@@ -33,8 +33,8 @@ async function loadWorkspacesDropdown() {
     switcher.innerHTML = '';
 
     if (!res.data || res.data.length === 0) {
-      // User has no groups yet, redirect to workspace creation
-      window.location.href = 'workspaces.html';
+      // Show empty state inside dashboard instead of redirecting
+      showDashboardEmptyState();
       return;
     }
 
@@ -63,6 +63,70 @@ async function loadWorkspacesDropdown() {
   } catch (err) {
     showToast(err.message, 'error');
   }
+}
+
+function showDashboardEmptyState() {
+  // Update sidebar switcher to show placeholder
+  const switcher = document.getElementById('groupSwitcher');
+  if (switcher) {
+    switcher.innerHTML = '<option value="">No workspaces yet</option>';
+    switcher.disabled = true;
+  }
+
+  // Hide action button & join code badge
+  const actionBtn = document.getElementById('primaryActionBtn');
+  const joinBadge = document.getElementById('joinCodeBadge');
+  if (actionBtn) actionBtn.style.display = 'none';
+  if (joinBadge) joinBadge.style.display = 'none';
+
+  // Replace main content with a beautiful empty state
+  const main = document.querySelector('.dashboard-main');
+  if (!main) return;
+
+  main.innerHTML = `
+    <div style="
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 100vh; padding: 40px 24px;
+      text-align: center; background: #f1f5f9;
+    ">
+      <div style="
+        background: #ffffff; border-radius: 24px; padding: 56px 48px;
+        max-width: 520px; width: 100%;
+        box-shadow: 0 8px 40px rgba(79,70,229,0.10);
+        border: 1.5px solid #e2e8f0;
+      ">
+        <div style="font-size: 4rem; margin-bottom: 20px; line-height: 1;">🚀</div>
+        <h2 style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin-bottom: 12px; letter-spacing: -0.5px;">
+          Welcome to GroupSpace!
+        </h2>
+        <p style="color: #64748b; font-size: 1rem; line-height: 1.7; margin-bottom: 32px; max-width: 360px; margin-left: auto; margin-right: auto;">
+          You're all set! Create your first workspace to start collaborating with your team on tasks, notes, expenses, and discussions.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <a href="workspaces.html" style="
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 14px 28px; background: #4f46e5; color: #ffffff;
+            border-radius: 12px; font-weight: 700; font-size: 0.95rem;
+            text-decoration: none; box-shadow: 0 4px 14px rgba(79,70,229,0.35);
+          ">✨ Create Your First Workspace</a>
+          <a href="workspaces.html" style="
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 13px 28px; background: transparent; color: #4f46e5;
+            border: 1.5px solid #c7d2fe; border-radius: 12px;
+            font-weight: 600; font-size: 0.95rem; text-decoration: none;
+          ">🔗 Join with Invite Code</a>
+        </div>
+        <div style="
+          margin-top: 36px; padding-top: 28px; border-top: 1px solid #f1f5f9;
+          display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+        ">
+          <div><div style="font-size:1.5rem;margin-bottom:6px;">📋</div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Kanban Tasks</div></div>
+          <div><div style="font-size:1.5rem;margin-bottom:6px;">💬</div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Discussions</div></div>
+          <div><div style="font-size:1.5rem;margin-bottom:6px;">💰</div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Expenses</div></div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 async function switchWorkspace(groupId) {
