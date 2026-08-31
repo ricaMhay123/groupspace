@@ -25,34 +25,23 @@
 <body>
 
 
-<!-- 1. Bootstrap Responsive Navigation Bar -->
-<nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm sticky-top">
-  <div class="container">
-    <a class="navbar-brand fw-bold text-dark d-flex align-items-center gap-2" href="index.html">
+<!-- Clean Navbar -->
+<nav class="navbar bg-white border-bottom shadow-sm sticky-top py-3">
+  <div class="container d-flex justify-content-between align-items-center">
+    <!-- Brand Logo & Name -->
+    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark fs-4 mb-0" href="#">
       <span>👥</span> GroupSpace
     </a>
     
-    <!-- Mobile Hamburger Toggle Button -->
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#groupspaceNav" aria-controls="groupspaceNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <!-- Collapsible Nav Items & Buttons -->
-    <div class="collapse navbar-collapse" id="groupspaceNav">
-      <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-3">
-        <li class="nav-item"><a class="nav-link text-secondary fw-medium" href="#home">Home</a></li>
-        <li class="nav-item"><a class="nav-link text-secondary fw-medium" href="#features">Features</a></li>
-        <li class="nav-item"><a class="nav-link text-secondary fw-medium" href="#works">How It Works</a></li>
-      </ul>
-      <div class="d-flex align-items-center gap-2 pt-2 pt-lg-0" id="authNavButtons">
-        <a href="login.html" class="btn btn-outline-secondary px-3 py-2">Login</a>
-        <a href="register.html" class="btn btn-primary px-3 py-2 fw-semibold">Get Started</a>
-      </div>
+    <!-- Action Buttons (Login + Get Started) -->
+    <div class="d-flex align-items-center gap-2" id="authNavButtons">
+      <a href="/login.html" class="btn btn-outline-secondary px-3 py-1.5 fw-medium">Login</a>
+      <a href="/register.html" class="btn btn-primary px-3 py-1.5 fw-semibold">Get Started</a>
     </div>
   </div>
 </nav>
 
-<!-- 2. Bootstrap Hero Grid -->
+<!-- Clean Hero Section -->
 <section class="py-5 bg-light" id="home">
   <div class="container py-4">
     <div class="row align-items-center g-5">
@@ -64,16 +53,16 @@
         <h1 class="display-5 fw-bold text-dark mb-3">
           Manage Every Team <span class="d-block text-secondary fs-3 fw-normal">Inside One Workspace</span>
         </h1>
-        <p class="lead text-muted mb-4">
+        <p class="lead text-muted mb-4 fs-6">
           GroupSpace is a collaboration platform designed for students, organizations, and project teams. Manage discussions, tasks, files, schedules, expenses, and members inside one modern workspace.
         </p>
         <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">
-          <a href="register.html" class="btn btn-primary btn-lg px-4 fw-semibold">Create Workspace</a>
+          <a href="/register.html" class="btn btn-primary btn-lg px-4 fw-semibold">Create Workspace</a>
           <a href="#features" class="btn btn-outline-secondary btn-lg px-4">Explore Features</a>
         </div>
       </div>
 
-      <!-- Right Dashboard Card Preview -->
+      <!-- Right Dashboard Card Preview (Clean Light Theme) -->
       <div class="col-lg-6">
         <div class="card border border-light-subtle shadow-sm rounded-4 overflow-hidden bg-white text-dark p-3">
           <!-- Top Bar: Workspace Brand & Search -->
@@ -123,29 +112,21 @@
               <div class="bg-light p-2.5 rounded-3 border">
                 <div class="fw-semibold text-dark mb-2" style="font-size: 0.8rem;">General Discussion</div>
                 <div class="d-flex flex-column gap-2" style="font-size: 0.75rem;">
-                  <div class="d-flex align-items-start gap-2">
-                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-circle p-1 mt-1"></span>
-                    <div>
-                      <strong class="text-dark">Kevin:</strong> <span class="text-secondary">Homepage is finished.</span>
-                    </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success-subtle border border-success-subtle rounded-circle p-1"></span>
+                    <div><strong class="text-dark">Kevin:</strong> <span class="text-secondary">Homepage is finished.</span></div>
                   </div>
-                  <div class="d-flex align-items-start gap-2">
-                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-circle p-1 mt-1"></span>
-                    <div>
-                      <strong class="text-dark">Maria:</strong> <span class="text-secondary">UI design uploaded.</span>
-                    </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success-subtle border border-success-subtle rounded-circle p-1"></span>
+                    <div><strong class="text-dark">Maria:</strong> <span class="text-secondary">UI design uploaded.</span></div>
                   </div>
-                  <div class="d-flex align-items-start gap-2">
-                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-circle p-1 mt-1"></span>
-                    <div>
-                      <strong class="text-dark">John:</strong> <span class="text-secondary">Meeting at 2:00 PM.</span>
-                    </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success-subtle border border-success-subtle rounded-circle p-1"></span>
+                    <div><strong class="text-dark">John:</strong> <span class="text-secondary">Meeting at 2:00 PM.</span></div>
                   </div>
-                  <div class="d-flex align-items-start gap-2">
-                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-circle p-1 mt-1"></span>
-                    <div>
-                      <strong class="text-dark">Karen:</strong> <span class="text-secondary">Database updated.</span>
-                    </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success-subtle border border-success-subtle rounded-circle p-1"></span>
+                    <div><strong class="text-dark">Karen:</strong> <span class="text-secondary">Database updated.</span></div>
                   </div>
                 </div>
               </div>
