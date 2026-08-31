@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workspaces | GroupSpace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <a href="index.html"><h1>👥 GroupSpace</h1></a>
+  </div>
+  <nav>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="workspaces.html" style="color:var(--primary);">Workspaces</a>
+    <a href="about.html">About</a>
+  </nav>
+  <div class="nav-buttons">
+    <span id="userNameBadge" style="font-weight:600; color:var(--primary); margin-right:10px;"></span>
+    <button onclick="logoutUser()" class="login-btn" style="cursor:pointer; background:transparent;">Logout</button>
+  </div>
+</header>
+
+<div class="workspace-page">
+  <div class="workspace-header">
+    <h1>Your <span>Workspaces</span></h1>
+    <p>Select a workspace to jump into your collaborative board, or create a new space for your team.</p>
+  </div>
+
+  <div class="workspace-actions">
+    <button onclick="openModal('createModal')" class="primary-btn">+ Create Workspace</button>
+    <button onclick="openModal('joinModal')" class="secondary-btn">🔗 Join with Code</button>
+  </div>
+
+  <div class="workspace-grid" id="workspaceGrid">
+    <div style="color:var(--gray); padding:30px;">Loading your workspaces...</div>
+  </div>
+</div>
+
+<!-- ================= CREATE WORKSPACE MODAL ================= -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Create New Workspace</h3>
+      <button class="modal-close" onclick="closeModal('createModal')">✕</button>
+    </div>
+    <form id="createWorkspaceForm">
+      <div class="form-group">
+        <label>Workspace Name *</label>
+        <input type="text" id="wsName" class="form-control" placeholder="e.g. Senior Capstone 2026" required>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="wsDesc" class="form-control" placeholder="Brief mission or project goal..." rows="3"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Category</label>
+        <select id="wsCategory" class="form-control">
+          <option value="School Project">School Project</option>
+          <option value="Student Organization">Student Organization</option>
+          <option value="Hackathon / Competition">Hackathon / Competition</option>
+          <option value="Startup / Business">Startup / Business</option>
+          <option value="Personal Study Group">Personal Study Group</option>
+        </select>
+      </div>
+
+      <div class="form-actions" style="margin-top:20px;">
+        <button type="button" class="btn-outline" onclick="closeModal('createModal')">Cancel</button>
+        <button type="submit" class="btn-green">Create & Enter</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= JOIN WORKSPACE MODAL ================= -->
+<div class="modal-overlay" id="joinModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Join Workspace</h3>
+      <button class="modal-close" onclick="closeModal('joinModal')">✕</button>
+    </div>
+    <form id="joinWorkspaceForm">
+      <div class="join-code-box">
+        <h3>Have an Invitation Code?</h3>
+        <p>Ask your workspace leader for the 6-character code (e.g. <code>GS-7K9B2</code>).</p>
+      </div>
+
+      <div class="form-group">
+        <label>Workspace Join Code *</label>
+        <input type="text" id="joinCode" class="form-control" placeholder="GS-XXXXXX" style="text-transform:uppercase; letter-spacing:2px; font-weight:700;" required>
+      </div>
+
+      <div class="form-actions" style="margin-top:20px;">
+        <button type="button" class="btn-outline" onclick="closeModal('joinModal')">Cancel</button>
+        <button type="submit" class="btn-green">Join Workspace</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast notifications -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="js/api.js"></script>
+<script>
+  function openModal(id) {
+    document.getElementById(id).classList.add('active');
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+  }
+
+  async function loadWorkspaces() {
+    try {
+      const user = await checkAuth();
+      if (!user) return;
+      document.getElementById('userNameBadge').textContent = `👋 ${user.fullName}`;
+
+      const res = await apiFetch('/api/groups');
+      const container = document.getElementById('workspaceGrid');
+
+      if (!res.data || res.data.length === 0) {
+        container.innerHTML = `
+          <div class="workspace-empty-card">
+            <div class="empty-icon">📁</div>
+            <h2>No Workspaces Yet</h2>
+            <p>You are not a member of any workspace yet. Create one or join an existing group with an invitation code!</p>
+            <div class="empty-actions">
+              <button onclick="openModal('createModal')" class="btn-green">+ Create Workspace</button>
+              <button onclick="openModal('joinModal')" class="btn-outline">🔗 Join with Code</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = res.data.map(ws => `
+        <div class="workspace-card" onclick="selectWorkspace(${ws.id})">
+          <div class="workspace-icon">${ws.category === 'School Project' ? '🎓' : ws.category === 'Hackathon / Competition' ? '⚡' : '👥'}</div>
+          <h2>${escapeHtml(ws.name)}</h2>
+          <p style="color:var(--gray); font-size:14px; margin-bottom:12px;">${escapeHtml(ws.description || 'No description provided.')}</p>
+          
+          <div class="workspace-info">
+            <p>👑 <strong>Role:</strong> <span style="color:var(--primary); font-weight:700;">${ws.role}</span></p>
+            <p>👥 <strong>Members:</strong> ${ws.member_count} active collaborators</p>
+            <p>📋 <strong>Pending Tasks:</strong> ${ws.pending_task_count} incomplete</p>
+            <p>🔑 <strong>Invite Code:</strong> <code>${ws.join_code}</code></p>
+          </div>
+
+          <a href="dashboard.html?groupId=${ws.id}" class="btn-green" style="display:block; text-align:center; margin-top:15px;" onclick="event.stopPropagation(); selectWorkspace(${ws.id});">
+            Enter Workspace →
+          </a>
+        </div>
+      `).join('');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  function selectWorkspace(id) {
+    localStorage.setItem('groupspace_active_group_id', id);
+    window.location.href = `dashboard.html?groupId=${id}`;
+  }
+
+  document.getElementById('createWorkspaceForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('wsName').value.trim();
+    const description = document.getElementById('wsDesc').value.trim();
+    const category = document.getElementById('wsCategory').value;
+
+    try {
+      const res = await apiFetch('/api/groups', {
+        method: 'POST',
+        body: JSON.stringify({ name, description, category })
+      });
+      showToast('Workspace created successfully!', 'success');
+      closeModal('createModal');
+      selectWorkspace(res.data.id);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  });
+
+  document.getElementById('joinWorkspaceForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const joinCode = document.getElementById('joinCode').value.trim();
+
+    try {
+      const res = await apiFetch('/api/groups/join', {
+        method: 'POST',
+        body: JSON.stringify({ joinCode })
+      });
+      showToast(`Joined workspace ${res.data.name}!`, 'success');
+      closeModal('joinModal');
+      selectWorkspace(res.data.id);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', loadWorkspaces);
+</script>
+</body>
+</html>

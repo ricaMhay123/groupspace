@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Register | GroupSpace</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+
+</head>
+
+<body class="login-page">
+
+<a href="index.html" class="back-home">
+    ← Back to Home
+</a>
+
+<div class="login-container">
+
+<div class="login-left">
+
+<h1>👥 GroupSpace</h1>
+
+<p class="login-subtitle">
+Create your account and start collaborating with your team.
+</p>
+
+<div class="login-preview">
+
+<h3>Why Join GroupSpace?</h3>
+
+<div class="preview-card">
+
+<p>👥 Create or join workspaces</p>
+
+<p>💬 Organize group discussions</p>
+
+<p>✅ Manage team tasks</p>
+
+<p>📁 Share important files</p>
+
+<p>📅 Schedule meetings and deadlines</p>
+
+<p>💰 Track shared expenses</p>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="login-right">
+
+<div class="login-card">
+
+<h2>Create Account 🚀</h2>
+
+<p>
+Fill in your information to start using GroupSpace.
+</p>
+
+<div id="registerAlert" style="display:none; padding:12px; margin-bottom:18px; border-radius:10px; font-size:14px;"></div>
+
+<form id="registerForm" action="/api/auth/register" method="post">
+
+<input
+type="text"
+name="fullname"
+id="fullName"
+placeholder="Full Name"
+autocomplete="name"
+required>
+
+<input
+type="email"
+name="email"
+id="regEmail"
+placeholder="Email Address"
+autocomplete="email"
+required>
+
+<input
+type="password"
+name="password"
+id="regPassword"
+placeholder="Create Password"
+autocomplete="new-password"
+required>
+
+<input
+type="password"
+name="confirm_password"
+id="regConfirmPassword"
+placeholder="Confirm Password"
+autocomplete="new-password"
+required>
+
+<button type="submit" id="regBtn">
+Create Account
+</button>
+
+</form>
+
+<div class="create-account">
+
+Already have an account?
+
+<a href="login.html">
+Login
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ================= EMAIL VERIFICATION MODAL ================= -->
+<div class="modal-overlay" id="emailVerifyModal">
+  <div class="modal-card" style="max-width:460px; text-align:center;">
+    <div class="modal-header" style="justify-content:center; margin-bottom:10px;">
+      <h3 style="color:var(--primary); font-size:24px;">📧 Verify Your Email</h3>
+    </div>
+    
+    <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px; line-height:1.5;">
+      We sent a 6-digit verification code to <br>
+      <strong id="verifyTargetEmail" style="color:var(--primary); font-weight:600;"></strong>.
+    </p>
+
+    <div id="verifyAlert" style="display:none; padding:10px; margin-bottom:15px; border-radius:10px; font-size:13px;"></div>
+
+    <form id="verifyCodeForm">
+      <input
+        type="text"
+        id="inputVerifyCode"
+        maxlength="6"
+        placeholder="Enter 6-digit code"
+        style="text-align:center; font-size:26px; font-weight:800; letter-spacing:6px; color:var(--primary); padding:14px; margin-bottom:20px;"
+        required
+      >
+
+      <button type="submit" id="confirmVerifyBtn" class="btn-green" style="width:100%; padding:15px; font-size:16px;">
+        Verify & Finish Sign Up
+      </button>
+    </form>
+
+    <div style="margin-top:20px; font-size:13px; color:var(--text-muted);">
+      Didn't receive the code? 
+      <a href="#" id="resendCodeBtn" style="color:var(--primary); text-decoration:none; font-weight:600;">Resend Code</a>
+      <span style="display:block; margin-top:6px; font-size:12px; color:var(--text-muted);">(Check your spam or junk folder)</span>
+    </div>
+    
+    <div style="margin-top:15px;">
+      <a href="#" onclick="document.getElementById('emailVerifyModal').classList.remove('active'); return false;" style="color:#777; font-size:13px; text-decoration:none;">Cancel</a>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+
+</body>
+
+</html>

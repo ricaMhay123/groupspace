@@ -1,0 +1,461 @@
+/**
+ * GroupSpace Client Authentication & Email Verification Handler
+ */
+
+let pendingRegistrationData = null;
+let resendTimerInterval = null;
+let forgotResendTimerInterval = null;
+
+function showAlert(el, message, type = 'error') {
+  if (!el) return;
+  el.style.display = 'block';
+  el.textContent = message;
+  if (type === 'success') {
+    el.style.background = '#dcfce7';
+    el.style.color = '#15803d';
+    el.style.border = '1px solid #bbf7d0';
+  } else if (type === 'warning') {
+    el.style.background = '#fef3c7';
+    el.style.color = '#b45309';
+    el.style.border = '1px solid #fde68a';
+  } else {
+    // error
+    el.style.background = '#fee2e2';
+    el.style.color = '#ba1a1a';
+    el.style.border = '1px solid #fecaca';
+  }
+}
+
+function hideAlert(el) {
+  if (el) el.style.display = 'none';
+}
+
+function formatAuthError(err) {
+  if (!err) return 'An unexpected error occurred.';
+  const msg = err.message || String(err);
+  if (err.name === 'TypeError' || msg === 'Failed to fetch' || msg.includes('Failed to fetch') || msg.includes('fetch')) {
+    if (window.location.protocol === 'file:') {
+      return '⚠️ You opened this file directly in your browser. Please run "npm start" in your terminal and open http://localhost:3001';
+    }
+    return '⚠️ Cannot connect to GroupSpace server. Please ensure "npm start" is running in your terminal at http://localhost:3001';
+  }
+  return msg;
+}
+
+function openForgotPasswordModal() {
+  const modal = document.getElementById('forgotModal');
+  if (modal) {
+    modal.classList.add('active');
+    document.getElementById('forgotStep1Form').style.display = 'block';
+    document.getElementById('forgotStep2Form').style.display = 'none';
+    const alertBox = document.getElementById('forgotAlert');
+    hideAlert(alertBox);
+    const emailInput = document.getElementById('forgotEmail');
+    if (emailInput) {
+      const loginEmail = document.getElementById('email');
+      if (loginEmail && loginEmail.value) {
+        emailInput.value = loginEmail.value.trim();
+      }
+      setTimeout(() => emailInput.focus(), 100);
+    }
+  }
+}
+
+function closeForgotPasswordModal() {
+  const modal = document.getElementById('forgotModal');
+  if (modal) modal.classList.remove('active');
+  if (forgotResendTimerInterval) clearInterval(forgotResendTimerInterval);
+}
+
+function backToForgotStep1() {
+  document.getElementById('forgotStep1Form').style.display = 'block';
+  document.getElementById('forgotStep2Form').style.display = 'none';
+  const alertBox = document.getElementById('forgotAlert');
+  hideAlert(alertBox);
+  if (forgotResendTimerInterval) clearInterval(forgotResendTimerInterval);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.location.protocol === 'file:') {
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#ba1a1a;color:#fff;padding:12px 20px;text-align:center;font-weight:600;font-size:14px;z-index:999999;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+    banner.innerHTML = '⚠️ You opened this page directly as a local file (file://). API requests will fail. Please run <code>npm start</code> in terminal and visit <a href="http://localhost:3001" style="color:#fff;text-decoration:underline;">http://localhost:3001</a>.';
+    document.body.prepend(banner);
+  }
+
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  const verifyCodeForm = document.getElementById('verifyCodeForm');
+  const resendBtn = document.getElementById('resendCodeBtn');
+  const forgotStep1Form = document.getElementById('forgotStep1Form');
+  const forgotStep2Form = document.getElementById('forgotStep2Form');
+  const forgotResendBtn = document.getElementById('forgotResendBtn');
+
+  // ==========================================
+  // 1. LOGIN HANDLER
+  // ==========================================
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const alertBox = document.getElementById('loginAlert');
+      const submitBtn = document.getElementById('loginBtn');
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Logging in...';
+      hideAlert(alertBox);
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Login failed.');
+
+        localStorage.setItem('groupspace_token', data.data.token);
+        localStorage.setItem('groupspace_user', JSON.stringify(data.data.user));
+
+        showAlert(alertBox, 'Login successful! Redirecting...', 'success');
+
+        setTimeout(() => {
+          window.location.href = 'workspaces.html';
+        }, 500);
+      } catch (err) {
+        showAlert(alertBox, formatAuthError(err), 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Login';
+      }
+    });
+  }
+
+  // ==========================================
+  // 2. REGISTRATION STEP 1: SEND VERIFICATION CODE
+  // ==========================================
+  if (registerForm) {
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fullName = document.getElementById('fullName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+      const confirmPasswordEl = document.getElementById('regConfirmPassword');
+      const confirmPassword = confirmPasswordEl ? confirmPasswordEl.value : password;
+      const alertBox = document.getElementById('registerAlert');
+      const submitBtn = document.getElementById('regBtn');
+
+      hideAlert(alertBox);
+
+      if (password !== confirmPassword) {
+        showAlert(alertBox, 'Passwords do not match. Please re-enter.', 'error');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending Verification Code...';
+
+      try {
+        // Request 6-digit OTP code to the email address
+        const res = await fetch('/api/auth/send-verification-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, type: 'SIGNUP' })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Could not send verification code.');
+
+        // Save pending registration payload in memory
+        pendingRegistrationData = { fullName, email, password };
+
+        // Open verification modal
+        const verifyModal = document.getElementById('emailVerifyModal');
+        const targetEmailEl = document.getElementById('verifyTargetEmail');
+        const verifyAlert = document.getElementById('verifyAlert');
+        const inputCode = document.getElementById('inputVerifyCode');
+
+        if (targetEmailEl) targetEmailEl.textContent = email;
+        if (inputCode) inputCode.value = '';
+        hideAlert(verifyAlert);
+
+        if (verifyModal) verifyModal.classList.add('active');
+        if (inputCode) setTimeout(() => inputCode.focus(), 150);
+
+        startResendTimer();
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Account';
+      } catch (err) {
+        showAlert(alertBox, formatAuthError(err), 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Account';
+      }
+    });
+  }
+
+  // ==========================================
+  // 3. REGISTRATION STEP 2: VERIFY CODE & CREATE ACCOUNT
+  // ==========================================
+  if (verifyCodeForm) {
+    verifyCodeForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!pendingRegistrationData) {
+        alert('Please complete the registration form first.');
+        return;
+      }
+
+      const inputCode = document.getElementById('inputVerifyCode');
+      const verifyAlert = document.getElementById('verifyAlert');
+      const confirmBtn = document.getElementById('confirmVerifyBtn');
+      const otpCode = inputCode ? inputCode.value.trim() : '';
+
+      hideAlert(verifyAlert);
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Verifying & Creating Account...';
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fullName: pendingRegistrationData.fullName,
+            email: pendingRegistrationData.email,
+            password: pendingRegistrationData.password,
+            otpCode
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Verification failed.');
+
+        localStorage.setItem('groupspace_token', data.data.token);
+        localStorage.setItem('groupspace_user', JSON.stringify(data.data.user));
+
+        if (verifyAlert) {
+          showAlert(verifyAlert, '🎉 Account verified! Welcome email sent. Redirecting...', 'success');
+        }
+
+        setTimeout(() => {
+          window.location.href = 'workspaces.html';
+        }, 700);
+      } catch (err) {
+        if (verifyAlert) {
+          showAlert(verifyAlert, formatAuthError(err), 'error');
+        }
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Verify & Finish Sign Up';
+      }
+    });
+  }
+
+  // Resend Verification Code for Signup
+  if (resendBtn) {
+    resendBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (!pendingRegistrationData) return;
+
+      const verifyAlert = document.getElementById('verifyAlert');
+      resendBtn.style.pointerEvents = 'none';
+      resendBtn.textContent = 'Sending...';
+
+      try {
+        const res = await fetch('/api/auth/send-verification-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: pendingRegistrationData.email, type: 'SIGNUP' })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to resend.');
+
+        if (verifyAlert) {
+          showAlert(verifyAlert, '✅ New verification code sent to your email!', 'success');
+        }
+        startResendTimer();
+      } catch (err) {
+        if (verifyAlert) {
+          showAlert(verifyAlert, formatAuthError(err), 'error');
+        }
+        resendBtn.style.pointerEvents = 'auto';
+        resendBtn.textContent = 'Resend Code';
+      }
+    });
+  }
+
+  function startResendTimer() {
+    if (!resendBtn) return;
+    clearInterval(resendTimerInterval);
+    let secondsLeft = 30;
+    resendBtn.style.pointerEvents = 'none';
+    resendBtn.textContent = `Resend in ${secondsLeft}s`;
+
+    resendTimerInterval = setInterval(() => {
+      secondsLeft--;
+      if (secondsLeft <= 0) {
+        clearInterval(resendTimerInterval);
+        resendBtn.style.pointerEvents = 'auto';
+        resendBtn.textContent = 'Resend Code';
+      } else {
+        resendBtn.textContent = `Resend in ${secondsLeft}s`;
+      }
+    }, 1000);
+  }
+
+  function startForgotResendTimer() {
+    if (!forgotResendBtn) return;
+    clearInterval(forgotResendTimerInterval);
+    let secondsLeft = 30;
+    forgotResendBtn.style.pointerEvents = 'none';
+    forgotResendBtn.textContent = `Resend in ${secondsLeft}s`;
+
+    forgotResendTimerInterval = setInterval(() => {
+      secondsLeft--;
+      if (secondsLeft <= 0) {
+        clearInterval(forgotResendTimerInterval);
+        forgotResendBtn.style.pointerEvents = 'auto';
+        forgotResendBtn.textContent = 'Resend Code';
+      } else {
+        forgotResendBtn.textContent = `Resend in ${secondsLeft}s`;
+      }
+    }, 1000);
+  }
+
+  // ==========================================
+  // 4. FORGOT PASSWORD STEP 1: REQUEST RESET CODE
+  // ==========================================
+  if (forgotStep1Form) {
+    forgotStep1Form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('forgotEmail').value.trim();
+      const alertBox = document.getElementById('forgotAlert');
+      const submitBtn = document.getElementById('sendForgotBtn');
+
+      hideAlert(alertBox);
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending Code...';
+
+      try {
+        const res = await fetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Could not send reset code.');
+
+        // Transition to Step 2
+        document.getElementById('forgotTargetEmail').textContent = email;
+        document.getElementById('forgotStep1Form').style.display = 'none';
+        document.getElementById('forgotStep2Form').style.display = 'block';
+
+        const otpInput = document.getElementById('forgotOtpCode');
+        if (otpInput) {
+          otpInput.value = '';
+          setTimeout(() => otpInput.focus(), 150);
+        }
+        document.getElementById('forgotNewPass').value = '';
+        document.getElementById('forgotConfirmPass').value = '';
+
+        showAlert(alertBox, `Verification code sent to ${email}`, 'success');
+        startForgotResendTimer();
+      } catch (err) {
+        showAlert(alertBox, formatAuthError(err), 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Reset Code';
+      }
+    });
+  }
+
+  // Resend code in Forgot Password Step 2
+  if (forgotResendBtn) {
+    forgotResendBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('forgotTargetEmail').textContent.trim();
+      const alertBox = document.getElementById('forgotAlert');
+      if (!email) return;
+
+      forgotResendBtn.style.pointerEvents = 'none';
+      forgotResendBtn.textContent = 'Sending...';
+
+      try {
+        const res = await fetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to resend reset code.');
+
+        showAlert(alertBox, `✅ New verification code sent to ${email}`, 'success');
+        startForgotResendTimer();
+      } catch (err) {
+        showAlert(alertBox, formatAuthError(err), 'error');
+        forgotResendBtn.style.pointerEvents = 'auto';
+        forgotResendBtn.textContent = 'Resend Code';
+      }
+    });
+  }
+
+  // ==========================================
+  // 5. FORGOT PASSWORD STEP 2: SUBMIT NEW PASSWORD
+  // ==========================================
+  if (forgotStep2Form) {
+    forgotStep2Form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('forgotTargetEmail').textContent.trim();
+      const otpCode = document.getElementById('forgotOtpCode').value.trim();
+      const newPassword = document.getElementById('forgotNewPass').value;
+      const confirmPass = document.getElementById('forgotConfirmPass').value;
+      const alertBox = document.getElementById('forgotAlert');
+      const submitBtn = document.getElementById('resetPassBtn');
+
+      hideAlert(alertBox);
+
+      if (newPassword !== confirmPass) {
+        showAlert(alertBox, 'New passwords do not match. Please re-enter.', 'error');
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        showAlert(alertBox, 'Password must be at least 6 characters.', 'error');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Updating Password...';
+
+      try {
+        const res = await fetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, otpCode, newPassword })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Password reset failed.');
+
+        showAlert(alertBox, '✅ Password reset successfully! You can now log in.', 'success');
+
+        setTimeout(() => {
+          closeForgotPasswordModal();
+          const emailInput = document.getElementById('email');
+          if (emailInput) emailInput.value = email;
+          const passInput = document.getElementById('password');
+          if (passInput) {
+            passInput.value = '';
+            passInput.focus();
+          }
+        }, 1500);
+      } catch (err) {
+        showAlert(alertBox, formatAuthError(err), 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Update Password';
+      }
+    });
+  }
+});

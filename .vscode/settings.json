@@ -1,0 +1,16 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "data/*.db-journal": true,
+    "data/*.db-wal": true,
+    "data/*.db-shm": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/data/*.db": true
+  }
+}

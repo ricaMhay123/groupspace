@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | GroupSpace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body class="dashboard-page">
+
+<div class="dashboard-layout">
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="dashboard-sidebar">
+    <div>
+      <div class="dashboard-brand">
+        <a href="index.html" style="text-decoration:none;"><h2>👥 GroupSpace</h2></a>
+      </div>
+
+      <!-- Multi-Group Switcher -->
+      <div class="group-selector-box">
+        <label>Active Workspace</label>
+        <select id="groupSwitcher" class="group-select" onchange="switchWorkspace(this.value)">
+          <option value="">Loading workspaces...</option>
+        </select>
+        <div style="display:flex; justify-content:space-between; margin-top:10px;">
+          <a href="workspaces.html" style="font-size:12px; color:var(--primary); text-decoration:none; font-weight:600;">+ New / Join Space</a>
+        </div>
+      </div>
+
+      <!-- Nav Menu -->
+      <ul id="sidebarMenu">
+        <li class="active" onclick="switchTab('overview')">📊 Overview</li>
+        <li onclick="switchTab('tasks')">📋 Tasks (Kanban)</li>
+        <li onclick="switchTab('notebook')">📝 Notebook</li>
+        <li onclick="switchTab('expenses')">💰 Expenses</li>
+        <li onclick="switchTab('discussions')">💬 Discussions</li>
+        <li onclick="switchTab('personal')">🔒 Personal Space</li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="profile-card" style="margin-bottom:12px; padding:12px; background:var(--card); border-radius:14px; border:1px solid var(--border);">
+        <div class="profile-avatar" id="userAvatar">GS</div>
+        <div style="min-width:0;">
+          <h4 id="userFullName" style="font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">User</h4>
+          <span class="status online">Online</span>
+        </div>
+      </div>
+      <button onclick="logoutUser()" class="logout-btn" style="width:100%;">Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN CONTENT ================= -->
+  <main class="dashboard-main">
+    <!-- Header -->
+    <div class="dashboard-header">
+      <div>
+        <h1 id="viewTitle">Overview</h1>
+        <p id="viewSubtitle">Welcome to your team workspace.</p>
+      </div>
+
+      <div class="dashboard-header-actions">
+        <!-- Join Code Badge -->
+        <div id="joinCodeBadge" style="display:none; align-items:center; gap:8px; padding:10px 16px; background:#141815; border:1px solid var(--border); border-radius:12px; font-size:13px;">
+          <span style="color:var(--gray);">Invite Code:</span>
+          <strong id="displayJoinCode" style="color:var(--primary); letter-spacing:1px; cursor:pointer;" title="Click to copy" onclick="copyJoinCode()">GS-XXXXXX</strong>
+        </div>
+        <button id="primaryActionBtn" class="btn-green" onclick="handlePrimaryAction()">+ Action</button>
+      </div>
+    </div>
+
+    <!-- TAB 1: OVERVIEW -->
+    <section id="tab-overview" class="tab-view active">
+      <div class="dashboard-cards">
+        <div class="dashboard-card">
+          <h4>Active Tasks</h4>
+          <h2 id="statActiveTasks">0</h2>
+        </div>
+        <div class="dashboard-card">
+          <h4>Awaiting Approval</h4>
+          <h2 id="statPendingApproval" style="color:var(--warning);">0</h2>
+        </div>
+        <div class="dashboard-card">
+          <h4>Total Workspace Spend</h4>
+          <h2 id="statTotalSpent">$0.00</h2>
+        </div>
+        <div class="dashboard-card">
+          <h4>Team Members</h4>
+          <h2 id="statMemberCount">0</h2>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="dashboard-panel">
+          <div class="panel-header">
+            <h3>Recent Activity Feed</h3>
+            <span style="font-size:12px; color:var(--gray);">Live workspace events</span>
+          </div>
+          <div class="activity-feed" id="overviewActivityList">
+            <p style="color:var(--gray);">No recent workspace activity yet.</p>
+          </div>
+        </div>
+
+        <div>
+          <div class="dashboard-panel">
+            <div class="panel-header">
+              <h3>Team Roster</h3>
+              <span id="userRoleBadge" class="status online" style="font-size:11px;">MEMBER</span>
+            </div>
+            <ul class="task-list" id="overviewMemberList">
+              <li style="color:var(--gray);">Loading roster...</li>
+            </ul>
+          </div>
+
+          <div class="dashboard-panel">
+            <div class="panel-header">
+              <h3>Personal Quick Notes</h3>
+              <button onclick="switchTab('personal')" class="btn-outline" style="padding:4px 10px; font-size:12px;">Open 🔒</button>
+            </div>
+            <div id="overviewPersonalList">
+              <p style="color:var(--gray); font-size:13px;">Private to you. Visit your Personal Space tab to manage.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: TASKS (KANBAN WITH DUAL-APPROVAL) -->
+    <section id="tab-tasks" class="tab-view" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <p style="color:var(--gray);">
+          💡 <strong>Dual-Approval Workflow:</strong> Workers submit finished tasks for approval. Workspace <strong>Leaders</strong> verify and grant final completion.
+        </p>
+        <button onclick="openModal('createTaskModal')" class="btn-green">+ Create Task</button>
+      </div>
+
+      <div class="kanban-board">
+        <!-- Col 1: To Do -->
+        <div class="kanban-col">
+          <div class="kanban-col-header">
+            <span class="kanban-col-title">📌 To Do</span>
+            <span class="col-badge" id="count-todo">0</span>
+          </div>
+          <div class="kanban-cards" id="col-todo"></div>
+        </div>
+
+        <!-- Col 2: In Progress -->
+        <div class="kanban-col">
+          <div class="kanban-col-header">
+            <span class="kanban-col-title">⚡ In Progress</span>
+            <span class="col-badge" id="count-in_progress">0</span>
+          </div>
+          <div class="kanban-cards" id="col-in_progress"></div>
+        </div>
+
+        <!-- Col 3: Pending Approval -->
+        <div class="kanban-col" style="border-color:rgba(255,193,7,.25);">
+          <div class="kanban-col-header">
+            <span class="kanban-col-title" style="color:var(--warning);">🛡️ Awaiting Approval</span>
+            <span class="col-badge" id="count-pending_approval" style="color:var(--warning);">0</span>
+          </div>
+          <div class="kanban-cards" id="col-pending_approval"></div>
+        </div>
+
+        <!-- Col 4: Approved Done -->
+        <div class="kanban-col" style="border-color:rgba(124,255,58,.25);">
+          <div class="kanban-col-header">
+            <span class="kanban-col-title" style="color:var(--primary);">✅ Approved Done</span>
+            <span class="col-badge" id="count-done" style="color:var(--primary);">0</span>
+          </div>
+          <div class="kanban-cards" id="col-done"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: NOTEBOOK -->
+    <section id="tab-notebook" class="tab-view" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; gap:20px;">
+        <div class="dashboard-search" style="flex:1;">
+          <input type="text" id="noteSearchInput" placeholder="🔍 Search notebook pages and tags..." oninput="debounceNotesSearch()">
+        </div>
+        <button onclick="openModal('createNoteModal')" class="btn-green">+ New Page</button>
+      </div>
+
+      <div class="notebook-grid" id="notebookGrid">
+        <p style="color:var(--gray);">Loading shared notes...</p>
+      </div>
+    </section>
+
+    <!-- TAB 4: EXPENSES -->
+    <section id="tab-expenses" class="tab-view" style="display:none;">
+      <div class="expense-summary-grid">
+        <div class="summary-stat-box">
+          <h4>Total Workspace Expenditure</h4>
+          <h2 id="expTotalSpent">$0.00</h2>
+        </div>
+        <div class="summary-stat-box">
+          <h4>Your Net Balance</h4>
+          <h2 id="expYourNet">$0.00</h2>
+        </div>
+        <div class="summary-stat-box">
+          <h4>Active Settlements</h4>
+          <h2 id="expSettlementCount">0</h2>
+        </div>
+      </div>
+
+      <!-- Debt Settlement Matrix -->
+      <div class="dashboard-panel">
+        <div class="panel-header">
+          <h3>Simplified Debt Settlement Plan</h3>
+          <span style="font-size:12px; color:var(--gray);">Calculated via net debt reduction algorithm</span>
+        </div>
+        <div id="settlementList">
+          <p style="color:var(--gray);">All balances settled! Nobody owes anything right now.</p>
+        </div>
+      </div>
+
+      <!-- Expense Ledger Table -->
+      <div class="dashboard-panel">
+        <div class="panel-header">
+          <h3>Workspace Expense Ledger</h3>
+          <button onclick="openModal('createExpenseModal')" class="btn-green">+ Log Expense</button>
+        </div>
+        <table class="expense-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Category</th>
+              <th>Paid By</th>
+              <th>Split</th>
+              <th>Amount</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="expenseTableBody">
+            <tr><td colspan="7" style="color:var(--gray); text-align:center;">No expenses logged yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 5: DISCUSSIONS -->
+    <section id="tab-discussions" class="tab-view" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <div>
+          <h3>Team Topics & Threads</h3>
+          <p style="color:var(--gray); font-size:14px;">Collaborate, brainstorm, and share updates.</p>
+        </div>
+        <button onclick="openModal('createTopicModal')" class="btn-green">+ New Topic</button>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="dashboard-panel">
+          <div class="panel-header">
+            <h3>Discussion Topics</h3>
+          </div>
+          <div id="topicsList">
+            <p style="color:var(--gray);">No topics yet. Start one for your team!</p>
+          </div>
+        </div>
+
+        <div class="dashboard-panel" id="topicChatPanel">
+          <div class="panel-header">
+            <h3 id="activeTopicTitle">Select a Topic</h3>
+          </div>
+          <div id="commentsContainer" style="max-height:400px; overflow-y:auto; margin-bottom:18px;">
+            <p style="color:var(--gray); text-align:center; padding:30px;">Click on a topic to view its replies and thread discussion.</p>
+          </div>
+          <form id="postCommentForm" style="display:none;" onsubmit="handlePostComment(event)">
+            <input type="text" id="newCommentInput" class="form-control" placeholder="Write a reply..." required style="margin-bottom:10px;">
+            <button type="submit" class="btn-green" style="width:100%;">Post Reply</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: PERSONAL SPACE -->
+    <section id="tab-personal" class="tab-view" style="display:none;">
+      <div style="margin-bottom:20px;">
+        <span class="hero-tag">🔒 STRICTLY PRIVATE TO YOU</span>
+        <h2>Your Isolated Space</h2>
+        <p style="color:var(--gray);">Items saved here are stored privately for your account and are completely invisible to other workspace members.</p>
+      </div>
+
+      <div class="personal-tabs">
+        <button class="personal-tab-btn active" onclick="switchPersonalSubTab('NOTE')">📝 Private Notes</button>
+        <button class="personal-tab-btn" onclick="switchPersonalSubTab('TASK')">☑️ Personal To-Dos</button>
+        <button class="personal-tab-btn" onclick="switchPersonalSubTab('EXPENSE')">💵 Personal Budget</button>
+      </div>
+
+      <div class="dashboard-panel">
+        <div class="panel-header">
+          <h3 id="personalSubTabTitle">Private Notes</h3>
+          <button onclick="openPersonalAddModal()" class="btn-green">+ Add Item</button>
+        </div>
+        <div id="personalItemsContainer">
+          <p style="color:var(--gray);">Loading personal space...</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- Create Task Modal -->
+<div class="modal-overlay" id="createTaskModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Create Kanban Task</h3>
+      <button class="modal-close" onclick="closeModal('createTaskModal')">✕</button>
+    </div>
+    <form id="createTaskForm" onsubmit="handleCreateTask(event)">
+      <div class="form-group">
+        <label>Task Title *</label>
+        <input type="text" id="taskTitle" class="form-control" placeholder="e.g. Implement API Auth Middleware" required>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="taskDesc" class="form-control" rows="3" placeholder="Task requirements, acceptance criteria..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Priority</label>
+        <select id="taskPriority" class="form-control">
+          <option value="LOW">Low</option>
+          <option value="MEDIUM" selected>Medium</option>
+          <option value="HIGH">High</option>
+          <option value="URGENT">Urgent</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Assign To Member</label>
+        <select id="taskAssignee" class="form-control">
+          <option value="">Unassigned</option>
+        </select>
+      </div>
+      <div class="form-actions" style="margin-top:20px;">
+        <button type="button" class="btn-outline" onclick="closeModal('createTaskModal')">Cancel</button>
+        <button type="submit" class="btn-green">Create Task</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Dual Approval Review Modal -->
+<div class="modal-overlay" id="reviewTaskModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>🛡️ Leader Dual-Approval</h3>
+      <button class="modal-close" onclick="closeModal('reviewTaskModal')">✕</button>
+    </div>
+    <div style="margin-bottom:18px;">
+      <h4 id="reviewTaskTitle" style="color:var(--primary); font-size:18px; margin-bottom:6px;">Task Title</h4>
+      <p id="reviewTaskDesc" style="color:var(--gray); font-size:14px; line-height:1.5;">Description</p>
+      <div style="margin-top:12px; font-size:13px; color:var(--warning);">
+        ⚠️ Submitted by assignee for final review. As workspace Leader, verify quality before approving.
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Feedback / Approval Notes</label>
+      <textarea id="reviewNotes" class="form-control" rows="2" placeholder="e.g. Looks great, verified tests pass!"></textarea>
+    </div>
+    <div class="form-actions" style="margin-top:20px; display:flex; gap:12px;">
+      <button type="button" class="btn-outline" onclick="submitReview(false)" style="color:#FF7272; border-color:#FF5252;">Request Revisions</button>
+      <button type="button" class="btn-green" onclick="submitReview(true)">✅ Approve as Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Note Modal -->
+<div class="modal-overlay" id="createNoteModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Add Notebook Page</h3>
+      <button class="modal-close" onclick="closeModal('createNoteModal')">✕</button>
+    </div>
+    <form id="createNoteForm" onsubmit="handleCreateNote(event)">
+      <div class="form-group">
+        <label>Page Title *</label>
+        <input type="text" id="noteTitle" class="form-control" placeholder="e.g. Sprint 1 Meeting Minutes" required>
+      </div>
+      <div class="form-group">
+        <label>Content (Markdown / Notes)</label>
+        <textarea id="noteContent" class="form-control" rows="6" placeholder="Document decisions, links, notes..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Tags (comma separated)</label>
+        <input type="text" id="noteTags" class="form-control" placeholder="specs, planning, backend">
+      </div>
+      <div class="form-group">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="notePinned" style="accent-color:var(--primary);"> Pin this note to top
+        </label>
+      </div>
+      <div class="form-actions" style="margin-top:20px;">
+        <button type="button" class="btn-outline" onclick="closeModal('createNoteModal')">Cancel</button>
+        <button type="submit" class="btn-green">Save Page</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Log Expense Modal -->
+<div class="modal-overlay" id="createExpenseModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Log Workspace Expense</h3>
+      <button class="modal-close" onclick="closeModal('createExpenseModal')">✕</button>
+    </div>
+    <form id="createExpenseForm" onsubmit="handleCreateExpense(event)">
+      <div class="form-group">
+        <label>Expense Title / Item *</label>
+        <input type="text" id="expTitle" class="form-control" placeholder="e.g. Domain Registration & Hosting" required>
+      </div>
+      <div class="form-group">
+        <label>Amount ($ USD) *</label>
+        <input type="number" step="0.01" min="0.01" id="expAmount" class="form-control" placeholder="0.00" required>
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="expCategory" class="form-control">
+          <option value="Tools & Software">Tools & Software</option>
+          <option value="Hardware / Supplies">Hardware / Supplies</option>
+          <option value="Food & Drinks">Food & Drinks</option>
+          <option value="Travel / Transit">Travel / Transit</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Who Paid?</label>
+        <select id="expPaidBy" class="form-control"></select>
+      </div>
+      <div class="form-group">
+        <label>Split Type</label>
+        <select id="expSplitType" class="form-control">
+          <option value="EQUAL">Equal Split Among All Members</option>
+        </select>
+      </div>
+      <div class="form-actions" style="margin-top:20px;">
+        <button type="button" class="btn-outline" onclick="closeModal('createExpenseModal')">Cancel</button>
+        <button type="submit" class="btn-green">Add to Ledger</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Create Topic Modal -->
+<div class="modal-overlay" id="createTopicModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Start Discussion Topic</h3>
+      <button class="modal-close" onclick="closeModal('createTopicModal')">✕</button>
+    </div>
+    <form id="createTopicForm" onsubmit="handleCreateTopic(event)">
+      <div class="form-group">
+        <label>Topic Title *</label>
+        <input type="text" id="topicTitle" class="form-control" placeholder="e.g. API Architecture Debate: REST vs GraphQL" required>
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="topicCategory" class="form-control">
+          <option value="General">General</option>
+          <option value="Technical">Technical</option>
+          <option value="Brainstorming">Brainstorming</option>
+          <option value="Announcements">Announcements</option>
+        </select>
+      </div>
+      <div class="form-actions" style="margin-top:20px;">
+        <button type="button" class="btn-outline" onclick="closeModal('createTopicModal')">Cancel</button>
+        <button type="submit" class="btn-green">Create Topic</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Personal Item Modal -->
+<div class="modal-overlay" id="personalItemModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="personalModalHeading">Add Personal Item</h3>
+      <button class="modal-close" onclick="closeModal('personalItemModal')">✕</button>
+    </div>
+    <form id="personalItemForm" onsubmit="handleSavePersonalItem(event)">
+      <div class="form-group">
+        <label>Title *</label>
+        <input type="text" id="personalItemTitle" class="form-control" placeholder="Title" required>
+      </div>
+      <div class="form-group" id="personalContentGroup">
+        <label>Notes / Details</label>
+        <textarea id="personalItemContent" class="form-control" rows="3" placeholder="Private details..."></textarea>
+      </div>
+      <div class="form-group" id="personalAmountGroup" style="display:none;">
+        <label>Amount ($)</label>
+        <input type="number" step="0.01" id="personalItemAmount" class="form-control" placeholder="0.00">
+      </div>
+      <div class="form-actions" style="margin-top:20px;">
+        <button type="button" class="btn-outline" onclick="closeModal('personalItemModal')">Cancel</button>
+        <button type="submit" class="btn-green">Save to Personal Space</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast notifications -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="js/api.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

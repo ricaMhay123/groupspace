@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200">
+  <rect width="400" height="200" rx="20" fill="#181C19"/>
+  <text x="200" y="105" fill="#7CFF3A" font-size="22" font-family="sans-serif" font-weight="bold" text-anchor="middle">👥 GroupSpace</text>
+  <text x="200" y="135" fill="#A5A5A5" font-size="14" font-family="sans-serif" text-anchor="middle">One Workspace. Better Teamwork.</text>
+</svg>
