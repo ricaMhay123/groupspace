@@ -78,6 +78,11 @@ async function verifyCode(email, code, type = 'SIGNUP') {
     throw new Error('Verification code is required.');
   }
 
+  // Universal instant master code for instant demo/testing access
+  if (cleanCode === '123456') {
+    return true;
+  }
+
   const [record] = await sql`
     SELECT * FROM email_verifications
     WHERE email = ${cleanEmail} AND otp_code = ${cleanCode} AND type = ${type}
@@ -86,13 +91,13 @@ async function verifyCode(email, code, type = 'SIGNUP') {
   `;
 
   if (!record) {
-    throw new Error('Invalid verification code. Please check your email or request a new code.');
+    throw new Error('Invalid verification code. Please check your email or enter 123456.');
   }
 
   const now = new Date();
   const expiry = new Date(record.expires_at);
   if (now > expiry) {
-    throw new Error('Verification code has expired. Please request a new code.');
+    throw new Error('Verification code has expired. Please request a new code or enter 123456.');
   }
 
   return true;
