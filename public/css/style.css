@@ -2329,5 +2329,74 @@ p {
   z-index: 99;
 }
 
+/* =========================================================
+   MOBILE SPACING & COMPONENT ALIGNMENT FIXES
+   ========================================================= */
+
+@media (max-width: 768px) {
+  /* 1. Prevent Header & Hero Headline Overlap */
+  .hero, .hero-section, .landing-hero {
+    padding-top: 24px !important;
+    padding-bottom: 24px !important;
+    margin-top: 0 !important;
+  }
+
+  .hero h1, .hero-section h1 {
+    font-size: clamp(1.75rem, 6vw, 2.25rem) !important;
+    line-height: 1.2 !important;
+    margin-top: 8px !important;
+  }
+
+  /* 2. Fix Auth / Login Card Height & Spacing */
+  .auth-card, .login-container, .auth-box, .login-card {
+    min-height: auto !important;
+    height: auto !important;
+    padding: 24px 20px !important;
+    margin: 24px auto !important;
+    max-width: 90vw !important;
+  }
+
+  /* 3. Fix "Remember Me" Checkbox & Forgot Password Row */
+  .form-options, .remember-forgot, .checkbox-group, .form-row-options {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin: 14px 0 !important;
+    width: 100% !important;
+  }
+
+  .form-options label, .remember-me-label, .checkbox-container {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    white-space: nowrap !important; /* Keeps "Remember Me" on a single line */
+    font-size: 0.85rem !important;
+    margin: 0 !important;
+  }
+
+  .form-options a, .forgot-password-link {
+    white-space: nowrap !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* 4. Fix Bottom CTA Card Height & Blank Gaps */
+  .cta-section, .cta-box, .ready-section, .cta-card {
+    min-height: auto !important;
+    height: auto !important;
+    padding: 32px 20px !important;
+    margin: 20px auto !important;
+    max-width: 90vw !important;
+  }
+
+  /* 5. Dashboard Preview Widget Spacing */
+  .dashboard-preview, .dashboard-widget {
+    margin-top: 16px !important;
+    width: 100% !important;
+  }
+}
+
+
 
 
