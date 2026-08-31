@@ -183,7 +183,7 @@ function switchTab(tabName) {
 
   // Update sidebar menu active state
   const menuItems = document.querySelectorAll('#sidebarMenu li');
-  const tabNames = ['overview', 'tasks', 'notebook', 'expenses', 'discussions', 'personal'];
+  const tabNames = ['overview', 'tasks', 'calendar', 'notebook', 'expenses', 'discussions', 'personal'];
   menuItems.forEach((li, idx) => {
     if (tabNames[idx] === tabName) {
       li.classList.add('active');
@@ -204,6 +204,7 @@ function switchTab(tabName) {
   const titleMap = {
     overview: 'Workspace Overview',
     tasks: 'Kanban Task Board',
+    calendar: 'Team Calendar',
     notebook: 'Collaborative Notebook',
     expenses: 'Expense Ledger & Net Split',
     discussions: 'Topics & Discussions',
@@ -213,6 +214,7 @@ function switchTab(tabName) {
   const subtitleMap = {
     overview: `Overview for ${currentGroupDetails ? currentGroupDetails.name : 'Workspace'}`,
     tasks: 'Track progress with dual-approval quality control.',
+    calendar: 'View events, deadlines, and task due dates.',
     notebook: 'Shared project documentation and specs.',
     expenses: 'Smart ledger with automatic debt simplification.',
     discussions: 'Brainstorm, discuss ideas, and follow activity.',
@@ -222,6 +224,7 @@ function switchTab(tabName) {
   const actionMap = {
     overview: '+ Quick Task',
     tasks: '+ Create Task',
+    calendar: '+ Add Event',
     notebook: '+ New Page',
     expenses: '+ Log Expense',
     discussions: '+ New Topic',
@@ -237,6 +240,7 @@ function switchTab(tabName) {
 
 function handlePrimaryAction() {
   if (currentTab === 'tasks' || currentTab === 'overview') openModal('createTaskModal');
+  else if (currentTab === 'calendar') openAddEventModal();
   else if (currentTab === 'notebook') openModal('createNoteModal');
   else if (currentTab === 'expenses') openModal('createExpenseModal');
   else if (currentTab === 'discussions') openModal('createTopicModal');
@@ -248,6 +252,7 @@ function refreshCurrentView() {
 
   if (currentTab === 'overview') loadOverview();
   else if (currentTab === 'tasks') loadTasks();
+  else if (currentTab === 'calendar') { if (typeof initCalendar === 'function') initCalendar(currentGroupId); }
   else if (currentTab === 'notebook') loadNotebook();
   else if (currentTab === 'expenses') loadExpenses();
   else if (currentTab === 'discussions') loadDiscussions();

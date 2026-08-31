@@ -39,6 +39,7 @@
       <ul id="sidebarMenu">
         <li class="active" onclick="switchTab('overview')">📊 Overview</li>
         <li onclick="switchTab('tasks')">📋 Tasks (Kanban)</li>
+        <li onclick="switchTab('calendar')">📅 Calendar</li>
         <li onclick="switchTab('notebook')">📝 Notebook</li>
         <li onclick="switchTab('expenses')">💰 Expenses</li>
         <li onclick="switchTab('discussions')">💬 Discussions</li>
@@ -133,7 +134,12 @@
       </div>
     </section>
 
-    <!-- TAB 2: TASKS (KANBAN WITH DUAL-APPROVAL) -->
+    <!-- TAB 2: CALENDAR -->
+    <section id="tab-calendar" class="tab-view" style="display:none;">
+      <div id="calendarView" style="padding: 0 4px;"></div>
+    </section>
+
+    <!-- TAB 3: TASKS (KANBAN WITH DUAL-APPROVAL) -->
     <section id="tab-tasks" class="tab-view" style="display:none;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <p style="color:var(--gray);">
@@ -514,7 +520,9 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <script src="js/api.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 <script src="js/dashboard.js"></script>
+<script src="js/calendar.js"></script>
 
 <!-- Bootstrap 5 JS Bundle (with Popper) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>

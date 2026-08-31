@@ -170,6 +170,20 @@ async function initDb() {
       );
     `;
 
+    await sql`
+      CREATE TABLE IF NOT EXISTS calendar_events (
+        id SERIAL PRIMARY KEY,
+        group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        description TEXT,
+        event_date TIMESTAMPTZ NOT NULL,
+        event_type VARCHAR(30) DEFAULT 'EVENT',
+        color VARCHAR(20) DEFAULT '#4f46e5',
+        created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `;
+
     // Execute table column migrations to ensure all required columns exist in pre-existing tables
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name TEXT`; } catch (e) {}
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT`; } catch (e) {}
