@@ -92,9 +92,18 @@ html, body {
   color: var(--text-main) !important;
 }
 
-/* Typography */
-h1, h2, h3, h4, h5, h6, .brand-title {
-  color: var(--text-main) !important;
+/* Force visible dark slate color on all section titles */
+h1, h2, h3, h4, h5, h6, .section-title, .feature-title, .brand-title {
+  color: #0f172a !important;
+}
+
+/* Feature subtitle text */
+.section-subtitle, .feature-desc {
+  color: #475569 !important;
+}
+
+.fs-7 {
+  font-size: 0.8rem !important;
 }
 
 p, span, label, td, th, li {
