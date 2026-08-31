@@ -7,23 +7,15 @@ const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
 const smtpPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 465;
 const smtpSecure = process.env.SMTP_SECURE === 'true' || process.env.SMTP_SECURE === true || smtpPort === 465;
 
-// Configure SMTP transporter with connection pooling for maximum speed
+// Configure SMTP transporter for Gmail
 let transporter = null;
 if (emailUser && emailPass) {
   transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: smtpPort,
-    secure: smtpSecure,
+    service: 'gmail',
     auth: {
       user: emailUser,
       pass: emailPass,
     },
-    pool: true,
-    maxConnections: 5,
-    maxMessages: 100,
-    connectionTimeout: 5000,
-    greetingTimeout: 5000,
-    socketTimeout: 10000,
   });
 }
 
