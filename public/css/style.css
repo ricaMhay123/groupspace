@@ -6,28 +6,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* ===========================
-        RESET & BASE
+        GLOBAL RESET
 =========================== */
 
 *, *::before, *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-}
-
-html {
-    scroll-behavior: smooth;
-    font-size: 16px;
-}
-
-body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: var(--background);
-    color: var(--text);
-    line-height: 1.6;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
 }
 
 /* ===========================
@@ -97,6 +82,77 @@ body {
     --shadow: 0 4px 20px rgba(20, 27, 43, 0.05), 0 1px 3px rgba(20, 27, 43, 0.03);
     --shadow-md: 0 10px 30px rgba(20, 27, 43, 0.07), 0 2px 6px rgba(20, 27, 43, 0.04);
     --shadow-hover: 0 14px 36px rgba(20, 27, 43, 0.09), 0 3px 8px rgba(20, 27, 43, 0.05);
+
+    /* Fluid Typography Scale */
+    --font-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.8125rem);
+    --font-sm: clamp(0.8125rem, 0.775rem + 0.3vw, 0.875rem);
+    --font-base: clamp(0.9375rem, 0.875rem + 0.35vw, 1rem);
+    --font-lg: clamp(1.125rem, 1.05rem + 0.5vw, 1.25rem);
+    --font-xl: clamp(1.35rem, 1.2rem + 0.8vw, 1.625rem);
+    --font-2xl: clamp(1.65rem, 1.4rem + 1.2vw, 2.125rem);
+    --font-3xl: clamp(2rem, 1.6rem + 1.8vw, 2.75rem);
+
+    /* Spacing Tokens */
+    --space-2xs: 4px;
+    --space-xs: 6px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-2xl: 48px;
+}
+
+/* ===========================
+        BASE HTML & RESET
+=========================== */
+
+/* Base HTML & Reset */
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+  font-size: var(--font-base);
+  line-height: 1.5;
+  color: #1e293b;
+  background-color: #f8fafc;
+  overflow-x: hidden; /* Prevents side horizontal scrolling */
+}
+
+/* Headings scale down smoothly on mobile */
+h1 {
+  font-size: var(--font-2xl);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin-bottom: var(--space-sm);
+}
+
+h2 {
+  font-size: var(--font-xl);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-sm);
+}
+
+h3 {
+  font-size: var(--font-lg);
+  font-weight: 600;
+}
+
+p, span, li, label {
+  font-size: var(--font-base);
+}
+
+small, .meta-text, .badge {
+  font-size: var(--font-xs);
+}
+
+/* Form inputs & buttons sizing */
+input, select, textarea, button {
+  font-size: var(--font-base);
+  padding: 10px 14px;
 }
 
 /* ===========================
@@ -1619,6 +1675,7 @@ footer {
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 4;
+    line-clamp: 4;
     -webkit-box-orient: vertical;
 }
 
@@ -2075,3 +2132,31 @@ footer {
         display: none;
     }
 }
+
+/* Smooth Card & Container Padding */
+.card, .workspace-card, .kanban-column, .expense-card {
+  padding: var(--space-md);
+  border-radius: 10px;
+}
+
+/* Mobile Adjustments (Screen width under 768px) */
+@media (max-width: 768px) {
+  /* Give containers breathing room on phones */
+  .container, .main-content {
+    padding: 16px 12px !important;
+    width: 100% !important;
+  }
+
+  /* Prevent text and cards from stretching awkwardly */
+  .auth-card, .login-box, .register-box {
+    width: 100% !important;
+    max-width: 92vw !important;
+    margin: 20px auto !important;
+  }
+
+  /* Full-width responsive buttons */
+  .btn-primary, .btn-secondary, button[type="submit"] {
+    width: 100%;
+  }
+}
+
