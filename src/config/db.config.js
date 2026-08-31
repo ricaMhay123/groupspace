@@ -21,6 +21,9 @@ async function initDb() {
         password_hash TEXT NOT NULL,
         avatar_initials VARCHAR(10),
         status VARCHAR(20) DEFAULT 'offline',
+        failed_login_attempts INTEGER DEFAULT 0,
+        lockout_until TIMESTAMPTZ,
+        last_failed_login TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `;
@@ -173,6 +176,9 @@ async function initDb() {
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT`; } catch (e) {}
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_initials VARCHAR(10)`; } catch (e) {}
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'offline'`; } catch (e) {}
+    try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER DEFAULT 0`; } catch (e) {}
+    try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS lockout_until TIMESTAMPTZ`; } catch (e) {}
+    try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_failed_login TIMESTAMPTZ`; } catch (e) {}
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW()`; } catch (e) {}
 
     // groups table migrations

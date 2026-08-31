@@ -5,29 +5,37 @@
 let pendingRegistrationData = null;
 let resendTimerInterval = null;
 let forgotResendTimerInterval = null;
+let lockoutTimerInterval = null;
 
 function showAlert(el, message, type = 'error') {
-  if (!el) return;
-  el.style.display = 'block';
-  el.textContent = message;
+  let target = el;
+  if (!target) {
+    target = document.getElementById('loginAlert') || document.getElementById('registerAlert');
+  }
+  if (!target) return;
+
+  target.style.display = 'block';
+  target.textContent = message;
+
   if (type === 'success') {
-    el.style.background = '#dcfce7';
-    el.style.color = '#15803d';
-    el.style.border = '1px solid #bbf7d0';
+    target.style.background = '#dcfce7';
+    target.style.color = '#15803d';
+    target.style.border = '1px solid #bbf7d0';
   } else if (type === 'warning') {
-    el.style.background = '#fef3c7';
-    el.style.color = '#b45309';
-    el.style.border = '1px solid #fde68a';
+    target.style.background = '#fef3c7';
+    target.style.color = '#b45309';
+    target.style.border = '1px solid #fde68a';
   } else {
     // error
-    el.style.background = '#fee2e2';
-    el.style.color = '#ba1a1a';
-    el.style.border = '1px solid #fecaca';
+    target.style.background = '#fee2e2';
+    target.style.color = '#ba1a1a';
+    target.style.border = '1px solid #fecaca';
   }
 }
 
 function hideAlert(el) {
-  if (el) el.style.display = 'none';
+  let target = el || document.getElementById('loginAlert') || document.getElementById('registerAlert');
+  if (target) target.style.display = 'none';
 }
 
 function formatAuthError(err) {
@@ -40,6 +48,38 @@ function formatAuthError(err) {
     return '⚠️ Cannot connect to GroupSpace server. Please ensure "npm start" is running in your terminal at http://localhost:3001';
   }
   return msg;
+}
+
+function startLockoutCountdown(alertBox, submitBtn, totalSeconds) {
+  if (lockoutTimerInterval) clearInterval(lockoutTimerInterval);
+  let remaining = Math.max(1, totalSeconds || 600);
+
+  function updateDisplay() {
+    if (remaining <= 0) {
+      clearInterval(lockoutTimerInterval);
+      lockoutTimerInterval = null;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Login';
+      }
+      showAlert(alertBox, 'Lockout period has ended. You may now attempt to log in.', 'warning');
+      return;
+    }
+
+    const mins = Math.floor(remaining / 60);
+    const secs = remaining % 60;
+    const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = `Locked (${formatted})`;
+    }
+    showAlert(alertBox, `⛔ Incorrect password. You have reached 3 failed attempts. Your account is locked for 10 minutes. Please wait ${formatted} before trying again.`, 'error');
+    remaining--;
+  }
+
+  updateDisplay();
+  lockoutTimerInterval = setInterval(updateDisplay, 1000);
 }
 
 function openForgotPasswordModal() {
@@ -87,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const registerForm = document.getElementById('registerForm');
   const verifyCodeForm = document.getElementById('verifyCodeForm');
   const resendBtn = document.getElementById('resendCodeBtn');
-  const forgotStep1Form = document.getElementById('forgotStep1Form');
+  const forgotStep1Form = document.getElementById('forgotStep1Form') || document.getElementById('resetPasswordForm');
   const forgotStep2Form = document.getElementById('forgotStep2Form');
   const forgotResendBtn = document.getElementById('forgotResendBtn');
 
@@ -100,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
       const alertBox = document.getElementById('loginAlert');
-      const submitBtn = document.getElementById('loginBtn');
+      const submitBtn = document.getElementById('loginBtn') || loginForm.querySelector('button[type="submit"]');
 
       submitBtn.disabled = true;
       submitBtn.textContent = 'Logging in...';
@@ -114,7 +154,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Login failed.');
+        if (!res.ok) {
+          if (data.isLocked || res.status === 429) {
+            const seconds = data.remainingSeconds || 600;
+            startLockoutCountdown(alertBox, submitBtn, seconds);
+            return;
+          }
+          const err = new Error(data.message || 'Login failed.');
+          err.attemptsLeft = data.attemptsLeft;
+          throw err;
+        }
+
+        if (lockoutTimerInterval) {
+          clearInterval(lockoutTimerInterval);
+          lockoutTimerInterval = null;
+        }
 
         localStorage.setItem('groupspace_token', data.data.token);
         localStorage.setItem('groupspace_user', JSON.stringify(data.data.user));
@@ -125,9 +179,12 @@ document.addEventListener('DOMContentLoaded', () => {
           window.location.href = 'workspaces.html';
         }, 500);
       } catch (err) {
-        showAlert(alertBox, formatAuthError(err), 'error');
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Login';
+        const alertType = (typeof err.attemptsLeft === 'number') ? 'warning' : 'error';
+        showAlert(alertBox, formatAuthError(err), alertType);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Login';
+        }
       }
     });
   }

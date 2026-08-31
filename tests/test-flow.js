@@ -122,6 +122,66 @@ async function runTests() {
     assert(bobLogin.token, 'Bob must be able to log in with new password');
     console.log('   ✅ Password reset OTP flow verified & new password login successful.');
 
+    // 2b. Failed Login Rate Limiting & 10-Minute Lockout Test
+    console.log('\n🔒 Testing 3-Attempt Failed Password Protection & 10-Minute Lockout...');
+
+    // Attempt 1: Wrong password -> 2 attempts remaining
+    let attempt1Failed = false;
+    try {
+      await authService.loginUser({ email: bobEmail, password: 'wrongPassword1' });
+    } catch (e) {
+      attempt1Failed = true;
+      assert.strictEqual(e.attemptsLeft, 2, 'First failed attempt should show 2 attempts remaining');
+      assert.strictEqual(e.status, 401);
+    }
+    assert(attempt1Failed, 'Attempt 1 should fail');
+    console.log('   ✅ Attempt 1 failed correctly: 2 attempts remaining.');
+
+    // Attempt 2: Wrong password -> 1 attempt remaining
+    let attempt2Failed = false;
+    try {
+      await authService.loginUser({ email: bobEmail, password: 'wrongPassword2' });
+    } catch (e) {
+      attempt2Failed = true;
+      assert.strictEqual(e.attemptsLeft, 1, 'Second failed attempt should show 1 attempt remaining');
+      assert.strictEqual(e.status, 401);
+    }
+    assert(attempt2Failed, 'Attempt 2 should fail');
+    console.log('   ✅ Attempt 2 failed correctly: 1 attempt remaining.');
+
+    // Attempt 3: Wrong password -> Lockout triggered (10 minutes, status 429)
+    let attempt3Locked = false;
+    try {
+      await authService.loginUser({ email: bobEmail, password: 'wrongPassword3' });
+    } catch (e) {
+      attempt3Locked = true;
+      assert(e.isLocked, 'Third failed attempt should trigger lockout flag');
+      assert.strictEqual(e.status, 429, 'Lockout should return HTTP 429 status');
+      assert(e.message.includes('10 minutes'), 'Lockout message must specify 10 minutes');
+    }
+    assert(attempt3Locked, 'Attempt 3 should trigger 10-minute lockout');
+    console.log('   ✅ Attempt 3 locked out user for 10 minutes with HTTP 429.');
+
+    // Attempt 4: Even with correct password, login is blocked while locked out
+    let lockedAttemptBlocked = false;
+    try {
+      await authService.loginUser({ email: bobEmail, password: 'newpassword456' });
+    } catch (e) {
+      lockedAttemptBlocked = true;
+      assert(e.isLocked, 'Account should remain locked');
+      assert.strictEqual(e.status, 429);
+    }
+    assert(lockedAttemptBlocked, 'Account must remain locked during active 10-minute lockout');
+    console.log('   ✅ Active lockout successfully prevents login even with correct password.');
+
+    // Reset lockout in DB for remaining tests
+    await sql`UPDATE users SET failed_login_attempts = 0, lockout_until = NULL WHERE email = ${bobEmail}`;
+
+    // Verify Bob can log in again after reset
+    const bobUnlockedLogin = await authService.loginUser({ email: bobEmail, password: 'newpassword456' });
+    assert(bobUnlockedLogin.token, 'Bob can log in after lockout reset');
+    console.log('   ✅ Lockout cleared and login successful.');
+
     // 3. Workspace Creation & Join Code Test
     console.log('\n3️⃣ Testing Workspace Creation & Multi-Group Switcher...');
     const workspace = await groupService.createWorkspace({

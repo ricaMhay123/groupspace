@@ -116,9 +116,13 @@ async function login(req, res) {
       data: result
     });
   } catch (error) {
-    return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+    const statusCode = error.status || HTTP_STATUS.UNAUTHORIZED;
+    return res.status(statusCode).json({
       success: false,
-      message: error.message
+      message: error.message,
+      isLocked: !!error.isLocked,
+      remainingSeconds: error.remainingSeconds,
+      attemptsLeft: error.attemptsLeft
     });
   }
 }

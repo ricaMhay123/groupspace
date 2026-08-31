@@ -169,12 +169,72 @@ async function loginUser({ email, password }) {
     throw new Error('Invalid email or password.');
   }
 
-  const isMatch = await bcrypt.compare(password, user.password_hash);
-  if (!isMatch) {
-    throw new Error('Invalid email or password.');
+  // 1. Check if user account is currently locked out
+  if (user.lockout_until) {
+    const lockoutExpiry = new Date(user.lockout_until);
+    const now = new Date();
+    if (lockoutExpiry > now) {
+      const remainingMs = lockoutExpiry.getTime() - now.getTime();
+      const remainingSecs = Math.max(1, Math.ceil(remainingMs / 1000));
+      const remainingMins = Math.ceil(remainingSecs / 60);
+      const timeDisplay = remainingMins > 1 ? `${remainingMins} minutes` : `${remainingSecs} seconds`;
+
+      const err = new Error(`Too many failed login attempts. Your account is temporarily locked for 10 minutes. Please try again in ${timeDisplay}.`);
+      err.status = 429;
+      err.isLocked = true;
+      err.remainingSeconds = remainingSecs;
+      throw err;
+    } else {
+      // Lockout window has elapsed, reset attempts
+      await sql`UPDATE users SET failed_login_attempts = 0, lockout_until = NULL WHERE id = ${user.id}`;
+      user.failed_login_attempts = 0;
+      user.lockout_until = null;
+    }
   }
 
-  await sql`UPDATE users SET status = 'online' WHERE id = ${user.id}`;
+  // 2. Validate password against hashed password
+  const isMatch = await bcrypt.compare(password, user.password_hash);
+  if (!isMatch) {
+    const currentAttempts = (user.failed_login_attempts || 0) + 1;
+
+    if (currentAttempts >= 3) {
+      const lockoutUntil = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      await sql`
+        UPDATE users
+        SET failed_login_attempts = ${currentAttempts},
+            lockout_until = ${lockoutUntil.toISOString()},
+            last_failed_login = NOW()
+        WHERE id = ${user.id}
+      `;
+      const err = new Error('Incorrect password. You have reached 3 failed attempts. Your account has been locked for 10 minutes. Please wait 10 minutes before trying again.');
+      err.status = 429;
+      err.isLocked = true;
+      err.remainingSeconds = 600;
+      throw err;
+    } else {
+      const attemptsLeft = 3 - currentAttempts;
+      await sql`
+        UPDATE users
+        SET failed_login_attempts = ${currentAttempts},
+            last_failed_login = NOW()
+        WHERE id = ${user.id}
+      `;
+      const err = new Error(`Incorrect password. You have ${attemptsLeft} attempt${attemptsLeft === 1 ? '' : 's'} remaining before a 10-minute lockout.`);
+      err.status = 401;
+      err.attemptsLeft = attemptsLeft;
+      throw err;
+    }
+  }
+
+  // 3. On successful login: Reset failed attempts & clear lockout
+  await sql`
+    UPDATE users 
+    SET failed_login_attempts = 0, 
+        lockout_until = NULL, 
+        last_failed_login = NULL, 
+        status = 'online' 
+    WHERE id = ${user.id}
+  `;
 
   const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 
