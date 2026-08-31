@@ -344,7 +344,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (resendBtn) {
     resendBtn.addEventListener('click', async (e) => {
       e.preventDefault();
-      if (!pendingRegistrationData) return;
+      const targetEmailEl = document.getElementById('verifyTargetEmail');
+      const email = (pendingRegistrationData && pendingRegistrationData.email) || (targetEmailEl ? targetEmailEl.textContent.trim() : '');
+      if (!email) {
+        alert('Please enter your email and try registering again.');
+        return;
+      }
 
       const verifyAlert = document.getElementById('verifyAlert');
       resendBtn.style.pointerEvents = 'none';
@@ -354,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await fetch(`${getApiBaseUrl()}/api/auth/send-verification-code`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: pendingRegistrationData.email, type: 'SIGNUP' })
+          body: JSON.stringify({ email, type: 'SIGNUP' })
         });
 
         const data = await res.json();

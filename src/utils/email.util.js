@@ -1,8 +1,8 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-const emailUser = process.env.SMTP_USER || process.env.EMAIL_USER;
-const emailPass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+const emailUser = process.env.SMTP_USER || process.env.EMAIL_USER || 'ricamhaysaturinas2@gmail.com';
+const emailPass = process.env.SMTP_PASS || process.env.EMAIL_PASS || 'cgwuwgnvnikmnqkn';
 const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
 const smtpPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 465;
 const smtpSecure = process.env.SMTP_SECURE === 'true' || process.env.SMTP_SECURE === true || smtpPort === 465;
