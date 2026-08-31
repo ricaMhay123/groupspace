@@ -55,8 +55,10 @@ async function requestVerificationCode(email, type = 'SIGNUP') {
     VALUES (${cleanEmail}, ${code}, ${type}, ${expiresAt})
   `;
 
-  // Send verification email via Nodemailer / Dev Simulator
-  await sendOtpEmail({ to: cleanEmail, otpCode: code, type });
+  // Send verification email via Nodemailer asynchronously for instant UI responsiveness
+  sendOtpEmail({ to: cleanEmail, otpCode: code, type }).catch(err => {
+    console.error(`⚠️ [Email Error] Could not deliver OTP email to ${cleanEmail}: ${err.message}`);
+  });
 
   return {
     success: true,
