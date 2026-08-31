@@ -2224,6 +2224,110 @@ footer {
   }
 }
 
+/* =========================================================
+   NAVBAR & HERO SPACING / VISIBILITY FIX
+   ========================================================= */
+
+/* Ensure the full page cannot exceed the viewport width */
+html, body {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+
+/* 1. Header & Navbar Alignment */
+header, .navbar, nav {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100% !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  padding: 12px 24px !important;
+  box-sizing: border-box !important;
+  background-color: #ffffff !important;
+}
+
+/* Nav links container */
+.nav-links, .nav-menu, header nav {
+  display: flex !important;
+  align-items: center !important;
+  gap: 20px !important;
+}
+
+/* Auth Buttons Container (Login + Get Started) */
+.nav-actions, .auth-buttons, header .btn-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important; /* Prevents buttons from collapsing or overflowing */
+}
+
+.btn-get-started, .nav-actions .btn-primary, header .btn-primary {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  padding: 8px 18px !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  text-decoration: none !important;
+}
+
+/* 2. Hero Section Grid & Spacing */
+.hero, .hero-section, .landing-hero {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  padding: 32px 24px !important; /* Reduces large dead spaces */
+  gap: 32px !important;
+  box-sizing: border-box !important;
+}
+
+.hero-content, .hero-text {
+  flex: 1 1 50% !important;
+  max-width: 580px !important;
+}
+
+.hero h1 {
+  font-size: clamp(2rem, 3.5vw, 2.75rem) !important;
+  line-height: 1.15 !important;
+  margin: 12px 0 16px 0 !important;
+  color: #0f172a !important;
+}
+
+.dashboard-preview, .dashboard-widget {
+  flex: 1 1 45% !important;
+  max-width: 500px !important;
+  margin: 0 !important;
+}
+
+/* 3. Mobile & Tablet Fallback */
+@media (max-width: 900px) {
+  .nav-links, .nav-menu {
+    display: none !important; /* Hides middle text links on smaller screens */
+  }
+
+  .hero, .hero-section {
+    flex-direction: column !important;
+    padding: 24px 16px !important;
+    gap: 24px !important;
+  }
+
+  .hero-content, .dashboard-preview {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
+
+
 
 
 
