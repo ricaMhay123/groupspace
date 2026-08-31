@@ -77,49 +77,78 @@
 
       <!-- Right Dashboard Card Preview -->
       <div class="col-lg-6">
-        <div class="card border border-light-subtle shadow-sm rounded-4 overflow-hidden">
-          <div class="dashboard-preview" style="border:none; box-shadow:none; margin:0; width:100%;">
-            <div class="dashboard-top">
-              <div class="dashboard-logo">👥 GroupSpace</div>
-              <input type="text" placeholder="Search..." disabled>
+        <div class="card border border-light-subtle shadow-sm rounded-4 overflow-hidden bg-white text-dark p-3">
+          <!-- Top Bar: Workspace Brand & Search -->
+          <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
+            <div class="d-flex align-items-center gap-2 fw-bold text-dark">
+              <span class="badge bg-primary-subtle text-primary rounded-2 p-2">GS</span>
+              <span>GroupSpace</span>
             </div>
-            <div class="dashboard-body">
-              <!-- Preview Sidebar -->
-              <div class="sidebar">
-                <p class="active">🏠 Dashboard</p>
-                <p>💬 Discussions</p>
-                <p>✅ Tasks</p>
-                <p>📁 Files</p>
-                <p>📅 Calendar</p>
-                <p>👥 Members</p>
-                <p>💰 Expenses</p>
-              </div>
+            <div class="w-50">
+              <input type="text" class="form-control form-control-sm bg-light border-0" placeholder="Search...">
+            </div>
+          </div>
 
-              <!-- Preview Content -->
-              <div class="dashboard-content">
-                <div class="mini-cards">
-                  <div class="mini-card">
-                    <h4>Projects</h4>
-                    <h2>12</h2>
-                  </div>
-                  <div class="mini-card">
-                    <h4>Tasks</h4>
-                    <h2>28</h2>
-                  </div>
-                  <div class="mini-card">
-                    <h4>Members</h4>
-                    <h2>8</h2>
+          <div class="row g-3">
+            <!-- Left Navigation / Menu -->
+            <div class="col-4 border-end pe-2">
+              <div class="nav flex-column gap-1">
+                <a class="nav-link active bg-primary text-white rounded-2 py-1 px-2 fs-7 fw-medium" href="#">Dashboard</a>
+                <a class="nav-link text-secondary rounded-2 py-1 px-2 fs-7" href="#">Discussions</a>
+                <a class="nav-link text-secondary rounded-2 py-1 px-2 fs-7" href="#">Tasks</a>
+                <a class="nav-link text-secondary rounded-2 py-1 px-2 fs-7" href="#">Files</a>
+                <a class="nav-link text-secondary rounded-2 py-1 px-2 fs-7" href="#">Calendar</a>
+                <a class="nav-link text-secondary rounded-2 py-1 px-2 fs-7" href="#">Members</a>
+                <a class="nav-link text-secondary rounded-2 py-1 px-2 fs-7" href="#">Expenses</a>
+              </div>
+            </div>
+
+            <!-- Right Side: Metrics & Activity Feed -->
+            <div class="col-8">
+              <!-- Quick Metric Counters -->
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <div class="bg-light p-2 rounded-3 text-center border">
+                    <small class="text-muted d-block" style="font-size: 0.75rem;">Projects</small>
+                    <span class="fw-bold fs-5 text-dark">12</span>
                   </div>
                 </div>
+                <div class="col-6">
+                  <div class="bg-light p-2 rounded-3 text-center border">
+                    <small class="text-muted d-block" style="font-size: 0.75rem;">Tasks</small>
+                    <span class="fw-bold fs-5 text-dark">28</span>
+                  </div>
+                </div>
+              </div>
 
-                <div class="recent-box">
-                  <h3>General Discussion</h3>
-                  <ul>
-                    <li>🟢 Kevin: Homepage is finished.</li>
-                    <li>🟢 Maria: UI design uploaded.</li>
-                    <li>🟢 John: Meeting at 2:00 PM.</li>
-                    <li>🟢 Karen: Database updated.</li>
-                  </ul>
+              <!-- Clean Discussion Feed -->
+              <div class="bg-light p-2.5 rounded-3 border">
+                <div class="fw-semibold text-dark mb-2" style="font-size: 0.8rem;">General Discussion</div>
+                <div class="d-flex flex-column gap-2" style="font-size: 0.75rem;">
+                  <div class="d-flex align-items-start gap-2">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-circle p-1 mt-1"></span>
+                    <div>
+                      <strong class="text-dark">Kevin:</strong> <span class="text-secondary">Homepage is finished.</span>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-start gap-2">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-circle p-1 mt-1"></span>
+                    <div>
+                      <strong class="text-dark">Maria:</strong> <span class="text-secondary">UI design uploaded.</span>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-start gap-2">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-circle p-1 mt-1"></span>
+                    <div>
+                      <strong class="text-dark">John:</strong> <span class="text-secondary">Meeting at 2:00 PM.</span>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-start gap-2">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-circle p-1 mt-1"></span>
+                    <div>
+                      <strong class="text-dark">Karen:</strong> <span class="text-secondary">Database updated.</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
