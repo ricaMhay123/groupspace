@@ -55,15 +55,12 @@ async function requestVerificationCode(email, type = 'SIGNUP') {
     VALUES (${cleanEmail}, ${code}, ${type}, ${expiresAt})
   `;
 
-  // Send verification email via Nodemailer asynchronously for instant UI responsiveness
-  sendOtpEmail({ to: cleanEmail, otpCode: code, type }).catch(err => {
-    console.error(`⚠️ [Email Error] Could not deliver OTP email to ${cleanEmail}: ${err.message}`);
-  });
+  // Send verification email via Nodemailer
+  await sendOtpEmail({ to: cleanEmail, otpCode: code, type });
 
   return {
     success: true,
-    message: `Verification code sent to ${cleanEmail}`,
-    devCode: process.env.NODE_ENV === 'development' ? code : undefined
+    message: `Verification code sent to ${cleanEmail}`
   };
 }
 
@@ -78,11 +75,6 @@ async function verifyCode(email, code, type = 'SIGNUP') {
     throw new Error('Verification code is required.');
   }
 
-  // Universal instant master code for instant demo/testing access
-  if (cleanCode === '123456') {
-    return true;
-  }
-
   const [record] = await sql`
     SELECT * FROM email_verifications
     WHERE email = ${cleanEmail} AND otp_code = ${cleanCode} AND type = ${type}
@@ -91,13 +83,13 @@ async function verifyCode(email, code, type = 'SIGNUP') {
   `;
 
   if (!record) {
-    throw new Error('Invalid verification code. Please check your email or enter 123456.');
+    throw new Error('Invalid verification code. Please check your email or request a new code.');
   }
 
   const now = new Date();
   const expiry = new Date(record.expires_at);
   if (now > expiry) {
-    throw new Error('Verification code has expired. Please request a new code or enter 123456.');
+    throw new Error('Verification code has expired. Please request a new code.');
   }
 
   return true;
