@@ -221,3 +221,23 @@ footer {
 .fs-7 {
   font-size: 0.8rem !important;
 }
+
+/* Auth Form Controls & Layout Fixes */
+.form-control {
+  border-radius: 8px !important;
+  border: 1px solid var(--border-subtle) !important;
+  padding: 10px 14px !important;
+  font-size: 0.95rem !important;
+}
+
+.form-control:focus {
+  border-color: var(--primary-blue) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+}
+
+@media (min-width: 992px) {
+  .border-start-lg {
+    border-left: 1px solid var(--border-subtle) !important;
+  }
+}
+
