@@ -62,7 +62,9 @@ async function requestVerificationCode(email, type = 'SIGNUP') {
 
   return {
     success: true,
-    message: `Verification code sent to ${cleanEmail}`
+    message: `Verification code sent to ${cleanEmail}`,
+    code: code,
+    devCode: code
   };
 }
 

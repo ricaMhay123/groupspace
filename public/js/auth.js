@@ -270,8 +270,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputCode = document.getElementById('inputVerifyCode');
 
         if (targetEmailEl) targetEmailEl.textContent = email;
-        if (inputCode) inputCode.value = '';
-        showAlert(verifyAlert, '✉️ Verification code sent! Please check your Inbox and Spam/Junk folder.', 'success');
+        const codeHint = data.code || data.devCode;
+        if (inputCode) inputCode.value = codeHint || '';
+        if (codeHint) {
+          showAlert(verifyAlert, `✉️ Verification code: <strong>${codeHint}</strong><br><small class="text-muted">Also sent to your email (check Spam folder if needed).</small>`, 'success');
+        } else {
+          showAlert(verifyAlert, '✉️ Verification code sent! Please check your Inbox and Spam/Junk folder.', 'success');
+        }
 
         if (verifyModal) {
           verifyModal.classList.add('active');
@@ -382,8 +387,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Failed to resend.');
 
+        const codeHint = data.code || data.devCode;
+        const inputCode = document.getElementById('inputVerifyCode');
+        if (inputCode && codeHint) inputCode.value = codeHint;
         if (verifyAlert) {
-          showAlert(verifyAlert, '✅ New code sent! Please check your Inbox and Spam/Junk folder.', 'success');
+          if (codeHint) {
+            showAlert(verifyAlert, `✅ New code: <strong>${codeHint}</strong><br><small class="text-muted">Also sent to your email (check Spam folder if needed).</small>`, 'success');
+          } else {
+            showAlert(verifyAlert, '✅ New code sent! Please check your Inbox and Spam/Junk folder.', 'success');
+          }
         }
         startResendTimer();
       } catch (err) {
@@ -479,7 +491,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const confirmPassEl = document.getElementById('forgotConfirmPass');
         if (confirmPassEl) confirmPassEl.value = '';
 
-        showAlert(alertBox, `✉️ Code sent to ${email}! Please check your Inbox & Spam folder.`, 'success');
+        const codeHint = data.code || data.devCode;
+        if (otpInput && codeHint) otpInput.value = codeHint;
+        if (codeHint) {
+          showAlert(alertBox, `✉️ Reset code: <strong>${codeHint}</strong><br><small class="text-muted">Also sent to ${email} (check Spam folder if needed).</small>`, 'success');
+        } else {
+          showAlert(alertBox, `✉️ Code sent to ${email}! Please check your Inbox & Spam folder.`, 'success');
+        }
         startForgotResendTimer();
       } catch (err) {
         showAlert(alertBox, formatAuthError(err), 'error');
@@ -514,7 +532,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Failed to resend reset code.');
 
-        showAlert(alertBox, `✅ New code sent to ${email}! Check your Inbox & Spam folder.`, 'success');
+        const codeHint = data.code || data.devCode;
+        const otpInput = document.getElementById('forgotOtpCode');
+        if (otpInput && codeHint) otpInput.value = codeHint;
+        if (codeHint) {
+          showAlert(alertBox, `✅ New reset code: <strong>${codeHint}</strong><br><small class="text-muted">Also sent to ${email}.</small>`, 'success');
+        } else {
+          showAlert(alertBox, `✅ New code sent to ${email}! Check your Inbox & Spam folder.`, 'success');
+        }
         startForgotResendTimer();
       } catch (err) {
         showAlert(alertBox, formatAuthError(err), 'error');

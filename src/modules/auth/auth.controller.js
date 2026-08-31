@@ -12,7 +12,8 @@ async function sendVerificationCode(req, res) {
     return res.status(HTTP_STATUS.OK).json({
       success: true,
       message: result.message,
-      devCode: result.devCode
+      code: result.code,
+      devCode: result.code
     });
   } catch (error) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -69,7 +70,8 @@ async function forgotPassword(req, res) {
     return res.status(HTTP_STATUS.OK).json({
       success: true,
       message: `Password reset code sent to ${email}`,
-      devCode: result.devCode
+      code: result.code,
+      devCode: result.code
     });
   } catch (error) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
