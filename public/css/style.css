@@ -2327,6 +2327,18 @@ header, .navbar, nav {
   }
 }
 
+/* Prevent awkward word splitting across cards */
+.card, .card span, .card p, .card div {
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  hyphens: auto;
+}
+
+.fs-7 {
+  font-size: 0.8rem !important;
+}
+
+
 
 
 
