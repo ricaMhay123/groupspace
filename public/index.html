@@ -25,188 +25,109 @@
 <body>
 
 
-<!-- ================= HEADER ================= -->
+<!-- 1. Bootstrap Responsive Navigation Bar -->
+<nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm sticky-top">
+  <div class="container">
+    <a class="navbar-brand fw-bold text-dark d-flex align-items-center gap-2" href="index.html">
+      <span>👥</span> GroupSpace
+    </a>
+    
+    <!-- Mobile Hamburger Toggle Button -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#groupspaceNav" aria-controls="groupspaceNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-<header>
-
-<div class="logo">
-
-<a href="index.html" style="text-decoration:none;"><h1>👥 GroupSpace</h1></a>
-
-</div>
-
-<nav>
-
-<a href="#home">Home</a>
-
-<a href="#features">Features</a>
-
-<a href="#works">How It Works</a>
-
-<a href="about.html">About</a>
-
-<a href="contact.html">Contact</a>
-
+    <!-- Collapsible Nav Items & Buttons -->
+    <div class="collapse navbar-collapse" id="groupspaceNav">
+      <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-3">
+        <li class="nav-item"><a class="nav-link text-secondary fw-medium" href="#home">Home</a></li>
+        <li class="nav-item"><a class="nav-link text-secondary fw-medium" href="#features">Features</a></li>
+        <li class="nav-item"><a class="nav-link text-secondary fw-medium" href="#works">How It Works</a></li>
+        <li class="nav-item"><a class="nav-link text-secondary fw-medium" href="about.html">About</a></li>
+        <li class="nav-item"><a class="nav-link text-secondary fw-medium" href="contact.html">Contact</a></li>
+      </ul>
+      <div class="d-flex align-items-center gap-2 pt-2 pt-lg-0" id="authNavButtons">
+        <a href="login.html" class="btn btn-outline-secondary px-3 py-2">Login</a>
+        <a href="register.html" class="btn btn-primary px-3 py-2 fw-semibold">Get Started</a>
+      </div>
+    </div>
+  </div>
 </nav>
 
-<div class="nav-buttons" id="authNavButtons">
-
-<a href="login.html" class="login-btn">
-Login
-</a>
-
-<a href="register.html" class="register-btn">
-Get Started
-</a>
-
-</div>
-
-</header>
-
-
-<!-- ================= HERO ================= -->
-
-<section class="hero" id="home">
-
-<div class="hero-left">
-
-<span class="hero-tag">
-COLLABORATE • ORGANIZE • ACHIEVE
-</span>
-
-<h1>
-
-Manage Every Team
-
-<span>
-Inside One Workspace
-</span>
-
-</h1>
-
-<p>
-
-GroupSpace is a collaboration platform designed for
-students, organizations, and project teams.
-Manage discussions, tasks, files, schedules,
-expenses, and members inside one modern workspace.
-
-</p>
-
-<div class="hero-buttons">
-
-<a href="register.html" class="primary-btn">
-Create Workspace
-</a>
-
-<a href="#features" class="secondary-btn">
-Explore Features
-</a>
-
-</div>
-
-</div>
-
-
-<!-- ================= DASHBOARD PREVIEW ================= -->
-
-<div class="hero-right">
-
-<div class="dashboard-preview">
-
-<div class="dashboard-top">
-
-<div class="dashboard-logo">
-👥 GroupSpace
-</div>
-
-<input
-type="text"
-placeholder="Search..."
-disabled>
-
-</div>
-
-<div class="dashboard-body">
-
-
-<!-- Preview Sidebar -->
-
-<div class="sidebar">
-
-<p class="active">🏠 Dashboard</p>
-
-<p>💬 Discussions</p>
-
-<p>✅ Tasks</p>
-
-<p>📁 Files</p>
-
-<p>📅 Calendar</p>
-
-<p>👥 Members</p>
-
-<p>💰 Expenses</p>
-
-</div>
-
-
-<!-- Preview Content -->
-
-<div class="dashboard-content">
-
-<div class="mini-cards">
-
-<div class="mini-card">
-
-<h4>Projects</h4>
-<h2>12</h2>
-
-</div>
-
-<div class="mini-card">
-
-<h4>Tasks</h4>
-<h2>28</h2>
-
-</div>
-
-<div class="mini-card">
-
-<h4>Members</h4>
-<h2>8</h2>
-
-</div>
-
-</div>
-
-
-<div class="recent-box">
-
-<h3>General Discussion</h3>
-
-<ul>
-
-<li>🟢 Kevin: Homepage is finished.</li>
-
-<li>🟢 Maria: UI design uploaded.</li>
-
-<li>🟢 John: Meeting at 2:00 PM.</li>
-
-<li>🟢 Karen: Database updated.</li>
-
-</ul>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
+<!-- 2. Bootstrap Hero Grid -->
+<section class="py-5 bg-light" id="home">
+  <div class="container py-4">
+    <div class="row align-items-center g-5">
+      <!-- Left Hero Text -->
+      <div class="col-lg-6 text-center text-lg-start">
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 text-uppercase fw-bold mb-3 d-inline-block">
+          Collaborate • Organize • Achieve
+        </span>
+        <h1 class="display-5 fw-bold text-dark mb-3">
+          Manage Every Team <span class="d-block text-secondary fs-3 fw-normal">Inside One Workspace</span>
+        </h1>
+        <p class="lead text-muted mb-4">
+          GroupSpace is a collaboration platform designed for students, organizations, and project teams. Manage discussions, tasks, files, schedules, expenses, and members inside one modern workspace.
+        </p>
+        <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">
+          <a href="register.html" class="btn btn-primary btn-lg px-4 fw-semibold">Create Workspace</a>
+          <a href="#features" class="btn btn-outline-secondary btn-lg px-4">Explore Features</a>
+        </div>
+      </div>
+
+      <!-- Right Dashboard Card Preview -->
+      <div class="col-lg-6">
+        <div class="card border border-light-subtle shadow-sm rounded-4 overflow-hidden">
+          <div class="dashboard-preview" style="border:none; box-shadow:none; margin:0; width:100%;">
+            <div class="dashboard-top">
+              <div class="dashboard-logo">👥 GroupSpace</div>
+              <input type="text" placeholder="Search..." disabled>
+            </div>
+            <div class="dashboard-body">
+              <!-- Preview Sidebar -->
+              <div class="sidebar">
+                <p class="active">🏠 Dashboard</p>
+                <p>💬 Discussions</p>
+                <p>✅ Tasks</p>
+                <p>📁 Files</p>
+                <p>📅 Calendar</p>
+                <p>👥 Members</p>
+                <p>💰 Expenses</p>
+              </div>
+
+              <!-- Preview Content -->
+              <div class="dashboard-content">
+                <div class="mini-cards">
+                  <div class="mini-card">
+                    <h4>Projects</h4>
+                    <h2>12</h2>
+                  </div>
+                  <div class="mini-card">
+                    <h4>Tasks</h4>
+                    <h2>28</h2>
+                  </div>
+                  <div class="mini-card">
+                    <h4>Members</h4>
+                    <h2>8</h2>
+                  </div>
+                </div>
+
+                <div class="recent-box">
+                  <h3>General Discussion</h3>
+                  <ul>
+                    <li>🟢 Kevin: Homepage is finished.</li>
+                    <li>🟢 Maria: UI design uploaded.</li>
+                    <li>🟢 John: Meeting at 2:00 PM.</li>
+                    <li>🟢 Karen: Database updated.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
 
 
