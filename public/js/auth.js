@@ -93,37 +93,54 @@ function startLockoutCountdown(alertBox, submitBtn, totalSeconds) {
 }
 
 function openForgotPasswordModal() {
-  const modal = document.getElementById('forgotModal');
-  if (modal) {
-    modal.classList.add('active');
-    document.getElementById('forgotStep1Form').style.display = 'block';
-    document.getElementById('forgotStep2Form').style.display = 'none';
+  const modalEl = document.getElementById('resetPasswordModal') || document.getElementById('forgotModal');
+  if (modalEl) {
+    const step1 = document.getElementById('forgotStep1Form');
+    const step2 = document.getElementById('forgotStep2Form');
+    if (step1) step1.style.display = 'block';
+    if (step2) step2.style.display = 'none';
     const alertBox = document.getElementById('forgotAlert');
     hideAlert(alertBox);
     const emailInput = document.getElementById('forgotEmail');
-    if (emailInput) {
-      const loginEmail = document.getElementById('email');
-      if (loginEmail && loginEmail.value) {
-        emailInput.value = loginEmail.value.trim();
-      }
-      setTimeout(() => emailInput.focus(), 100);
+    const loginEmail = document.getElementById('email');
+    if (emailInput && loginEmail && loginEmail.value) {
+      emailInput.value = loginEmail.value.trim();
     }
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+      const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      bsModal.show();
+    } else {
+      modalEl.classList.add('active');
+    }
+    if (emailInput) setTimeout(() => emailInput.focus(), 150);
   }
 }
 
 function closeForgotPasswordModal() {
-  const modal = document.getElementById('forgotModal');
-  if (modal) modal.classList.remove('active');
+  const modalEl = document.getElementById('resetPasswordModal') || document.getElementById('forgotModal');
+  if (modalEl) {
+    modalEl.classList.remove('active');
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+      const bsModal = bootstrap.Modal.getInstance(modalEl);
+      if (bsModal) bsModal.hide();
+    }
+  }
   if (forgotResendTimerInterval) clearInterval(forgotResendTimerInterval);
 }
 
 function backToForgotStep1() {
-  document.getElementById('forgotStep1Form').style.display = 'block';
-  document.getElementById('forgotStep2Form').style.display = 'none';
+  const step1 = document.getElementById('forgotStep1Form');
+  const step2 = document.getElementById('forgotStep2Form');
   const alertBox = document.getElementById('forgotAlert');
-  hideAlert(alertBox);
+  if (step1) step1.style.display = 'block';
+  if (step2) step2.style.display = 'none';
+  if (alertBox) hideAlert(alertBox);
   if (forgotResendTimerInterval) clearInterval(forgotResendTimerInterval);
 }
+
+window.openForgotPasswordModal = openForgotPasswordModal;
+window.closeForgotPasswordModal = closeForgotPasswordModal;
+window.backToForgotStep1 = backToForgotStep1;
 
 document.addEventListener('DOMContentLoaded', () => {
   if (window.location.protocol === 'file:') {
@@ -295,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const inputCode = document.getElementById('inputVerifyCode');
       const verifyAlert = document.getElementById('verifyAlert');
       const confirmBtn = document.getElementById('confirmVerifyBtn') || verifyCodeForm.querySelector('button[type="submit"]');
-      const otpCode = inputCode ? inputCode.value.trim() : '';
+      const otpCode = (inputCode ? inputCode.value : '').replace(/\s+/g, '').trim();
 
       hideAlert(verifyAlert);
       if (confirmBtn) {
@@ -514,8 +531,8 @@ document.addEventListener('DOMContentLoaded', () => {
     forgotStep2Form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const targetEmailEl = document.getElementById('forgotTargetEmail');
-      const email = targetEmailEl ? targetEmailEl.textContent.trim() : (document.getElementById('forgotEmail') || {}).value?.trim();
-      const otpCode = (document.getElementById('forgotOtpCode') || {}).value?.trim() || '';
+      const email = (targetEmailEl ? targetEmailEl.textContent.trim() : '') || (document.getElementById('forgotEmail') || {}).value?.trim();
+      const otpCode = ((document.getElementById('forgotOtpCode') || {}).value || '').replace(/\s+/g, '').trim();
       const newPassword = (document.getElementById('forgotNewPass') || {}).value || '';
       const confirmPass = (document.getElementById('forgotConfirmPass') || {}).value || '';
       const alertBox = document.getElementById('forgotAlert');
