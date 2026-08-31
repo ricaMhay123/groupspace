@@ -2,8 +2,17 @@
  * GroupSpace API Client & Shared Utilities
  */
 
+function getApiBaseUrl() {
+  if (window.location.protocol === 'file:') {
+    return 'https://groupspace-w50r.onrender.com';
+  }
+  return '';
+}
+
 async function apiFetch(endpoint, options = {}) {
   const token = localStorage.getItem('groupspace_token');
+  const baseUrl = getApiBaseUrl();
+  const fullUrl = endpoint.startsWith('http') ? endpoint : `${baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
 
   const headers = {
     'Content-Type': 'application/json',
@@ -16,15 +25,18 @@ async function apiFetch(endpoint, options = {}) {
 
   let response;
   try {
-    response = await fetch(endpoint, {
+    response = await fetch(fullUrl, {
       ...options,
       headers
     });
   } catch (netErr) {
-    if (window.location.protocol === 'file:') {
-      throw new Error('You are opening the HTML file directly (file://). Please start the Node.js server with "npm start" and visit http://localhost:3001');
+    if (window.location.hostname.includes('render.com') || window.location.protocol === 'https:') {
+      throw new Error('Cannot connect to GroupSpace server. If Render was asleep on the free tier, please wait ~30 seconds and refresh.');
     }
-    throw new Error('Cannot connect to the GroupSpace server. Please ensure the backend server is running with "npm start" at http://localhost:3001');
+    if (window.location.protocol === 'file:') {
+      throw new Error('Cannot connect to GroupSpace. Please open https://groupspace-w50r.onrender.com in your browser.');
+    }
+    throw new Error('Cannot connect to the GroupSpace server. Please ensure the server is running.');
   }
 
   if (response.status === 401) {

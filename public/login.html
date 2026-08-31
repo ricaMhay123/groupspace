@@ -99,14 +99,37 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body pt-2">
-          <p class="text-muted fs-7 mb-3">Enter your registered email address and we'll send you instructions to reset your password.</p>
           <div id="forgotAlert" style="display:none; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 12px;"></div>
-          <form id="resetPasswordForm">
+          
+          <!-- Step 1: Request Code -->
+          <form id="forgotStep1Form">
+            <p class="text-muted fs-7 mb-3">Enter your registered email address and we'll send you a 6-digit verification code.</p>
             <div class="mb-3">
               <label class="form-label text-dark fw-medium fs-7 mb-1">Email Address</label>
               <input type="email" id="forgotEmail" class="form-control" placeholder="name@gmail.com" required>
             </div>
-            <button type="submit" id="sendForgotBtn" class="btn btn-primary w-100 py-2 fw-semibold">Send Reset Link</button>
+            <button type="submit" id="sendForgotBtn" class="btn btn-primary w-100 py-2 fw-semibold">Send Verification Code</button>
+          </form>
+
+          <!-- Step 2: Enter OTP & New Password -->
+          <form id="forgotStep2Form" style="display:none;">
+            <p class="text-muted fs-7 mb-3">A 6-digit code was sent to <strong id="forgotTargetEmail"></strong>.</p>
+            <div class="mb-3">
+              <label class="form-label text-dark fw-medium fs-7 mb-1">6-Digit Code</label>
+              <input type="text" id="forgotOtpCode" class="form-control text-center fw-bold fs-5" maxlength="6" placeholder="123456" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label text-dark fw-medium fs-7 mb-1">New Password</label>
+              <input type="password" id="forgotNewPass" class="form-control" placeholder="At least 6 characters" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label text-dark fw-medium fs-7 mb-1">Confirm New Password</label>
+              <input type="password" id="forgotConfirmPass" class="form-control" placeholder="Repeat new password" required>
+            </div>
+            <button type="submit" id="resetPassBtn" class="btn btn-primary w-100 py-2 fw-semibold mb-2">Reset Password</button>
+            <div class="text-center">
+              <button type="button" id="forgotResendBtn" class="btn btn-link text-decoration-none fs-7 p-0">Resend Code</button>
+            </div>
           </form>
         </div>
       </div>

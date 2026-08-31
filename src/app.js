@@ -26,7 +26,10 @@ const discussionRoutes = require('./modules/discussions/discussion.routes');
 const app = express();
 
 // Standard Middlewares
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

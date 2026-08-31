@@ -7,6 +7,13 @@ let resendTimerInterval = null;
 let forgotResendTimerInterval = null;
 let lockoutTimerInterval = null;
 
+function getApiBaseUrl() {
+  if (window.location.protocol === 'file:') {
+    return 'https://groupspace-w50r.onrender.com';
+  }
+  return '';
+}
+
 function showAlert(el, message, type = 'error') {
   let target = el;
   if (!target) {
@@ -41,11 +48,14 @@ function hideAlert(el) {
 function formatAuthError(err) {
   if (!err) return 'An unexpected error occurred.';
   const msg = err.message || String(err);
-  if (err.name === 'TypeError' || msg === 'Failed to fetch' || msg.includes('Failed to fetch') || msg.includes('fetch')) {
-    if (window.location.protocol === 'file:') {
-      return '⚠️ You opened this file directly in your browser. Please run "npm start" in your terminal and open http://localhost:3001';
+  if (msg === 'Failed to fetch' || msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+    if (window.location.hostname.includes('render.com') || window.location.protocol === 'https:') {
+      return '⚠️ Cannot connect to server. If Render was asleep (free tier), please wait ~30 seconds and try again.';
     }
-    return '⚠️ Cannot connect to GroupSpace server. Please ensure "npm start" is running in your terminal at http://localhost:3001';
+    if (window.location.protocol === 'file:') {
+      return '⚠️ You opened this file directly. Please visit https://groupspace-w50r.onrender.com';
+    }
+    return '⚠️ Cannot connect to GroupSpace server. Please check your network connection.';
   }
   return msg;
 }
@@ -137,17 +147,21 @@ document.addEventListener('DOMContentLoaded', () => {
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
+      const emailEl = document.getElementById('email') || document.getElementById('loginEmail');
+      const email = emailEl ? emailEl.value.trim() : '';
+      const passEl = document.getElementById('password') || document.getElementById('loginPassword');
+      const password = passEl ? passEl.value : '';
       const alertBox = document.getElementById('loginAlert');
       const submitBtn = document.getElementById('loginBtn') || loginForm.querySelector('button[type="submit"]');
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Logging in...';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Logging in...';
+      }
       hideAlert(alertBox);
 
       try {
-        const res = await fetch('/api/auth/login', {
+        const res = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
@@ -195,13 +209,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (registerForm) {
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const fullName = document.getElementById('fullName').value.trim();
-      const email = document.getElementById('regEmail').value.trim();
-      const password = document.getElementById('regPassword').value;
-      const confirmPasswordEl = document.getElementById('regConfirmPassword');
+      const fullNameEl = document.getElementById('fullName') || document.getElementById('regFullName');
+      const fullName = fullNameEl ? fullNameEl.value.trim() : '';
+      const emailEl = document.getElementById('regEmail') || document.getElementById('email');
+      const email = emailEl ? emailEl.value.trim() : '';
+      const passEl = document.getElementById('regPassword') || document.getElementById('password');
+      const password = passEl ? passEl.value : '';
+      const confirmPasswordEl = document.getElementById('regConfirmPassword') || document.getElementById('confirmPassword');
       const confirmPassword = confirmPasswordEl ? confirmPasswordEl.value : password;
       const alertBox = document.getElementById('registerAlert');
-      const submitBtn = document.getElementById('regBtn');
+      const submitBtn = document.getElementById('regBtn') || registerForm.querySelector('button[type="submit"]');
 
       hideAlert(alertBox);
 
@@ -210,12 +227,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Sending Verification Code...';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending Verification Code...';
+      }
 
       try {
         // Request 6-digit OTP code to the email address
-        const res = await fetch('/api/auth/send-verification-code', {
+        const res = await fetch(`${getApiBaseUrl()}/api/auth/send-verification-code`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, type: 'SIGNUP' })
@@ -237,16 +256,27 @@ document.addEventListener('DOMContentLoaded', () => {
         if (inputCode) inputCode.value = '';
         hideAlert(verifyAlert);
 
-        if (verifyModal) verifyModal.classList.add('active');
+        if (verifyModal) {
+          verifyModal.classList.add('active');
+          // If Bootstrap modal exists
+          if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            const bsModal = bootstrap.Modal.getOrCreateInstance(verifyModal);
+            bsModal.show();
+          }
+        }
         if (inputCode) setTimeout(() => inputCode.focus(), 150);
 
         startResendTimer();
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Create Account';
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Create Account';
+        }
       } catch (err) {
         showAlert(alertBox, formatAuthError(err), 'error');
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Create Account';
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Create Account';
+        }
       }
     });
   }
@@ -264,15 +294,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const inputCode = document.getElementById('inputVerifyCode');
       const verifyAlert = document.getElementById('verifyAlert');
-      const confirmBtn = document.getElementById('confirmVerifyBtn');
+      const confirmBtn = document.getElementById('confirmVerifyBtn') || verifyCodeForm.querySelector('button[type="submit"]');
       const otpCode = inputCode ? inputCode.value.trim() : '';
 
       hideAlert(verifyAlert);
-      confirmBtn.disabled = true;
-      confirmBtn.textContent = 'Verifying & Creating Account...';
+      if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Verifying & Creating Account...';
+      }
 
       try {
-        const res = await fetch('/api/auth/register', {
+        const res = await fetch(`${getApiBaseUrl()}/api/auth/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -300,8 +332,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (verifyAlert) {
           showAlert(verifyAlert, formatAuthError(err), 'error');
         }
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = 'Verify & Finish Sign Up';
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = 'Verify & Finish Sign Up';
+        }
       }
     });
   }
@@ -317,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
       resendBtn.textContent = 'Sending...';
 
       try {
-        const res = await fetch('/api/auth/send-verification-code', {
+        const res = await fetch(`${getApiBaseUrl()}/api/auth/send-verification-code`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: pendingRegistrationData.email, type: 'SIGNUP' })
@@ -386,14 +420,16 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const email = document.getElementById('forgotEmail').value.trim();
       const alertBox = document.getElementById('forgotAlert');
-      const submitBtn = document.getElementById('sendForgotBtn');
+      const submitBtn = document.getElementById('sendForgotBtn') || forgotStep1Form.querySelector('button[type="submit"]');
 
       hideAlert(alertBox);
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Sending Code...';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending Code...';
+      }
 
       try {
-        const res = await fetch('/api/auth/forgot-password', {
+        const res = await fetch(`${getApiBaseUrl()}/api/auth/forgot-password`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
@@ -402,26 +438,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Could not send reset code.');
 
-        // Transition to Step 2
-        document.getElementById('forgotTargetEmail').textContent = email;
-        document.getElementById('forgotStep1Form').style.display = 'none';
-        document.getElementById('forgotStep2Form').style.display = 'block';
+        // Transition to Step 2 if step2 exists
+        const step2 = document.getElementById('forgotStep2Form');
+        const targetEmail = document.getElementById('forgotTargetEmail');
+        if (targetEmail) targetEmail.textContent = email;
+        if (step2) {
+          forgotStep1Form.style.display = 'none';
+          step2.style.display = 'block';
+        }
 
         const otpInput = document.getElementById('forgotOtpCode');
         if (otpInput) {
           otpInput.value = '';
           setTimeout(() => otpInput.focus(), 150);
         }
-        document.getElementById('forgotNewPass').value = '';
-        document.getElementById('forgotConfirmPass').value = '';
+        const newPassEl = document.getElementById('forgotNewPass');
+        if (newPassEl) newPassEl.value = '';
+        const confirmPassEl = document.getElementById('forgotConfirmPass');
+        if (confirmPassEl) confirmPassEl.value = '';
 
         showAlert(alertBox, `Verification code sent to ${email}`, 'success');
         startForgotResendTimer();
       } catch (err) {
         showAlert(alertBox, formatAuthError(err), 'error');
       } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Send Reset Code';
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Send Reset Code';
+        }
       }
     });
   }
@@ -430,7 +474,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (forgotResendBtn) {
     forgotResendBtn.addEventListener('click', async (e) => {
       e.preventDefault();
-      const email = document.getElementById('forgotTargetEmail').textContent.trim();
+      const targetEmailEl = document.getElementById('forgotTargetEmail');
+      const email = targetEmailEl ? targetEmailEl.textContent.trim() : (document.getElementById('forgotEmail') || {}).value?.trim();
       const alertBox = document.getElementById('forgotAlert');
       if (!email) return;
 
@@ -438,7 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
       forgotResendBtn.textContent = 'Sending...';
 
       try {
-        const res = await fetch('/api/auth/forgot-password', {
+        const res = await fetch(`${getApiBaseUrl()}/api/auth/forgot-password`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
@@ -463,12 +508,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (forgotStep2Form) {
     forgotStep2Form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = document.getElementById('forgotTargetEmail').textContent.trim();
-      const otpCode = document.getElementById('forgotOtpCode').value.trim();
-      const newPassword = document.getElementById('forgotNewPass').value;
-      const confirmPass = document.getElementById('forgotConfirmPass').value;
+      const targetEmailEl = document.getElementById('forgotTargetEmail');
+      const email = targetEmailEl ? targetEmailEl.textContent.trim() : (document.getElementById('forgotEmail') || {}).value?.trim();
+      const otpCode = (document.getElementById('forgotOtpCode') || {}).value?.trim() || '';
+      const newPassword = (document.getElementById('forgotNewPass') || {}).value || '';
+      const confirmPass = (document.getElementById('forgotConfirmPass') || {}).value || '';
       const alertBox = document.getElementById('forgotAlert');
-      const submitBtn = document.getElementById('resetPassBtn');
+      const submitBtn = document.getElementById('resetPassBtn') || forgotStep2Form.querySelector('button[type="submit"]');
 
       hideAlert(alertBox);
 
@@ -482,11 +528,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Updating Password...';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Updating Password...';
+      }
 
       try {
-        const res = await fetch('/api/auth/reset-password', {
+        const res = await fetch(`${getApiBaseUrl()}/api/auth/reset-password`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, otpCode, newPassword })
@@ -510,8 +558,10 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) {
         showAlert(alertBox, formatAuthError(err), 'error');
       } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Update Password';
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Update Password';
+        }
       }
     });
   }
