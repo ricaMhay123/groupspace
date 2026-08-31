@@ -16,6 +16,9 @@ if (emailUser && emailPass) {
       user: emailUser,
       pass: emailPass,
     },
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 10000,
   });
 }
 
