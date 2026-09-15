@@ -1,57 +1,41 @@
-const nodemailer = require('nodemailer');
-require('dotenv').config();
+﻿require('dotenv').config();
 
 // =========================================================
 // EMAIL TRANSPORT PRIORITY:
-//  1. Brevo SMTP  � free, 300/day, works from ANY cloud server (Render, etc.)
-//  2. Gmail SMTP  � works locally, blocked by Google from cloud server IPs
-//  3. Resend API  � HTTPS (not blocked), but free tier only sends to your own email
-//
-// HOW TO SET UP BREVO (fixes Render email delivery):
-//   1. Sign up free at https://app.brevo.com
-//   2. Go to: Profile ? SMTP & API ? SMTP tab ? Generate a new SMTP key
-//   3. Add to Render Environment:
-//        BREVO_SMTP_USER = your_brevo_login_email@gmail.com
-//        BREVO_SMTP_PASS = the generated SMTP password (xsmtp-...)
+//  1. Brevo REST API  — HTTPS, free 300/day, ANY recipient, works on Render ✅
+//  2. Resend API      — HTTPS fallback (only sends to owner email on free tier)
+//  3. Gmail SMTP      — local development only (blocked on cloud servers)
 // =========================================================
+const nodemailer = require('nodemailer');
 
-let _brevoTransporter = null;
-let _smtpTransporter = null;
+// --- Brevo REST API ---
+async function sendViaBrevoApi({ to, subject, html }) {
+  const apiKey = process.env.BREVO_API_KEY;
+  const fromEmail = process.env.BREVO_SMTP_USER || process.env.SMTP_USER || 'ricamhaysaturinas2@gmail.com';
+  if (!apiKey) return null;
+
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'api-key': apiKey,
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({
+      sender: { name: 'GroupSpace', email: fromEmail },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html
+    })
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || JSON.stringify(data));
+  return data;
+}
+
+// --- Resend API ---
 let _resendClient = null;
-
-const RESEND_FROM = 'GroupSpace <onboarding@resend.dev>';
-
-function getBrevoTransporter() {
-  if (_brevoTransporter) return _brevoTransporter;
-  const user = process.env.BREVO_SMTP_USER;
-  const pass = process.env.BREVO_SMTP_PASS;
-  if (!user || !pass) return null;
-  _brevoTransporter = nodemailer.createTransport({
-    host: 'smtp-relay.brevo.com',
-    port: 587,
-    secure: false,
-    auth: { user, pass },
-    tls: { rejectUnauthorized: false }
-  });
-  return _brevoTransporter;
-}
-
-function getGmailTransporter() {
-  if (_smtpTransporter) return _smtpTransporter;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  if (!user || !pass) return null;
-  _smtpTransporter = nodemailer.createTransport({
-    service: 'gmail',
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: { user, pass },
-    tls: { rejectUnauthorized: false }
-  });
-  return _smtpTransporter;
-}
-
 function getResendClient() {
   if (_resendClient) return _resendClient;
   const { Resend } = require('resend');
@@ -61,51 +45,78 @@ function getResendClient() {
   return _resendClient;
 }
 
-// Core send: Brevo -> Gmail -> Resend
-async function sendEmail({ to, subject, html }) {
-  const fromAddress = process.env.EMAIL_FROM
-    || (process.env.BREVO_SMTP_USER ? `GroupSpace <${process.env.BREVO_SMTP_USER}>` : null)
-    || (process.env.SMTP_USER ? `GroupSpace <${process.env.SMTP_USER}>` : null)
-    || 'GroupSpace <noreply@groupspace.app>';
+// --- Gmail SMTP (local dev only) ---
+let _gmailTransporter = null;
+function getGmailTransporter() {
+  if (_gmailTransporter) return _gmailTransporter;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!user || !pass) return null;
+  _gmailTransporter = nodemailer.createTransport({
+    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    auth: { user, pass },
+    tls: { rejectUnauthorized: false }
+  });
+  return _gmailTransporter;
+}
 
-  const brevo = getBrevoTransporter();
-  if (brevo) {
+// =========================================================
+// Core send — tries Brevo API → Gmail SMTP → Resend
+// =========================================================
+async function sendEmail({ to, subject, html }) {
+  // 1. Brevo REST API (best for Render — HTTPS, any recipient)
+  if (process.env.BREVO_API_KEY) {
     try {
-      const info = await brevo.sendMail({ from: fromAddress, to, subject, html });
-      console.log(`? [Brevo SMTP] Email sent to ${to}. MessageId: ${info.messageId}`);
+      const result = await sendViaBrevoApi({ to, subject, html });
+      console.log(`✅ [Brevo API] Email sent to ${to}. MessageId: ${result.messageId}`);
       return { accepted: [to], provider: 'brevo' };
     } catch (err) {
-      console.error(`?? [Brevo Error] ${err.message} � trying Gmail...`);
+      console.error(`⚠️ [Brevo API Error] ${err.message} — trying Gmail...`);
     }
   }
 
+  // 2. Gmail SMTP (works locally, blocked on Render)
   const gmail = getGmailTransporter();
   if (gmail) {
     try {
-      const info = await gmail.sendMail({ from: fromAddress, to, subject, html });
-      console.log(`? [Gmail SMTP] Email sent to ${to}. MessageId: ${info.messageId}`);
+      const info = await gmail.sendMail({
+        from: process.env.EMAIL_FROM || `GroupSpace <${process.env.SMTP_USER}>`,
+        to, subject, html
+      });
+      console.log(`✅ [Gmail SMTP] Email sent to ${to}. MessageId: ${info.messageId}`);
       return { accepted: [to], provider: 'gmail' };
     } catch (err) {
-      console.error(`?? [Gmail Error] ${err.message} � trying Resend...`);
+      console.error(`⚠️ [Gmail Error] ${err.message} — trying Resend...`);
     }
   }
 
-  const resendClient = getResendClient();
-  if (resendClient) {
+  // 3. Resend (HTTPS, but free tier only sends to owner email)
+  const resend = getResendClient();
+  if (resend) {
     try {
-      const result = await resendClient.emails.send({ from: RESEND_FROM, to: [to], subject, html });
-      console.log(`? [Resend] Email sent to ${to}. ID: ${result.data?.id}`);
+      const result = await resend.emails.send({
+        from: 'GroupSpace <onboarding@resend.dev>',
+        to: [to], subject, html
+      });
+      if (result.error) throw new Error(result.error.message);
+      console.log(`✅ [Resend] Email sent to ${to}. ID: ${result.data?.id}`);
       return { accepted: [to], provider: 'resend' };
     } catch (err) {
-      console.error(`?? [Resend Error] ${err.message}`);
+      console.error(`⚠️ [Resend Error] ${err.message}`);
       throw new Error(`All email providers failed: ${err.message}`);
     }
   }
 
-  console.warn(`?? No email transport configured. OTP is logged above in server console.`);
+  console.warn(`⚠️ No email provider configured. OTP is in server logs above.`);
   return { accepted: [to], skipped: true };
 }
 
+// =========================================================
+// HTML Templates
+// =========================================================
 function buildOtpHtml({ subject, heading, description, otp }) {
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${subject}</title></head>
 <body style="margin:0;padding:0;background:#f4f6f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
@@ -120,7 +131,7 @@ function buildOtpHtml({ subject, heading, description, otp }) {
     <div style="font-size:42px;font-weight:800;letter-spacing:12px;color:#141b2b;font-family:monospace;">${otp}</div>
   </div>
   <div style="background:#eff6ff;border-left:3px solid #3b82f6;border-radius:6px;padding:12px 16px;font-size:13px;color:#475569;">
-    &#9200; This code expires in <strong>10 minutes</strong>. If you did not request this, ignore this email.
+    &#9200; Code expires in <strong>10 minutes</strong>. If you did not request this, ignore this email.
   </div>
 </td></tr>
 <tr><td style="padding:20px 32px;border-top:1px solid #f1f5f9;text-align:center;">
@@ -146,6 +157,9 @@ function buildWelcomeHtml({ fullName, loginUrl }) {
 </table></td></tr></table></body></html>`;
 }
 
+// =========================================================
+// Public API
+// =========================================================
 const sendOtpEmail = async (param1, param2) => {
   let toEmail, otp, type;
   if (typeof param1 === 'object' && param1 !== null) {
@@ -161,7 +175,7 @@ const sendOtpEmail = async (param1, param2) => {
     ? 'Use the 6-digit code below to reset your GroupSpace password.'
     : 'Use the 6-digit code below to complete your GroupSpace registration.';
 
-  console.log(`?? [${isReset ? 'Reset OTP' : 'Signup OTP'} for ${toEmail}]: ${otp}`);
+  console.log(`🔑 [${isReset ? 'Reset OTP' : 'Signup OTP'} for ${toEmail}]: ${otp}`);
   return sendEmail({ to: toEmail, subject, html: buildOtpHtml({ subject, heading, description, otp }) });
 };
 
@@ -174,7 +188,7 @@ const sendWelcomeEmail = async (param1, param2) => {
 
   const loginUrl = 'https://groupspace-w50r.onrender.com/login.html';
   return sendEmail({ to: toEmail, subject: `Welcome to GroupSpace, ${fullName}!`, html: buildWelcomeHtml({ fullName, loginUrl }) })
-    .catch(err => { console.error(`?? Welcome email error: ${err.message}`); return { accepted: [toEmail] }; });
+    .catch(err => { console.error(`⚠️ Welcome email error: ${err.message}`); return { accepted: [toEmail] }; });
 };
 
 module.exports = { sendOtpEmail, sendWelcomeEmail };
