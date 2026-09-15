@@ -143,12 +143,7 @@ window.closeForgotPasswordModal = closeForgotPasswordModal;
 window.backToForgotStep1 = backToForgotStep1;
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (window.location.protocol === 'file:') {
-    const banner = document.createElement('div');
-    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#ba1a1a;color:#fff;padding:12px 20px;text-align:center;font-weight:600;font-size:14px;z-index:999999;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
-    banner.innerHTML = '⚠️ You opened this page directly as a local file (file://). API requests will fail. Please run <code>npm start</code> in terminal and visit <a href="http://localhost:3001" style="color:#fff;text-decoration:underline;">http://localhost:3001</a>.';
-    document.body.prepend(banner);
-  }
+  // NOTE: The file:// protocol banner is already added by api.js — no duplicate needed here.
 
   const loginForm = document.getElementById('loginForm');
   const registerForm = document.getElementById('registerForm');
@@ -239,6 +234,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       hideAlert(alertBox);
 
+      if (!fullName || fullName.length < 2) {
+        showAlert(alertBox, 'Full name must be at least 2 characters.', 'error');
+        return;
+      }
+      if (password.length < 6) {
+        showAlert(alertBox, 'Password must be at least 6 characters.', 'error');
+        return;
+      }
       if (password !== confirmPassword) {
         showAlert(alertBox, 'Passwords do not match. Please re-enter.', 'error');
         return;
@@ -485,7 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = 'Send Reset Code';
+          submitBtn.textContent = 'Send Verification Code';
         }
       }
     });

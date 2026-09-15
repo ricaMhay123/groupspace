@@ -117,10 +117,11 @@ async function registerUser({ fullName, email, password, verificationCode, otpCo
     throw new Error('Password must be at least 6 characters.');
   }
 
-  // If verification code is provided, verify it
-  if (codeToVerify) {
-    await verifyCode(cleanEmail, codeToVerify, 'SIGNUP');
+  // Verification code is REQUIRED — never allow skipping email verification
+  if (!codeToVerify) {
+    throw new Error('Email verification code is required. Please complete the verification step first.');
   }
+  await verifyCode(cleanEmail, codeToVerify, 'SIGNUP');
 
   // Check if user already exists
   const [existing] = await sql`SELECT id FROM users WHERE email = ${cleanEmail}`;
@@ -146,7 +147,7 @@ async function registerUser({ fullName, email, password, verificationCode, otpCo
   // Send Welcome confirmation email asynchronously
   sendWelcomeEmail({ to: cleanEmail, fullName: cleanName }).catch(err => console.error('Welcome email error:', err));
 
-  const token = jwt.sign({ userId, email: cleanEmail }, JWT_SECRET, { expiresIn: '7d' });
+  const token = jwt.sign({ userId: Number(userId), email: cleanEmail }, JWT_SECRET, { expiresIn: '7d' });
 
   return {
     user: {

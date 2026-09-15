@@ -1,14 +1,86 @@
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+// =========================================================
+// Nodemailer Gmail SMTP transporter (primary sender)
+// Works for ANY recipient — no domain verification needed.
+// =========================================================
+let _smtpTransporter = null;
 
+function getSmtpTransporter() {
+  if (_smtpTransporter) return _smtpTransporter;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!user || !pass) {
+    console.warn('⚠️ SMTP_USER or SMTP_PASS not set. Gmail SMTP unavailable.');
+    return null;
+  }
+  _smtpTransporter = nodemailer.createTransport({
+    service: 'gmail',
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT || '465', 10),
+    secure: process.env.SMTP_SECURE !== 'false',
+    auth: { user, pass },
+    tls: { rejectUnauthorized: false }
+  });
+  return _smtpTransporter;
+}
+
+// =========================================================
+// Resend API (fallback only)
+// =========================================================
+let _resendClient = null;
 // Resend free tier: must send FROM onboarding@resend.dev without a verified domain
 const FROM_EMAIL = 'GroupSpace <onboarding@resend.dev>';
 
+function getResendClient() {
+  if (_resendClient) return _resendClient;
+  const { Resend } = require('resend');
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return null;
+  _resendClient = new Resend(key);
+  return _resendClient;
+}
+
 /**
- * 1. Send OTP / Verification Email via Resend HTTPS API
+ * Core send function — tries Gmail SMTP first, then Resend as fallback.
+ */
+async function sendEmail({ to, subject, html }) {
+  const smtpFromAddress = process.env.EMAIL_FROM || `"GroupSpace" <${process.env.SMTP_USER}>`;
+
+  // --- Primary: Gmail SMTP ---
+  const transporter = getSmtpTransporter();
+  if (transporter) {
+    try {
+      const info = await transporter.sendMail({ from: smtpFromAddress, to, subject, html });
+      console.log(`✅ [Gmail SMTP] Email sent to ${to}. MessageId: ${info.messageId}`);
+      return { accepted: [to], provider: 'smtp', messageId: info.messageId };
+    } catch (smtpErr) {
+      console.error(`⚠️ [Gmail SMTP Error] Could not send to ${to}: ${smtpErr.message}. Trying Resend fallback...`);
+      // Fall through to Resend
+    }
+  }
+
+  // --- Fallback: Resend API ---
+  const resendClient = getResendClient();
+  if (resendClient) {
+    try {
+      const result = await resendClient.emails.send({ from: FROM_EMAIL, to: [to], subject, html });
+      console.log(`✅ [Resend Fallback] Email sent to ${to}. ID: ${result.data?.id}`);
+      return { accepted: [to], provider: 'resend', id: result.data?.id };
+    } catch (resendErr) {
+      console.error(`⚠️ [Resend Error] Could not send to ${to}: ${resendErr.message}`);
+      throw new Error(`Email delivery failed via both SMTP and Resend: ${resendErr.message}`);
+    }
+  }
+
+  // No transport configured at all
+  console.warn(`⚠️ No email transport configured. Skipping email to ${to}. Code logged above.`);
+  return { accepted: [to], skipped: true };
+}
+
+/**
+ * 1. Send OTP / Verification Email
  */
 const sendOtpEmail = async (param1, param2) => {
   let toEmail, otp, type;
@@ -26,15 +98,11 @@ const sendOtpEmail = async (param1, param2) => {
   const subject = isReset ? 'Your GroupSpace Password Reset Code' : 'Your GroupSpace Verification Code';
   const heading = isReset ? 'Reset Your Password' : 'Verify Your Email Address';
   const description = isReset
-    ? 'Use the 6-digit verification code below to securely reset your GroupSpace account password.'
-    : 'Use the 6-digit verification code below to complete your registration and activate your workspace account.';
+    ? 'Use the 6-digit code below to securely reset your GroupSpace account password.'
+    : 'Use the 6-digit code below to complete your registration and activate your GroupSpace account.';
 
-  console.log(`🔑 [${isReset ? 'Password Reset Code' : 'Verification Code'} for ${toEmail}]: ${otp}`);
-
-  if (!resend) {
-    console.warn('⚠️ RESEND_API_KEY not set. Email not sent. Set it in Render environment variables.');
-    return { accepted: [toEmail], skipped: true };
-  }
+  // Always log OTP server-side for debugging
+  console.log(`🔑 [${isReset ? 'Password Reset' : 'Signup OTP'} for ${toEmail}]: ${otp}`);
 
   const html = `
 <!DOCTYPE html>
@@ -101,23 +169,11 @@ const sendOtpEmail = async (param1, param2) => {
 </html>
   `;
 
-  try {
-    const result = await resend.emails.send({
-      from: FROM_EMAIL,
-      to: [toEmail],
-      subject: subject,
-      html: html,
-    });
-    console.log(`✅ [Resend] Email sent to ${toEmail}. ID: ${result.data?.id}`);
-    return { accepted: [toEmail], id: result.data?.id };
-  } catch (err) {
-    console.error(`⚠️ [Resend Error] Could not send to ${toEmail}: ${err.message}`);
-    return { accepted: [toEmail], error: err.message };
-  }
+  return sendEmail({ to: toEmail, subject, html });
 };
 
 /**
- * 2. Send Welcome Email via Resend HTTPS API
+ * 2. Send Welcome Email
  */
 const sendWelcomeEmail = async (param1, param2) => {
   let toEmail, fullName;
@@ -188,19 +244,14 @@ const sendWelcomeEmail = async (param1, param2) => {
 </html>
   `;
 
-  try {
-    const result = await resend.emails.send({
-      from: FROM_EMAIL,
-      to: [toEmail],
-      subject: `Welcome to GroupSpace, ${fullName}!`,
-      html: html,
-    });
-    console.log(`✅ [Resend] Welcome email sent to ${toEmail}. ID: ${result.data?.id}`);
-    return { accepted: [toEmail], id: result.data?.id };
-  } catch (err) {
-    console.error(`⚠️ [Resend Error] Welcome email failed: ${err.message}`);
+  return sendEmail({
+    to: toEmail,
+    subject: `Welcome to GroupSpace, ${fullName}!`,
+    html
+  }).catch(err => {
+    console.error(`⚠️ Welcome email error for ${toEmail}: ${err.message}`);
     return { accepted: [toEmail] };
-  }
+  });
 };
 
 module.exports = {
