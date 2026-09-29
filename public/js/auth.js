@@ -349,9 +349,74 @@ document.addEventListener('DOMContentLoaded', () => {
     const regEmailEl    = document.getElementById('email');
     const regPassEl     = document.getElementById('password');
     const regConfirmEl  = document.getElementById('confirmPassword');
+    const emailStatusEl = document.getElementById('emailStatus');
 
-    // Clear-on-type listeners
-    if (regEmailEl)   regEmailEl.addEventListener('input',   () => clearRegFieldError('email'));
+    // ── Live email checker ─────────────────────────────────────────────────
+    let _emailDebounce = null;
+
+    function setEmailStatus(type, msg) {
+      if (!emailStatusEl) return;
+      emailStatusEl.className = 'fs-7 mt-1';
+      if (type === 'hidden') { emailStatusEl.classList.add('d-none'); emailStatusEl.innerHTML = ''; return; }
+      if (type === 'checking') { emailStatusEl.innerHTML = '<span class="text-muted">⏳ Checking availability...</span>'; }
+      if (type === 'available') { emailStatusEl.innerHTML = '<span class="text-success fw-semibold">✓ Email is available</span>'; }
+      if (type === 'taken')    { emailStatusEl.innerHTML = '<span class="text-danger fw-semibold">✕ This Gmail is already registered — <a href="/login.html" class="text-primary fw-semibold">Login instead</a></span>'; }
+      if (type === 'invalid')  { emailStatusEl.innerHTML = `<span class="text-danger fw-semibold">✕ ${msg || 'Only @gmail.com addresses are accepted.'}</span>`; }
+      if (type === 'error')    { emailStatusEl.innerHTML = '<span class="text-muted">Could not check — will verify on submit.</span>'; }
+    }
+
+    if (regEmailEl) {
+      regEmailEl.addEventListener('input', () => {
+        clearRegFieldError('email');
+        const val = regEmailEl.value.trim();
+
+        // Clear debounce
+        clearTimeout(_emailDebounce);
+
+        if (!val) { setEmailStatus('hidden'); regEmailEl.classList.remove('is-valid'); return; }
+
+        // Instant format check
+        if (!REG_GMAIL_REGEX.test(val)) {
+          setEmailStatus('invalid');
+          regEmailEl.classList.remove('is-valid');
+          regEmailEl.classList.add('is-invalid');
+          return;
+        }
+
+        // Format OK — remove invalid class, show checking after short pause
+        regEmailEl.classList.remove('is-invalid', 'is-valid');
+        setEmailStatus('checking');
+
+        _emailDebounce = setTimeout(async () => {
+          try {
+            const res = await fetch(`${getApiBaseUrl()}/api/auth/check-email?email=${encodeURIComponent(val)}`);
+            const data = await res.json();
+            if (data.status === 'available') {
+              regEmailEl.classList.add('is-valid');
+              regEmailEl.classList.remove('is-invalid');
+              setEmailStatus('available');
+            } else if (data.status === 'taken') {
+              regEmailEl.classList.add('is-invalid');
+              regEmailEl.classList.remove('is-valid');
+              setEmailStatus('taken');
+            } else {
+              setEmailStatus('error');
+            }
+          } catch (_) { setEmailStatus('error'); }
+        }, 700);
+      });
+
+      // Also clear on focus-out if field is cleared
+      regEmailEl.addEventListener('blur', () => {
+        if (!regEmailEl.value.trim()) {
+          setEmailStatus('hidden');
+          regEmailEl.classList.remove('is-valid', 'is-invalid');
+        }
+      });
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
+    // Clear-on-type listeners for other fields
     if (regPassEl)    regPassEl.addEventListener('input',    () => clearRegFieldError('password'));
     if (regConfirmEl) regConfirmEl.addEventListener('input', () => clearRegFieldError('confirmPassword'));
 

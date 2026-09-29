@@ -317,6 +317,28 @@ async function updateStatus(userId, status) {
   return { success: true, status };
 }
 
+/**
+ * Checks if a Gmail address is valid format and whether it is already registered.
+ * Lightweight — no OTP generation, no side effects.
+ */
+async function checkEmailAvailability(email) {
+  const GMAIL_RE = /^[a-zA-Z0-9._%+\-]+@gmail\.com$/i;
+  const cleanEmail = (email || '').trim().toLowerCase();
+
+  if (!cleanEmail) {
+    return { available: false, status: 'empty', message: '' };
+  }
+  if (!GMAIL_RE.test(cleanEmail)) {
+    return { available: false, status: 'invalid', message: 'Only @gmail.com email addresses are accepted.' };
+  }
+
+  const [existing] = await sql`SELECT id FROM users WHERE email = ${cleanEmail}`;
+  if (existing) {
+    return { available: false, status: 'taken', message: 'This Gmail is already registered. Please login instead.' };
+  }
+  return { available: true, status: 'available', message: 'Email is available.' };
+}
+
 module.exports = {
   requestVerificationCode,
   verifyCode,
@@ -324,5 +346,6 @@ module.exports = {
   loginUser,
   resetPasswordWithOtp,
   getUserProfile,
-  updateStatus
+  updateStatus,
+  checkEmailAvailability
 };

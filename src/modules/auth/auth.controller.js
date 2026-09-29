@@ -157,6 +157,19 @@ async function logout(req, res) {
     message: 'Logged out successfully.'
   });
 }
+async function checkEmail(req, res) {
+  try {
+    const { email } = req.query;
+    const result = await authService.checkEmailAvailability(email);
+    return res.status(HTTP_STATUS.OK).json(result);
+  } catch (error) {
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      available: false,
+      status: 'error',
+      message: 'Could not check email. Please try again.'
+    });
+  }
+}
 
 module.exports = {
   sendVerificationCode,
@@ -166,5 +179,6 @@ module.exports = {
   resetPassword,
   login,
   getMe,
-  logout
+  logout,
+  checkEmail
 };
