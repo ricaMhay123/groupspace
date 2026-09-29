@@ -11,9 +11,7 @@ async function sendVerificationCode(req, res) {
     const result = await authService.requestVerificationCode(email, type);
     return res.status(HTTP_STATUS.OK).json({
       success: true,
-      message: result.message,
-      code: result.code,
-      devCode: result.code
+      message: result.message
     });
   } catch (error) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -71,9 +69,7 @@ async function forgotPassword(req, res) {
     const result = await authService.requestVerificationCode(email, 'RESET_PASSWORD');
     return res.status(HTTP_STATUS.OK).json({
       success: true,
-      message: `Password reset code sent to ${email}`,
-      code: result.code,
-      devCode: result.code
+      message: `Password reset code sent to ${email}`
     });
   } catch (error) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({

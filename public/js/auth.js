@@ -388,18 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputCode = document.getElementById('inputVerifyCode');
 
         if (targetEmailEl) targetEmailEl.textContent = email;
-
-        // If the server returns a devCode (email delivery may be unreliable on free hosting),
-        // auto-fill the OTP input and show a visible fallback so registration can still complete.
-        if (data.devCode && inputCode) {
-          inputCode.value = data.devCode;
-          showAlert(verifyAlert,
-            `📧 Email delivery may be delayed. Your code is: <strong style="letter-spacing:3px;font-size:1.1em;">${data.devCode}</strong><br><small class="text-muted">You can also check your inbox — the code is the same.</small>`,
-            'warning'
-          );
-        } else {
-          showAlert(verifyAlert, '✉️ Verification code sent! Please check your inbox.', 'success');
-        }
+        showAlert(verifyAlert, '✉️ Verification code sent! Please check your inbox.', 'success');
 
         if (verifyModal) {
           verifyModal.classList.add('active');
@@ -409,7 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
             bsModal.show();
           }
         }
-        if (inputCode && !data.devCode) setTimeout(() => inputCode.focus(), 150);
+        if (inputCode) setTimeout(() => inputCode.focus(), 150);
 
         startResendTimer();
         if (submitBtn) {
@@ -510,16 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Failed to resend.');
 
-        const inputCode = document.getElementById('inputVerifyCode');
-        if (data.devCode && inputCode) {
-          inputCode.value = data.devCode;
-          if (verifyAlert) {
-            showAlert(verifyAlert,
-              `📧 Email delivery may be delayed. Your new code is: <strong style="letter-spacing:3px;font-size:1.1em;">${data.devCode}</strong>`,
-              'warning'
-            );
-          }
-        } else if (verifyAlert) {
+        if (verifyAlert) {
           showAlert(verifyAlert, '✅ New code sent! Please check your inbox.', 'success');
         }
         startResendTimer();
