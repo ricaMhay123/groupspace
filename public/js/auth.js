@@ -156,21 +156,77 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // 1. LOGIN HANDLER
   // ==========================================
+  const GMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@gmail\.com$/i;
+
+  // Show an error above the email box, optionally marking specific inputs is-invalid
+  // fields: 'email' | 'password' | 'both'
+  function showLoginError(message, fields) {
+    const emailErr = document.getElementById('emailError');
+    const passErr  = document.getElementById('passwordError');
+    const emailEl  = document.getElementById('email');
+    const passEl   = document.getElementById('password');
+
+    if (fields === 'email') {
+      // Show above email, highlight email only
+      if (emailErr) { emailErr.textContent = message; emailErr.classList.remove('d-none'); }
+      if (passErr)  { passErr.textContent  = '';       passErr.classList.add('d-none');    }
+      if (emailEl)  emailEl.classList.add('is-invalid');
+      if (passEl)   passEl.classList.remove('is-invalid');
+    } else if (fields === 'password') {
+      // Show below password, highlight password only
+      if (emailErr) { emailErr.textContent = ''; emailErr.classList.add('d-none'); }
+      if (passErr)  { passErr.textContent  = message; passErr.classList.remove('d-none'); }
+      if (emailEl)  emailEl.classList.remove('is-invalid');
+      if (passEl)   passEl.classList.add('is-invalid');
+    } else {
+      // 'both' — show above email, highlight BOTH inputs
+      if (emailErr) { emailErr.textContent = message; emailErr.classList.remove('d-none'); }
+      if (passErr)  { passErr.textContent  = '';       passErr.classList.add('d-none');    }
+      if (emailEl)  emailEl.classList.add('is-invalid');
+      if (passEl)   passEl.classList.add('is-invalid');
+    }
+  }
+
+  function clearAllLoginErrors() {
+    const emailErr = document.getElementById('emailError');
+    const passErr  = document.getElementById('passwordError');
+    const emailEl  = document.getElementById('email');
+    const passEl   = document.getElementById('password');
+    if (emailErr) { emailErr.textContent = ''; emailErr.classList.add('d-none'); }
+    if (passErr)  { passErr.textContent  = ''; passErr.classList.add('d-none');  }
+    if (emailEl)  emailEl.classList.remove('is-invalid');
+    if (passEl)   passEl.classList.remove('is-invalid');
+  }
+
   if (loginForm) {
+    const emailEl = document.getElementById('email');
+    const passEl  = document.getElementById('password');
+
+    // Typing in EITHER field clears ALL errors and is-invalid from BOTH fields
+    if (emailEl) emailEl.addEventListener('input', clearAllLoginErrors);
+    if (passEl)  passEl.addEventListener('input',  clearAllLoginErrors);
+
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const emailEl = document.getElementById('email') || document.getElementById('loginEmail');
-      const email = emailEl ? emailEl.value.trim() : '';
-      const passEl = document.getElementById('password') || document.getElementById('loginPassword');
-      const password = passEl ? passEl.value : '';
+      const email    = emailEl ? emailEl.value.trim() : '';
+      const password = passEl  ? passEl.value : '';
       const alertBox = document.getElementById('loginAlert');
       const submitBtn = document.getElementById('loginBtn') || loginForm.querySelector('button[type="submit"]');
+
+      // Clear all previous errors
+      clearAllLoginErrors();
+      hideAlert(alertBox);
+
+      // Frontend Gmail validation
+      if (!GMAIL_REGEX.test(email)) {
+        showLoginError('Only @gmail.com email addresses are accepted.', 'email');
+        return;
+      }
 
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Logging in...';
       }
-      hideAlert(alertBox);
 
       try {
         const res = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
@@ -186,9 +242,20 @@ document.addEventListener('DOMContentLoaded', () => {
             startLockoutCountdown(alertBox, submitBtn, seconds);
             return;
           }
-          const err = new Error(data.message || 'Login failed.');
-          err.attemptsLeft = data.attemptsLeft;
-          throw err;
+          // Route to the correct field(s)
+          if (data.field === 'email') {
+            showLoginError(data.message || 'No account found with this Gmail address.', 'email');
+          } else if (data.field === 'password') {
+            showLoginError(data.message || 'Incorrect password. Please try again.', 'password');
+          } else {
+            // Generic / combined credential failure — top of form, both inputs highlighted
+            showLoginError('Invalid email and password', 'both');
+          }
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Login';
+          }
+          return;
         }
 
         if (lockoutTimerInterval) {
@@ -218,7 +285,39 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // 2. REGISTRATION STEP 1: SEND VERIFICATION CODE
   // ==========================================
+  const REG_GMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@gmail\.com$/i;
+
+  // Registration field-error helpers
+  function showRegFieldError(fieldId, message) {
+    const errEl = document.getElementById(fieldId + 'Error');
+    const inputEl = document.getElementById(fieldId);
+    if (errEl) {
+      errEl.textContent = message;
+      errEl.classList.remove('d-none');
+    }
+    if (inputEl) inputEl.classList.add('is-invalid');
+  }
+
+  function clearRegFieldError(fieldId) {
+    const errEl = document.getElementById(fieldId + 'Error');
+    const inputEl = document.getElementById(fieldId);
+    if (errEl) {
+      errEl.textContent = '';
+      errEl.classList.add('d-none');
+    }
+    if (inputEl) inputEl.classList.remove('is-invalid');
+  }
+
   if (registerForm) {
+    const regEmailEl    = document.getElementById('email');
+    const regPassEl     = document.getElementById('password');
+    const regConfirmEl  = document.getElementById('confirmPassword');
+
+    // Clear-on-type listeners
+    if (regEmailEl)   regEmailEl.addEventListener('input',   () => clearRegFieldError('email'));
+    if (regPassEl)    regPassEl.addEventListener('input',    () => clearRegFieldError('password'));
+    if (regConfirmEl) regConfirmEl.addEventListener('input', () => clearRegFieldError('confirmPassword'));
+
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fullNameEl = document.getElementById('fullName') || document.getElementById('regFullName');
@@ -233,17 +332,28 @@ document.addEventListener('DOMContentLoaded', () => {
       const submitBtn = document.getElementById('regBtn') || registerForm.querySelector('button[type="submit"]');
 
       hideAlert(alertBox);
+      clearRegFieldError('email');
+      clearRegFieldError('password');
+      clearRegFieldError('confirmPassword');
 
       if (!fullName || fullName.length < 2) {
         showAlert(alertBox, 'Full name must be at least 2 characters.', 'error');
         return;
       }
+
+      // Frontend Gmail validation
+      if (!REG_GMAIL_REGEX.test(email)) {
+        showRegFieldError('email', 'Only @gmail.com email addresses are accepted.');
+        return;
+      }
+
       if (password.length < 6) {
         showAlert(alertBox, 'Password must be at least 6 characters.', 'error');
         return;
       }
+
       if (password !== confirmPassword) {
-        showAlert(alertBox, 'Passwords do not match. Please re-enter.', 'error');
+        showRegFieldError('confirmPassword', 'Passwords do not match.');
         return;
       }
 
@@ -261,7 +371,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Could not send verification code.');
+        if (!res.ok) {
+          if (data.field === 'email') {
+            showRegFieldError('email', data.message || 'This Gmail is already registered. Please login instead.');
+          } else {
+            showAlert(alertBox, data.message || 'Could not send verification code.', 'error');
+          }
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Create Account';
+          }
+          return;
+        }
 
         // Save pending registration payload in memory
         pendingRegistrationData = { fullName, email, password };

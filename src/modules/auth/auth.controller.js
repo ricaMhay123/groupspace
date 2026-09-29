@@ -18,7 +18,8 @@ async function sendVerificationCode(req, res) {
   } catch (error) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      message: error.message
+      message: error.message,
+      field: error.field || null
     });
   }
 }
@@ -58,7 +59,8 @@ async function register(req, res) {
   } catch (error) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      message: error.message
+      message: error.message,
+      field: error.field || null
     });
   }
 }
@@ -122,6 +124,7 @@ async function login(req, res) {
     return res.status(statusCode).json({
       success: false,
       message: error.message,
+      field: error.field || null,
       isLocked: !!error.isLocked,
       remainingSeconds: error.remainingSeconds,
       attemptsLeft: error.attemptsLeft

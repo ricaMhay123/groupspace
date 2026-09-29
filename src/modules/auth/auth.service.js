@@ -30,7 +30,9 @@ async function requestVerificationCode(email, type = 'SIGNUP') {
     // Check if user already exists
     const [existing] = await sql`SELECT id FROM users WHERE email = ${cleanEmail}`;
     if (existing) {
-      throw new Error('An account with this email already exists. Please log in instead.');
+      const err = new Error('This Gmail is already registered. Please login instead.');
+      err.field = 'email';
+      throw err;
     }
   } else if (type === 'RESET_PASSWORD') {
     // Check if user exists for password reset
@@ -126,7 +128,9 @@ async function registerUser({ fullName, email, password, verificationCode, otpCo
   // Check if user already exists
   const [existing] = await sql`SELECT id FROM users WHERE email = ${cleanEmail}`;
   if (existing) {
-    throw new Error('An account with this email already exists.');
+    const err = new Error('This Gmail is already registered. Please login instead.');
+    err.field = 'email';
+    throw err;
   }
 
   const salt = await bcrypt.genSalt(10);
@@ -170,7 +174,10 @@ async function loginUser({ email, password }) {
 
   const [user] = await sql`SELECT * FROM users WHERE email = ${cleanEmail}`;
   if (!user) {
-    throw new Error('Invalid email or password.');
+    const err = new Error('No account found with this Gmail address.');
+    err.field = 'email';
+    err.status = 401;
+    throw err;
   }
 
   // 1. Check if user account is currently locked out
@@ -213,6 +220,7 @@ async function loginUser({ email, password }) {
       const err = new Error('Incorrect password. You have reached 3 failed attempts. Your account has been locked for 10 minutes. Please wait 10 minutes before trying again.');
       err.status = 429;
       err.isLocked = true;
+      err.field = 'password';
       err.remainingSeconds = 600;
       throw err;
     } else {
@@ -225,6 +233,7 @@ async function loginUser({ email, password }) {
       `;
       const err = new Error(`Incorrect password. You have ${attemptsLeft} attempt${attemptsLeft === 1 ? '' : 's'} remaining before a 10-minute lockout.`);
       err.status = 401;
+      err.field = 'password';
       err.attemptsLeft = attemptsLeft;
       throw err;
     }
