@@ -366,63 +366,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (regEmailEl) {
+      // Clear everything while the user is typing — no feedback mid-type
       regEmailEl.addEventListener('input', () => {
         clearRegFieldError('email');
-        const val = regEmailEl.value.trim();
-
-        // Reset everything while user is still typing
-        clearTimeout(_emailDebounce);
         setEmailStatus('hidden');
         regEmailEl.classList.remove('is-valid', 'is-invalid');
-
-        if (!val) return;
-
-        // Wait until user stops typing before showing anything
-        _emailDebounce = setTimeout(async () => {
-          // Format check first
-          if (!REG_GMAIL_REGEX.test(val)) {
-            setEmailStatus('invalid');
-            regEmailEl.classList.add('is-invalid');
-            return;
-          }
-
-          // Format OK — call API
-          setEmailStatus('checking');
-          try {
-            const res = await fetch(`${getApiBaseUrl()}/api/auth/check-email?email=${encodeURIComponent(val)}`);
-            const data = await res.json();
-            if (data.status === 'available') {
-              regEmailEl.classList.add('is-valid');
-              setEmailStatus('available');
-            } else if (data.status === 'taken') {
-              regEmailEl.classList.add('is-invalid');
-              setEmailStatus('taken');
-            } else {
-              setEmailStatus('error');
-            }
-          } catch (_) { setEmailStatus('error'); }
-        }, 700);
       });
 
-      // On blur: trigger immediately without waiting
-      regEmailEl.addEventListener('blur', () => {
+      // Check ONLY when the user leaves the field (tab or click away)
+      regEmailEl.addEventListener('blur', async () => {
         const val = regEmailEl.value.trim();
-        clearTimeout(_emailDebounce);
         if (!val) { setEmailStatus('hidden'); regEmailEl.classList.remove('is-valid', 'is-invalid'); return; }
+
+        // Format check
         if (!REG_GMAIL_REGEX.test(val)) {
           setEmailStatus('invalid');
           regEmailEl.classList.add('is-invalid');
           return;
         }
+
+        // Valid format — check DB
         setEmailStatus('checking');
-        fetch(`${getApiBaseUrl()}/api/auth/check-email?email=${encodeURIComponent(val)}`)
-          .then(r => r.json())
-          .then(data => {
-            if (data.status === 'available') { regEmailEl.classList.add('is-valid'); setEmailStatus('available'); }
-            else if (data.status === 'taken') { regEmailEl.classList.add('is-invalid'); setEmailStatus('taken'); }
-            else { setEmailStatus('error'); }
-          })
-          .catch(() => setEmailStatus('error'));
+        try {
+          const res  = await fetch(`${getApiBaseUrl()}/api/auth/check-email?email=${encodeURIComponent(val)}`);
+          const data = await res.json();
+          if (data.status === 'available') {
+            regEmailEl.classList.add('is-valid');
+            setEmailStatus('available');
+          } else if (data.status === 'taken') {
+            regEmailEl.classList.add('is-invalid');
+            setEmailStatus('taken');
+          } else {
+            setEmailStatus('error');
+          }
+        } catch (_) { setEmailStatus('error'); }
       });
     }
     // ────────────────────────────────────────────────────────────────────────
