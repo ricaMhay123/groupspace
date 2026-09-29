@@ -22,6 +22,34 @@ let resendTimerInterval = null;
 let forgotResendTimerInterval = null;
 let lockoutTimerInterval = null;
 
+// ── Back-to-form from OTP modal — closes modal, restores typed credentials ──
+window.backToRegForm = function () {
+  // Close the Bootstrap modal
+  const modalEl = document.getElementById('emailVerifyModal');
+  if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+    const bsModal = bootstrap.Modal.getInstance(modalEl);
+    if (bsModal) bsModal.hide();
+  }
+
+  // Re-fill the registration form with the saved credentials
+  if (pendingRegistrationData) {
+    const fullNameEl = document.getElementById('fullName') || document.getElementById('regFullName');
+    const emailEl    = document.getElementById('regEmail') || document.getElementById('email');
+    const passEl     = document.getElementById('regPassword') || document.getElementById('password');
+    const confEl     = document.getElementById('regConfirmPassword') || document.getElementById('confirmPassword');
+
+    if (fullNameEl) fullNameEl.value = pendingRegistrationData.fullName || '';
+    if (emailEl)    emailEl.value    = pendingRegistrationData.email    || '';
+    if (passEl)     passEl.value     = pendingRegistrationData.password || '';
+    if (confEl)     confEl.value     = pendingRegistrationData.password || '';
+  }
+
+  // Clear the OTP input so it's fresh if they re-submit
+  const otpEl = document.getElementById('inputVerifyCode');
+  if (otpEl) otpEl.value = '';
+};
+// ────────────────────────────────────────────────────────────────────────────
+
 function getApiBaseUrl() {
   if (window.location.protocol === 'file:') {
     return 'https://groupspace-w50r.onrender.com';
