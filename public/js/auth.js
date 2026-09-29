@@ -158,50 +158,34 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   const GMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@gmail\.com$/i;
 
-  // Show an error, targeting the right element and highlighting the right input(s)
-  // fields: 'email'   → #emailError above email input,  email is-invalid only   (frontend Gmail format)
-  //         'password' → #passwordError below password,  password is-invalid only (email found, pw wrong)
-  //         'both'    → #formError at top of form,       BOTH inputs is-invalid   (email not found / generic)
+  // Show an error for a specific field
+  // fields: 'email'    → #emailError above email input,   email is-invalid only
+  //         'password' → #passwordError below password,  password is-invalid only
   function showLoginError(message, fields) {
-    const formErr  = document.getElementById('formError');
     const emailErr = document.getElementById('emailError');
     const passErr  = document.getElementById('passwordError');
     const emailEl  = document.getElementById('email');
     const passEl   = document.getElementById('password');
 
-    // Always hide the containers not being used
     if (fields === 'email') {
-      // Frontend Gmail format — show above email input, email border only
-      if (formErr)  { formErr.textContent  = ''; formErr.classList.add('d-none');    }
       if (emailErr) { emailErr.textContent = message; emailErr.classList.remove('d-none'); }
-      if (passErr)  { passErr.textContent  = ''; passErr.classList.add('d-none');    }
+      if (passErr)  { passErr.textContent  = '';      passErr.classList.add('d-none');     }
       if (emailEl)  emailEl.classList.add('is-invalid');
       if (passEl)   passEl.classList.remove('is-invalid');
-    } else if (fields === 'password') {
-      // Email found, password wrong — show below password, password border only
-      if (formErr)  { formErr.textContent  = ''; formErr.classList.add('d-none');  }
+    } else {
+      // 'password'
       if (emailErr) { emailErr.textContent = ''; emailErr.classList.add('d-none'); }
       if (passErr)  { passErr.textContent  = message; passErr.classList.remove('d-none'); }
       if (emailEl)  emailEl.classList.remove('is-invalid');
-      if (passEl)   passEl.classList.add('is-invalid');
-    } else {
-      // 'both' — email not found OR generic failure
-      // Show in #formError (top of form, below subtitle), BOTH inputs highlighted
-      if (formErr)  { formErr.textContent  = message; formErr.classList.remove('d-none'); }
-      if (emailErr) { emailErr.textContent = ''; emailErr.classList.add('d-none'); }
-      if (passErr)  { passErr.textContent  = ''; passErr.classList.add('d-none');  }
-      if (emailEl)  emailEl.classList.add('is-invalid');
       if (passEl)   passEl.classList.add('is-invalid');
     }
   }
 
   function clearAllLoginErrors() {
-    const formErr  = document.getElementById('formError');
     const emailErr = document.getElementById('emailError');
     const passErr  = document.getElementById('passwordError');
     const emailEl  = document.getElementById('email');
     const passEl   = document.getElementById('password');
-    if (formErr)  { formErr.textContent  = ''; formErr.classList.add('d-none');  }
     if (emailErr) { emailErr.textContent = ''; emailErr.classList.add('d-none'); }
     if (passErr)  { passErr.textContent  = ''; passErr.classList.add('d-none');  }
     if (emailEl)  emailEl.classList.remove('is-invalid');
@@ -252,16 +236,14 @@ document.addEventListener('DOMContentLoaded', () => {
             startLockoutCountdown(alertBox, submitBtn, seconds);
             return;
           }
-          // Route to the correct field(s)
+          // Route to the correct field
           if (data.field === 'email') {
-            // Email not in DB — we can't verify the password either,
-            // so treat as combined failure: top-of-form message, both inputs red
-            showLoginError('Invalid email and password', 'both');
+            showLoginError(data.message || 'No account found with this Gmail address.', 'email');
           } else if (data.field === 'password') {
             showLoginError(data.message || 'Incorrect password. Please try again.', 'password');
           } else {
-            // Generic / combined credential failure — top of form, both inputs highlighted
-            showLoginError('Invalid email and password', 'both');
+            // Generic failure — show in the general alert box
+            showAlert(alertBox, data.message || 'Login failed. Please try again.', 'error');
           }
           if (submitBtn) {
             submitBtn.disabled = false;
