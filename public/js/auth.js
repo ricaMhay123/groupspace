@@ -36,12 +36,10 @@ window.backToRegForm = function () {
     const fullNameEl = document.getElementById('fullName') || document.getElementById('regFullName');
     const emailEl    = document.getElementById('regEmail') || document.getElementById('email');
     const passEl     = document.getElementById('regPassword') || document.getElementById('password');
-    const confEl     = document.getElementById('regConfirmPassword') || document.getElementById('confirmPassword');
 
     if (fullNameEl) fullNameEl.value = pendingRegistrationData.fullName || '';
     if (emailEl)    emailEl.value    = pendingRegistrationData.email    || '';
     if (passEl)     passEl.value     = pendingRegistrationData.password || '';
-    if (confEl)     confEl.value     = pendingRegistrationData.password || '';
   }
 
   // Clear the OTP input so it's fresh if they re-submit
@@ -348,7 +346,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (registerForm) {
     const regEmailEl    = document.getElementById('email');
     const regPassEl     = document.getElementById('password');
-    const regConfirmEl  = document.getElementById('confirmPassword');
     const emailStatusEl = document.getElementById('emailStatus');
 
     // ── Live email checker ─────────────────────────────────────────────────
@@ -404,9 +401,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // ────────────────────────────────────────────────────────────────────────
 
-    // Clear-on-type listeners for other fields
-    if (regPassEl)    regPassEl.addEventListener('input',    () => clearRegFieldError('password'));
-    if (regConfirmEl) regConfirmEl.addEventListener('input', () => clearRegFieldError('confirmPassword'));
+    // Clear-on-type listener for password
+    if (regPassEl) regPassEl.addEventListener('input', () => clearRegFieldError('password'));
 
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -416,15 +412,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const email = emailEl ? emailEl.value.trim() : '';
       const passEl = document.getElementById('regPassword') || document.getElementById('password');
       const password = passEl ? passEl.value : '';
-      const confirmPasswordEl = document.getElementById('regConfirmPassword') || document.getElementById('confirmPassword');
-      const confirmPassword = confirmPasswordEl ? confirmPasswordEl.value : password;
       const alertBox = document.getElementById('registerAlert');
       const submitBtn = document.getElementById('regBtn') || registerForm.querySelector('button[type="submit"]');
 
       hideAlert(alertBox);
       clearRegFieldError('email');
       clearRegFieldError('password');
-      clearRegFieldError('confirmPassword');
 
       if (!fullName || fullName.length < 2) {
         showAlert(alertBox, 'Full name must be at least 2 characters.', 'error');
@@ -442,10 +435,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      if (password !== confirmPassword) {
-        showRegFieldError('confirmPassword', 'Passwords do not match.');
-        return;
-      }
 
       if (submitBtn) {
         submitBtn.disabled = true;
