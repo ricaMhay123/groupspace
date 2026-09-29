@@ -360,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (type === 'hidden') { emailStatusEl.classList.add('d-none'); emailStatusEl.innerHTML = ''; return; }
       if (type === 'checking') { emailStatusEl.innerHTML = '<span class="text-muted">⏳ Checking availability...</span>'; }
       if (type === 'available') { emailStatusEl.innerHTML = '<span class="text-success fw-semibold">✓ Email is available</span>'; }
-      if (type === 'taken')    { emailStatusEl.innerHTML = '<span class="text-danger fw-semibold">✕ This Gmail is already registered — <a href="/login.html" class="text-primary fw-semibold">Login instead</a></span>'; }
+      if (type === 'taken')    { emailStatusEl.innerHTML = '<span class="text-danger fw-semibold">✕ This Gmail is already registered.</span>'; }
       if (type === 'invalid')  { emailStatusEl.innerHTML = `<span class="text-danger fw-semibold">✕ ${msg || 'Only @gmail.com addresses are accepted.'}</span>`; }
       if (type === 'error')    { emailStatusEl.innerHTML = '<span class="text-muted">Could not check — will verify on submit.</span>'; }
     }
