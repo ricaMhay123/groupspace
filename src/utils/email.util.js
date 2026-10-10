@@ -21,7 +21,7 @@ function getGmailTransporter() {
     host: 'smtp.gmail.com',
     port,
     secure,
-    auth: { user, pass },
+    auth: { user: user.trim(), pass: pass.trim() },
     tls: { rejectUnauthorized: false }
   });
   return _gmailTransporter;
@@ -29,8 +29,8 @@ function getGmailTransporter() {
 
 // --- Brevo REST API (HTTPS — not blocked by Vercel) ---
 async function sendViaBrevo({ to, subject, html }) {
-  const apiKey   = process.env.BREVO_API_KEY;
-  const fromEmail = process.env.BREVO_SMTP_USER || process.env.SMTP_USER;
+  const apiKey   = (process.env.BREVO_API_KEY || '').trim();
+  const fromEmail = (process.env.BREVO_SMTP_USER || process.env.SMTP_USER || '').trim();
   if (!apiKey) throw new Error('BREVO_API_KEY not set');
   const res = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
@@ -44,7 +44,7 @@ async function sendViaBrevo({ to, subject, html }) {
 
 // --- Resend REST API (HTTPS) ---
 async function sendViaResend({ to, subject, html }) {
-  const key = process.env.RESEND_API_KEY;
+  const key = (process.env.RESEND_API_KEY || '').trim();
   if (!key) throw new Error('RESEND_API_KEY not set');
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
