@@ -2,134 +2,111 @@ require('dotenv').config();
 
 // =========================================================
 // EMAIL TRANSPORT PRIORITY:
-//  1. Brevo SMTP relay — port 587, DKIM-signed, works on Vercel ✅
-//  2. Resend REST API  — HTTPS fallback
-//  3. Gmail SMTP       — local dev only
+//  1. Gmail SMTP  — sends FROM gmail.com via Google's servers = passes DMARC ✅
+//  2. Brevo REST  — HTTPS, works on Vercel but DMARC fails for @gmail.com senders
+//  3. Resend REST — HTTPS fallback
 // =========================================================
 const nodemailer = require('nodemailer');
 
-// --- Brevo SMTP Relay ---
-let _brevoTransporter = null;
-function getBrevoTransporter() {
-  if (_brevoTransporter) return _brevoTransporter;
-  const user = process.env.BREVO_SMTP_USER;
-  const pass = process.env.BREVO_SMTP_PASS;
-  if (!user || !pass) return null;
-  _brevoTransporter = nodemailer.createTransport({
-    host: 'smtp-relay.brevo.com',
-    port: 587,
-    secure: false,
-    auth: { user, pass },
-    tls: { rejectUnauthorized: false }
-  });
-  return _brevoTransporter;
-}
-
-// --- Resend REST API ---
-async function sendViaResend({ to, subject, html }) {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return null;
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      from: 'GroupSpace <onboarding@resend.dev>',
-      to: [to], subject, html
-    })
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || JSON.stringify(data));
-  return data;
-}
-
-// --- Gmail SMTP (local dev only) ---
+// --- Gmail SMTP (uses Google's own servers — DMARC always passes for @gmail.com) ---
 let _gmailTransporter = null;
 function getGmailTransporter() {
   if (_gmailTransporter) return _gmailTransporter;
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
   if (!user || !pass) return null;
+  const port   = parseInt(process.env.SMTP_PORT   || '587', 10);
+  const secure = process.env.SMTP_SECURE === 'true' || port === 465;
   _gmailTransporter = nodemailer.createTransport({
-    service: 'gmail',
     host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
+    port,
+    secure,
     auth: { user, pass },
     tls: { rejectUnauthorized: false }
   });
   return _gmailTransporter;
 }
 
+// --- Brevo REST API (HTTPS — not blocked by Vercel) ---
+async function sendViaBrevo({ to, subject, html }) {
+  const apiKey   = process.env.BREVO_API_KEY;
+  const fromEmail = process.env.BREVO_SMTP_USER || process.env.SMTP_USER;
+  if (!apiKey) throw new Error('BREVO_API_KEY not set');
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { 'accept': 'application/json', 'api-key': apiKey.trim(), 'content-type': 'application/json' },
+    body: JSON.stringify({ sender: { name: 'GroupSpace', email: fromEmail }, to: [{ email: to }], subject, htmlContent: html })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(`Brevo ${res.status}: ${data.message || JSON.stringify(data)}`);
+  return data;
+}
+
+// --- Resend REST API (HTTPS) ---
+async function sendViaResend({ to, subject, html }) {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) throw new Error('RESEND_API_KEY not set');
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: 'GroupSpace <onboarding@resend.dev>', to: [to], subject, html })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || JSON.stringify(data));
+  return data;
+}
+
 // =========================================================
 // Core send — tries Resend → Gmail SMTP → Brevo
 // =========================================================
 // Core send — Brevo REST API (HTTPS) → Resend REST (HTTPS)
-// SMTP removed — Vercel may block outbound port 587
+// =========================================================
+// Core send — Gmail SMTP → Brevo REST → Resend REST
+// Gmail first: sends FROM @gmail.com via Google's servers → DMARC passes → inbox ✅
 // =========================================================
 async function sendEmail({ to, subject, html }) {
-  const fromEmail = process.env.BREVO_SMTP_USER || 'ricamhaysaturinas2@gmail.com';
+  const fromUser = process.env.SMTP_USER;
 
-  // 1. Brevo REST API (HTTPS — not blocked by Vercel)
-  const brevoKey = process.env.BREVO_API_KEY;
-  console.log(`[Email] BREVO_API_KEY set: ${!!brevoKey}, BREVO_SMTP_USER: ${fromEmail}`);
-
-  if (brevoKey) {
-    try {
-      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: {
-          'accept': 'application/json',
-          'api-key': brevoKey.trim(),
-          'content-type': 'application/json'
-        },
-        body: JSON.stringify({
-          sender: { name: 'GroupSpace', email: fromEmail },
-          to: [{ email: to }],
-          subject,
-          htmlContent: html
-        })
-      });
-      const data = await res.json();
-      console.log(`[Brevo] Status: ${res.status}, Response: ${JSON.stringify(data)}`);
-      if (!res.ok) throw new Error(`Brevo ${res.status}: ${data.message || JSON.stringify(data)}`);
-      console.log(`✅ [Brevo] Email queued to ${to}. MessageId: ${data.messageId}`);
-      return { accepted: [to], provider: 'brevo', messageId: data.messageId };
-    } catch (err) {
-      console.error(`⚠️ [Brevo Error] ${err.message}`);
-    }
-  }
-
-  // 2. Resend REST API (HTTPS fallback)
-  const resendKey = process.env.RESEND_API_KEY;
-  console.log(`[Email] RESEND_API_KEY set: ${!!resendKey}`);
-
-  if (resendKey) {
-    try {
-      const result = await sendViaResend({ to, subject, html });
-      console.log(`✅ [Resend] Email sent to ${to}. ID: ${result.id}`);
-      return { accepted: [to], provider: 'resend' };
-    } catch (err) {
-      console.error(`⚠️ [Resend Error] ${err.message}`);
-      throw new Error(`All providers failed. Brevo & Resend both errored. Check Vercel logs.`);
-    }
-  }
-
-  // 3. Gmail SMTP last resort (local dev)
+  // 1. Gmail SMTP via Google's own servers (DMARC-compliant, delivers to inbox)
   const gmail = getGmailTransporter();
   if (gmail) {
     try {
       const info = await gmail.sendMail({
-        from: `"GroupSpace" <${process.env.SMTP_USER}>`,
+        from: `"GroupSpace" <${fromUser}>`,
         to, subject, html
       });
-      console.log(`✅ [Gmail] Email sent to ${to}. MessageId: ${info.messageId}`);
+      console.log(`✅ [Gmail SMTP] Email sent to ${to}. MessageId: ${info.messageId}`);
       return { accepted: [to], provider: 'gmail' };
     } catch (err) {
-      console.error(`⚠️ [Gmail Error] ${err.message}`);
+      console.error(`⚠️ [Gmail SMTP Error] ${err.message} — trying Brevo...`);
+    }
+  } else {
+    console.warn('[Email] Gmail SMTP not configured (SMTP_USER or SMTP_PASS missing)');
+  }
+
+  // 2. Brevo REST API (HTTPS — but emails from @gmail.com may hit spam/be rejected)
+  if (process.env.BREVO_API_KEY) {
+    try {
+      const data = await sendViaBrevo({ to, subject, html });
+      console.log(`✅ [Brevo] Email queued to ${to}. MessageId: ${data.messageId}`);
+      return { accepted: [to], provider: 'brevo', messageId: data.messageId };
+    } catch (err) {
+      console.error(`⚠️ [Brevo Error] ${err.message} — trying Resend...`);
     }
   }
 
-  throw new Error('No email provider is configured or all failed. Check Vercel env vars.');
+  // 3. Resend REST API (HTTPS)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const data = await sendViaResend({ to, subject, html });
+      console.log(`✅ [Resend] Email sent to ${to}. ID: ${data.id}`);
+      return { accepted: [to], provider: 'resend' };
+    } catch (err) {
+      console.error(`⚠️ [Resend Error] ${err.message}`);
+    }
+  }
+
+  throw new Error('All email providers failed or none are configured. Check SMTP_USER, SMTP_PASS, BREVO_API_KEY in Vercel env vars.');
 }
 
 
