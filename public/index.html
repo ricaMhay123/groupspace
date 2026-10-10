@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="/css/style.css?v=33.0">
 <link rel="stylesheet" href="/css/landing.css">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
+<script src="/js/theme.js"></script>
 </head>
 
 <body id="landingBody">
@@ -38,11 +39,9 @@
 
     <!-- Right: theme toggle + auth buttons -->
     <div class="landing-nav-right" id="navRightAnim">
-      <button id="themeToggle" class="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle theme">
-        <!-- Moon icon (show in light mode) -->
-        <svg id="iconMoon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
-        <!-- Sun icon (show in dark mode) -->
-        <svg id="iconSun"  xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1"  x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <button id="themeToggle" data-theme-toggle class="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle theme">
+        <svg data-theme-moon id="iconMoon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
+        <svg data-theme-sun  id="iconSun"  xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1"  x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       </button>
 
       <div id="authNavButtons" class="landing-auth-btns">
@@ -268,16 +267,7 @@ if (token) {
 }
 
 /* ── Dark mode ── */
-const htmlRoot = document.getElementById('htmlRoot');
-let dark = localStorage.getItem('gs_dark') === '1';
-function applyDark() {
-  htmlRoot.classList.toggle('dark', dark);
-  document.getElementById('iconMoon').style.display = dark ? 'none'  : '';
-  document.getElementById('iconSun').style.display  = dark ? ''      : 'none';
-  localStorage.setItem('gs_dark', dark ? '1' : '0');
-}
-applyDark();
-document.getElementById('themeToggle').addEventListener('click', () => { dark = !dark; applyDark(); });
+/* ── Dark mode handled by /js/theme.js ── */
 
 /* ── Sticky header ── */
 const header = document.getElementById('siteHeader');
