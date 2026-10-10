@@ -57,15 +57,18 @@ async function requestVerificationCode(email, type = 'SIGNUP') {
     VALUES (${cleanEmail}, ${code}, ${type}, ${expiresAt})
   `;
 
-  // Send verification email in background so the UI transitions instantly without stalling
-  sendOtpEmail({ to: cleanEmail, otpCode: code, type }).catch(err => {
-    console.error(`⚠️ [Email Background Error] Could not deliver to ${cleanEmail}: ${err.message}`);
-  });
+  // Await email delivery — on Vercel serverless, fire-and-forget gets
+  // killed the moment the response is sent, so we must await here.
+  try {
+    await sendOtpEmail({ to: cleanEmail, otpCode: code, type });
+  } catch (err) {
+    console.error(`⚠️ [Email Error] Could not deliver to ${cleanEmail}: ${err.message}`);
+    // Don't throw — OTP is saved in DB; user can still receive it
+  }
 
   return {
     success: true,
     message: `Verification code sent to ${cleanEmail}`,
-    code: code,
     devCode: code
   };
 }
