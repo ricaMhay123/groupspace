@@ -1,4 +1,4 @@
-﻿require('dotenv').config();
+require('dotenv').config();
 
 // =========================================================
 // EMAIL TRANSPORT PRIORITY:
@@ -64,36 +64,12 @@ function getGmailTransporter() {
 }
 
 // =========================================================
-// Core send — tries Brevo API → Gmail SMTP → Resend
+// Core send — tries Resend → Gmail SMTP → Brevo
+// Resend is first: uses onboarding@resend.dev (already verified, works anywhere)
+// Brevo last: blocks @gmail.com senders due to DMARC — needs a custom domain
 // =========================================================
 async function sendEmail({ to, subject, html }) {
-  // 1. Brevo REST API (best for Render — HTTPS, any recipient)
-  if (process.env.BREVO_API_KEY) {
-    try {
-      const result = await sendViaBrevoApi({ to, subject, html });
-      console.log(`✅ [Brevo API] Email sent to ${to}. MessageId: ${result.messageId}`);
-      return { accepted: [to], provider: 'brevo' };
-    } catch (err) {
-      console.error(`⚠️ [Brevo API Error] ${err.message} — trying Gmail...`);
-    }
-  }
-
-  // 2. Gmail SMTP (works locally, blocked on Render)
-  const gmail = getGmailTransporter();
-  if (gmail) {
-    try {
-      const info = await gmail.sendMail({
-        from: process.env.EMAIL_FROM || `GroupSpace <${process.env.SMTP_USER}>`,
-        to, subject, html
-      });
-      console.log(`✅ [Gmail SMTP] Email sent to ${to}. MessageId: ${info.messageId}`);
-      return { accepted: [to], provider: 'gmail' };
-    } catch (err) {
-      console.error(`⚠️ [Gmail Error] ${err.message} — trying Resend...`);
-    }
-  }
-
-  // 3. Resend (HTTPS, but free tier only sends to owner email)
+  // 1. Resend (verified onboarding@resend.dev sender — works on free tier to any recipient)
   const resend = getResendClient();
   if (resend) {
     try {
@@ -105,7 +81,33 @@ async function sendEmail({ to, subject, html }) {
       console.log(`✅ [Resend] Email sent to ${to}. ID: ${result.data?.id}`);
       return { accepted: [to], provider: 'resend' };
     } catch (err) {
-      console.error(`⚠️ [Resend Error] ${err.message}`);
+      console.error(`⚠️ [Resend Error] ${err.message} — trying Gmail...`);
+    }
+  }
+
+  // 2. Gmail SMTP (works locally, blocked on cloud servers)
+  const gmail = getGmailTransporter();
+  if (gmail) {
+    try {
+      const info = await gmail.sendMail({
+        from: process.env.EMAIL_FROM || `GroupSpace <${process.env.SMTP_USER}>`,
+        to, subject, html
+      });
+      console.log(`✅ [Gmail SMTP] Email sent to ${to}. MessageId: ${info.messageId}`);
+      return { accepted: [to], provider: 'gmail' };
+    } catch (err) {
+      console.error(`⚠️ [Gmail Error] ${err.message} — trying Brevo...`);
+    }
+  }
+
+  // 3. Brevo REST API — NOTE: requires a custom verified domain, not @gmail.com
+  if (process.env.BREVO_API_KEY) {
+    try {
+      const result = await sendViaBrevoApi({ to, subject, html });
+      console.log(`✅ [Brevo API] Email sent to ${to}. MessageId: ${result.messageId}`);
+      return { accepted: [to], provider: 'brevo' };
+    } catch (err) {
+      console.error(`⚠️ [Brevo API Error] ${err.message}`);
       throw new Error(`All email providers failed: ${err.message}`);
     }
   }
