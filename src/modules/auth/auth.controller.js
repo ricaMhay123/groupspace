@@ -184,6 +184,21 @@ async function testEmail(req, res) {
   }
 }
 
+async function debugEnv(req, res) {
+  // Only print the first 3 characters of secrets to be safe
+  const mask = (str) => (str ? str.substring(0, 3) + '***' : 'MISSING');
+  
+  return res.json({
+    SMTP_USER: process.env.SMTP_USER || 'MISSING',
+    SMTP_PASS: mask(process.env.SMTP_PASS),
+    SMTP_PORT: process.env.SMTP_PORT || 'MISSING',
+    SMTP_SECURE: process.env.SMTP_SECURE || 'MISSING',
+    NODE_ENV: process.env.NODE_ENV || 'MISSING',
+    BREVO_API_KEY: mask(process.env.BREVO_API_KEY),
+    RESEND_API_KEY: mask(process.env.RESEND_API_KEY)
+  });
+}
+
 module.exports = {
   sendVerificationCode,
   verifyCode,
@@ -194,5 +209,6 @@ module.exports = {
   getMe,
   logout,
   checkEmail,
-  testEmail
+  testEmail,
+  debugEnv
 };

@@ -17,5 +17,6 @@ router.get('/check-email', authController.checkEmail);
 router.get('/me', authMiddleware, authController.getMe);
 router.post('/logout', authMiddleware, authController.logout);
 router.get('/test-email', authController.testEmail);  // ← diagnostic, remove after fix
+router.get('/debug-env', authController.debugEnv);    // ← diagnostic, remove after fix
 
 module.exports = router;
