@@ -2,47 +2,44 @@ require('dotenv').config();
 
 // =========================================================
 // EMAIL TRANSPORT PRIORITY:
-//  1. Brevo REST API  — HTTPS, free 300/day, ANY recipient, works on Render ✅
-//  2. Resend API      — HTTPS fallback (only sends to owner email on free tier)
-//  3. Gmail SMTP      — local development only (blocked on cloud servers)
+//  1. Brevo SMTP relay — port 587, DKIM-signed, works on Vercel ✅
+//  2. Resend REST API  — HTTPS fallback
+//  3. Gmail SMTP       — local dev only
 // =========================================================
 const nodemailer = require('nodemailer');
 
-// --- Brevo REST API ---
-async function sendViaBrevoApi({ to, subject, html }) {
-  const apiKey = process.env.BREVO_API_KEY;
-  const fromEmail = process.env.BREVO_SMTP_USER || process.env.SMTP_USER || 'ricamhaysaturinas2@gmail.com';
-  if (!apiKey) return null;
+// --- Brevo SMTP Relay ---
+let _brevoTransporter = null;
+function getBrevoTransporter() {
+  if (_brevoTransporter) return _brevoTransporter;
+  const user = process.env.BREVO_SMTP_USER;
+  const pass = process.env.BREVO_SMTP_PASS;
+  if (!user || !pass) return null;
+  _brevoTransporter = nodemailer.createTransport({
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    secure: false,
+    auth: { user, pass },
+    tls: { rejectUnauthorized: false }
+  });
+  return _brevoTransporter;
+}
 
-  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+// --- Resend REST API ---
+async function sendViaResend({ to, subject, html }) {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return null;
+  const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
-    headers: {
-      'accept': 'application/json',
-      'api-key': apiKey,
-      'content-type': 'application/json'
-    },
+    headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      sender: { name: 'GroupSpace', email: fromEmail },
-      to: [{ email: to }],
-      subject,
-      htmlContent: html
+      from: 'GroupSpace <onboarding@resend.dev>',
+      to: [to], subject, html
     })
   });
-
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || JSON.stringify(data));
   return data;
-}
-
-// --- Resend API ---
-let _resendClient = null;
-function getResendClient() {
-  if (_resendClient) return _resendClient;
-  const { Resend } = require('resend');
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return null;
-  _resendClient = new Resend(key);
-  return _resendClient;
 }
 
 // --- Gmail SMTP (local dev only) ---
@@ -65,56 +62,59 @@ function getGmailTransporter() {
 
 // =========================================================
 // Core send — tries Resend → Gmail SMTP → Brevo
-// Resend is first: uses onboarding@resend.dev (already verified, works anywhere)
-// Brevo last: blocks @gmail.com senders due to DMARC — needs a custom domain
+// =========================================================
+// Core send — Brevo SMTP → Resend REST → Gmail SMTP
 // =========================================================
 async function sendEmail({ to, subject, html }) {
-  // 1. Resend (verified onboarding@resend.dev sender — works on free tier to any recipient)
-  const resend = getResendClient();
-  if (resend) {
+  const fromName = 'GroupSpace';
+  const fromEmail = process.env.BREVO_SMTP_USER || process.env.SMTP_USER;
+
+  // 1. Brevo SMTP relay (DKIM-signed via smtp-relay.brevo.com — works on Vercel)
+  const brevo = getBrevoTransporter();
+  if (brevo) {
     try {
-      const result = await resend.emails.send({
-        from: 'GroupSpace <onboarding@resend.dev>',
-        to: [to], subject, html
+      const info = await brevo.sendMail({
+        from: `"${fromName}" <${fromEmail}>`,
+        to, subject, html
       });
-      if (result.error) throw new Error(result.error.message);
-      console.log(`✅ [Resend] Email sent to ${to}. ID: ${result.data?.id}`);
+      console.log(`✅ [Brevo SMTP] Email sent to ${to}. MessageId: ${info.messageId}`);
+      return { accepted: [to], provider: 'brevo-smtp' };
+    } catch (err) {
+      console.error(`⚠️ [Brevo SMTP Error] ${err.message} — trying Resend...`);
+    }
+  }
+
+  // 2. Resend REST API
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const result = await sendViaResend({ to, subject, html });
+      console.log(`✅ [Resend] Email sent to ${to}. ID: ${result.id}`);
       return { accepted: [to], provider: 'resend' };
     } catch (err) {
       console.error(`⚠️ [Resend Error] ${err.message} — trying Gmail...`);
     }
   }
 
-  // 2. Gmail SMTP (works locally, blocked on cloud servers)
+  // 3. Gmail SMTP (local dev only — blocked on Vercel)
   const gmail = getGmailTransporter();
   if (gmail) {
     try {
       const info = await gmail.sendMail({
-        from: process.env.EMAIL_FROM || `GroupSpace <${process.env.SMTP_USER}>`,
+        from: process.env.EMAIL_FROM || `"${fromName}" <${process.env.SMTP_USER}>`,
         to, subject, html
       });
       console.log(`✅ [Gmail SMTP] Email sent to ${to}. MessageId: ${info.messageId}`);
       return { accepted: [to], provider: 'gmail' };
     } catch (err) {
-      console.error(`⚠️ [Gmail Error] ${err.message} — trying Brevo...`);
+      console.error(`⚠️ [Gmail Error] ${err.message}`);
+      throw new Error(`All email providers failed. Last error: ${err.message}`);
     }
   }
 
-  // 3. Brevo REST API — NOTE: requires a custom verified domain, not @gmail.com
-  if (process.env.BREVO_API_KEY) {
-    try {
-      const result = await sendViaBrevoApi({ to, subject, html });
-      console.log(`✅ [Brevo API] Email sent to ${to}. MessageId: ${result.messageId}`);
-      return { accepted: [to], provider: 'brevo' };
-    } catch (err) {
-      console.error(`⚠️ [Brevo API Error] ${err.message}`);
-      throw new Error(`All email providers failed: ${err.message}`);
-    }
-  }
-
-  console.warn(`⚠️ No email provider configured. OTP is in server logs above.`);
+  console.warn(`⚠️ No email provider configured. OTP logged above.`);
   return { accepted: [to], skipped: true };
 }
+
 
 // =========================================================
 // HTML Templates
