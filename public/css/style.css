@@ -1481,3 +1481,166 @@ h1, h2, h3, h4, h5, h6 {
   .form-actions { flex-direction: column; }
   .modal-card { padding: 24px 18px 20px; }
 }
+
+/* =========================================================
+   DARK MODE OVERRIDES
+   Fixes every hardcoded light color so text is readable
+   ========================================================= */
+
+.dark body,
+.dark html {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
+.dark h1, .dark h2, .dark h3,
+.dark h4, .dark h5, .dark h6 { color: var(--foreground) !important; }
+
+/* Navbar / header */
+.dark .navbar,
+.dark header { background-color: var(--card) !important; border-color: var(--border) !important; }
+.dark .navbar-brand,
+.dark header .logo h1 { color: var(--foreground) !important; }
+
+/* Bootstrap outline button */
+.dark .btn-outline-secondary { color: var(--foreground) !important; border-color: var(--border) !important; background-color: var(--card) !important; }
+.dark .btn-outline-secondary:hover { background-color: var(--muted) !important; color: var(--foreground) !important; }
+
+/* Landing: feature & step cards */
+.dark .feature-card,
+.dark .step-card { background-color: var(--card) !important; border-color: var(--border) !important; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+.dark .feature-card h3, .dark .step-card h3 { color: var(--foreground) !important; }
+.dark .feature-card p,  .dark .step-card p  { color: var(--muted-foreground) !important; }
+.dark .step-card .step-number { background-color: var(--muted) !important; color: var(--ring) !important; }
+
+/* Section titles */
+.dark .section-title h2 { color: var(--foreground) !important; }
+.dark .section-title p  { color: var(--muted-foreground) !important; }
+
+/* CTA */
+.dark .cta { background-color: var(--card) !important; border-color: var(--border) !important; }
+.dark .cta h2 { color: var(--foreground) !important; }
+.dark .cta p  { color: var(--muted-foreground) !important; }
+
+/* Footer */
+.dark footer { background-color: var(--card) !important; border-color: var(--border) !important; }
+.dark .footer-content h3 { color: var(--foreground) !important; }
+.dark .footer-content p  { color: var(--muted-foreground) !important; }
+.dark .footer-links a    { color: var(--muted-foreground) !important; }
+.dark .footer-links a:hover { color: var(--ring) !important; }
+.dark .copyright         { color: var(--muted-foreground) !important; }
+
+/* Modal */
+.dark .modal-card { background: var(--card) !important; box-shadow: 0 24px 80px rgba(0,0,0,0.6); }
+.dark .modal-header h3 { color: var(--foreground) !important; }
+.dark .modal-close { background: var(--muted) !important; color: var(--muted-foreground) !important; }
+.dark .modal-close:hover { background: hsl(0,62%,15%) !important; color: hsl(0,72%,70%) !important; }
+
+/* Form controls */
+.dark .form-control,
+.dark .form-select,
+.dark input:not([type="checkbox"]):not([type="radio"]),
+.dark textarea,
+.dark select { background: var(--input) !important; color: var(--foreground) !important; border-color: var(--border) !important; }
+.dark .form-control::placeholder, .dark input::placeholder { color: var(--muted-foreground) !important; opacity: 1; }
+.dark .form-control:focus { border-color: var(--ring) !important; box-shadow: 0 0 0 3px rgba(58,117,230,0.2) !important; background: var(--input) !important; }
+.dark .form-group label { color: var(--foreground) !important; }
+
+/* Bootstrap cards & bg helpers */
+.dark .card { background-color: var(--card) !important; border-color: var(--border) !important; color: var(--foreground) !important; }
+.dark .bg-white { background-color: var(--card) !important; }
+.dark .bg-light { background-color: var(--muted) !important; }
+.dark .text-dark { color: var(--foreground) !important; }
+.dark .text-muted, .dark .text-secondary { color: var(--muted-foreground) !important; }
+.dark .bg-primary-subtle { background-color: var(--muted) !important; }
+.dark .text-primary { color: var(--ring) !important; }
+.dark .border-primary-subtle { border-color: var(--border) !important; }
+.dark .border, .dark .border-bottom, .dark .border-top { border-color: var(--border) !important; }
+
+/* Dashboard layout */
+.dark body.dashboard-page  { background: var(--background) !important; }
+.dark .dashboard-main      { background: var(--background) !important; }
+.dark .dashboard-sidebar   { background: var(--card) !important; border-color: var(--border) !important; }
+.dark .dashboard-header    { background: var(--card) !important; border-color: var(--border) !important; }
+.dark .dashboard-header h1 { color: var(--foreground) !important; }
+.dark .dashboard-header p  { color: var(--muted-foreground) !important; }
+.dark .dashboard-card      { background: var(--card) !important; border-color: var(--border) !important; }
+.dark .dashboard-card h4   { color: var(--muted-foreground) !important; }
+.dark .dashboard-card h2   { color: var(--foreground) !important; }
+.dark .dashboard-panel     { background: var(--card) !important; border-color: var(--border) !important; }
+.dark .panel-header h3     { color: var(--foreground) !important; }
+
+/* Activity feed */
+.dark .activity-item            { border-color: var(--border) !important; }
+.dark .activity-item .act-icon  { background: var(--muted) !important; }
+.dark .activity-item .act-text  { color: var(--foreground) !important; }
+.dark .activity-item .act-time  { color: var(--muted-foreground) !important; }
+.dark .task-list li             { border-color: var(--border) !important; color: var(--foreground) !important; }
+
+/* Kanban */
+.dark .kanban-col           { background: var(--muted) !important; border-color: var(--border) !important; }
+.dark .kanban-col-header    { border-color: var(--border) !important; }
+.dark .kanban-col-title     { color: var(--foreground) !important; }
+.dark .col-badge            { background: var(--card) !important; border-color: var(--border) !important; color: var(--foreground) !important; }
+.dark .kanban-card          { background: var(--card) !important; border-color: var(--border) !important; }
+.dark .kanban-card h4       { color: var(--foreground) !important; }
+.dark .kanban-card p        { color: var(--muted-foreground) !important; }
+.dark .kanban-card .card-meta { color: var(--muted-foreground) !important; }
+.dark .priority-badge.HIGH   { background: hsl(0,60%,12%);   color: hsl(0,72%,72%); }
+.dark .priority-badge.MEDIUM { background: hsl(38,80%,12%);  color: hsl(38,80%,70%); }
+.dark .priority-badge.LOW    { background: hsl(142,60%,10%); color: hsl(142,60%,60%); }
+
+/* Notes */
+.dark .note-card             { background: var(--card) !important; border-color: var(--border) !important; }
+.dark .note-card h3          { color: var(--foreground) !important; }
+.dark .note-card .note-preview { color: var(--muted-foreground) !important; }
+.dark .note-card .note-meta  { color: var(--muted-foreground) !important; }
+.dark .note-tag              { background: var(--muted) !important; color: var(--ring) !important; }
+
+/* Expense table */
+.dark .expense-table th      { background: var(--muted) !important; color: var(--muted-foreground) !important; }
+.dark .expense-table td      { border-color: var(--border) !important; color: var(--foreground) !important; }
+.dark .expense-table tr:hover td { background: var(--muted) !important; }
+
+/* Discussions */
+.dark .topic-card            { background: var(--card) !important; border-color: var(--border) !important; }
+.dark .topic-card h3         { color: var(--foreground) !important; }
+.dark .topic-card .topic-meta { color: var(--muted-foreground) !important; }
+
+/* Dashboard search */
+.dark .dashboard-search input { background: var(--input) !important; color: var(--foreground) !important; border-color: var(--border) !important; }
+
+/* Personal space */
+.dark .personal-tabs         { background: var(--muted) !important; }
+.dark .personal-tab          { color: var(--muted-foreground) !important; }
+.dark .personal-tab.active   { background: var(--card) !important; color: var(--ring) !important; }
+.dark .personal-item         { background: var(--card) !important; border-color: var(--border) !important; }
+
+/* Sidebar */
+.dark .group-selector-box    { background: var(--muted) !important; border-color: var(--border) !important; }
+.dark .group-selector-box label { color: var(--ring) !important; }
+.dark .group-select          { background: var(--card) !important; color: var(--foreground) !important; border-color: var(--border) !important; }
+.dark .group-select option   { background: var(--card) !important; color: var(--foreground) !important; }
+.dark #sidebarMenu li        { color: var(--muted-foreground) !important; }
+.dark #sidebarMenu li:hover  { background: var(--muted) !important; color: var(--ring) !important; }
+.dark .dashboard-brand h2    { color: var(--foreground) !important; }
+.dark .profile-card h4       { color: var(--foreground) !important; }
+.dark .logout-btn            { color: var(--muted-foreground) !important; border-color: var(--border) !important; }
+.dark .logout-btn:hover      { background: hsl(0,62%,10%) !important; border-color: hsl(0,62%,45%) !important; color: hsl(0,72%,70%) !important; }
+
+/* Join code box */
+.dark .join-code-box         { background: var(--muted) !important; border-color: var(--border) !important; }
+.dark .join-code-box p       { color: var(--muted-foreground) !important; }
+.dark .join-code-box code    { background: var(--border) !important; color: var(--ring) !important; }
+
+/* Workspace cards */
+.dark .workspace-card        { background: var(--card) !important; border-color: var(--border) !important; }
+.dark .workspace-card h2     { color: var(--foreground) !important; }
+.dark .workspace-empty-card  { background: var(--card) !important; border-color: var(--border) !important; }
+.dark .workspace-empty-card h2 { color: var(--foreground) !important; }
+.dark .workspace-empty-card p { color: var(--muted-foreground) !important; }
+.dark .workspace-info code   { background: var(--muted) !important; color: var(--ring) !important; }
+
+/* Secondary button */
+.dark .secondary-btn, .dark .btn-outline { background: var(--card) !important; color: var(--foreground) !important; border-color: var(--border) !important; }
+.dark .secondary-btn:hover, .dark .btn-outline:hover { border-color: var(--ring) !important; color: var(--ring) !important; background: var(--muted) !important; }
