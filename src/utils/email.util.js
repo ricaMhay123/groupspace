@@ -67,6 +67,8 @@ async function sendViaResend({ to, subject, html }) {
 async function sendEmail({ to, subject, html }) {
   const fromUser = process.env.SMTP_USER;
 
+  const errors = [];
+
   // 1. Gmail SMTP via Google's own servers (DMARC-compliant, delivers to inbox)
   const gmail = getGmailTransporter();
   if (gmail) {
@@ -78,9 +80,11 @@ async function sendEmail({ to, subject, html }) {
       console.log(`✅ [Gmail SMTP] Email sent to ${to}. MessageId: ${info.messageId}`);
       return { accepted: [to], provider: 'gmail' };
     } catch (err) {
+      errors.push(`[Gmail SMTP Error] ${err.message}`);
       console.error(`⚠️ [Gmail SMTP Error] ${err.message} — trying Brevo...`);
     }
   } else {
+    errors.push('[Email] Gmail SMTP not configured (SMTP_USER or SMTP_PASS missing)');
     console.warn('[Email] Gmail SMTP not configured (SMTP_USER or SMTP_PASS missing)');
   }
 
@@ -91,8 +95,11 @@ async function sendEmail({ to, subject, html }) {
       console.log(`✅ [Brevo] Email queued to ${to}. MessageId: ${data.messageId}`);
       return { accepted: [to], provider: 'brevo', messageId: data.messageId };
     } catch (err) {
+      errors.push(`[Brevo Error] ${err.message}`);
       console.error(`⚠️ [Brevo Error] ${err.message} — trying Resend...`);
     }
+  } else {
+    errors.push('[Email] BREVO_API_KEY not configured');
   }
 
   // 3. Resend REST API (HTTPS)
@@ -102,11 +109,16 @@ async function sendEmail({ to, subject, html }) {
       console.log(`✅ [Resend] Email sent to ${to}. ID: ${data.id}`);
       return { accepted: [to], provider: 'resend' };
     } catch (err) {
+      errors.push(`[Resend Error] ${err.message}`);
       console.error(`⚠️ [Resend Error] ${err.message}`);
     }
+  } else {
+    errors.push('[Email] RESEND_API_KEY not configured');
   }
 
-  throw new Error('All email providers failed or none are configured. Check SMTP_USER, SMTP_PASS, BREVO_API_KEY in Vercel env vars.');
+  const finalError = new Error('All email providers failed or none are configured.');
+  finalError.trace = errors;
+  throw finalError;
 }
 
 

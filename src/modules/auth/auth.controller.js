@@ -177,12 +177,10 @@ async function testEmail(req, res) {
   const { sendOtpEmail } = require('../../utils/email.util');
   const to = req.query.to || 'test@example.com';
   try {
-    console.log('BREVO_API_KEY present:', !!process.env.BREVO_API_KEY);
-    console.log('BREVO_SMTP_USER:', process.env.BREVO_SMTP_USER);
     const result = await sendOtpEmail({ to, otpCode: '123456', type: 'SIGNUP' });
     return res.json({ success: true, result });
   } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message, trace: err.trace || [] });
   }
 }
 
