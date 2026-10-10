@@ -128,7 +128,8 @@
 
           <!-- Step 2: Enter OTP & New Password -->
           <form id="forgotStep2Form" style="display:none;">
-            <p class="text-muted fs-7 mb-3">A 6-digit code was sent to <strong id="forgotTargetEmail"></strong>.</p>
+            <p class="text-muted fs-7 mb-1">A 6-digit code was sent to <strong id="forgotTargetEmail"></strong>.</p>
+            <p class="fs-7 mb-3" style="color:var(--warning, #d97706);">📬 Can't find it? Check your <strong>Spam / Junk</strong> folder.</p>
             <div class="mb-3">
               <label class="form-label text-dark fw-medium fs-7 mb-1">6-Digit Code</label>
               <input type="text" id="forgotOtpCode" class="form-control text-center fw-bold fs-5" maxlength="6" placeholder="••••••" required>
