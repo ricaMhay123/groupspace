@@ -118,18 +118,7 @@
         <a href="#features" class="hero-btn-secondary">Explore Features</a>
       </div>
 
-      <!-- Social proof -->
-      <div class="hero-social-proof" id="heroSocial">
-        <div class="hero-avatars">
-          <div class="hero-avatar" style="background:#0248d4"></div>
-          <div class="hero-avatar" style="background:#8B5CF6"></div>
-          <div class="hero-avatar" style="background:#D946EF"></div>
-          <div class="hero-avatar" style="background:#F43F5E"></div>
-        </div>
-        <p class="hero-social-text">
-          <span class="hero-social-count">+2 400</span> workspaces created this month
-        </p>
-      </div>
+
     </div>
 
     <!-- RIGHT: dashboard card -->
@@ -211,16 +200,7 @@
 </section>
 
 
-<!-- ===================== TRUSTED BY ===================== -->
-<div class="trusted-section" id="trustedAnim">
-  <p class="trusted-label">Trusted by teams at</p>
-  <div class="trusted-logos">
-    <span class="trusted-logo-pill">🎓 UP Diliman</span>
-    <span class="trusted-logo-pill">🏫 DLSU</span>
-    <span class="trusted-logo-pill">📚 Ateneo</span>
-    <span class="trusted-logo-pill">🏢 UST</span>
-  </div>
-</div>
+
 
 
 <!-- ===================== FEATURES ===================== -->
@@ -385,7 +365,6 @@ window.addEventListener('DOMContentLoaded', () => {
   }, 950);
   setTimeout(() => animateIn(document.getElementById('heroSubtext'), 0),    500);
   setTimeout(() => animateIn(document.getElementById('heroCTA'), 0),        620);
-  setTimeout(() => animateIn(document.getElementById('heroSocial'), 0),     740);
 
   // Hero card
   const card = document.getElementById('heroCard');
@@ -420,9 +399,6 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }, 900);
 
-  // Trusted section
-  const trusted = document.getElementById('trustedAnim');
-  if (trusted) { trusted.dataset.delay = '0'; obs.observe(trusted); }
 });
 </script>
 </body>
