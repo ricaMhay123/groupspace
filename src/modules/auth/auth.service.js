@@ -57,19 +57,20 @@ async function requestVerificationCode(email, type = 'SIGNUP') {
     VALUES (${cleanEmail}, ${code}, ${type}, ${expiresAt})
   `;
 
-  // Await email delivery — on Vercel serverless, fire-and-forget gets
-  // killed the moment the response is sent, so we must await here.
+  // Await email delivery
+  let emailError = null;
   try {
     await sendOtpEmail({ to: cleanEmail, otpCode: code, type });
   } catch (err) {
+    emailError = err.message;
     console.error(`⚠️ [Email Error] Could not deliver to ${cleanEmail}: ${err.message}`);
-    // Don't throw — OTP is saved in DB; user can still receive it
   }
 
   return {
     success: true,
     message: `Verification code sent to ${cleanEmail}`,
-    devCode: code
+    devCode: code,
+    emailError   // null on success, error string on failure
   };
 }
 

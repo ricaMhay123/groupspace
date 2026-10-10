@@ -63,56 +63,73 @@ function getGmailTransporter() {
 // =========================================================
 // Core send — tries Resend → Gmail SMTP → Brevo
 // =========================================================
-// Core send — Brevo SMTP → Resend REST → Gmail SMTP
+// Core send — Brevo REST API (HTTPS) → Resend REST (HTTPS)
+// SMTP removed — Vercel may block outbound port 587
 // =========================================================
 async function sendEmail({ to, subject, html }) {
-  const fromName = 'GroupSpace';
-  const fromEmail = process.env.BREVO_SMTP_USER || process.env.SMTP_USER;
+  const fromEmail = process.env.BREVO_SMTP_USER || 'ricamhaysaturinas2@gmail.com';
 
-  // 1. Brevo SMTP relay (DKIM-signed via smtp-relay.brevo.com — works on Vercel)
-  const brevo = getBrevoTransporter();
-  if (brevo) {
+  // 1. Brevo REST API (HTTPS — not blocked by Vercel)
+  const brevoKey = process.env.BREVO_API_KEY;
+  console.log(`[Email] BREVO_API_KEY set: ${!!brevoKey}, BREVO_SMTP_USER: ${fromEmail}`);
+
+  if (brevoKey) {
     try {
-      const info = await brevo.sendMail({
-        from: `"${fromName}" <${fromEmail}>`,
-        to, subject, html
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': brevoKey.trim(),
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: { name: 'GroupSpace', email: fromEmail },
+          to: [{ email: to }],
+          subject,
+          htmlContent: html
+        })
       });
-      console.log(`✅ [Brevo SMTP] Email sent to ${to}. MessageId: ${info.messageId}`);
-      return { accepted: [to], provider: 'brevo-smtp' };
+      const data = await res.json();
+      console.log(`[Brevo] Status: ${res.status}, Response: ${JSON.stringify(data)}`);
+      if (!res.ok) throw new Error(`Brevo ${res.status}: ${data.message || JSON.stringify(data)}`);
+      console.log(`✅ [Brevo] Email queued to ${to}. MessageId: ${data.messageId}`);
+      return { accepted: [to], provider: 'brevo', messageId: data.messageId };
     } catch (err) {
-      console.error(`⚠️ [Brevo SMTP Error] ${err.message} — trying Resend...`);
+      console.error(`⚠️ [Brevo Error] ${err.message}`);
     }
   }
 
-  // 2. Resend REST API
-  if (process.env.RESEND_API_KEY) {
+  // 2. Resend REST API (HTTPS fallback)
+  const resendKey = process.env.RESEND_API_KEY;
+  console.log(`[Email] RESEND_API_KEY set: ${!!resendKey}`);
+
+  if (resendKey) {
     try {
       const result = await sendViaResend({ to, subject, html });
       console.log(`✅ [Resend] Email sent to ${to}. ID: ${result.id}`);
       return { accepted: [to], provider: 'resend' };
     } catch (err) {
-      console.error(`⚠️ [Resend Error] ${err.message} — trying Gmail...`);
+      console.error(`⚠️ [Resend Error] ${err.message}`);
+      throw new Error(`All providers failed. Brevo & Resend both errored. Check Vercel logs.`);
     }
   }
 
-  // 3. Gmail SMTP (local dev only — blocked on Vercel)
+  // 3. Gmail SMTP last resort (local dev)
   const gmail = getGmailTransporter();
   if (gmail) {
     try {
       const info = await gmail.sendMail({
-        from: process.env.EMAIL_FROM || `"${fromName}" <${process.env.SMTP_USER}>`,
+        from: `"GroupSpace" <${process.env.SMTP_USER}>`,
         to, subject, html
       });
-      console.log(`✅ [Gmail SMTP] Email sent to ${to}. MessageId: ${info.messageId}`);
+      console.log(`✅ [Gmail] Email sent to ${to}. MessageId: ${info.messageId}`);
       return { accepted: [to], provider: 'gmail' };
     } catch (err) {
       console.error(`⚠️ [Gmail Error] ${err.message}`);
-      throw new Error(`All email providers failed. Last error: ${err.message}`);
     }
   }
 
-  console.warn(`⚠️ No email provider configured. OTP logged above.`);
-  return { accepted: [to], skipped: true };
+  throw new Error('No email provider is configured or all failed. Check Vercel env vars.');
 }
 
 
