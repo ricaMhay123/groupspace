@@ -1,391 +1,563 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" id="htmlRoot">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GroupSpace | One Workspace. Better Teamwork.</title>
+    <meta
+      name="description"
+      content="GroupSpace is a collaboration platform designed for students, organizations, and project teams. Manage discussions, tasks, files, schedules, expenses, and members inside one modern workspace."
+    />
 
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GroupSpace | One Workspace. Better Teamwork.</title>
-<meta name="description" content="GroupSpace is a collaboration platform designed for students, organizations, and project teams. Manage discussions, tasks, files, schedules, expenses, and members inside one modern workspace.">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap"
+      rel="stylesheet"
+    />
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css?v=33.0" />
+    <link rel="stylesheet" href="/css/landing.css" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <script src="/js/theme.js"></script>
+  </head>
 
-<link rel="stylesheet" href="/css/style.css?v=33.0">
-<link rel="stylesheet" href="/css/landing.css">
-<link rel="icon" type="image/x-icon" href="favicon.ico">
-<script src="/js/theme.js"></script>
-</head>
+  <body id="landingBody">
+    <!-- ===================== NAVBAR ===================== -->
+    <header id="siteHeader" class="landing-header">
+      <div class="landing-nav-inner">
+        <!-- Logo -->
+        <div class="landing-logo" id="logoAnim">
+          <a href="/" class="landing-logo-link">
+            <span class="logo-icon">👥</span>
+            <span class="logo-text">GroupSpace</span>
+          </a>
 
-<body id="landingBody">
-
-<!-- ===================== NAVBAR ===================== -->
-<header id="siteHeader" class="landing-header">
-  <div class="landing-nav-inner">
-
-    <!-- Logo -->
-    <div class="landing-logo" id="logoAnim">
-      <a href="/" class="landing-logo-link">
-        <span class="logo-icon">👥</span>
-        <span class="logo-text">GroupSpace</span>
-      </a>
-
-      <!-- Desktop nav links -->
-      <nav class="landing-nav-links" aria-label="Main navigation">
-        <a href="#features" class="landing-nav-link">Features</a>
-        <a href="#works"    class="landing-nav-link">How It Works</a>
-      </nav>
-    </div>
-
-    <!-- Right: theme toggle + auth buttons -->
-    <div class="landing-nav-right" id="navRightAnim">
-      <button id="themeToggle" data-theme-toggle class="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle theme">
-        <svg data-theme-moon id="iconMoon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
-        <svg data-theme-sun  id="iconSun"  xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1"  x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-      </button>
-
-      <div id="authNavButtons" class="landing-auth-btns">
-        <a href="/login.html"    class="landing-signin-link">Sign in</a>
-        <a href="/register.html" class="landing-signup-btn">Sign up</a>
-      </div>
-
-      <!-- Hamburger (mobile) -->
-      <button id="menuToggle" class="hamburger-btn" aria-label="Open menu">
-        <svg id="iconMenu" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6"  x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        <svg id="iconClose" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6"  y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-  </div>
-
-  <!-- Mobile menu -->
-  <div id="mobileMenu" class="mobile-menu" aria-hidden="true">
-    <div class="mobile-menu-links">
-      <a href="#features" class="mobile-menu-link" onclick="closeMobileMenu()">Features</a>
-      <a href="#works"    class="mobile-menu-link" onclick="closeMobileMenu()">How It Works</a>
-    </div>
-    <div class="mobile-menu-auth">
-      <a href="/login.html"    class="mobile-menu-link" onclick="closeMobileMenu()">Sign in</a>
-      <a href="/register.html" class="mobile-menu-signup" onclick="closeMobileMenu()">Sign up</a>
-    </div>
-  </div>
-</header>
-
-
-<!-- ===================== HERO ===================== -->
-<section class="hero-section" id="home">
-
-  <!-- Decorative blobs -->
-  <div class="hero-blob hero-blob-1" id="blob1"></div>
-  <div class="hero-blob hero-blob-2" id="blob2"></div>
-
-  <!-- Dot grid -->
-  <div class="hero-grid-pattern" aria-hidden="true"></div>
-
-  <div class="hero-inner">
-
-    <!-- LEFT: text -->
-    <div class="hero-text" id="heroText">
-
-      <!-- Badge -->
-      <div class="hero-badge" id="heroBadge">
-        <span class="hero-badge-dot"></span>
-        New — Beta v1.0 available
-      </div>
-
-      <h1 class="hero-heading" id="heroHeading">
-        Organize your team<br>
-        to <span class="hero-heading-highlight">
-          maximum impact
-          <span class="hero-underline" id="heroUnderline"></span>
-        </span>
-      </h1>
-
-      <p class="hero-subtext" id="heroSubtext">
-        GroupSpace simplifies collaboration for students, organizations, and project teams.
-        Manage discussions, tasks, files, schedules, and expenses inside one modern workspace.
-      </p>
-
-      <div class="hero-cta-row" id="heroCTA">
-        <a href="/register.html" class="hero-btn-primary">
-          Get Started
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </a>
-        <a href="#features" class="hero-btn-secondary">Explore Features</a>
-      </div>
-
-
-    </div>
-
-    <!-- RIGHT: dashboard card -->
-    <div class="hero-card-wrap" id="heroCard">
-      <!-- Decorative rotated box behind card -->
-      <div class="hero-card-deco"></div>
-
-      <div class="hero-dashboard-card">
-        <!-- Titlebar -->
-        <div class="dashboard-titlebar">
-          <div class="titlebar-dots">
-            <span class="dot dot-red"></span>
-            <span class="dot dot-yellow"></span>
-            <span class="dot dot-green"></span>
-          </div>
-          <span class="titlebar-label">GroupSpace — Dashboard</span>
-          <div style="width:48px"></div>
+          <!-- Desktop nav links -->
+          <nav class="landing-nav-links" aria-label="Main navigation">
+            <a href="#features" class="landing-nav-link">Features</a>
+            <a href="#works" class="landing-nav-link">How It Works</a>
+          </nav>
         </div>
 
-        <!-- Dashboard body -->
-        <div class="dashboard-body">
+        <!-- Right: theme toggle + auth buttons -->
+        <div class="landing-nav-right" id="navRightAnim">
+          <button
+            id="themeToggle"
+            data-theme-toggle
+            class="theme-toggle-btn"
+            aria-label="Toggle dark mode"
+            title="Toggle theme"
+          >
+            <svg
+              data-theme-moon
+              id="iconMoon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"
+              />
+            </svg>
+            <svg
+              data-theme-sun
+              id="iconSun"
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+              style="display: none"
+            >
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+          </button>
 
-          <!-- Stats row -->
-          <div class="dash-stats-row">
-            <div class="dash-stat-card" id="stat0">
-              <p class="stat-label">Workspaces</p>
-              <p class="stat-value">24</p>
-              <p class="stat-delta">+3</p>
-            </div>
-            <div class="dash-stat-card" id="stat1">
-              <p class="stat-label">Members</p>
-              <p class="stat-value">1 840</p>
-              <p class="stat-delta">+12%</p>
-            </div>
-            <div class="dash-stat-card" id="stat2">
-              <p class="stat-label">Tasks Done</p>
-              <p class="stat-value">96%</p>
-              <p class="stat-delta">↑</p>
-            </div>
+          <div id="authNavButtons" class="landing-auth-btns">
+            <a href="/login.html" class="landing-signin-link">Sign in</a>
+            <a href="/register.html" class="landing-signup-btn">Sign up</a>
           </div>
 
-          <!-- Upcoming tasks -->
-          <div class="dash-section">
-            <p class="dash-section-title">Active Workspaces</p>
-            <div class="dash-list">
-              <div class="dash-list-item" id="item0">
-                <div class="dash-item-icon">📁</div>
-                <div class="dash-item-text">
-                  <p class="dash-item-name">CS Capstone Project</p>
-                  <p class="dash-item-sub">Due Dec 15, 2025</p>
-                </div>
-                <span class="dash-item-badge">8 members</span>
-              </div>
-              <div class="dash-list-item" id="item1">
-                <div class="dash-item-icon">💬</div>
-                <div class="dash-item-text">
-                  <p class="dash-item-name">Student Council</p>
-                  <p class="dash-item-sub">Dec 20, 2025</p>
-                </div>
-                <span class="dash-item-badge">12 members</span>
-              </div>
-            </div>
-          </div>
+          <!-- Hamburger (mobile) -->
+          <button id="menuToggle" class="hamburger-btn" aria-label="Open menu">
+            <svg
+              id="iconMenu"
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+            <svg
+              id="iconClose"
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+              style="display: none"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      </div>
 
-          <!-- Mini bar chart -->
-          <div class="dash-section">
-            <p class="dash-section-title">Monthly Activity</p>
-            <div class="dash-chart">
-              <div class="dash-chart-bars" id="chartBars">
-                <!-- bars injected by JS -->
+      <!-- Mobile menu -->
+      <div id="mobileMenu" class="mobile-menu" aria-hidden="true">
+        <div class="mobile-menu-links">
+          <a
+            href="#features"
+            class="mobile-menu-link"
+            onclick="closeMobileMenu()"
+            >Features</a
+          >
+          <a href="#works" class="mobile-menu-link" onclick="closeMobileMenu()"
+            >How It Works</a
+          >
+        </div>
+        <div class="mobile-menu-auth">
+          <a
+            href="/login.html"
+            class="mobile-menu-link"
+            onclick="closeMobileMenu()"
+            >Sign in</a
+          >
+          <a
+            href="/register.html"
+            class="mobile-menu-signup"
+            onclick="closeMobileMenu()"
+            >Sign up</a
+          >
+        </div>
+      </div>
+    </header>
+
+    <!-- ===================== HERO ===================== -->
+    <section class="hero-section" id="home">
+      <!-- Decorative blobs -->
+      <div class="hero-blob hero-blob-1" id="blob1"></div>
+      <div class="hero-blob hero-blob-2" id="blob2"></div>
+
+      <!-- Dot grid -->
+      <div class="hero-grid-pattern" aria-hidden="true"></div>
+
+      <div class="hero-inner">
+        <!-- LEFT: text -->
+        <div class="hero-text" id="heroText">
+          <h1 class="hero-heading" id="heroHeading">
+            Organize your team<br />
+            to
+            <span class="hero-heading-highlight">
+              maximum impact
+              <span class="hero-underline" id="heroUnderline"></span>
+            </span>
+          </h1>
+
+          <p class="hero-subtext" id="heroSubtext">
+            GroupSpace simplifies collaboration for students, organizations, and
+            project teams. Manage discussions, tasks, files, schedules, and
+            expenses inside one modern workspace.
+          </p>
+
+          <div class="hero-cta-row" id="heroCTA">
+            <a href="/register.html" class="hero-btn-primary">
+              Get Started
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </a>
+            <a href="#features" class="hero-btn-secondary">Explore Features</a>
+          </div>
+        </div>
+
+        <!-- RIGHT: dashboard card -->
+        <div class="hero-card-wrap" id="heroCard">
+          <!-- Decorative rotated box behind card -->
+          <div class="hero-card-deco"></div>
+
+          <div class="hero-dashboard-card">
+            <!-- Titlebar -->
+            <div class="dashboard-titlebar">
+              <div class="titlebar-dots">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+              </div>
+              <span class="titlebar-label">GroupSpace — Dashboard</span>
+              <div style="width: 48px"></div>
+            </div>
+
+            <!-- Dashboard body -->
+            <div class="dashboard-body">
+              <!-- Stats row -->
+              <div class="dash-stats-row">
+                <div class="dash-stat-card" id="stat0">
+                  <p class="stat-label">Workspaces</p>
+                  <p class="stat-value">24</p>
+                  <p class="stat-delta">+3</p>
+                </div>
+                <div class="dash-stat-card" id="stat1">
+                  <p class="stat-label">Members</p>
+                  <p class="stat-value">1 840</p>
+                  <p class="stat-delta">+12%</p>
+                </div>
+                <div class="dash-stat-card" id="stat2">
+                  <p class="stat-label">Tasks Done</p>
+                  <p class="stat-value">96%</p>
+                  <p class="stat-delta">↑</p>
+                </div>
+              </div>
+
+              <!-- Upcoming tasks -->
+              <div class="dash-section">
+                <p class="dash-section-title">Active Workspaces</p>
+                <div class="dash-list">
+                  <div class="dash-list-item" id="item0">
+                    <div class="dash-item-icon">📁</div>
+                    <div class="dash-item-text">
+                      <p class="dash-item-name">CS Capstone Project</p>
+                      <p class="dash-item-sub">Due Dec 15, 2025</p>
+                    </div>
+                    <span class="dash-item-badge">8 members</span>
+                  </div>
+                  <div class="dash-list-item" id="item1">
+                    <div class="dash-item-icon">💬</div>
+                    <div class="dash-item-text">
+                      <p class="dash-item-name">Student Council</p>
+                      <p class="dash-item-sub">Dec 20, 2025</p>
+                    </div>
+                    <span class="dash-item-badge">12 members</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mini bar chart -->
+              <div class="dash-section">
+                <p class="dash-section-title">Monthly Activity</p>
+                <div class="dash-chart">
+                  <div class="dash-chart-bars" id="chartBars">
+                    <!-- bars injected by JS -->
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-  </div>
-</section>
+    <!-- ===================== FEATURES ===================== -->
+    <section class="features" id="features">
+      <div class="section-title">
+        <h2>Everything Your Team Needs</h2>
+        <p>
+          GroupSpace provides powerful tools that help students, organizations,
+          and project teams collaborate more efficiently.
+        </p>
+      </div>
 
+      <div class="feature-container">
+        <div class="feature-card">
+          <div class="icon">💬</div>
+          <h3>Group Discussions</h3>
+          <p>
+            Create discussion threads, ask questions, and keep everyone updated.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">✅</div>
+          <h3>Task Management</h3>
+          <p>
+            Assign tasks, monitor deadlines, and track every member's progress.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">📁</div>
+          <h3>File Sharing</h3>
+          <p>
+            Upload and organize documents, presentations, images, and reports.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">📅</div>
+          <h3>Calendar</h3>
+          <p>
+            Never miss meetings or project deadlines with a shared calendar.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">👥</div>
+          <h3>Group Members</h3>
+          <p>Manage team members and assign different responsibilities.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">💰</div>
+          <h3>Expense Tracker</h3>
+          <p>Record shared expenses and easily monitor group contributions.</p>
+        </div>
+      </div>
+    </section>
 
+    <!-- ===================== HOW IT WORKS ===================== -->
+    <section id="works">
+      <div class="section-title">
+        <h2>Getting Started is Easy</h2>
+        <p>
+          Create your account, choose your workspace, and start collaborating
+          with your team.
+        </p>
+      </div>
 
+      <div class="steps-container">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h3>Create an Account</h3>
+          <p>Register your GroupSpace account in just a few seconds.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h3>Create or Join a Workspace</h3>
+          <p>
+            Create your own workspace or join an existing one using an
+            invitation.
+          </p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h3>Start Collaborating</h3>
+          <p>
+            Manage discussions, tasks, files, schedules, expenses, and members
+            together.
+          </p>
+        </div>
+      </div>
+    </section>
 
+    <!-- ===================== CTA ===================== -->
+    <section class="cta">
+      <div class="cta-container">
+        <h2>Ready to organize your next project?</h2>
+        <p>
+          Create your GroupSpace account and bring your team's tasks,
+          discussions, files, schedules, and expenses into one organized
+          workspace.
+        </p>
+        <a href="register.html" class="primary-btn">Get Started</a>
+      </div>
+    </section>
 
-<!-- ===================== FEATURES ===================== -->
-<section class="features" id="features">
-  <div class="section-title">
-    <h2>Everything Your Team Needs</h2>
-    <p>GroupSpace provides powerful tools that help students, organizations, and project teams collaborate more efficiently.</p>
-  </div>
+    <!-- ===================== FOOTER ===================== -->
+    <footer>
+      <div class="footer-content">
+        <h3>👥 GroupSpace</h3>
+        <p>One Workspace. Better Teamwork.</p>
+        <div class="footer-links">
+          <a href="#home">Home</a>
+          <a href="#features">Features</a>
+          <a href="#works">How It Works</a>
+          <a href="login.html">Login</a>
+          <a href="register.html">Register</a>
+        </div>
+        <p class="copyright">© 2026 GroupSpace. All Rights Reserved.</p>
+      </div>
+    </footer>
 
-  <div class="feature-container">
-    <div class="feature-card"><div class="icon">💬</div><h3>Group Discussions</h3><p>Create discussion threads, ask questions, and keep everyone updated.</p></div>
-    <div class="feature-card"><div class="icon">✅</div><h3>Task Management</h3><p>Assign tasks, monitor deadlines, and track every member's progress.</p></div>
-    <div class="feature-card"><div class="icon">📁</div><h3>File Sharing</h3><p>Upload and organize documents, presentations, images, and reports.</p></div>
-    <div class="feature-card"><div class="icon">📅</div><h3>Calendar</h3><p>Never miss meetings or project deadlines with a shared calendar.</p></div>
-    <div class="feature-card"><div class="icon">👥</div><h3>Group Members</h3><p>Manage team members and assign different responsibilities.</p></div>
-    <div class="feature-card"><div class="icon">💰</div><h3>Expense Tracker</h3><p>Record shared expenses and easily monitor group contributions.</p></div>
-  </div>
-</section>
+    <script>
+      /* ── Auth nav ── */
+      const token = localStorage.getItem("groupspace_token");
+      if (token) {
+        const navBtn = document.getElementById("authNavButtons");
+        if (navBtn)
+          navBtn.innerHTML = `<a href="dashboard.html" class="landing-signup-btn">Open Dashboard →</a>`;
+      }
 
+      /* ── Dark mode ── */
+      /* ── Dark mode handled by /js/theme.js ── */
 
-<!-- ===================== HOW IT WORKS ===================== -->
-<section id="works">
-  <div class="section-title">
-    <h2>Getting Started is Easy</h2>
-    <p>Create your account, choose your workspace, and start collaborating with your team.</p>
-  </div>
+      /* ── Sticky header ── */
+      const header = document.getElementById("siteHeader");
+      window.addEventListener(
+        "scroll",
+        () => {
+          header.classList.toggle("scrolled", window.scrollY > 10);
+        },
+        { passive: true },
+      );
 
-  <div class="steps-container">
-    <div class="step-card"><div class="step-number">1</div><h3>Create an Account</h3><p>Register your GroupSpace account in just a few seconds.</p></div>
-    <div class="step-card"><div class="step-number">2</div><h3>Create or Join a Workspace</h3><p>Create your own workspace or join an existing one using an invitation.</p></div>
-    <div class="step-card"><div class="step-number">3</div><h3>Start Collaborating</h3><p>Manage discussions, tasks, files, schedules, expenses, and members together.</p></div>
-  </div>
-</section>
+      /* ── Mobile menu ── */
+      const mobileMenu = document.getElementById("mobileMenu");
+      const iconMenu = document.getElementById("iconMenu");
+      const iconClose = document.getElementById("iconClose");
+      let menuOpen = false;
+      document.getElementById("menuToggle").addEventListener("click", () => {
+        menuOpen = !menuOpen;
+        mobileMenu.classList.toggle("open", menuOpen);
+        mobileMenu.setAttribute("aria-hidden", !menuOpen);
+        iconMenu.style.display = menuOpen ? "none" : "";
+        iconClose.style.display = menuOpen ? "" : "none";
+      });
+      function closeMobileMenu() {
+        menuOpen = false;
+        mobileMenu.classList.remove("open");
+        mobileMenu.setAttribute("aria-hidden", "true");
+        iconMenu.style.display = "";
+        iconClose.style.display = "none";
+      }
 
-
-<!-- ===================== CTA ===================== -->
-<section class="cta">
-  <div class="cta-container">
-    <h2>Ready to organize your next project?</h2>
-    <p>Create your GroupSpace account and bring your team's tasks, discussions, files, schedules, and expenses into one organized workspace.</p>
-    <a href="register.html" class="primary-btn">Get Started</a>
-  </div>
-</section>
-
-
-<!-- ===================== FOOTER ===================== -->
-<footer>
-  <div class="footer-content">
-    <h3>👥 GroupSpace</h3>
-    <p>One Workspace. Better Teamwork.</p>
-    <div class="footer-links">
-      <a href="#home">Home</a>
-      <a href="#features">Features</a>
-      <a href="#works">How It Works</a>
-      <a href="login.html">Login</a>
-      <a href="register.html">Register</a>
-    </div>
-    <p class="copyright">© 2026 GroupSpace. All Rights Reserved.</p>
-  </div>
-</footer>
-
-
-<script>
-/* ── Auth nav ── */
-const token = localStorage.getItem('groupspace_token');
-if (token) {
-  const navBtn = document.getElementById('authNavButtons');
-  if (navBtn) navBtn.innerHTML = `<a href="dashboard.html" class="landing-signup-btn">Open Dashboard →</a>`;
-}
-
-/* ── Dark mode ── */
-/* ── Dark mode handled by /js/theme.js ── */
-
-/* ── Sticky header ── */
-const header = document.getElementById('siteHeader');
-window.addEventListener('scroll', () => {
-  header.classList.toggle('scrolled', window.scrollY > 10);
-}, { passive: true });
-
-/* ── Mobile menu ── */
-const mobileMenu  = document.getElementById('mobileMenu');
-const iconMenu    = document.getElementById('iconMenu');
-const iconClose   = document.getElementById('iconClose');
-let menuOpen = false;
-document.getElementById('menuToggle').addEventListener('click', () => {
-  menuOpen = !menuOpen;
-  mobileMenu.classList.toggle('open', menuOpen);
-  mobileMenu.setAttribute('aria-hidden', !menuOpen);
-  iconMenu.style.display  = menuOpen ? 'none' : '';
-  iconClose.style.display = menuOpen ? ''     : 'none';
-});
-function closeMobileMenu() {
-  menuOpen = false;
-  mobileMenu.classList.remove('open');
-  mobileMenu.setAttribute('aria-hidden', 'true');
-  iconMenu.style.display  = '';
-  iconClose.style.display = 'none';
-}
-
-/* ── Bar chart ── */
-const bars   = [40, 65, 45, 80, 75, 90];
-const months = ['Jan','Feb','Mar','Apr','May','Jun'];
-const chartEl = document.getElementById('chartBars');
-if (chartEl) {
-  bars.forEach((h, i) => {
-    const col = document.createElement('div');
-    col.className = 'dash-bar-col';
-    col.innerHTML = `
+      /* ── Bar chart ── */
+      const bars = [40, 65, 45, 80, 75, 90];
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+      const chartEl = document.getElementById("chartBars");
+      if (chartEl) {
+        bars.forEach((h, i) => {
+          const col = document.createElement("div");
+          col.className = "dash-bar-col";
+          col.innerHTML = `
       <div class="dash-bar-track">
-        <div class="dash-bar-fill${h === 90 ? ' dash-bar-active' : ''}" data-h="${h}" style="height:0%"></div>
+        <div class="dash-bar-fill${h === 90 ? " dash-bar-active" : ""}" data-h="${h}" style="height:0%"></div>
       </div>
       <span class="dash-bar-label">${months[i]}</span>`;
-    chartEl.appendChild(col);
-  });
-}
+          chartEl.appendChild(col);
+        });
+      }
 
-/* ── Intersection Observer animations ── */
-function animateIn(el, delay = 0) {
-  el.style.opacity = '0';
-  el.style.transform = 'translateY(20px)';
-  el.style.transition = `opacity 0.6s ${delay}s ease, transform 0.6s ${delay}s cubic-bezier(.16,1,.3,1)`;
-  setTimeout(() => {
-    el.style.opacity = '1';
-    el.style.transform = 'translateY(0)';
-  }, 80);
-}
+      /* ── Intersection Observer animations ── */
+      function animateIn(el, delay = 0) {
+        el.style.opacity = "0";
+        el.style.transform = "translateY(20px)";
+        el.style.transition = `opacity 0.6s ${delay}s ease, transform 0.6s ${delay}s cubic-bezier(.16,1,.3,1)`;
+        setTimeout(() => {
+          el.style.opacity = "1";
+          el.style.transform = "translateY(0)";
+        }, 80);
+      }
 
-const obs = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (!entry.isIntersecting) return;
-    const el = entry.target;
-    const delay = parseFloat(el.dataset.delay || '0');
-    animateIn(el, delay);
-    obs.unobserve(el);
-  });
-}, { threshold: 0.12, rootMargin: '-40px 0px' });
+      const obs = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            const el = entry.target;
+            const delay = parseFloat(el.dataset.delay || "0");
+            animateIn(el, delay);
+            obs.unobserve(el);
+          });
+        },
+        { threshold: 0.12, rootMargin: "-40px 0px" },
+      );
 
-// Animate hero elements on load
-window.addEventListener('DOMContentLoaded', () => {
-  // Header
-  const hdr = document.getElementById('siteHeader');
-  hdr.style.transform = 'translateY(-80px)'; hdr.style.opacity = '0';
-  hdr.style.transition = 'transform 0.55s cubic-bezier(.16,1,.3,1), opacity 0.55s ease';
-  setTimeout(() => { hdr.style.transform = ''; hdr.style.opacity = '1'; }, 80);
+      // Animate hero elements on load
+      window.addEventListener("DOMContentLoaded", () => {
+        // Header
+        const hdr = document.getElementById("siteHeader");
+        hdr.style.transform = "translateY(-80px)";
+        hdr.style.opacity = "0";
+        hdr.style.transition =
+          "transform 0.55s cubic-bezier(.16,1,.3,1), opacity 0.55s ease";
+        setTimeout(() => {
+          hdr.style.transform = "";
+          hdr.style.opacity = "1";
+        }, 80);
 
-  // Badge
-  setTimeout(() => animateIn(document.getElementById('heroBadge'), 0),     200);
-  setTimeout(() => animateIn(document.getElementById('heroHeading'), 0),    320);
-  setTimeout(() => {
-    // underline
-    const ul = document.getElementById('heroUnderline');
-    if (ul) { ul.style.transform = 'scaleX(1)'; }
-  }, 950);
-  setTimeout(() => animateIn(document.getElementById('heroSubtext'), 0),    500);
-  setTimeout(() => animateIn(document.getElementById('heroCTA'), 0),        620);
 
-  // Hero card
-  const card = document.getElementById('heroCard');
-  card.style.opacity = '0'; card.style.transform = 'translateY(32px) scale(0.97)';
-  card.style.transition = 'opacity 0.75s 0.35s cubic-bezier(.16,1,.3,1), transform 0.75s 0.35s cubic-bezier(.16,1,.3,1)';
-  setTimeout(() => { card.style.opacity = '1'; card.style.transform = 'translateY(0) scale(1)'; }, 80);
+        setTimeout(
+          () => animateIn(document.getElementById("heroHeading"), 0),
+          320,
+        );
+        setTimeout(() => {
+          // underline
+          const ul = document.getElementById("heroUnderline");
+          if (ul) {
+            ul.style.transform = "scaleX(1)";
+          }
+        }, 950);
+        setTimeout(
+          () => animateIn(document.getElementById("heroSubtext"), 0),
+          500,
+        );
+        setTimeout(() => animateIn(document.getElementById("heroCTA"), 0), 620);
 
-  // Stat cards stagger
-  [0,1,2].forEach(i => {
-    const el = document.getElementById(`stat${i}`);
-    if (!el) return;
-    el.style.opacity = '0'; el.style.transform = 'translateY(10px)';
-    el.style.transition = `opacity 0.4s ${0.6 + i*0.08}s ease, transform 0.4s ${0.6 + i*0.08}s ease`;
-    setTimeout(() => { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; }, 80);
-  });
+        // Hero card
+        const card = document.getElementById("heroCard");
+        card.style.opacity = "0";
+        card.style.transform = "translateY(32px) scale(0.97)";
+        card.style.transition =
+          "opacity 0.75s 0.35s cubic-bezier(.16,1,.3,1), transform 0.75s 0.35s cubic-bezier(.16,1,.3,1)";
+        setTimeout(() => {
+          card.style.opacity = "1";
+          card.style.transform = "translateY(0) scale(1)";
+        }, 80);
 
-  // List items stagger
-  [0,1].forEach(i => {
-    const el = document.getElementById(`item${i}`);
-    if (!el) return;
-    el.style.opacity = '0'; el.style.transform = 'translateX(-10px)';
-    el.style.transition = `opacity 0.4s ${0.7 + i*0.1}s ease, transform 0.4s ${0.7 + i*0.1}s ease`;
-    setTimeout(() => { el.style.opacity = '1'; el.style.transform = 'translateX(0)'; }, 80);
-  });
+        // Stat cards stagger
+        [0, 1, 2].forEach((i) => {
+          const el = document.getElementById(`stat${i}`);
+          if (!el) return;
+          el.style.opacity = "0";
+          el.style.transform = "translateY(10px)";
+          el.style.transition = `opacity 0.4s ${0.6 + i * 0.08}s ease, transform 0.4s ${0.6 + i * 0.08}s ease`;
+          setTimeout(() => {
+            el.style.opacity = "1";
+            el.style.transform = "translateY(0)";
+          }, 80);
+        });
 
-  // Bar chart animate in
-  setTimeout(() => {
-    document.querySelectorAll('.dash-bar-fill').forEach((bar, i) => {
-      const h = bar.dataset.h;
-      bar.style.transition = `height 0.5s ${i*0.06}s ease-out`;
-      bar.style.height = h + '%';
-    });
-  }, 900);
+        // List items stagger
+        [0, 1].forEach((i) => {
+          const el = document.getElementById(`item${i}`);
+          if (!el) return;
+          el.style.opacity = "0";
+          el.style.transform = "translateX(-10px)";
+          el.style.transition = `opacity 0.4s ${0.7 + i * 0.1}s ease, transform 0.4s ${0.7 + i * 0.1}s ease`;
+          setTimeout(() => {
+            el.style.opacity = "1";
+            el.style.transform = "translateX(0)";
+          }, 80);
+        });
 
-});
-</script>
-</body>
+        // Bar chart animate in
+        setTimeout(() => {
+          document.querySelectorAll(".dash-bar-fill").forEach((bar, i) => {
+            const h = bar.dataset.h;
+            bar.style.transition = `height 0.5s ${i * 0.06}s ease-out`;
+            bar.style.height = h + "%";
+          });
+        }, 900);
+      });
+    </script>
+  </body>
 </html>
