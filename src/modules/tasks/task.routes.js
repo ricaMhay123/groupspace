@@ -58,11 +58,13 @@ router.delete('/:taskId', ctrl.remove);
 
 // ─── Flagging (Blocked / Help Needed) ────────────────────────────────────────
 
-// POST /:taskId/flag  — flag as blocked (assignee or leader)
+// POST /:taskId/flag and /:id/flag — flag as blocked (assignee or leader)
 router.post('/:taskId/flag', ctrl.flagTask);
+router.post('/:id/flag', ctrl.flagTask);
 
-// DELETE /:taskId/flag — clear flag (assignee or leader)
+// DELETE /:taskId/flag and /:id/flag — clear flag (assignee or leader)
 router.delete('/:taskId/flag', ctrl.unflagTask);
+router.delete('/:id/flag', ctrl.unflagTask);
 
 // ─── Peer-Assist Workflow ─────────────────────────────────────────────────────
 

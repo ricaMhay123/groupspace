@@ -483,34 +483,76 @@ async function deleteTask(taskId) {
 
 // ================= TAB 3: NOTEBOOK ================= //
 async function loadNotebook(query = '') {
+  const container = document.getElementById('notebookGrid');
+  if (!container || !currentGroupId) return;
+
+  container.innerHTML = '<p style="color:var(--gray); padding:30px;">Loading notebook pages...</p>';
+
   try {
+    // Primary: legacy flat notes endpoint
     const url = query
       ? `/api/groups/${currentGroupId}/notes?search=${encodeURIComponent(query)}`
       : `/api/groups/${currentGroupId}/notes`;
 
-    const res = await apiFetch(url);
-    const notes = res.data || [];
-    const container = document.getElementById('notebookGrid');
+    let notes = [];
+    try {
+      const res = await apiFetch(url);
+      notes = Array.isArray(res.data) ? res.data : [];
+    } catch (primaryErr) {
+      console.warn('[Notebook] Primary notes endpoint failed:', primaryErr.message);
+    }
 
+    // Fallback: collaborative notebooks endpoint
     if (notes.length === 0) {
-      container.innerHTML = '<p style="color:var(--gray); padding:30px;">No notes found. Create your first page!</p>';
+      try {
+        const nbRes = await apiFetch(`/api/notebooks/${currentGroupId}`);
+        // Try flat notes from response
+        if (Array.isArray(nbRes.notes) && nbRes.notes.length > 0) {
+          notes = nbRes.notes;
+        } else if (Array.isArray(nbRes.data) && nbRes.data.length > 0) {
+          // nbRes.data are notebook objects — fetch pages from first one
+          const primaryNotebook = nbRes.data[0];
+          try {
+            const pagesRes = await apiFetch(`/api/notebooks/${primaryNotebook.id}/pages`);
+            const pagesData = pagesRes.data;
+            if (pagesData && Array.isArray(pagesData.pages)) {
+              notes = pagesData.pages.map(p => ({
+                id: p.id,
+                title: p.title,
+                content: p.content || '',
+                tags: '',
+                is_pinned: false,
+                author_name: p.author_name || 'Member'
+              }));
+            }
+          } catch (pagesErr) {
+            console.warn('[Notebook] Pages fetch failed:', pagesErr.message);
+          }
+        }
+      } catch (nbErr) {
+        console.warn('[Notebook] Collaborative notebooks endpoint failed:', nbErr.message);
+      }
+    }
+
+    if (!notes || notes.length === 0) {
+      container.innerHTML = '<p style="color:var(--gray); padding:30px;">No notebook pages yet. Click <strong>+ New Page</strong> to create one!</p>';
       return;
     }
 
     container.innerHTML = notes.map(n => `
       <div class="note-card ${n.is_pinned ? 'pinned' : ''}">
         <div>
-          <h4>${escapeHtml(n.title)}</h4>
-          <p>${escapeHtml(n.content || '')}</p>
+          <h4>${escapeHtml(n.title || 'Untitled')}</h4>
+          <p style="white-space:pre-wrap;">${escapeHtml(n.content || '')}</p>
         </div>
         <div>
           ${n.tags ? `
             <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
-              ${n.tags.split(',').map(t => `<span style="font-size:11px; padding:2px 8px; background:#202522; border-radius:6px; color:var(--primary); font-weight:600;">#${escapeHtml(t.trim())}</span>`).join('')}
+              ${n.tags.split(',').filter(t => t.trim()).map(t => `<span style="font-size:11px; padding:2px 8px; background:#202522; border-radius:6px; color:var(--primary); font-weight:600;">#${escapeHtml(t.trim())}</span>`).join('')}
             </div>
           ` : ''}
-          <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-            <span>✍️ ${escapeHtml(n.author_name)}</span>
+          <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px;">
+            <span>✍️ ${escapeHtml(n.author_name || 'Member')}</span>
             <div style="display:flex; align-items:center; gap:6px;">
               <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id}, '${escapeHtml(n.title)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">📄 .txt</button>
               <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id}, '${escapeHtml(n.title)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">📕 .pdf</button>
@@ -522,7 +564,8 @@ async function loadNotebook(query = '') {
       </div>
     `).join('');
   } catch (err) {
-    showToast(err.message, 'error');
+    console.error('[Notebook] loadNotebook error:', err);
+    container.innerHTML = '<p style="color:var(--danger,#ff6b6b); padding:30px;">Error loading notebook. Please try again.</p>';
   }
 }
 
@@ -594,9 +637,164 @@ async function deleteNote(noteId) {
     showToast('Note deleted.', 'success');
     loadNotebook();
   } catch (err) {
-    showToast(err.message, 'error');
+    // Fallback: try notebook pages delete endpoint
+    try {
+      await apiFetch(`/api/notebooks/${noteId}/pages/${noteId}`, { method: 'DELETE' });
+      showToast('Note deleted.', 'success');
+      loadNotebook();
+    } catch (e2) {
+      showToast(err.message || 'Failed to delete note.', 'error');
+    }
   }
 }
+
+// ================= PERSONAL FEED DRAWER ================= //
+let personalFeedOpen = false;
+
+async function openPersonalFeedDrawer() {
+  const drawer = document.getElementById('personalFeedDrawer');
+  if (!drawer) { injectPersonalFeedDrawer(); return openPersonalFeedDrawer(); }
+
+  personalFeedOpen = !personalFeedOpen;
+  drawer.style.transform = personalFeedOpen ? 'translateX(0)' : 'translateX(100%)';
+
+  if (personalFeedOpen) {
+    await renderPersonalFeed();
+  }
+}
+
+function injectPersonalFeedDrawer() {
+  if (document.getElementById('personalFeedDrawer')) return;
+
+  const drawerHtml = `
+    <div id="personalFeedDrawer" style="
+      position:fixed; top:0; right:0; width:340px; height:100vh;
+      background:var(--sidebar-bg,#0f1613); border-left:1px solid var(--border,#2B342F);
+      z-index:9999; transform:translateX(100%); transition:transform 0.3s cubic-bezier(.4,0,.2,1);
+      display:flex; flex-direction:column; overflow:hidden;
+      box-shadow:-8px 0 32px rgba(0,0,0,0.35);
+    ">
+      <div style="padding:20px 18px 14px; border-bottom:1px solid var(--border,#2B342F); display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h3 style="margin:0; font-size:16px; font-weight:700; color:var(--text,#E1E7E3);">🔔 My Feed</h3>
+          <p style="margin:4px 0 0; font-size:12px; color:var(--gray,#7A8C84);">Mentions, approvals & help requests</p>
+        </div>
+        <button onclick="openPersonalFeedDrawer()" style="background:none; border:none; color:var(--gray,#7A8C84); font-size:18px; cursor:pointer; padding:4px 8px;">✕</button>
+      </div>
+      <div id="personalFeedContent" style="flex:1; overflow-y:auto; padding:16px;">
+        <p style="color:var(--gray,#7A8C84); text-align:center; padding:30px 0;">Loading feed...</p>
+      </div>
+    </div>
+    <button id="feedBellBtn" onclick="openPersonalFeedDrawer()" title="Open Personal Feed" style="
+      position:fixed; bottom:24px; right:24px; z-index:9998;
+      width:48px; height:48px; border-radius:50%; border:none;
+      background:var(--primary,#52D68A); color:#fff; font-size:20px;
+      cursor:pointer; box-shadow:0 4px 16px rgba(82,214,138,0.4);
+      display:flex; align-items:center; justify-content:center;
+      transition:transform 0.2s; animation: feedPulse 2.5s infinite;
+    ">🔔</button>
+    <style>
+      @keyframes feedPulse {
+        0%,100%{box-shadow:0 4px 16px rgba(82,214,138,0.4);}
+        50%{box-shadow:0 4px 28px rgba(82,214,138,0.75);}
+      }
+    </style>
+  `;
+  document.body.insertAdjacentHTML('beforeend', drawerHtml);
+}
+
+async function renderPersonalFeed() {
+  const content = document.getElementById('personalFeedContent');
+  if (!content) return;
+  content.innerHTML = '<p style="color:var(--gray,#7A8C84); text-align:center; padding:30px 0;">Loading feed...</p>';
+
+  try {
+    const res = await apiFetch('/api/user/personal-feed');
+    const data = res.data || {};
+    const mentions = data.mentions || [];
+    const pendingApprovals = data.pendingApprovals || [];
+    const helpRequests = data.helpRequests || [];
+
+    const total = mentions.length + pendingApprovals.length + helpRequests.length;
+
+    // Update bell badge
+    const bellBtn = document.getElementById('feedBellBtn');
+    if (bellBtn) {
+      bellBtn.innerHTML = total > 0 ? `🔔<span style="position:absolute;top:6px;right:6px;background:#FF5252;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;">${total > 9 ? '9+' : total}</span>` : '🔔';
+      if (total > 0) bellBtn.style.position = 'fixed';
+    }
+
+    if (total === 0) {
+      content.innerHTML = `
+        <div style="text-align:center; padding:40px 20px;">
+          <div style="font-size:3rem; margin-bottom:12px;">✅</div>
+          <h4 style="color:var(--text,#E1E7E3); margin-bottom:6px;">You're all caught up!</h4>
+          <p style="color:var(--gray,#7A8C84); font-size:13px;">No pending mentions, approvals or help requests.</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+
+    if (pendingApprovals.length > 0) {
+      html += `<div style="margin-bottom:20px;">
+        <h4 style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--warning,#FFB347); margin-bottom:10px;">⏳ Pending Approvals (${pendingApprovals.length})</h4>
+        ${pendingApprovals.map(t => `
+          <div style="background:#1C2A22; border:1px solid #2B4028; border-radius:10px; padding:12px 14px; margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div style="font-weight:600; font-size:13px; color:#E1E7E3;">${escapeHtml(t.title)}</div>
+              <span style="font-size:10px; padding:2px 8px; background:#FFB34722; color:#FFB347; border-radius:20px; font-weight:700; white-space:nowrap; margin-left:8px;">PENDING</span>
+            </div>
+            <div style="font-size:11px; color:var(--gray,#7A8C84); margin-top:4px;">Requested by: ${escapeHtml(t.creator_name || 'Member')}</div>
+            <div style="display:flex; gap:8px; margin-top:10px;">
+              <button onclick="approveTask(${t.id}, true); renderPersonalFeed();" style="flex:1; padding:6px; background:#52D68A; border:none; color:#0a1610; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">✅ Approve</button>
+              <button onclick="approveTask(${t.id}, false); renderPersonalFeed();" style="flex:1; padding:6px; background:#2B342F; border:1px solid #3D5045; color:#E1E7E3; border-radius:6px; font-size:12px; cursor:pointer;">🔄 Revise</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>`;
+    }
+
+    if (helpRequests.length > 0) {
+      html += `<div style="margin-bottom:20px;">
+        <h4 style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#FF7272; margin-bottom:10px;">⚠️ Help Needed (${helpRequests.length})</h4>
+        ${helpRequests.map(t => `
+          <div style="background:#2A1C1C; border:1px solid #3D2828; border-radius:10px; padding:12px 14px; margin-bottom:8px;">
+            <div style="font-weight:600; font-size:13px; color:#E1E7E3;">${escapeHtml(t.title)}</div>
+            <div style="font-size:11px; color:var(--gray,#7A8C84); margin-top:4px;">
+              ${t.flagged_reason ? `Blocked: ${escapeHtml(t.flagged_reason)}` : 'Member needs peer assistance'}
+            </div>
+            <div style="font-size:11px; color:#7A8C84; margin-top:2px;">Assigned to: ${escapeHtml(t.assignee_name || 'Member')}</div>
+            <button onclick="switchTab('tasks'); openPersonalFeedDrawer();" style="width:100%; margin-top:10px; padding:6px; background:#2B342F; border:1px solid #FF727244; color:#FF9999; border-radius:6px; font-size:12px; cursor:pointer;">🙋 View in Tasks</button>
+          </div>
+        `).join('')}
+      </div>`;
+    }
+
+    if (mentions.length > 0) {
+      html += `<div style="margin-bottom:20px;">
+        <h4 style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--primary,#52D68A); margin-bottom:10px;">💬 Mentions (${mentions.length})</h4>
+        ${mentions.map(m => `
+          <div style="background:#1C221F; border:1px solid #2B342F; border-radius:10px; padding:12px 14px; margin-bottom:8px;">
+            <div style="font-size:13px; color:#E1E7E3;">${escapeHtml(m.content || '')}</div>
+            <div style="font-size:11px; color:var(--gray,#7A8C84); margin-top:6px;">— ${escapeHtml(m.author_name || 'Member')} · ${formatDate(m.created_at)}</div>
+          </div>
+        `).join('')}
+      </div>`;
+    }
+
+    content.innerHTML = html;
+  } catch (err) {
+    console.warn('[PersonalFeed] Error:', err);
+    content.innerHTML = `<p style="color:var(--gray,#7A8C84); text-align:center; padding:30px;">Feed unavailable — check back later.</p>`;
+  }
+}
+
+// Auto-inject drawer when dashboard loads
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(injectPersonalFeedDrawer, 500);
+});
 
 // ================= TAB 4: EXPENSES & SETTLEMENTS ================= //
 async function loadExpenses() {

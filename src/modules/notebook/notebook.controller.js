@@ -29,11 +29,16 @@ function errorStatus(err) {
  */
 async function getGroupNotebooks(req, res) {
   try {
-    const notebooks = await notebookService.getGroupNotebooks(
-      req.params.groupId,
-      req.user.id
-    );
-    return res.status(HTTP_STATUS.OK).json({ success: true, data: notebooks });
+    const groupId = req.params.groupId;
+    const notebooks = await notebookService.getGroupNotebooks(groupId, req.user.id);
+    const flatNotes = await notebookService.getGroupNotes(groupId, req.query.search);
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: notebooks,
+      notebooks,
+      notes: flatNotes
+    });
   } catch (error) {
     return res.status(errorStatus(error)).json({ success: false, message: error.message });
   }
@@ -130,13 +135,28 @@ async function deleteNotebook(req, res) {
 // ─── Page Sub-Resource ─────────────────────────────────────────────────────────
 
 /**
- * GET /api/notebooks/:id/pages
+ * GET /api/notebooks/:id/pages and GET /api/notebooks/pages/:notebookId
  * Fetch all pages for a notebook (requires at least viewer access).
  */
 async function getPages(req, res) {
   try {
+    let notebookId = req.params.notebookId || req.params.id || req.query.notebookId;
+    const groupId = req.query.groupId || req.params.groupId;
+
+    // If notebookId isn't given directly, find the primary notebook for this group
+    if (!notebookId && groupId) {
+      const existing = await notebookService.getGroupNotebooks(groupId, req.user.id);
+      if (existing && existing.length > 0) {
+        notebookId = existing[0].id;
+      }
+    }
+
+    if (!notebookId) {
+      return res.status(HTTP_STATUS.OK).json({ success: true, data: { notebook: null, pages: [] } });
+    }
+
     const { notebook, pages } = await notebookService.getNotebookPages(
-      req.params.id,
+      notebookId,
       req.user.id,
       req.membership.role
     );

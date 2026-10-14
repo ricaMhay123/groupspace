@@ -155,9 +155,10 @@ async function remove(req, res) {
 async function flagTask(req, res) {
   try {
     const { reason } = req.body;
+    const taskId = req.params.taskId || req.params.id;
 
     const task = await taskService.flagTask({
-      taskId:   req.params.taskId,
+      taskId,
       groupId:  req.params.groupId,
       userId:   req.user.id,
       userRole: req.membership.role,
@@ -180,8 +181,9 @@ async function flagTask(req, res) {
  */
 async function unflagTask(req, res) {
   try {
+    const taskId = req.params.taskId || req.params.id;
     const task = await taskService.unflagTask({
-      taskId:   req.params.taskId,
+      taskId,
       groupId:  req.params.groupId,
       userId:   req.user.id,
       userRole: req.membership.role

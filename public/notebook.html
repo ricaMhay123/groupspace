@@ -1,0 +1,327 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notebook | GroupSpace</title>
+  <meta name="description" content="Collaborative Notebook - GroupSpace full-page editor">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css?v=12.0">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script src="/js/theme.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Inter", sans-serif; background: var(--bg, #0d1410); color: var(--text, #E1E7E3); min-height: 100vh; display: flex; flex-direction: column; }
+    .nb-header { position: sticky; top: 0; z-index: 100; background: var(--sidebar-bg, #111916); border-bottom: 1px solid var(--border, #2B342F); padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .nb-back-btn { display: flex; align-items: center; gap: 8px; background: none; border: 1px solid var(--border, #2B342F); color: var(--text, #E1E7E3); padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all 0.2s; }
+    .nb-back-btn:hover { background: var(--hover, #1C2A22); border-color: var(--primary, #52D68A); }
+    .nb-header-center { flex: 1; text-align: center; }
+    .nb-header-center h1 { font-size: 16px; font-weight: 700; color: var(--text, #E1E7E3); }
+    .nb-header-center p { font-size: 11px; color: var(--gray, #7A8C84); margin-top: 1px; }
+    .nb-header-actions { display: flex; align-items: center; gap: 10px; }
+    .btn-nb { padding: 8px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn-nb-outline { background: none; border: 1px solid var(--border, #2B342F); color: var(--text, #E1E7E3); }
+    .btn-nb-outline:hover { background: var(--hover, #1C2A22); }
+    .btn-nb-green { background: var(--primary, #52D68A); color: #0a1610; }
+    .btn-nb-green:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .nb-layout { display: flex; flex: 1; min-height: 0; }
+    .nb-sidebar { width: 240px; min-width: 200px; max-width: 280px; background: var(--sidebar-bg, #111916); border-right: 1px solid var(--border, #2B342F); display: flex; flex-direction: column; overflow: hidden; }
+    .nb-sidebar-header { padding: 16px 16px 12px; border-bottom: 1px solid var(--border, #2B342F); }
+    .nb-sidebar-header h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gray, #7A8C84); }
+    .nb-pages-list { flex: 1; overflow-y: auto; padding: 8px; }
+    .nb-page-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: all 0.15s; margin-bottom: 2px; border: 1px solid transparent; }
+    .nb-page-item:hover { background: var(--hover, #1C2A22); border-color: var(--border, #2B342F); }
+    .nb-page-item.active { background: rgba(82, 214, 138, 0.1); border-color: var(--primary, #52D68A); }
+    .nb-page-item-title { font-size: 13px; font-weight: 600; color: var(--text, #E1E7E3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nb-page-item-meta { font-size: 11px; color: var(--gray, #7A8C84); margin-top: 3px; }
+    .nb-sidebar-footer { padding: 12px; border-top: 1px solid var(--border, #2B342F); }
+    .nb-editor-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg, #0d1410); }
+    .nb-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 24px; background: var(--sidebar-bg, #111916); border-bottom: 1px solid var(--border, #2B342F); }
+    .nb-toolbar-group { display: flex; align-items: center; gap: 6px; padding-right: 10px; border-right: 1px solid var(--border, #2B342F); }
+    .nb-toolbar-group:last-child { border-right: none; padding-right: 0; }
+    .nb-toolbar label { font-size: 11px; color: var(--gray, #7A8C84); white-space: nowrap; }
+    .nb-toolbar select { background: #131815; color: var(--text, #E1E7E3); border: 1px solid var(--border, #2B342F); border-radius: 6px; padding: 4px 8px; font-size: 12px; font-family: "Inter", sans-serif; cursor: pointer; }
+    .nb-toolbar select:focus { outline: none; border-color: var(--primary, #52D68A); }
+    .btn-export-sm { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border, #2B342F); background: #1B231E; color: var(--text, #E1E7E3); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+    .btn-export-sm:hover { border-color: var(--primary, #52D68A); color: var(--primary, #52D68A); }
+    .nb-canvas { flex: 1; display: flex; flex-direction: column; padding: 32px 48px; overflow-y: auto; max-width: 900px; width: 100%; margin: 0 auto; }
+    #nbPageTitle { font-size: 28px; font-weight: 800; color: var(--text, #E1E7E3); background: transparent; border: none; border-bottom: 2px solid var(--border, #2B342F); width: 100%; padding: 0 0 12px; margin-bottom: 20px; font-family: "Inter", sans-serif; transition: border-color 0.2s; }
+    #nbPageTitle:focus { outline: none; border-bottom-color: var(--primary, #52D68A); }
+    #nbPageTitle::placeholder { color: var(--gray, #7A8C84); }
+    #nbPageContent { flex: 1; width: 100%; min-height: 480px; background: transparent; border: none; color: var(--text, #E1E7E3); font-size: 15px; font-family: "Inter", sans-serif; line-height: 1.7; resize: none; padding: 0; }
+    #nbPageContent:focus { outline: none; }
+    #nbPageContent::placeholder { color: var(--gray, #7A8C84); }
+    .nb-status-bar { padding: 8px 24px; border-top: 1px solid var(--border, #2B342F); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--gray, #7A8C84); background: var(--sidebar-bg, #111916); }
+    #nbSaveStatus { color: var(--primary, #52D68A); }
+    .nb-empty-pages { padding: 20px 16px; text-align: center; color: var(--gray, #7A8C84); font-size: 13px; }
+    .toast-container { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+    .toast { padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; animation: toastIn 0.3s ease; }
+    .toast.success { background: #1a3a26; border: 1px solid #52D68A; color: #52D68A; }
+    .toast.error { background: #3a1a1a; border: 1px solid #FF5252; color: #FF5252; }
+    .toast.info { background: #1a2a3a; border: 1px solid #4A9EFF; color: #4A9EFF; }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 768px) { .nb-sidebar { display: none; } .nb-canvas { padding: 20px 16px; } }
+  </style>
+</head>
+<body>
+<header class="nb-header">
+  <a href="dashboard.html" id="backBtn" class="nb-back-btn">&#8592; Back to Workspace</a>
+  <div class="nb-header-center">
+    <h1 id="notebookName">&#x1F4DD; Collaborative Notebook</h1>
+    <p id="notebookMeta">Loading workspace...</p>
+  </div>
+  <div class="nb-header-actions">
+    <button class="btn-nb btn-nb-outline" onclick="newPage()">+ New Page</button>
+    <button class="btn-nb btn-nb-green" id="savePageBtn" onclick="saveCurrentPage()">&#x1F4BE; Save Page</button>
+  </div>
+</header>
+
+<div class="nb-layout">
+  <aside class="nb-sidebar">
+    <div class="nb-sidebar-header"><h3>&#x1F4C4; Pages</h3></div>
+    <div class="nb-pages-list" id="nbPagesList"><div class="nb-empty-pages">Loading pages...</div></div>
+    <div class="nb-sidebar-footer">
+      <button class="btn-nb btn-nb-outline" style="width:100%; font-size:12px;" onclick="newPage()">+ Add Page</button>
+    </div>
+  </aside>
+
+  <div class="nb-editor-area">
+    <div class="nb-toolbar">
+      <div class="nb-toolbar-group">
+        <label>Font:</label>
+        <select id="nbFontFamily" onchange="applyFont(this.value)">
+          <option value="Inter, sans-serif" selected>Inter</option>
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="Calibri, sans-serif">Calibri</option>
+          <option value="'Times New Roman', serif">Times New Roman</option>
+          <option value="'Courier New', monospace">Courier New</option>
+        </select>
+      </div>
+      <div class="nb-toolbar-group">
+        <label>Size:</label>
+        <select id="nbFontSize" onchange="applyFontSize(this.value)">
+          <option value="13px">Small</option>
+          <option value="15px" selected>Normal</option>
+          <option value="17px">Large</option>
+          <option value="20px">XL</option>
+        </select>
+      </div>
+      <div class="nb-toolbar-group">
+        <label>Spacing:</label>
+        <select id="nbLineHeight" onchange="applyLineHeight(this.value)">
+          <option value="1.2">Compact</option>
+          <option value="1.5">Normal</option>
+          <option value="1.7" selected>Relaxed</option>
+          <option value="2.0">Double</option>
+        </select>
+      </div>
+      <div class="nb-toolbar-group">
+        <label>Export:</label>
+        <button class="btn-export-sm" onclick="exportPage('txt')">&#x1F4C4; .txt</button>
+        <button class="btn-export-sm" onclick="exportPage('pdf')">&#x1F4D5; .pdf</button>
+        <button class="btn-export-sm" onclick="exportPage('docx')">&#x1F4D8; .docx</button>
+      </div>
+    </div>
+
+    <div class="nb-canvas">
+      <input type="text" id="nbPageTitle" placeholder="Page Title..." autocomplete="off">
+      <textarea id="nbPageContent" placeholder="Start writing your notes here...&#10;&#10;Your work auto-saves every 4 seconds. Use Ctrl+S to save now."></textarea>
+    </div>
+
+    <div class="nb-status-bar">
+      <span id="nbAuthorInfo">-</span>
+      <span id="nbSaveStatus">Not saved yet</span>
+      <span id="nbWordCount">0 words</span>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="/js/api.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+'use strict';
+let currentUser = null, currentGroupId = null, currentNotebookId = null, currentPageId = null;
+let pages = [], autoSaveTimer = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  currentUser = await checkAuth();
+  if (!currentUser) return;
+  const params = new URLSearchParams(window.location.search);
+  currentGroupId = params.get('groupId') || localStorage.getItem('groupspace_active_group_id');
+  currentNotebookId = params.get('notebookId') || null;
+  if (currentGroupId) document.getElementById('backBtn').href = 'dashboard.html?groupId=' + currentGroupId;
+  await loadNotebook();
+  setupAutoSave();
+  updateWordCount();
+});
+
+async function loadNotebook() {
+  if (!currentGroupId) {
+    document.getElementById('nbPagesList').innerHTML = '<div class="nb-empty-pages">No workspace selected.<br><a href="dashboard.html" style="color:var(--primary);">Go to Dashboard</a></div>';
+    return;
+  }
+  try {
+    if (!currentNotebookId) {
+      const nbRes = await apiFetch('/api/notebooks/' + currentGroupId);
+      const notebooks = nbRes.data || [];
+      if (notebooks.length > 0) {
+        currentNotebookId = notebooks[0].id;
+        document.getElementById('notebookName').textContent = '\uD83D\uDCDD ' + (notebooks[0].title || 'Notebook');
+        document.getElementById('notebookMeta').textContent = notebooks[0].description || 'Collaborative workspace notebook';
+      } else {
+        const created = await apiFetch('/api/notebooks', { method: 'POST', body: JSON.stringify({ groupId: currentGroupId, title: 'Workspace Notebook', visibility: 'shared' }) });
+        currentNotebookId = created.data.id;
+        document.getElementById('notebookName').textContent = '\uD83D\uDCDD Workspace Notebook';
+      }
+    }
+    await loadPages();
+  } catch (err) {
+    console.error('[Notebook] loadNotebook error:', err);
+    showToast('Could not load notebook. ' + err.message, 'error');
+  }
+}
+
+async function loadPages() {
+  if (!currentNotebookId) return;
+  const list = document.getElementById('nbPagesList');
+  try {
+    const res = await apiFetch('/api/notebooks/' + currentNotebookId + '/pages');
+    const pagesData = res.data;
+    pages = (pagesData && Array.isArray(pagesData.pages)) ? pagesData.pages : [];
+    if (pages.length === 0) { list.innerHTML = '<div class="nb-empty-pages">No pages yet.<br>Click <strong>+ Add Page</strong> to start.</div>'; clearEditor(); return; }
+    renderPagesList();
+    if (!currentPageId || !pages.find(p => p.id === currentPageId)) openPage(pages[0]);
+  } catch (err) {
+    list.innerHTML = '<div class="nb-empty-pages">Error loading pages.</div>';
+  }
+}
+
+function renderPagesList() {
+  const list = document.getElementById('nbPagesList');
+  list.innerHTML = pages.map(p => '<div class="nb-page-item ' + (p.id === currentPageId ? 'active' : '') + '" onclick="openPageById(' + p.id + ')">'
+    + '<div class="nb-page-item-title">' + escapeHtml(p.title || 'Untitled') + '</div>'
+    + '<div class="nb-page-item-meta">\u270D\uFE0F ' + escapeHtml(p.author_name || 'Member') + '</div>'
+    + '</div>').join('');
+}
+
+function openPageById(id) { const p = pages.find(pg => pg.id === id); if (p) openPage(p); }
+
+function openPage(page) {
+  currentPageId = page.id;
+  document.getElementById('nbPageTitle').value = page.title || '';
+  document.getElementById('nbPageContent').value = page.content || '';
+  document.getElementById('nbAuthorInfo').textContent = '\u270D\uFE0F ' + (page.author_name || (currentUser && currentUser.fullName) || 'You');
+  document.getElementById('nbSaveStatus').textContent = 'Loaded';
+  renderPagesList();
+  updateWordCount();
+}
+
+function clearEditor() {
+  currentPageId = null;
+  document.getElementById('nbPageTitle').value = '';
+  document.getElementById('nbPageContent').value = '';
+  document.getElementById('nbAuthorInfo').textContent = '-';
+  document.getElementById('nbSaveStatus').textContent = 'New page';
+}
+
+async function saveCurrentPage() {
+  const title = document.getElementById('nbPageTitle').value.trim();
+  const content = document.getElementById('nbPageContent').value;
+  if (!title) { showToast('Please enter a page title.', 'error'); document.getElementById('nbPageTitle').focus(); return; }
+  const btn = document.getElementById('savePageBtn');
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Saving...';
+  document.getElementById('nbSaveStatus').textContent = 'Saving...';
+  try {
+    if (currentPageId) {
+      await apiFetch('/api/notebooks/' + currentNotebookId + '/pages/' + currentPageId, { method: 'PATCH', body: JSON.stringify({ title, content }) });
+    } else {
+      const res = await apiFetch('/api/notebooks/' + currentNotebookId + '/pages', { method: 'POST', body: JSON.stringify({ title, content, position: pages.length }) });
+      currentPageId = res.data.id;
+    }
+    document.getElementById('nbSaveStatus').textContent = '\u2705 Saved ' + new Date().toLocaleTimeString();
+    showToast('Page saved!', 'success');
+    await loadPages();
+  } catch (err) {
+    document.getElementById('nbSaveStatus').textContent = '\u274C Save failed';
+    showToast(err.message || 'Failed to save.', 'error');
+  } finally { btn.disabled = false; btn.textContent = orig; }
+}
+
+function newPage() {
+  clearEditor();
+  document.getElementById('nbPageTitle').focus();
+  document.querySelectorAll('.nb-page-item').forEach(el => el.classList.remove('active'));
+  showToast('New page started!', 'info');
+}
+
+function setupAutoSave() {
+  [document.getElementById('nbPageTitle'), document.getElementById('nbPageContent')].forEach(el => {
+    el.addEventListener('input', () => {
+      document.getElementById('nbSaveStatus').textContent = 'Unsaved...';
+      clearTimeout(autoSaveTimer);
+      autoSaveTimer = setTimeout(saveCurrentPage, 4000);
+      updateWordCount();
+    });
+  });
+  document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCurrentPage(); } });
+}
+
+function updateWordCount() {
+  const text = (document.getElementById('nbPageTitle').value || '') + ' ' + (document.getElementById('nbPageContent').value || '');
+  const w = text.trim().split(/\s+/).filter(Boolean).length;
+  const el = document.getElementById('nbWordCount');
+  if (el) el.textContent = w + ' word' + (w !== 1 ? 's' : '');
+}
+
+function applyFont(f) { document.getElementById('nbPageContent').style.fontFamily = f; }
+function applyFontSize(s) { document.getElementById('nbPageContent').style.fontSize = s; }
+function applyLineHeight(l) { document.getElementById('nbPageContent').style.lineHeight = l; }
+
+async function exportPage(format) {
+  const title = document.getElementById('nbPageTitle').value.trim() || 'Notebook Page';
+  const content = document.getElementById('nbPageContent').value || '';
+  const safe = title.replace(/[^a-z0-9_-]/gi, '_').slice(0, 80);
+  const font = document.getElementById('nbFontFamily').value || 'Inter, sans-serif';
+  const lh = document.getElementById('nbLineHeight').value || '1.7';
+  if (format === 'txt') {
+    const blob = new Blob([title + '\n' + '='.repeat(title.length) + '\n\n' + content], { type: 'text/plain' });
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: safe + '.txt' });
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    showToast('Downloaded .txt', 'success');
+  } else if (format === 'pdf') {
+    if (typeof html2pdf === 'undefined') { showToast('Loading PDF engine...', 'info'); return; }
+    const div = document.createElement('div');
+    div.style.cssText = 'padding:28px;font-family:' + font + ';line-height:' + lh + ';color:#111;background:#fff;';
+    div.innerHTML = '<h1 style="font-size:22px;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:16px;">' + title + '</h1><div style="font-size:14px;white-space:pre-wrap;">' + content + '</div>';
+    html2pdf().from(div).set({ margin:[10,10,10,10], filename: safe+'.pdf', html2canvas:{scale:2}, jsPDF:{unit:'mm',format:'a4'} }).save().then(() => showToast('Downloaded .pdf','success'));
+  } else if (format === 'docx') {
+    try {
+      showToast('Generating Word doc...', 'info');
+      const r = await fetch('/api/notebooks/export/docx', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify({ notebookId: currentNotebookId, pageId: currentPageId || 0, title, htmlContent: '<h2>' + title + '</h2><p>' + content.replace(/\n/g,'<br/>') + '</p>', font: font.split(',')[0].replace(/'/g,'').trim(), lineHeight: parseFloat(lh) }) });
+      if (!r.ok) throw new Error('Server error generating DOCX');
+      const blob = await r.blob();
+      const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: safe + '.docx' });
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      showToast('Downloaded .docx', 'success');
+    } catch (err) { showToast(err.message || 'DOCX failed', 'error'); }
+  }
+}
+
+function escapeHtml(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+function showToast(msg, type) {
+  const c = document.getElementById('toastContainer');
+  if (!c) return;
+  const t = document.createElement('div');
+  t.className = 'toast ' + (type||'success');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+</script>
+</body>
+</html>

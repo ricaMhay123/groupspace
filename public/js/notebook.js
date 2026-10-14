@@ -102,8 +102,10 @@ function initSavePageModalListener() {
         showToast('Page saved successfully!', 'success');
       }
 
-      // Refresh list
-      if (typeof loadNotebook === 'function') {
+      // Refresh list using loadNotebookPages
+      if (typeof loadNotebookPages === 'function') {
+        await loadNotebookPages();
+      } else if (typeof loadNotebook === 'function') {
         await loadNotebook();
       }
     } catch (err) {
@@ -124,6 +126,100 @@ function initSavePageModalListener() {
   }
   if (form) {
     form.addEventListener('submit', handleSavePage);
+  }
+}
+
+/**
+ * Loads and renders saved notebook pages / notes in the shared notes list container (#notebookGrid).
+ * Supports responses from GET /api/notebooks/:groupId, GET /api/notebooks/pages/:notebookId,
+ * and GET /api/groups/:groupId/notes.
+ */
+async function loadNotebookPages(groupId = null) {
+  const activeGroupId = groupId || (typeof currentGroupId !== 'undefined' ? currentGroupId : null);
+  const container = document.getElementById('notebookGrid');
+  if (!container || !activeGroupId) return;
+
+  try {
+    // 1. Fetch from /api/notebooks/:groupId
+    const res = await fetch(`/api/notebooks/${activeGroupId}`, {
+      credentials: 'same-origin'
+    });
+    const result = await res.json();
+
+    let items = [];
+
+    // Parse records from result.notes, result.data, or pages
+    if (result && result.notes && Array.isArray(result.notes) && result.notes.length > 0) {
+      items = result.notes;
+    } else if (result && Array.isArray(result.data) && result.data.length > 0) {
+      items = result.data;
+    } else if (result && result.data && Array.isArray(result.data.pages) && result.data.pages.length > 0) {
+      items = result.data.pages;
+    }
+
+    // 2. If no items yet, check if there's a notebookId to query /api/notebooks/pages/:notebookId
+    if (items.length === 0 && result && Array.isArray(result.data) && result.data.length > 0 && result.data[0].id) {
+      const primaryNotebookId = result.data[0].id;
+      const pagesRes = await fetch(`/api/notebooks/pages/${primaryNotebookId}`, { credentials: 'same-origin' });
+      const pagesData = await pagesRes.json();
+      if (pagesData && pagesData.data && Array.isArray(pagesData.data.pages)) {
+        items = pagesData.data.pages;
+      }
+    }
+
+    // 3. Fallback to /api/groups/:groupId/notes if empty
+    if (items.length === 0 && typeof apiFetch === 'function') {
+      try {
+        const legacyRes = await apiFetch(`/api/groups/${activeGroupId}/notes`);
+        if (legacyRes && Array.isArray(legacyRes.data)) {
+          items = legacyRes.data;
+        }
+      } catch (e) {}
+    }
+
+    // Render empty state
+    if (!items || items.length === 0) {
+      container.innerHTML = '<p style="color:var(--gray); padding:30px;">No notebook pages found. Create your first page!</p>';
+      return;
+    }
+
+    // Render note cards matching active group_id
+    container.innerHTML = items.map(n => {
+      const title = n.title || 'Untitled Page';
+      const content = n.content || '';
+      const author = n.author_name || n.author || 'Member';
+      const isPinned = Boolean(n.is_pinned);
+      const tags = n.tags || '';
+      const safeId = n.id || 0;
+
+      return `
+        <div class="note-card ${isPinned ? 'pinned' : ''}">
+          <div>
+            <h4>${escapeHtml(title)}</h4>
+            <p style="white-space:pre-wrap;">${escapeHtml(content)}</p>
+          </div>
+          <div>
+            ${tags ? `
+              <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
+                ${tags.split(',').map(t => `<span style="font-size:11px; padding:2px 8px; background:#202522; border-radius:6px; color:var(--primary); font-weight:600;">#${escapeHtml(t.trim())}</span>`).join('')}
+              </div>
+            ` : ''}
+            <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px;">
+              <span>✍️ ${escapeHtml(author)}</span>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">📄 .txt</button>
+                <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">📕 .pdf</button>
+                <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">📘 .docx</button>
+                <span style="cursor:pointer; color:#FF7272; margin-left:4px;" title="Delete Note" onclick="deleteNote(${safeId})">🗑️</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error('Failed to load notebook pages:', err);
+    container.innerHTML = '<p style="color:var(--gray); padding:30px;">Error loading notebook pages.</p>';
   }
 }
 

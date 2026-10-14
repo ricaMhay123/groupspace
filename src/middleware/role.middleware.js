@@ -10,8 +10,30 @@ const { ROLES, HTTP_STATUS, SYSTEM_MESSAGES } = require('../config/constants');
  * Middleware ensuring user is a member of the group specified in req.params.groupId (or req.body.groupId)
  */
 async function requireGroupMembership(req, res, next) {
-  const groupId = req.params.groupId || req.params.id || req.body.groupId;
+  let groupId = req.params.groupId || req.body.groupId || req.query.groupId;
+  const taskId = req.params.taskId; // only for task routes, NOT req.params.id generically
   const userId = req.user && req.user.id;
+
+  // If mounted at /api/tasks/:id/flag, resolve groupId from tasks table
+  if (!groupId && taskId) {
+    try {
+      const [taskRow] = await sql`SELECT group_id FROM tasks WHERE id = ${taskId}`;
+      if (taskRow) {
+        groupId = taskRow.group_id;
+        req.params.groupId = groupId;
+      }
+    } catch (e) {}
+  }
+
+  // Resolve groupId from notebook/page IDs when mounted as /api/notebooks/:id/*
+  if (!groupId && req.params.id) {
+    // Only use :id as groupId if we are NOT on a sub-resource route (i.e. no /pages, /permissions suffix)
+    const isNotebookSubRoute = req.path.includes('/pages') || req.path.includes('/permissions');
+    if (!isNotebookSubRoute) {
+      // Try treating :id as a groupId — if not valid a group, skip
+      groupId = req.params.id;
+    }
+  }
 
   if (!groupId) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -19,6 +41,7 @@ async function requireGroupMembership(req, res, next) {
       message: 'Workspace ID is required.'
     });
   }
+
 
   if (!userId) {
     return res.status(HTTP_STATUS.UNAUTHORIZED).json({

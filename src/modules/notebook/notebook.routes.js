@@ -34,6 +34,12 @@ router.post(
 );
 
 router.get(
+  '/pages/:notebookId',
+  requireGroupMembership,
+  ctrl.getPages
+);
+
+router.get(
   '/pages',
   requireGroupMembership,
   ctrl.getPages

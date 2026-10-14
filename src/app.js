@@ -23,6 +23,8 @@ const expenseRoutes    = require('./modules/expenses/expense.routes');
 const personalRoutes   = require('./modules/personal-space/personal.routes');
 const discussionRoutes = require('./modules/discussions/discussion.routes');
 const calendarRoutes   = require('./modules/calendar/event.routes');
+const personalCtrl     = require('./modules/personal-space/personal.controller');
+const { authMiddleware } = require('./middleware/auth.middleware');
 
 const app = express();
 
@@ -43,6 +45,7 @@ app.use(express.static(publicDir));
 app.use('/api/auth',    authRoutes);
 app.use('/api/groups',  groupRoutes);
 app.use('/api/groups/:groupId/tasks',       taskRoutes);
+app.use('/api/tasks',                       taskRoutes);
 app.use('/api/groups/:groupId/notes',       notebookRoutes); // legacy flat-notes (kept for backwards compat)
 app.use('/api/groups/:groupId/expenses',    expenseRoutes);
 app.use('/api/groups/:groupId/discussions', discussionRoutes);
@@ -51,6 +54,9 @@ app.use('/api/personal', personalRoutes);
 
 // Collaborative Notebook module — top-level resource
 app.use('/api/notebooks', notebookRoutes);
+
+// Personal Feed alias — must be BEFORE /api/personal (which is mounted with sub-routes)
+app.get('/api/user/personal-feed', authMiddleware, personalCtrl.getPersonalFeed);
 
 // Health check endpoint with Neon database ping
 app.get('/api/health', async (req, res) => {

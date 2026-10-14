@@ -204,13 +204,17 @@
         <div class="dashboard-search" style="flex:1;">
           <input type="text" id="noteSearchInput" placeholder="🔍 Search notebook pages and tags..." oninput="debounceNotesSearch()">
         </div>
-        <button onclick="openModal('createNoteModal')" class="btn-green">+ New Page</button>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button onclick="window.open('notebook.html?groupId=' + currentGroupId, '_blank')" class="btn-outline" style="font-size:13px; padding:8px 16px;">↗ Full Editor</button>
+          <button onclick="openModal('createNoteModal')" class="btn-green">+ New Page</button>
+        </div>
       </div>
 
       <div class="notebook-grid" id="notebookGrid">
         <p style="color:var(--gray);">Loading shared notes...</p>
       </div>
     </section>
+
 
     <!-- TAB 4: EXPENSES -->
     <section id="tab-expenses" class="tab-view" style="display:none;">
