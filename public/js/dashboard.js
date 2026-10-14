@@ -516,23 +516,55 @@ function debounceNotesSearch() {
 }
 
 async function handleCreateNote(e) {
-  e.preventDefault();
-  const title = document.getElementById('noteTitle').value.trim();
-  const content = document.getElementById('noteContent').value;
-  const tags = document.getElementById('noteTags').value.trim();
-  const isPinned = document.getElementById('notePinned').checked;
+  if (e && typeof e.preventDefault === 'function') {
+    e.preventDefault();
+  }
+
+  const titleEl   = document.getElementById('noteTitle');
+  const contentEl = document.getElementById('noteContent');
+  const tagsEl    = document.getElementById('noteTags');
+  const pinnedEl  = document.getElementById('notePinned');
+
+  const title    = titleEl ? titleEl.value.trim() : '';
+  const content  = contentEl ? contentEl.value : '';
+  const tags     = tagsEl ? tagsEl.value.trim() : '';
+  const isPinned = pinnedEl ? pinnedEl.checked : false;
+
+  if (!title) {
+    showToast('Page title is required.', 'error');
+    if (titleEl) titleEl.focus();
+    return;
+  }
+
+  // Find submit button to toggle loading state and prevent duplicate submissions
+  const submitBtn = e && e.target ? e.target.querySelector('button[type="submit"]') : null;
+  const originalText = submitBtn ? submitBtn.textContent : 'Save Page';
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+  }
 
   try {
     await apiFetch(`/api/groups/${currentGroupId}/notes`, {
       method: 'POST',
       body: JSON.stringify({ title, content, tags, isPinned })
     });
+
     closeModal('createNoteModal');
-    document.getElementById('createNoteForm').reset();
+
+    const form = document.getElementById('createNoteForm');
+    if (form) form.reset();
+
     showToast('Page added to notebook!', 'success');
-    loadNotebook();
+    await loadNotebook();
   } catch (err) {
-    showToast(err.message, 'error');
+    console.error('Error saving notebook page:', err);
+    showToast(err.message || 'Failed to save notebook page.', 'error');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
   }
 }
 

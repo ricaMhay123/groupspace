@@ -7,7 +7,7 @@
 
 'use strict';
 
-const { NotebookModel, NotebookPageModel, NotebookPermissionModel } = require('./notebook.model');
+const { NoteModel, NotebookModel, NotebookPageModel, NotebookPermissionModel } = require('./notebook.model');
 const GroupModel   = require('../groups/group.model');
 const { ROLES, NOTEBOOK_ROLES, NOTEBOOK_VISIBILITY, SYSTEM_MESSAGES } = require('../../config/constants');
 const { sanitizeText } = require('../../utils/validation.util');
@@ -286,6 +286,80 @@ async function deletePage({ pageId, notebookId, userId, groupRole }) {
   return { success: true };
 }
 
+// ─── Legacy / Flat Note Services (Dashboard Workspace Notes) ───────────────────
+
+async function createNote({ groupId, title, content, tags, isPinned, authorUserId, authorName }) {
+  const cleanTitle = sanitizeText(title);
+  if (!cleanTitle) {
+    throw Object.assign(new Error('Page title is required.'), { httpStatus: 400 });
+  }
+
+  const note = await NoteModel.create({
+    groupId: Number(groupId),
+    title: cleanTitle,
+    content: content || '',
+    tags: sanitizeText(tags),
+    isPinned: Boolean(isPinned),
+    authorUserId
+  });
+
+  try {
+    await GroupModel.logActivity({
+      groupId: Number(groupId),
+      userId: authorUserId,
+      actionType: 'NOTE_CREATED',
+      description: `${authorName || 'A member'} created notebook page: "${cleanTitle}".`
+    });
+  } catch (e) {}
+
+  return note;
+}
+
+async function getGroupNotes(groupId, searchQuery) {
+  return await NoteModel.findByGroup(Number(groupId), searchQuery);
+}
+
+async function updateNote({ noteId, groupId, title, content, tags, isPinned, userId, userRole, userName }) {
+  const note = await NoteModel.findById(noteId);
+  if (!note || note.group_id !== Number(groupId)) {
+    throw Object.assign(new Error('Note not found in this workspace.'), { httpStatus: 404 });
+  }
+
+  const updates = {};
+  if (title !== undefined) updates.title = sanitizeText(title);
+  if (content !== undefined) updates.content = content;
+  if (tags !== undefined) updates.tags = sanitizeText(tags);
+  if (isPinned !== undefined) updates.is_pinned = isPinned ? 1 : 0;
+
+  const updated = await NoteModel.update(noteId, updates);
+
+  try {
+    await GroupModel.logActivity({
+      groupId: Number(groupId),
+      userId,
+      actionType: 'NOTE_UPDATED',
+      description: `${userName || 'A member'} updated note: "${updates.title || note.title}".`
+    });
+  } catch (e) {}
+
+  return updated;
+}
+
+async function deleteNote({ noteId, groupId, userId, userRole }) {
+  const note = await NoteModel.findById(noteId);
+  if (!note || note.group_id !== Number(groupId)) {
+    throw Object.assign(new Error('Note not found.'), { httpStatus: 404 });
+  }
+
+  // Only the author or a workspace leader can delete a note
+  if (note.author_user_id !== userId && userRole !== ROLES.LEADER) {
+    throw Object.assign(new Error('You do not have permission to delete this note.'), { httpStatus: 403 });
+  }
+
+  await NoteModel.delete(noteId);
+  return { success: true };
+}
+
 module.exports = {
   resolveNotebookRole,
   getGroupNotebooks,
@@ -295,5 +369,10 @@ module.exports = {
   getNotebookPages,
   createPage,
   updatePage,
-  deletePage
+  deletePage,
+  // Legacy / Dashboard note exports:
+  createNote,
+  getGroupNotes,
+  updateNote,
+  deleteNote
 };

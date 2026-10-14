@@ -291,6 +291,104 @@ async function exportDocx(req, res) {
   }
 }
 
+// ─── Legacy / Flat Note Handlers (for /api/groups/:groupId/notes) ─────────────
+
+async function getNotes(req, res) {
+  try {
+    const groupId = req.params.groupId;
+    const notes = await notebookService.getGroupNotes(groupId, req.query.search);
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: notes
+    });
+  } catch (error) {
+    return res.status(errorStatus(error)).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+async function create(req, res) {
+  try {
+    const groupId = req.params.groupId || req.body.groupId;
+    const { title, content, tags, isPinned } = req.body;
+    const note = await notebookService.createNote({
+      groupId,
+      title,
+      content,
+      tags,
+      isPinned,
+      authorUserId: req.user.id,
+      authorName: req.user.full_name
+    });
+
+    return res.status(HTTP_STATUS.CREATED).json({
+      success: true,
+      message: 'Note created successfully.',
+      data: note
+    });
+  } catch (error) {
+    return res.status(errorStatus(error)).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+async function update(req, res) {
+  try {
+    const groupId = req.params.groupId;
+    const noteId = req.params.noteId;
+    const { title, content, tags, isPinned } = req.body;
+    const note = await notebookService.updateNote({
+      noteId,
+      groupId,
+      title,
+      content,
+      tags,
+      isPinned,
+      userId: req.user.id,
+      userRole: req.membership?.role,
+      userName: req.user.full_name
+    });
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Note updated.',
+      data: note
+    });
+  } catch (error) {
+    return res.status(errorStatus(error)).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+async function remove(req, res) {
+  try {
+    const groupId = req.params.groupId;
+    const noteId = req.params.noteId;
+    await notebookService.deleteNote({
+      noteId,
+      groupId,
+      userId: req.user.id,
+      userRole: req.membership?.role
+    });
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Note deleted.'
+    });
+  } catch (error) {
+    return res.status(errorStatus(error)).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 module.exports = {
   getGroupNotebooks,
   createNotebook,
@@ -300,6 +398,11 @@ module.exports = {
   createPage,
   updatePage,
   deletePage,
-  exportDocx
+  exportDocx,
+  // Legacy / Dashboard note handlers:
+  getNotes,
+  create,
+  update,
+  remove
 };
 

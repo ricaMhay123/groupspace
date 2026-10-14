@@ -1,72 +1,92 @@
 /**
- * Collaborative Notebook Routes
+ * Collaborative Notebook & Workspace Notes Routes
  *
- * Mounted at /api/notebooks in app.js.
- *
- * Route map:
- *   POST   /api/notebooks/export/docx             — generate & stream .docx for a page
- *
- *   GET    /api/notebooks/:groupId                — list group notebooks visible to user
- *   POST   /api/notebooks                         — create notebook (body: { groupId, ... })
- *   PUT    /api/notebooks/:id/permissions         — update share settings & member roles
- *   DELETE /api/notebooks/:id                     — delete notebook
- *
- *   GET    /api/notebooks/:id/pages               — list all pages (viewer+)
- *   POST   /api/notebooks/:id/pages               — add a page (editor+)
- *   PATCH  /api/notebooks/:id/pages/:pageId       — update a page (editor+)
- *   DELETE /api/notebooks/:id/pages/:pageId       — delete a page (editor+)
+ * Supports two mount points in app.js:
+ *   1. /api/notebooks                   — Collaborative Notebook & Pages API
+ *   2. /api/groups/:groupId/notes       — Dashboard Flat Notes (backwards compatibility)
  */
 
 'use strict';
 
 const express = require('express');
-const router  = express.Router();
+const router  = express.Router({ mergeParams: true });
 
 const ctrl = require('./notebook.controller');
-const { authMiddleware }               = require('../../middleware/auth.middleware');
+const { authMiddleware } = require('../../middleware/auth.middleware');
 const { requireGroupMembership, requireNotebookEditorAccess } = require('../../middleware/role.middleware');
 
 // ─── All routes require authentication ────────────────────────────────────────
 router.use(authMiddleware);
 
 // ─── POST /api/notebooks/export/docx ─────────────────────────────────────────
-// Must be registered BEFORE /:groupId to avoid Express treating "export" as a groupId.
-// Viewers can export too — auth check is performed inside the service layer.
+// Must be registered BEFORE parameterized routes.
 router.post(
   '/export/docx',
   requireGroupMembership,
   ctrl.exportDocx
 );
 
+// ─── GET / (Notes List for /api/groups/:groupId/notes) ────────────────────────
+router.get('/', requireGroupMembership, (req, res, next) => {
+  if (req.baseUrl.includes('/notes') || req.params.groupId) {
+    return ctrl.getNotes(req, res, next);
+  }
+  return res.status(404).json({ success: false, message: 'Please specify a group ID to list notebooks: GET /api/notebooks/:groupId' });
+});
+
+// ─── POST / (Create Note or Create Notebook) ──────────────────────────────────
+router.post('/', requireGroupMembership, (req, res, next) => {
+  // If request comes from the workspace notes modal or has groupId in params without notebook visibility
+  if (req.baseUrl.includes('/notes') || (req.params.groupId && !req.body.visibility)) {
+    return ctrl.create(req, res, next);
+  }
+  return ctrl.createNotebook(req, res, next);
+});
+
+// ─── Legacy Note Detail / Update / Delete Routes ──────────────────────────────
+router.patch('/:noteId', requireGroupMembership, (req, res, next) => {
+  if (req.baseUrl.includes('/notes')) {
+    return ctrl.update(req, res, next);
+  }
+  next();
+});
+
+router.put('/:noteId', requireGroupMembership, (req, res, next) => {
+  if (req.baseUrl.includes('/notes')) {
+    return ctrl.update(req, res, next);
+  }
+  next();
+});
+
+router.delete('/:noteId', requireGroupMembership, (req, res, next) => {
+  if (req.baseUrl.includes('/notes')) {
+    return ctrl.remove(req, res, next);
+  }
+  next();
+});
+
 // ─── GET /api/notebooks/:groupId ──────────────────────────────────────────────
-// Uses requireGroupMembership so only workspace members can list notebooks.
 router.get(
   '/:groupId',
   requireGroupMembership,
-  ctrl.getGroupNotebooks
+  (req, res, next) => {
+    if (req.baseUrl.includes('/notes')) {
+      return ctrl.getNotes(req, res, next);
+    }
+    return ctrl.getGroupNotebooks(req, res, next);
+  }
 );
 
-// ─── POST /api/notebooks ──────────────────────────────────────────────────────
-// groupId comes from the request body; membership is verified inside the handler.
-// We validate group membership here via middleware (groupId is in req.body).
-router.post(
-  '/',
-  requireGroupMembership,
-  ctrl.createNotebook
-);
-
-// ─── Notebook-level operations (require group membership) ─────────────────────
-// The :id segment is the notebook's primary key.
-
-// PUT /api/notebooks/:id/permissions — admin only (enforced in service layer)
+// ─── Notebook-level operations ────────────────────────────────────────────────
+// PUT /api/notebooks/:id/permissions — admin only
 router.put(
   '/:id/permissions',
-  requireGroupMembership,       // validate workspace membership
-  requireNotebookEditorAccess,  // require at least editor (admin check is in service)
+  requireGroupMembership,
+  requireNotebookEditorAccess,
   ctrl.updatePermissions
 );
 
-// DELETE /api/notebooks/:id — admin only (enforced in service layer)
+// DELETE /api/notebooks/:id — admin only
 router.delete(
   '/:id',
   requireGroupMembership,
@@ -75,7 +95,6 @@ router.delete(
 );
 
 // ─── Page sub-resource ────────────────────────────────────────────────────────
-
 // GET /api/notebooks/:id/pages — viewer, editor, or admin
 router.get(
   '/:id/pages',
