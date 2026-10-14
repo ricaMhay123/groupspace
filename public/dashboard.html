@@ -403,24 +403,24 @@
     <form id="createNoteForm" onsubmit="handleCreateNote(event)">
       <div class="form-group">
         <label>Page Title *</label>
-        <input type="text" id="noteTitle" class="form-control" placeholder="e.g. Sprint 1 Meeting Minutes" required>
+        <input type="text" id="noteTitle" name="pageTitle" data-alt-id="pageTitle" class="form-control" placeholder="e.g. Sprint 1 Meeting Minutes" required>
       </div>
       <div class="form-group">
         <label>Content (Markdown / Notes)</label>
-        <textarea id="noteContent" class="form-control" rows="6" placeholder="Document decisions, links, notes..."></textarea>
+        <textarea id="noteContent" name="pageContent" data-alt-id="pageContent" class="form-control" rows="6" placeholder="Document decisions, links, notes..."></textarea>
       </div>
       <div class="form-group">
         <label>Tags (comma separated)</label>
-        <input type="text" id="noteTags" class="form-control" placeholder="specs, planning, backend">
+        <input type="text" id="noteTags" name="pageTags" data-alt-id="pageTags" class="form-control" placeholder="specs, planning, backend">
       </div>
       <div class="form-group">
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-          <input type="checkbox" id="notePinned" style="accent-color:var(--primary);"> Pin this note to top
+          <input type="checkbox" id="notePinned" name="pinNote" data-alt-id="pinNote" style="accent-color:var(--primary);"> Pin this note to top
         </label>
       </div>
       <div class="form-actions" style="margin-top:20px;">
         <button type="button" class="btn-outline" onclick="closeModal('createNoteModal')">Cancel</button>
-        <button type="submit" class="btn-green">Save Page</button>
+        <button type="submit" id="savePageBtn" class="btn-green">Save Page</button>
       </div>
     </form>
   </div>
@@ -532,8 +532,11 @@
 
 <script src="js/api.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="js/dashboard.js"></script>
 <script src="js/calendar.js"></script>
+<script src="js/notebook.js"></script>
+<script src="js/tasks.js"></script>
 
 <!-- Bootstrap 5 JS Bundle (with Popper) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>

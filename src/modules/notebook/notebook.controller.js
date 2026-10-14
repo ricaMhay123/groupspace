@@ -154,16 +154,43 @@ async function getPages(req, res) {
  */
 async function createPage(req, res) {
   try {
+    let notebookId = req.params.id || req.body.notebookId;
+    const groupId = req.body.groupId || req.params.groupId;
+
+    if (!notebookId && groupId) {
+      const existing = await notebookService.getGroupNotebooks(groupId, req.user.id);
+      if (existing && existing.length > 0) {
+        notebookId = existing[0].id;
+      } else {
+        const nb = await notebookService.createNotebook({
+          groupId,
+          title: 'Workspace Notebook',
+          description: 'Default notebook',
+          visibility: 'shared',
+          createdByUserId: req.user.id,
+          creatorName: req.user.full_name
+        });
+        notebookId = nb.id;
+      }
+    }
+
+    if (!notebookId) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: 'notebookId or groupId is required to add a page.'
+      });
+    }
+
     const { title, content, position } = req.body;
 
     const page = await notebookService.createPage({
-      notebookId:   req.params.id,
+      notebookId,
       title,
       content,
       position,
       authorUserId: req.user.id,
       authorName:   req.user.full_name,
-      groupRole:    req.membership.role
+      groupRole:    req.membership?.role
     });
 
     return res.status(HTTP_STATUS.CREATED).json({

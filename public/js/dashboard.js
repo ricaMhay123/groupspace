@@ -364,8 +364,17 @@ async function loadTasks() {
         }
       }
 
+      // Enhance with peer help flag & assist controls if tasks.js is loaded
+      const { flagHtml, actionExtra } = typeof enhanceTaskCardUI === 'function'
+        ? enhanceTaskCardUI(t, isLeader, currentUser?.id)
+        : { flagHtml: '', actionExtra: '' };
+
       card.innerHTML = `
-        <span class="task-tag ${tagClass}">${t.priority}</span>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+          <span class="task-tag ${tagClass}">${t.priority}</span>
+          ${t.is_flagged ? '<span style="font-size:11px; color:#FF5252; font-weight:700;">⚠️ Blocked</span>' : ''}
+        </div>
+        ${flagHtml}
         <h4>${escapeHtml(t.title)}</h4>
         <p>${escapeHtml(t.description || 'No description.')}</p>
         
@@ -380,8 +389,9 @@ async function loadTasks() {
           <span style="cursor:pointer; color:#FF7272;" onclick="deleteTask(${t.id})">🗑️</span>
         </div>
 
-        <div class="task-actions">
+        <div class="task-actions" style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
           ${actionButtons}
+          ${actionExtra}
         </div>
       `;
 
@@ -392,6 +402,10 @@ async function loadTasks() {
     document.getElementById('count-in_progress').textContent = counts.IN_PROGRESS;
     document.getElementById('count-pending_approval').textContent = counts.PENDING_APPROVAL;
     document.getElementById('count-done').textContent = counts.DONE;
+
+    if (typeof updateLeaderBacklogBadge === 'function') {
+      updateLeaderBacklogBadge(counts.PENDING_APPROVAL, isLeader);
+    }
 
   } catch (err) {
     showToast(err.message, 'error');
@@ -495,9 +509,14 @@ async function loadNotebook(query = '') {
               ${n.tags.split(',').map(t => `<span style="font-size:11px; padding:2px 8px; background:#202522; border-radius:6px; color:var(--primary); font-weight:600;">#${escapeHtml(t.trim())}</span>`).join('')}
             </div>
           ` : ''}
-          <div class="note-meta">
+          <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
             <span>✍️ ${escapeHtml(n.author_name)}</span>
-            <span style="cursor:pointer; color:#FF7272;" onclick="deleteNote(${n.id})">🗑️</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id}, '${escapeHtml(n.title)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">📄 .txt</button>
+              <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id}, '${escapeHtml(n.title)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">📕 .pdf</button>
+              <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id}, '${escapeHtml(n.title)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">📘 .docx</button>
+              <span style="cursor:pointer; color:#FF7272; margin-left:4px;" title="Delete Note" onclick="deleteNote(${n.id})">🗑️</span>
+            </div>
           </div>
         </div>
       </div>

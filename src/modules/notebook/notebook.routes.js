@@ -26,6 +26,19 @@ router.post(
   ctrl.exportDocx
 );
 
+// ─── Top-level /pages routes (/api/notebooks/pages) ──────────────────────────
+router.post(
+  '/pages',
+  requireGroupMembership,
+  ctrl.createPage
+);
+
+router.get(
+  '/pages',
+  requireGroupMembership,
+  ctrl.getPages
+);
+
 // ─── GET / (Notes List for /api/groups/:groupId/notes) ────────────────────────
 router.get('/', requireGroupMembership, (req, res, next) => {
   if (req.baseUrl.includes('/notes') || req.params.groupId) {
