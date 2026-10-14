@@ -15,14 +15,14 @@ if (sql && typeof sql.initDb === 'function') {
 }
 
 // Feature Route Modules
-const authRoutes = require('./modules/auth/auth.routes');
-const groupRoutes = require('./modules/groups/group.routes');
-const taskRoutes = require('./modules/tasks/task.routes');
-const notebookRoutes = require('./modules/notebook/notebook.routes');
-const expenseRoutes = require('./modules/expenses/expense.routes');
-const personalRoutes = require('./modules/personal-space/personal.routes');
+const authRoutes       = require('./modules/auth/auth.routes');
+const groupRoutes      = require('./modules/groups/group.routes');
+const taskRoutes       = require('./modules/tasks/task.routes');
+const notebookRoutes   = require('./modules/notebook/notebook.routes');
+const expenseRoutes    = require('./modules/expenses/expense.routes');
+const personalRoutes   = require('./modules/personal-space/personal.routes');
 const discussionRoutes = require('./modules/discussions/discussion.routes');
-const calendarRoutes = require('./modules/calendar/event.routes');
+const calendarRoutes   = require('./modules/calendar/event.routes');
 
 const app = express();
 
@@ -40,14 +40,17 @@ const publicDir = path.join(__dirname, '../public');
 app.use(express.static(publicDir));
 
 // API Feature Endpoints
-app.use('/api/auth', authRoutes);
-app.use('/api/groups', groupRoutes);
-app.use('/api/groups/:groupId/tasks', taskRoutes);
-app.use('/api/groups/:groupId/notes', notebookRoutes);
-app.use('/api/groups/:groupId/expenses', expenseRoutes);
+app.use('/api/auth',    authRoutes);
+app.use('/api/groups',  groupRoutes);
+app.use('/api/groups/:groupId/tasks',       taskRoutes);
+app.use('/api/groups/:groupId/notes',       notebookRoutes); // legacy flat-notes (kept for backwards compat)
+app.use('/api/groups/:groupId/expenses',    expenseRoutes);
 app.use('/api/groups/:groupId/discussions', discussionRoutes);
-app.use('/api/groups/:groupId/events', calendarRoutes);
+app.use('/api/groups/:groupId/events',      calendarRoutes);
 app.use('/api/personal', personalRoutes);
+
+// Collaborative Notebook module — top-level resource
+app.use('/api/notebooks', notebookRoutes);
 
 // Health check endpoint with Neon database ping
 app.get('/api/health', async (req, res) => {

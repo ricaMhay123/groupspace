@@ -77,10 +77,33 @@ async function initDb() {
         approved_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
         approval_notes TEXT,
         due_date TIMESTAMPTZ,
+        is_flagged BOOLEAN NOT NULL DEFAULT FALSE,
+        flagged_reason TEXT,
+        flagged_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       );
     `;
+
+    // ── task_assistants — peer-help offers ───────────────────────────────────────
+    await sql`
+      CREATE TABLE IF NOT EXISTS task_assistants (
+        id            SERIAL PRIMARY KEY,
+        task_id       INTEGER NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+        user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        -- 'offered'  → member volunteered
+        -- 'accepted' → assignee / leader accepted the offer
+        -- 'declined' → assignee / leader declined
+        status        VARCHAR(20) NOT NULL DEFAULT 'offered'
+                        CHECK (status IN ('offered', 'accepted', 'declined')),
+        message       TEXT,         -- optional message from the helper
+        created_at    TIMESTAMPTZ DEFAULT NOW(),
+        updated_at    TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (task_id, user_id)   -- one active offer per user per task
+      );
+    `;
+    try { await sql`CREATE INDEX IF NOT EXISTS idx_task_assistants_task_id ON task_assistants(task_id)`; } catch (e) {}
+    try { await sql`CREATE INDEX IF NOT EXISTS idx_task_assistants_user_id ON task_assistants(user_id)`; } catch (e) {}
 
     await sql`
       CREATE TABLE IF NOT EXISTS notes (
@@ -95,6 +118,56 @@ async function initDb() {
         updated_at TIMESTAMPTZ DEFAULT NOW()
       );
     `;
+
+    // ── Collaborative Notebook Module ──────────────────────────────────────────
+    await sql`
+      CREATE TABLE IF NOT EXISTS notebooks (
+        id            SERIAL PRIMARY KEY,
+        group_id      INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+        title         TEXT    NOT NULL,
+        description   TEXT,
+        -- 'shared'  => all workspace members can view; explicit grants control edit/admin
+        -- 'private' => only explicitly granted members can see or interact
+        visibility    VARCHAR(10) NOT NULL DEFAULT 'shared'
+                        CHECK (visibility IN ('shared', 'private')),
+        created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at    TIMESTAMPTZ DEFAULT NOW(),
+        updated_at    TIMESTAMPTZ DEFAULT NOW()
+      );
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS notebook_pages (
+        id          SERIAL PRIMARY KEY,
+        notebook_id INTEGER NOT NULL REFERENCES notebooks(id) ON DELETE CASCADE,
+        title       TEXT    NOT NULL,
+        content     TEXT,
+        position    INTEGER NOT NULL DEFAULT 0,   -- display order within notebook
+        author_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        last_edited_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at  TIMESTAMPTZ DEFAULT NOW(),
+        updated_at  TIMESTAMPTZ DEFAULT NOW()
+      );
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS notebook_permissions (
+        id          SERIAL PRIMARY KEY,
+        notebook_id INTEGER NOT NULL REFERENCES notebooks(id) ON DELETE CASCADE,
+        user_id     INTEGER NOT NULL REFERENCES users(id)    ON DELETE CASCADE,
+        -- Granular roles: viewer | editor | admin
+        role        VARCHAR(10) NOT NULL DEFAULT 'viewer'
+                      CHECK (role IN ('viewer', 'editor', 'admin')),
+        granted_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at  TIMESTAMPTZ DEFAULT NOW(),
+        updated_at  TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (notebook_id, user_id)
+      );
+    `;
+    // ─── Indexes for hot lookup paths ──────────────────────────────────────────
+    try { await sql`CREATE INDEX IF NOT EXISTS idx_notebooks_group_id ON notebooks(group_id)`; } catch (e) {}
+    try { await sql`CREATE INDEX IF NOT EXISTS idx_notebook_pages_notebook_id ON notebook_pages(notebook_id)`; } catch (e) {}
+    try { await sql`CREATE INDEX IF NOT EXISTS idx_notebook_permissions_notebook_user ON notebook_permissions(notebook_id, user_id)`; } catch (e) {}
 
     await sql`
       CREATE TABLE IF NOT EXISTS expenses (
@@ -214,12 +287,31 @@ async function initDb() {
     try { await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS approval_notes TEXT`; } catch (e) {}
     try { await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS due_date TIMESTAMPTZ`; } catch (e) {}
     try { await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`; } catch (e) {}
+    // Peer-assist / flagging columns (new)
+    try { await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS is_flagged BOOLEAN NOT NULL DEFAULT FALSE`; } catch (e) {}
+    try { await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS flagged_reason TEXT`; } catch (e) {}
+    try { await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS flagged_at TIMESTAMPTZ`; } catch (e) {}
 
     // notes table migrations
     try { await sql`ALTER TABLE notes ADD COLUMN IF NOT EXISTS is_pinned INTEGER DEFAULT 0`; } catch (e) {}
     try { await sql`ALTER TABLE notes ADD COLUMN IF NOT EXISTS tags TEXT`; } catch (e) {}
     try { await sql`ALTER TABLE notes ADD COLUMN IF NOT EXISTS author_user_id INTEGER`; } catch (e) {}
     try { await sql`ALTER TABLE notes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`; } catch (e) {}
+
+    // notebooks table migrations
+    try { await sql`ALTER TABLE notebooks ADD COLUMN IF NOT EXISTS description TEXT`; } catch (e) {}
+    try { await sql`ALTER TABLE notebooks ADD COLUMN IF NOT EXISTS visibility VARCHAR(10) NOT NULL DEFAULT 'shared'`; } catch (e) {}
+    try { await sql`ALTER TABLE notebooks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`; } catch (e) {}
+
+    // notebook_pages table migrations
+    try { await sql`ALTER TABLE notebook_pages ADD COLUMN IF NOT EXISTS content TEXT`; } catch (e) {}
+    try { await sql`ALTER TABLE notebook_pages ADD COLUMN IF NOT EXISTS position INTEGER NOT NULL DEFAULT 0`; } catch (e) {}
+    try { await sql`ALTER TABLE notebook_pages ADD COLUMN IF NOT EXISTS last_edited_by_user_id INTEGER`; } catch (e) {}
+    try { await sql`ALTER TABLE notebook_pages ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`; } catch (e) {}
+
+    // notebook_permissions table migrations
+    try { await sql`ALTER TABLE notebook_permissions ADD COLUMN IF NOT EXISTS granted_by_user_id INTEGER`; } catch (e) {}
+    try { await sql`ALTER TABLE notebook_permissions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`; } catch (e) {}
 
     // expenses table migrations
     try { await sql`ALTER TABLE expenses ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'General'`; } catch (e) {}

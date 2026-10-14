@@ -2,7 +2,7 @@
  * Calendar Event Controller
  */
 const EventModel = require('./event.model');
-const TaskModel = require('../tasks/task.model');
+const { TaskModel } = require('../tasks/task.model');
 const { HTTP_STATUS } = require('../../config/constants');
 
 async function getEvents(req, res) {
