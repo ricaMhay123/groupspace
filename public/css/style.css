@@ -1644,3 +1644,36 @@ h1, h2, h3, h4, h5, h6 {
 /* Secondary button */
 .dark .secondary-btn, .dark .btn-outline { background: var(--card) !important; color: var(--foreground) !important; border-color: var(--border) !important; }
 .dark .secondary-btn:hover, .dark .btn-outline:hover { border-color: var(--ring) !important; color: var(--ring) !important; background: var(--muted) !important; }
+
+/* ── Notebook Toolbar Dropdowns High Contrast ── */
+.notebook-toolbar,
+.notebook-rich-toolbar,
+.nb-toolbar {
+  background: #0f172a;
+}
+
+.notebook-toolbar select,
+.notebook-rich-toolbar select,
+.nb-toolbar select,
+.nb-tb-select {
+  background: #0f172a !important;
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.notebook-toolbar select option,
+.notebook-rich-toolbar select option,
+.nb-toolbar select option,
+.nb-tb-select option,
+select#nbFontFamily option,
+select#nbFontSize option,
+select#nbLineHeight option,
+select#nbParaMargin option {
+  background: #0f172a !important;
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+}

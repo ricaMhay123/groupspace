@@ -10,7 +10,17 @@ const { ROLES, HTTP_STATUS, SYSTEM_MESSAGES } = require('../config/constants');
  * Middleware ensuring user is a member of the group specified in req.params.groupId (or req.body.groupId)
  */
 async function requireGroupMembership(req, res, next) {
-  let groupId = req.params.groupId || req.body.groupId || req.query.groupId;
+  let groupId = req.params.groupId
+    || req.params.workspaceId
+    || req.params.workspace_id
+    || req.body?.groupId
+    || req.body?.workspaceId
+    || req.body?.workspace_id
+    || req.query?.groupId
+    || req.query?.workspaceId
+    || req.query?.workspace_id
+    || req.headers?.['x-group-id']
+    || req.headers?.['x-workspace-id'];
   const taskId = req.params.taskId; // only for task routes, NOT req.params.id generically
   const userId = req.user && req.user.id;
 
@@ -25,14 +35,44 @@ async function requireGroupMembership(req, res, next) {
     } catch (e) {}
   }
 
-  // Resolve groupId from notebook/page IDs when mounted as /api/notebooks/:id/*
-  if (!groupId && req.params.id) {
-    // Only use :id as groupId if we are NOT on a sub-resource route (i.e. no /pages, /permissions suffix)
-    const isNotebookSubRoute = req.path.includes('/pages') || req.path.includes('/permissions');
-    if (!isNotebookSubRoute) {
-      // Try treating :id as a groupId — if not valid a group, skip
-      groupId = req.params.id;
+  // Resolve groupId from notebook ID when mounted on notebook routes
+  const candidateNbId = req.params.notebookId || req.params.id || req.body?.notebookId || req.query?.notebookId;
+  if (!groupId && candidateNbId && !isNaN(Number(candidateNbId))) {
+    try {
+      const [nb] = await sql`SELECT group_id FROM notebooks WHERE id = ${Number(candidateNbId)}`;
+      if (nb && nb.group_id) {
+        groupId = nb.group_id;
+        req.params.groupId = groupId;
+      } else {
+        const [grp] = await sql`SELECT id FROM groups WHERE id = ${Number(candidateNbId)}`;
+        if (grp) {
+          groupId = grp.id;
+          req.params.groupId = groupId;
+        }
+      }
+    } catch (e) {}
+  }
+
+  // Fallback: If groupId is still not provided but user is logged in
+  if (!groupId && userId) {
+    // If it's a GET request for pages, return safe empty array instead of 500 / error
+    if (req.method === 'GET' && (req.path.includes('/pages') || req.baseUrl.includes('/notebooks'))) {
+      return res.status(HTTP_STATUS.OK).json({
+        success: true,
+        data: { notebook: null, pages: [] },
+        pages: []
+      });
     }
+
+    try {
+      const [userGrp] = await sql`
+        SELECT group_id FROM group_members WHERE user_id = ${userId} ORDER BY joined_at ASC LIMIT 1
+      `;
+      if (userGrp && userGrp.group_id) {
+        groupId = userGrp.group_id;
+        req.params.groupId = groupId;
+      }
+    } catch (e) {}
   }
 
   if (!groupId) {

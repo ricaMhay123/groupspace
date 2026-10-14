@@ -38,9 +38,9 @@ async function loadWorkspacesDropdown() {
       return;
     }
 
-    // Check URL param or localStorage
+    // Check URL param or localStorage (support groupId, workspaceId, workspace_id)
     const urlParams = new URLSearchParams(window.location.search);
-    const urlGroupId = urlParams.get('groupId');
+    const urlGroupId = urlParams.get('groupId') || urlParams.get('workspaceId') || urlParams.get('workspace_id');
     const storedGroupId = localStorage.getItem('groupspace_active_group_id');
 
     let selectedId = urlGroupId || storedGroupId;
@@ -541,12 +541,15 @@ async function loadNotebook(query = '') {
     }
 
     container.innerHTML = notes.map(n => `
-      <div class="note-card ${n.is_pinned ? 'pinned' : ''}">
+      <div class="note-card ${n.is_pinned ? 'pinned' : ''}" style="cursor:pointer;" onclick="window.location.href='/notebook.html?groupId=' + currentGroupId + '&noteId=' + ${n.id}" title="Click to open in Full Editor">
         <div>
-          <h4>${escapeHtml(n.title || 'Untitled')}</h4>
+          <h4 style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            ${escapeHtml(n.title || 'Untitled')}
+            <span style="font-size:11px; padding:2px 8px; background:rgba(82,214,138,0.15); color:#52D68A; border-radius:12px; font-weight:600; white-space:nowrap;">↗ Edit</span>
+          </h4>
           <p style="white-space:pre-wrap;">${escapeHtml(n.content || '')}</p>
         </div>
-        <div>
+        <div onclick="event.stopPropagation();">
           ${n.tags ? `
             <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
               ${n.tags.split(',').filter(t => t.trim()).map(t => `<span style="font-size:11px; padding:2px 8px; background:#202522; border-radius:6px; color:var(--primary); font-weight:600;">#${escapeHtml(t.trim())}</span>`).join('')}
@@ -608,7 +611,7 @@ async function handleCreateNote(e) {
   }
 
   try {
-    await apiFetch(`/api/groups/${currentGroupId}/notes`, {
+    const res = await apiFetch(`/api/groups/${currentGroupId}/notes`, {
       method: 'POST',
       body: JSON.stringify({ title, content, tags, isPinned })
     });
@@ -618,8 +621,13 @@ async function handleCreateNote(e) {
     const form = document.getElementById('createNoteForm');
     if (form) form.reset();
 
-    showToast('Page added to notebook!', 'success');
+    showToast('Page added! Opening in editor...', 'success');
     await loadNotebook();
+
+    const newNoteId = res && res.data ? res.data.id : null;
+    if (newNoteId) {
+      window.location.href = `/notebook.html?groupId=${currentGroupId}&noteId=${newNoteId}`;
+    }
   } catch (err) {
     console.error('Error saving notebook page:', err);
     showToast(err.message || 'Failed to save notebook page.', 'error');

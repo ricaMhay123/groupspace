@@ -42,9 +42,9 @@
     .nb-toolbar-group { display: flex; align-items: center; gap: 6px; padding-right: 10px; border-right: 1px solid var(--border, #2B342F); }
     .nb-toolbar-group:last-child { border-right: none; padding-right: 0; }
     .nb-toolbar label { font-size: 11px; color: var(--gray, #7A8C84); white-space: nowrap; }
-    .nb-toolbar select { background: #0f172a; color: #ffffff; border: 1px solid var(--border, #2B342F); border-radius: 6px; padding: 4px 8px; font-size: 12px; font-family: "Inter", sans-serif; cursor: pointer; }
-    .nb-toolbar select:focus { outline: none; border-color: var(--primary, #52D68A); }
-    .nb-toolbar select option { background: #0f172a; color: #ffffff; }
+    .nb-toolbar select, .notebook-toolbar select { background: #0f172a !important; color: #ffffff !important; border: 1px solid var(--border, #334155); border-radius: 6px; padding: 4px 8px; font-size: 12px; font-family: "Inter", sans-serif; cursor: pointer; }
+    .nb-toolbar select:focus, .notebook-toolbar select:focus { outline: none; border-color: var(--primary, #52D68A); }
+    .nb-toolbar select option, .notebook-toolbar select option { background: #0f172a !important; background-color: #0f172a !important; color: #ffffff !important; }
     .btn-export-sm { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border, #2B342F); background: #1B231E; color: var(--text, #E1E7E3); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
     .btn-export-sm:hover { border-color: var(--primary, #52D68A); color: var(--primary, #52D68A); }
     .nb-canvas { flex: 1; display: flex; flex-direction: column; padding: 32px 48px; overflow-y: auto; max-width: 900px; width: 100%; margin: 0 auto; }
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   currentUser = await checkAuth();
   if (!currentUser) return;
   const params = new URLSearchParams(window.location.search);
-  currentGroupId = params.get('groupId') || localStorage.getItem('groupspace_active_group_id');
+  currentGroupId = params.get('groupId') || params.get('workspaceId') || params.get('workspace_id') || localStorage.getItem('groupspace_active_group_id');
   currentNotebookId = params.get('notebookId') || null;
   // noteId passed from dashboard card click — pre-load that legacy note
   const inboundNoteId = params.get('noteId') || null;
@@ -160,10 +160,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadNotebook();
   setupAutoSave();
   updateWordCount();
-  // If a specific noteId was requested via URL, try to open it in the editor
+  // If a specific noteId was requested via URL, try to open it in the editor and focus canvas
   if (inboundNoteId && pages.length > 0) {
     const match = pages.find(p => String(p.id) === String(inboundNoteId));
-    if (match) openPage(match);
+    if (match) {
+      openPage(match);
+      const canvas = document.getElementById('nbPageContent');
+      if (canvas) canvas.focus();
+    }
   }
 });
 
@@ -304,13 +308,20 @@ async function saveCurrentPage() {
       // New page — always goes to collaborative notebook
       const res = await apiFetch('/api/notebooks/' + currentNotebookId + '/pages', {
         method: 'POST',
-        body: JSON.stringify({ title, content, position: pages.length })
+        body: JSON.stringify({ title, content, position: pages.length, groupId: currentGroupId })
       });
-      currentPageId = res.data.id;
+      currentPageId = (res.data && res.data.id) ? res.data.id : res.data;
     }
     document.getElementById('nbSaveStatus').textContent = '\u2705 Saved ' + new Date().toLocaleTimeString();
     showToast('Page saved!', 'success');
     await loadPages();
+    // Immediately load and focus the newly created page on the editor canvas
+    if (currentPageId) {
+      const targetPage = pages.find(p => String(p.id) === String(currentPageId));
+      if (targetPage) openPage(targetPage);
+    }
+    const canvas = document.getElementById('nbPageContent');
+    if (canvas) canvas.focus();
   } catch (err) {
     document.getElementById('nbSaveStatus').textContent = '\u274C Save failed';
     showToast(err.message || 'Failed to save.', 'error');

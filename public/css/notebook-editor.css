@@ -137,22 +137,36 @@
 .nb-tb-btn:hover  { background: var(--secondary); color: var(--foreground); }
 .nb-tb-btn.active { background: var(--accent);    color: var(--accent-foreground); }
 
-/* Toolbar select dropdowns */
-.nb-tb-select {
+/* Toolbar select dropdowns (Font, Size, Spacing) */
+.nb-tb-select,
+.notebook-toolbar select,
+.notebook-rich-toolbar select {
   height: 30px;
   padding: 0 8px;
   font-size: 0.8rem;
   font-family: var(--font-sans);
-  color: var(--foreground);
-  background: var(--card);
-  border: 1px solid var(--border);
+  color: #ffffff !important;
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
   border-radius: 6px;
   cursor: pointer;
   outline: none;
   transition: border-color 0.15s ease;
 }
 
-.nb-tb-select:focus { border-color: var(--ring); }
+.nb-tb-select:focus,
+.notebook-toolbar select:focus,
+.notebook-rich-toolbar select:focus {
+  border-color: #52D68A !important;
+}
+
+.nb-tb-select option,
+.notebook-toolbar select option,
+.notebook-rich-toolbar select option {
+  background: #0f172a !important;
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+}
 
 /* Colour swatch button */
 .nb-tb-color {

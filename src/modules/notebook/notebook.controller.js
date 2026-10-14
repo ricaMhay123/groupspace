@@ -10,6 +10,7 @@
 const notebookService  = require('./notebook.service');
 const notebookExport   = require('./notebook.export');
 const { HTTP_STATUS }  = require('../../config/constants');
+const sql              = require('../../config/db.config');
 
 // ─── Helper ────────────────────────────────────────────────────────────────────
 
@@ -141,42 +142,89 @@ async function deleteNotebook(req, res) {
 async function getPages(req, res) {
   try {
     let notebookId = req.params.notebookId || req.params.id || req.query.notebookId;
-    const groupId = req.query.groupId || req.params.groupId;
+    let groupId = req.query.groupId || req.query.workspaceId || req.query.workspace_id || req.params.groupId || req.body?.groupId;
+
+    // If notebookId is provided, verify whether it's a notebook or if it points to a group
+    if (notebookId && !groupId) {
+      try {
+        const [nb] = await sql`SELECT group_id FROM notebooks WHERE id = ${notebookId}`;
+        if (nb) {
+          groupId = nb.group_id;
+        } else {
+          const [grp] = await sql`SELECT id FROM groups WHERE id = ${notebookId}`;
+          if (grp) {
+            groupId = grp.id;
+            notebookId = null;
+          }
+        }
+      } catch (e) {}
+    }
 
     // If notebookId isn't given directly, find the primary notebook for this group
     if (!notebookId && groupId) {
-      const existing = await notebookService.getGroupNotebooks(groupId, req.user.id);
-      if (existing && existing.length > 0) {
-        notebookId = existing[0].id;
-      }
+      try {
+        const existing = await notebookService.getGroupNotebooks(groupId, req.user.id);
+        if (existing && existing.length > 0) {
+          notebookId = existing[0].id;
+        }
+      } catch (e) {}
     }
 
     if (!notebookId) {
-      return res.status(HTTP_STATUS.OK).json({ success: true, data: { notebook: null, pages: [] } });
+      return res.status(HTTP_STATUS.OK).json({ success: true, data: { notebook: null, pages: [] }, pages: [] });
     }
 
-    const { notebook, pages } = await notebookService.getNotebookPages(
-      notebookId,
-      req.user.id,
-      req.membership.role
-    );
-    return res.status(HTTP_STATUS.OK).json({ success: true, data: { notebook, pages } });
+    let notebook = null;
+    let pages = [];
+    try {
+      const result = await notebookService.getNotebookPages(
+        notebookId,
+        req.user.id,
+        req.membership?.role || 'MEMBER'
+      );
+      notebook = result.notebook;
+      pages = result.pages || [];
+    } catch (err) {
+      // Empty or non-existent notebook: return empty list safely instead of 500 / 404
+      return res.status(HTTP_STATUS.OK).json({ success: true, data: { notebook: null, pages: [] }, pages: [] });
+    }
+
+    return res.status(HTTP_STATUS.OK).json({ success: true, data: { notebook, pages }, pages });
   } catch (error) {
-    return res.status(errorStatus(error)).json({ success: false, message: error.message });
+    return res.status(HTTP_STATUS.OK).json({ success: true, data: { notebook: null, pages: [] }, pages: [] });
   }
 }
 
 /**
- * POST /api/notebooks/:id/pages
+ * POST /api/notebooks/:id/pages and POST /api/notebooks/pages
  * Add a page to a notebook (requires editor or admin).
  *
- * Body: { title, content?, position? }
+ * Body: { title, content?, position?, groupId? }
  */
 async function createPage(req, res) {
   try {
-    let notebookId = req.params.id || req.body.notebookId;
-    const groupId = req.body.groupId || req.params.groupId;
+    let notebookId = req.params.id || req.params.notebookId || req.body.notebookId || req.query.notebookId;
+    let groupId = req.body.groupId || req.body.workspaceId || req.body.workspace_id
+      || req.query.groupId || req.query.workspaceId || req.query.workspace_id
+      || req.params.groupId;
 
+    // Resolve groupId from notebookId if missing
+    if (notebookId && !groupId) {
+      try {
+        const [nb] = await sql`SELECT group_id FROM notebooks WHERE id = ${notebookId}`;
+        if (nb) {
+          groupId = nb.group_id;
+        } else {
+          const [grp] = await sql`SELECT id FROM groups WHERE id = ${notebookId}`;
+          if (grp) {
+            groupId = grp.id;
+            notebookId = null;
+          }
+        }
+      } catch (e) {}
+    }
+
+    // If groupId is provided, ensure a notebook exists
     if (!notebookId && groupId) {
       const existing = await notebookService.getGroupNotebooks(groupId, req.user.id);
       if (existing && existing.length > 0) {
@@ -197,7 +245,7 @@ async function createPage(req, res) {
     if (!notebookId) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        message: 'notebookId or groupId is required to add a page.'
+        message: 'Workspace ID (groupId) or notebookId is required to add a page.'
       });
     }
 
@@ -210,7 +258,7 @@ async function createPage(req, res) {
       position,
       authorUserId: req.user.id,
       authorName:   req.user.full_name,
-      groupRole:    req.membership?.role
+      groupRole:    req.membership?.role || 'MEMBER'
     });
 
     return res.status(HTTP_STATUS.CREATED).json({

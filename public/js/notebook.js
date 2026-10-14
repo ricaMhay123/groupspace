@@ -21,7 +21,10 @@
  * and GET /api/groups/:groupId/notes.
  */
 async function loadNotebookPages(groupId = null) {
-  const activeGroupId = groupId || (typeof currentGroupId !== 'undefined' ? currentGroupId : null);
+  // Extract groupId, workspaceId, or workspace_id safely from query parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramGroupId = urlParams.get('groupId') || urlParams.get('workspaceId') || urlParams.get('workspace_id');
+  const activeGroupId = groupId || paramGroupId || (typeof currentGroupId !== 'undefined' && currentGroupId ? currentGroupId : null) || localStorage.getItem('groupspace_active_group_id');
   const container = document.getElementById('notebookGrid');
   if (!container || !activeGroupId) return;
 
@@ -78,10 +81,10 @@ async function loadNotebookPages(groupId = null) {
       const isPinned = Boolean(n.is_pinned);
       const tags = n.tags || '';
       const safeId = n.id || 0;
-      const editorUrl = `notebook.html?groupId=${activeGroupId2}&noteId=${safeId}`;
+      const editorUrl = `/notebook.html?groupId=${activeGroupId2}&noteId=${safeId}`;
 
       return `
-        <div class="note-card ${isPinned ? 'pinned' : ''}" style="cursor:pointer;" onclick="window.open('${editorUrl}', '_blank')" title="Open in Full Editor">
+        <div class="note-card ${isPinned ? 'pinned' : ''}" style="cursor:pointer;" onclick="window.location.href='${editorUrl}'" title="Open in Full Editor">
           <div>
             <h4 style="display:flex; align-items:center; gap:8px;">
               ${escapeHtml(title)}
@@ -133,36 +136,36 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
   }
 
   container.innerHTML = `
-    <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:8px 12px; background:#1C221F; border:1px solid #2B342F; border-radius:8px; margin-bottom:10px;">
+    <div class="notebook-toolbar notebook-rich-toolbar" style="display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:8px 12px; background:#0f172a; border:1px solid #334155; border-radius:8px; margin-bottom:10px;">
       <!-- Font Family Dropdown -->
       <div style="display:flex; align-items:center; gap:6px;">
-        <label style="font-size:12px; color:var(--gray); margin:0;">Font:</label>
-        <select id="nbFontFamily" style="background:#131815; color:#E1E7E3; border:1px solid #2B342F; border-radius:6px; padding:4px 8px; font-size:13px; cursor:pointer;" onchange="applyNotebookFont(this.value)">
-          <option value="Arial" selected>Arial</option>
-          <option value="Calibri">Calibri</option>
-          <option value="'Times New Roman', Times, serif">Times New Roman</option>
+        <label style="font-size:12px; color:#94a3b8; margin:0;">Font:</label>
+        <select id="nbFontFamily" class="nb-tb-select" style="background:#0f172a !important; color:#ffffff !important; border:1px solid #334155; border-radius:6px; padding:4px 8px; font-size:13px; cursor:pointer;" onchange="applyNotebookFont(this.value)">
+          <option value="Arial" selected style="background-color:#0f172a; color:#ffffff;">Arial</option>
+          <option value="Calibri" style="background-color:#0f172a; color:#ffffff;">Calibri</option>
+          <option value="'Times New Roman', Times, serif" style="background-color:#0f172a; color:#ffffff;">Times New Roman</option>
         </select>
       </div>
 
-      <!-- Line Height Dropdown -->
+      <!-- Line Height / Spacing Dropdown -->
       <div style="display:flex; align-items:center; gap:6px;">
-        <label style="font-size:12px; color:var(--gray); margin:0;">Spacing:</label>
-        <select id="nbLineHeight" style="background:#131815; color:#E1E7E3; border:1px solid #2B342F; border-radius:6px; padding:4px 8px; font-size:13px; cursor:pointer;" onchange="applyNotebookLineHeight(this.value)">
-          <option value="1.0">1.0 (Single)</option>
-          <option value="1.15">1.15</option>
-          <option value="1.5" selected>1.5 (Standard)</option>
-          <option value="2.0">2.0 (Double)</option>
+        <label style="font-size:12px; color:#94a3b8; margin:0;">Spacing:</label>
+        <select id="nbLineHeight" class="nb-tb-select" style="background:#0f172a !important; color:#ffffff !important; border:1px solid #334155; border-radius:6px; padding:4px 8px; font-size:13px; cursor:pointer;" onchange="applyNotebookLineHeight(this.value)">
+          <option value="1.0" style="background-color:#0f172a; color:#ffffff;">1.0 (Single)</option>
+          <option value="1.15" style="background-color:#0f172a; color:#ffffff;">1.15</option>
+          <option value="1.5" selected style="background-color:#0f172a; color:#ffffff;">1.5 (Standard)</option>
+          <option value="2.0" style="background-color:#0f172a; color:#ffffff;">2.0 (Double)</option>
         </select>
       </div>
 
-      <!-- Paragraph Margin Control -->
+      <!-- Paragraph Margin / Size Control -->
       <div style="display:flex; align-items:center; gap:6px;">
-        <label style="font-size:12px; color:var(--gray); margin:0;">Para Margin:</label>
-        <select id="nbParaMargin" style="background:#131815; color:#E1E7E3; border:1px solid #2B342F; border-radius:6px; padding:4px 8px; font-size:13px; cursor:pointer;" onchange="applyNotebookParaMargin(this.value)">
-          <option value="0px">None</option>
-          <option value="8px">Small (8px)</option>
-          <option value="16px" selected>Normal (16px)</option>
-          <option value="24px">Large (24px)</option>
+        <label style="font-size:12px; color:#94a3b8; margin:0;">Para Margin:</label>
+        <select id="nbParaMargin" class="nb-tb-select" style="background:#0f172a !important; color:#ffffff !important; border:1px solid #334155; border-radius:6px; padding:4px 8px; font-size:13px; cursor:pointer;" onchange="applyNotebookParaMargin(this.value)">
+          <option value="0px" style="background-color:#0f172a; color:#ffffff;">None</option>
+          <option value="8px" style="background-color:#0f172a; color:#ffffff;">Small (8px)</option>
+          <option value="16px" selected style="background-color:#0f172a; color:#ffffff;">Normal (16px)</option>
+          <option value="24px" style="background-color:#0f172a; color:#ffffff;">Large (24px)</option>
         </select>
       </div>
     </div>
