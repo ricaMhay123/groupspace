@@ -316,9 +316,10 @@ async function loadOverview() {
 }
 
 function getActivityIcon(type) {
+  if (type.includes('FLAGGED') || type.includes('BLOCKED')) return '⚠️';
   if (type.includes('TASK')) return '📋';
   if (type.includes('EXPENSE')) return '💰';
-  if (type.includes('NOTE')) return '📝';
+  if (type.includes('NOTE') || type.includes('NOTEBOOK')) return '📝';
   if (type.includes('TOPIC') || type.includes('COMMENT')) return '💬';
   if (type.includes('WORKSPACE') || type.includes('MEMBER')) return '👥';
   return '⚡';

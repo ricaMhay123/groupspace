@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -42,8 +42,9 @@
     .nb-toolbar-group { display: flex; align-items: center; gap: 6px; padding-right: 10px; border-right: 1px solid var(--border, #2B342F); }
     .nb-toolbar-group:last-child { border-right: none; padding-right: 0; }
     .nb-toolbar label { font-size: 11px; color: var(--gray, #7A8C84); white-space: nowrap; }
-    .nb-toolbar select { background: #131815; color: var(--text, #E1E7E3); border: 1px solid var(--border, #2B342F); border-radius: 6px; padding: 4px 8px; font-size: 12px; font-family: "Inter", sans-serif; cursor: pointer; }
+    .nb-toolbar select { background: #0f172a; color: #ffffff; border: 1px solid var(--border, #2B342F); border-radius: 6px; padding: 4px 8px; font-size: 12px; font-family: "Inter", sans-serif; cursor: pointer; }
     .nb-toolbar select:focus { outline: none; border-color: var(--primary, #52D68A); }
+    .nb-toolbar select option { background: #0f172a; color: #ffffff; }
     .btn-export-sm { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border, #2B342F); background: #1B231E; color: var(--text, #E1E7E3); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
     .btn-export-sm:hover { border-color: var(--primary, #52D68A); color: var(--primary, #52D68A); }
     .nb-canvas { flex: 1; display: flex; flex-direction: column; padding: 32px 48px; overflow-y: auto; max-width: 900px; width: 100%; margin: 0 auto; }
@@ -153,10 +154,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const params = new URLSearchParams(window.location.search);
   currentGroupId = params.get('groupId') || localStorage.getItem('groupspace_active_group_id');
   currentNotebookId = params.get('notebookId') || null;
+  // noteId passed from dashboard card click — pre-load that legacy note
+  const inboundNoteId = params.get('noteId') || null;
   if (currentGroupId) document.getElementById('backBtn').href = 'dashboard.html?groupId=' + currentGroupId;
   await loadNotebook();
   setupAutoSave();
   updateWordCount();
+  // If a specific noteId was requested via URL, try to open it in the editor
+  if (inboundNoteId && pages.length > 0) {
+    const match = pages.find(p => String(p.id) === String(inboundNoteId));
+    if (match) openPage(match);
+  }
 });
 
 async function loadNotebook() {
@@ -186,17 +194,55 @@ async function loadNotebook() {
 }
 
 async function loadPages() {
-  if (!currentNotebookId) return;
+  if (!currentNotebookId && !currentGroupId) return;
   const list = document.getElementById('nbPagesList');
   try {
-    const res = await apiFetch('/api/notebooks/' + currentNotebookId + '/pages');
-    const pagesData = res.data;
-    pages = (pagesData && Array.isArray(pagesData.pages)) ? pagesData.pages : [];
-    if (pages.length === 0) { list.innerHTML = '<div class="nb-empty-pages">No pages yet.<br>Click <strong>+ Add Page</strong> to start.</div>'; clearEditor(); return; }
+    let loaded = false;
+
+    // 1. Try collaborative notebook pages
+    if (currentNotebookId) {
+      try {
+        const res = await apiFetch('/api/notebooks/' + currentNotebookId + '/pages');
+        const pagesData = res.data;
+        pages = (pagesData && Array.isArray(pagesData.pages)) ? pagesData.pages : [];
+        if (pages.length > 0) loaded = true;
+      } catch (e) {
+        console.warn('[Notebook] pages fetch failed:', e.message);
+      }
+    }
+
+    // 2. Fallback: load legacy flat notes from /api/groups/:groupId/notes
+    if (!loaded && currentGroupId) {
+      try {
+        const legacyRes = await apiFetch('/api/groups/' + currentGroupId + '/notes');
+        const legacyNotes = Array.isArray(legacyRes.data) ? legacyRes.data : [];
+        if (legacyNotes.length > 0) {
+          // Map legacy note shape to page shape for the editor
+          pages = legacyNotes.map(n => ({
+            id: n.id,
+            title: n.title || 'Untitled',
+            content: n.content || '',
+            author_name: n.author_name || 'Member',
+            is_legacy: true   // flag so save uses the legacy endpoint
+          }));
+          loaded = true;
+        }
+      } catch (e) {
+        console.warn('[Notebook] legacy notes fallback failed:', e.message);
+      }
+    }
+
+    if (!loaded || pages.length === 0) {
+      list.innerHTML = '<div class="nb-empty-pages">No pages yet.<br>Click <strong>+ Add Page</strong> to start.</div>';
+      clearEditor();
+      return;
+    }
+
     renderPagesList();
     if (!currentPageId || !pages.find(p => p.id === currentPageId)) openPage(pages[0]);
   } catch (err) {
     list.innerHTML = '<div class="nb-empty-pages">Error loading pages.</div>';
+    console.error('[Notebook] loadPages error:', err);
   }
 }
 
@@ -237,10 +283,29 @@ async function saveCurrentPage() {
   btn.disabled = true; btn.textContent = 'Saving...';
   document.getElementById('nbSaveStatus').textContent = 'Saving...';
   try {
+    const currentPageObj = pages.find(p => p.id === currentPageId);
+    const isLegacy = currentPageObj && currentPageObj.is_legacy;
+
     if (currentPageId) {
-      await apiFetch('/api/notebooks/' + currentNotebookId + '/pages/' + currentPageId, { method: 'PATCH', body: JSON.stringify({ title, content }) });
+      if (isLegacy && currentGroupId) {
+        // Legacy flat note — use the notes endpoint
+        await apiFetch('/api/groups/' + currentGroupId + '/notes/' + currentPageId, {
+          method: 'PATCH',
+          body: JSON.stringify({ title, content })
+        });
+      } else {
+        // Collaborative notebook page
+        await apiFetch('/api/notebooks/' + currentNotebookId + '/pages/' + currentPageId, {
+          method: 'PATCH',
+          body: JSON.stringify({ title, content })
+        });
+      }
     } else {
-      const res = await apiFetch('/api/notebooks/' + currentNotebookId + '/pages', { method: 'POST', body: JSON.stringify({ title, content, position: pages.length }) });
+      // New page — always goes to collaborative notebook
+      const res = await apiFetch('/api/notebooks/' + currentNotebookId + '/pages', {
+        method: 'POST',
+        body: JSON.stringify({ title, content, position: pages.length })
+      });
       currentPageId = res.data.id;
     }
     document.getElementById('nbSaveStatus').textContent = '\u2705 Saved ' + new Date().toLocaleTimeString();

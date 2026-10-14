@@ -1,133 +1,19 @@
 /**
  * GroupSpace — Collaborative Notebook Client Module (notebook.js)
- * 
- * Features:
- * 1. Modal Save Page handler with try/catch and matching HTML IDs
- * 2. Rich Text Font & Spacing controls injection
- * 3. Multi-format Document Export (.txt, .pdf via html2pdf, .docx via API)
+ *
+ * Provides:
+ * 1. loadNotebookPages() — renders saved pages from the API
+ * 2. renderNotebookRichTextToolbar() — injects font/spacing controls
+ * 3. exportNotebook() — .txt / .pdf / .docx download
+ *
+ * NOTE: The "Save Page" modal submit is handled exclusively by
+ * handleCreateNote() in dashboard.js (bound via the form's onsubmit
+ * attribute). notebook.js must NOT add a second listener on #savePageBtn
+ * or #createNoteForm — doing so causes double-fires and wrong-endpoint
+ * errors.
  */
 
 'use strict';
-
-/**
- * 1. FIX THE MODAL BUG:
- * Event listener for `#savePageBtn` / `#createNoteForm`.
- * Supports both ID conventions (pageTitle / noteTitle, etc.).
- */
-function initSavePageModalListener() {
-  const saveBtn = document.getElementById('savePageBtn');
-  const form = document.getElementById('createNoteForm');
-
-  async function handleSavePage(e) {
-    if (e && typeof e.preventDefault === 'function') {
-      e.preventDefault();
-    }
-
-    // Support both ID conventions (pageTitle/noteTitle, pageContent/noteContent, etc.)
-    const titleEl   = document.getElementById('pageTitle')   || document.getElementById('noteTitle');
-    const contentEl = document.getElementById('pageContent') || document.getElementById('noteContent');
-    const tagsEl    = document.getElementById('pageTags')    || document.getElementById('noteTags');
-    const pinEl     = document.getElementById('pinNote')     || document.getElementById('notePinned');
-
-    const title    = titleEl ? titleEl.value.trim() : '';
-    const content  = contentEl ? contentEl.value : '';
-    const tags     = tagsEl ? tagsEl.value.trim() : '';
-    const isPinned = pinEl ? Boolean(pinEl.checked) : false;
-
-    if (!title) {
-      if (typeof showToast === 'function') showToast('Page title is required.', 'error');
-      if (titleEl) titleEl.focus();
-      return;
-    }
-
-    // Button loading state to prevent double submits
-    const btn = saveBtn || (e?.target ? e.target.querySelector('button[type="submit"]') : null);
-    const origText = btn ? btn.textContent : 'Save Page';
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = 'Saving...';
-    }
-
-    try {
-      const activeGroupId = typeof currentGroupId !== 'undefined' ? currentGroupId : null;
-
-      // Primary: POST /api/notebooks/pages
-      const payload = {
-        title,
-        content,
-        tags,
-        isPinned,
-        groupId: activeGroupId
-      };
-
-      const res = await fetch('/api/notebooks/pages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || data.success === false) {
-        // Fallback to legacy notes endpoint if group-specific
-        if (activeGroupId) {
-          await apiFetch(`/api/groups/${activeGroupId}/notes`, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-          });
-        } else {
-          throw new Error(data.message || 'Failed to save page.');
-        }
-      }
-
-      // Close modal on success
-      if (typeof closeModal === 'function') {
-        closeModal('createNoteModal');
-      } else {
-        const modal = document.getElementById('createNoteModal');
-        if (modal) modal.style.display = 'none';
-      }
-
-      // Reset form
-      if (form) form.reset();
-      if (titleEl) titleEl.value = '';
-      if (contentEl) contentEl.value = '';
-      if (tagsEl) tagsEl.value = '';
-      if (pinEl) pinEl.checked = false;
-
-      if (typeof showToast === 'function') {
-        showToast('Page saved successfully!', 'success');
-      }
-
-      // Refresh list using loadNotebookPages
-      if (typeof loadNotebookPages === 'function') {
-        await loadNotebookPages();
-      } else if (typeof loadNotebook === 'function') {
-        await loadNotebook();
-      }
-    } catch (err) {
-      console.error('Error saving notebook page:', err);
-      if (typeof showToast === 'function') {
-        showToast(err.message || 'Error saving notebook page.', 'error');
-      }
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = origText;
-      }
-    }
-  }
-
-  if (saveBtn) {
-    saveBtn.addEventListener('click', handleSavePage);
-  }
-  if (form) {
-    form.addEventListener('submit', handleSavePage);
-  }
-}
 
 /**
  * Loads and renders saved notebook pages / notes in the shared notes list container (#notebookGrid).
@@ -183,7 +69,8 @@ async function loadNotebookPages(groupId = null) {
       return;
     }
 
-    // Render note cards matching active group_id
+    // Render note cards — click title to open in full editor
+    const activeGroupId2 = typeof currentGroupId !== 'undefined' ? currentGroupId : '';
     container.innerHTML = items.map(n => {
       const title = n.title || 'Untitled Page';
       const content = n.content || '';
@@ -191,14 +78,18 @@ async function loadNotebookPages(groupId = null) {
       const isPinned = Boolean(n.is_pinned);
       const tags = n.tags || '';
       const safeId = n.id || 0;
+      const editorUrl = `notebook.html?groupId=${activeGroupId2}&noteId=${safeId}`;
 
       return `
-        <div class="note-card ${isPinned ? 'pinned' : ''}">
+        <div class="note-card ${isPinned ? 'pinned' : ''}" style="cursor:pointer;" onclick="window.open('${editorUrl}', '_blank')" title="Open in Full Editor">
           <div>
-            <h4>${escapeHtml(title)}</h4>
-            <p style="white-space:pre-wrap;">${escapeHtml(content)}</p>
+            <h4 style="display:flex; align-items:center; gap:8px;">
+              ${escapeHtml(title)}
+              <span style="font-size:10px; padding:2px 7px; background:rgba(82,214,138,0.12); color:#52D68A; border-radius:10px; font-weight:600; white-space:nowrap;">↗ Edit</span>
+            </h4>
+            <p style="white-space:pre-wrap;">${escapeHtml(content.slice(0, 200))}${content.length > 200 ? '…' : ''}</p>
           </div>
-          <div>
+          <div onclick="event.stopPropagation();">
             ${tags ? `
               <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
                 ${tags.split(',').map(t => `<span style="font-size:11px; padding:2px 8px; background:#202522; border-radius:6px; color:var(--primary); font-weight:600;">#${escapeHtml(t.trim())}</span>`).join('')}
@@ -423,13 +314,12 @@ async function exportNotebook(format, noteId, title = 'Notebook_Page', rawConten
   }
 }
 
-// Auto-initialize when DOM is ready
+// Auto-initialize toolbar when DOM is ready
+// (Note: modal save is handled by handleCreateNote in dashboard.js)
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    initSavePageModalListener();
     renderNotebookRichTextToolbar();
   });
 } else {
-  initSavePageModalListener();
   renderNotebookRichTextToolbar();
 }

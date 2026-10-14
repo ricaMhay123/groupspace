@@ -110,55 +110,62 @@ async function getPersonalFeed(req, res) {
     const groupIds = memberships.map(m => m.group_id);
     const leaderGroupIds = memberships.filter(m => m.role === 'LEADER').map(m => m.group_id);
 
+    // Early return if user has no memberships (ANY() fails on empty arrays in Neon)
+    if (groupIds.length === 0) {
+      return res.status(HTTP_STATUS.OK).json({
+        success: true,
+        data: { pendingApprovals: [], helpRequests: [], mentions: [] }
+      });
+    }
+
     let pendingApprovals = [];
     let helpRequests = [];
     let mentions = [];
 
-    if (groupIds.length > 0) {
-      // Pending approval tasks — only shown to leaders
-      if (leaderGroupIds.length > 0) {
-        pendingApprovals = await sql`
-          SELECT t.id, t.title, t.description, t.group_id,
-                 u.full_name AS creator_name, a.full_name AS assignee_name
-          FROM tasks t
-          LEFT JOIN users u ON t.created_by_user_id = u.id
-          LEFT JOIN users a ON t.assigned_to_user_id = a.id
-          WHERE t.status = 'PENDING_APPROVAL'
-            AND t.group_id = ANY(${leaderGroupIds})
-          ORDER BY t.updated_at DESC
-          LIMIT 20
-        `;
-      }
-
-      // Flagged (help needed) tasks — shown to all group members
-      helpRequests = await sql`
-        SELECT t.id, t.title, t.flagged_reason, t.group_id,
-               a.full_name AS assignee_name
+    // Pending approval tasks — only shown to leaders
+    if (leaderGroupIds.length > 0) {
+      pendingApprovals = await sql`
+        SELECT t.id, t.title, t.description, t.group_id,
+               u.full_name AS creator_name, a.full_name AS assignee_name
         FROM tasks t
+        LEFT JOIN users u ON t.created_by_user_id = u.id
         LEFT JOIN users a ON t.assigned_to_user_id = a.id
-        WHERE t.is_flagged = TRUE
-          AND t.group_id = ANY(${groupIds})
-          AND t.assigned_to_user_id != ${userId}
-        ORDER BY t.flagged_at DESC NULLS LAST
+        WHERE t.status = 'PENDING_APPROVAL'
+          AND t.group_id = ANY(${leaderGroupIds}::int[])
+        ORDER BY t.updated_at DESC
         LIMIT 20
       `;
+    }
 
-      // @mentions in discussion comments (content contains @username)
-      const userHandle = `@${(req.user.full_name || '').split(' ')[0].toLowerCase()}`;
-      if (userHandle.length > 1) {
-        mentions = await sql`
-          SELECT dc.id, dc.content, dc.created_at,
-                 u.full_name AS author_name, d.group_id
-          FROM discussion_comments dc
-          JOIN discussions d ON dc.discussion_id = d.id
-          JOIN users u ON dc.user_id = u.id
-          WHERE d.group_id = ANY(${groupIds})
-            AND LOWER(dc.content) LIKE ${'%' + userHandle + '%'}
-            AND dc.user_id != ${userId}
-          ORDER BY dc.created_at DESC
-          LIMIT 20
-        `;
-      }
+    // Flagged (help needed) tasks — shown to all group members
+    helpRequests = await sql`
+      SELECT t.id, t.title, t.flagged_reason, t.group_id,
+             a.full_name AS assignee_name
+      FROM tasks t
+      LEFT JOIN users a ON t.assigned_to_user_id = a.id
+      WHERE t.is_flagged = TRUE
+        AND t.group_id = ANY(${groupIds}::int[])
+        AND (t.assigned_to_user_id IS NULL OR t.assigned_to_user_id != ${userId})
+      ORDER BY t.flagged_at DESC NULLS LAST
+      LIMIT 20
+    `;
+
+    // @mentions in discussion comments (content contains @username)
+    const firstName = (req.user.full_name || '').split(' ')[0].toLowerCase();
+    const userHandle = `@${firstName}`;
+    if (firstName.length > 0) {
+      mentions = await sql`
+        SELECT dc.id, dc.content, dc.created_at,
+               u.full_name AS author_name, d.group_id
+        FROM discussion_comments dc
+        JOIN discussions d ON dc.discussion_id = d.id
+        JOIN users u ON dc.user_id = u.id
+        WHERE d.group_id = ANY(${groupIds}::int[])
+          AND LOWER(dc.content) LIKE ${`%${userHandle}%`}
+          AND dc.user_id != ${userId}
+        ORDER BY dc.created_at DESC
+        LIMIT 20
+      `;
     }
 
     return res.status(HTTP_STATUS.OK).json({
