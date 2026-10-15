@@ -49,7 +49,9 @@ window.backToRegForm = function () {
 // ────────────────────────────────────────────────────────────────────────────
 
 function getApiBaseUrl() {
-  if (window.location.protocol === 'file:') {
+  const custom = localStorage.getItem('groupspace_api_url');
+  if (custom !== null) return custom;
+  if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'https://groupspace-w50r.onrender.com';
   }
   return '';

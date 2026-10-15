@@ -1,143 +1,822 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" id="htmlRoot">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login | GroupSpace</title>
+  <meta name="description" content="Sign in to your GroupSpace workspaces to collaborate on tasks, notes, discussions, and expenses.">
+
+  <!-- Typography matching Landing Page -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-  <link rel="stylesheet" href="/css/style.css?v=41.0">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Core Theme & Landing Styles -->
+  <link rel="stylesheet" href="/css/style.css?v=33.0">
+  <link rel="stylesheet" href="/css/landing.css">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+  <!-- Bootstrap CSS for Modal -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+  <!-- Theme Script (Dark/Light toggle) -->
   <script src="/js/theme.js"></script>
+
+  <style>
+    /* Scoped layout overrides aligning with landing page aesthetics */
+    body.login-page-body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--background);
+      color: var(--foreground);
+      font-family: var(--font-sans), 'Bricolage Grotesque', sans-serif;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Subtle Technical Grid Background (Matching Landing Hero) */
+    .login-grid-bg {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      opacity: 0.032;
+      background-image:
+        linear-gradient(to right, var(--foreground) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--foreground) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: 0;
+    }
+
+    .dark .login-grid-bg {
+      opacity: 0.05;
+    }
+
+    /* Soft ambient background depth blobs */
+    .login-bg-blob {
+      pointer-events: none;
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.35;
+      z-index: 0;
+    }
+
+    .login-bg-blob-1 {
+      width: 480px;
+      height: 480px;
+      top: -100px;
+      right: -100px;
+      background: var(--accent);
+    }
+
+    .login-bg-blob-2 {
+      width: 540px;
+      height: 540px;
+      bottom: -150px;
+      left: -120px;
+      background: var(--secondary);
+      opacity: 0.28;
+    }
+
+    .dark .login-bg-blob-1 { background: var(--accent); opacity: 0.12; }
+    .dark .login-bg-blob-2 { background: var(--secondary); opacity: 0.10; }
+
+    /* Navigation Header */
+    .login-header {
+      position: relative;
+      z-index: 10;
+      padding: 10px 24px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(253, 252, 254, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .dark .login-header {
+      background: rgba(2, 4, 9, 0.75);
+    }
+
+    .login-header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Main Split Section */
+    .login-main {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 20px 24px;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 1140px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.15fr 0.95fr;
+      gap: 48px;
+      align-items: start;
+    }
+
+    @media (max-width: 991px) {
+      .login-container {
+        grid-template-columns: 1fr;
+        gap: 36px;
+        max-width: 520px;
+      }
+      .login-preview-col {
+        display: none;
+      }
+    }
+
+    /* Left Column: Context & Mockup (Shifted up near top border) */
+    .login-context-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--primary);
+      background: var(--accent);
+      padding: 3px 10px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+
+    .dark .login-context-kicker {
+      color: #93c5fd;
+      background: rgba(147, 197, 253, 0.12);
+    }
+
+    .login-hero-title {
+      font-size: clamp(1.75rem, 2.3vw, 2.15rem);
+      font-weight: 800;
+      line-height: 1.14;
+      letter-spacing: -0.025em;
+      color: var(--foreground);
+      margin-bottom: 10px;
+    }
+
+    .login-hero-sub {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.925rem;
+      line-height: 1.5;
+      color: var(--muted-foreground);
+      margin-bottom: 18px;
+      max-width: 440px;
+    }
+
+    /* macOS Workspace Preview Card */
+    .preview-card-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 460px;
+    }
+
+    .preview-card-deco {
+      position: absolute;
+      right: -10px;
+      bottom: -10px;
+      width: 85px;
+      height: 85px;
+      background: var(--accent);
+      border-radius: 14px;
+      transform: rotate(6deg);
+      z-index: 0;
+    }
+
+    .dark .preview-card-deco {
+      background: var(--muted);
+    }
+
+    .preview-dashboard-card {
+      position: relative;
+      z-index: 1;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      box-shadow: 0 14px 36px -10px rgba(0, 0, 0, 0.07);
+      overflow: hidden;
+    }
+
+    .dark .preview-dashboard-card {
+      box-shadow: 0 14px 36px -10px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Scoped compact preview card elements */
+    .preview-dashboard-card .dashboard-titlebar {
+      padding: 7px 14px;
+    }
+
+    .preview-dashboard-card .dashboard-body {
+      padding: 12px 14px;
+      gap: 12px;
+    }
+
+    .preview-dashboard-card .dash-stats-row {
+      gap: 8px;
+    }
+
+    .preview-dashboard-card .dash-stat-card {
+      padding: 8px 10px;
+      border-radius: 10px;
+    }
+
+    .preview-dashboard-card .stat-label {
+      font-size: 0.58rem;
+      margin-bottom: 2px;
+    }
+
+    .preview-dashboard-card .stat-value {
+      font-size: 1.15rem;
+    }
+
+    .preview-dashboard-card .stat-delta {
+      font-size: 0.68rem;
+    }
+
+    .preview-dashboard-card .dash-section-title {
+      font-size: 0.72rem;
+      margin-bottom: 6px;
+    }
+
+    .preview-dashboard-card .dash-list {
+      gap: 6px;
+    }
+
+    .preview-dashboard-card .dash-list-item {
+      padding: 6px 10px;
+      border-radius: 10px;
+    }
+
+    .preview-dashboard-card .dash-item-icon {
+      font-size: 1.05rem;
+    }
+
+    .preview-dashboard-card .dash-item-name {
+      font-size: 0.8125rem;
+    }
+
+    .preview-dashboard-card .dash-item-sub {
+      font-size: 0.6875rem;
+    }
+
+    .preview-dashboard-card .dash-item-badge {
+      font-size: 0.6875rem;
+      padding: 2px 7px;
+    }
+
+    /* Right Column: Clean Login Card */
+    @media (min-width: 992px) {
+      .login-form-col {
+        align-self: center;
+      }
+    }
+
+    .login-auth-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 32px;
+      box-shadow: 0 14px 40px -10px rgba(0, 0, 0, 0.07);
+      position: relative;
+    }
+
+    @media (max-width: 576px) {
+      .login-auth-card {
+        padding: 24px 20px;
+        border-radius: 18px;
+      }
+    }
+
+    .auth-card-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--foreground);
+      margin-bottom: 4px;
+    }
+
+    .auth-card-sub {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      color: var(--muted-foreground);
+      margin-bottom: 18px;
+    }
+
+    /* Form Inputs */
+    .form-group-item {
+      margin-bottom: 15px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .form-label-custom {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--foreground);
+      margin-bottom: 5px;
+    }
+
+    .form-control-custom {
+      width: 100%;
+      height: 42px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      font-family: 'Inter', sans-serif;
+      color: var(--foreground);
+      background: var(--background);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .form-control-custom:focus {
+      border-color: var(--primary-hover);
+      box-shadow: 0 0 0 3px rgba(2, 72, 212, 0.12);
+      background: var(--card);
+    }
+
+    .form-control-custom.is-invalid {
+      border-color: var(--destructive);
+    }
+
+    .pwd-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .pwd-input-wrap .form-control-custom {
+      padding-right: 42px;
+    }
+
+    .pwd-toggle-btn-custom {
+      position: absolute;
+      right: 10px;
+      background: none;
+      border: none;
+      color: var(--muted-foreground);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      transition: color 0.15s ease;
+    }
+
+    .pwd-toggle-btn-custom:hover {
+      color: var(--foreground);
+    }
+
+    .error-msg {
+      font-size: 0.775rem;
+      font-weight: 500;
+      color: var(--destructive);
+      margin-top: 4px;
+    }
+
+    /* Options Row (Remember me & Forgot Password) */
+    .auth-options-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      font-size: 0.825rem;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .remember-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      color: var(--muted-foreground);
+      font-weight: 500;
+      user-select: none;
+    }
+
+    .remember-checkbox {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--primary);
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .forgot-pass-link {
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .dark .forgot-pass-link {
+      color: #93c5fd;
+    }
+
+    .forgot-pass-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Primary Submit Button (Landing Page Style) */
+    .login-submit-btn {
+      width: 100%;
+      height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.925rem;
+      font-weight: 700;
+      font-family: var(--font-sans), sans-serif;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(3, 3, 94, 0.22);
+      transition: all 0.2s ease;
+    }
+
+    .login-submit-btn:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 6px 20px rgba(2, 72, 212, 0.32);
+      transform: translateY(-1px);
+    }
+
+    .login-submit-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(3, 3, 94, 0.2);
+    }
+
+    .login-submit-btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Bottom Sign-up Link */
+    .auth-footer-prompt {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 0.825rem;
+      font-family: 'Inter', sans-serif;
+      color: var(--muted-foreground);
+    }
+
+    .auth-footer-link {
+      color: var(--primary);
+      font-weight: 700;
+      text-decoration: none;
+      margin-left: 4px;
+    }
+
+    .dark .auth-footer-link {
+      color: #93c5fd;
+    }
+
+    .auth-footer-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Alert Box */
+    .login-alert-box {
+      display: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-family: 'Inter', sans-serif;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    /* =========================================================
+       PAGE TRANSITIONS & TASTE-SKILL STAGGERED ENTRANCES
+       Uses landing page custom bezier: cubic-bezier(.16, 1, .3, 1)
+       ========================================================= */
+
+    /* Heading Highlight & Underline Animation (Identical to Landing Page) */
+    .login-heading-highlight {
+      position: relative;
+      display: inline-block;
+    }
+
+    .login-underline {
+      position: absolute;
+      bottom: 2px;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 999px;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.6s 0.75s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    .dark .login-underline {
+      background: var(--ring);
+      opacity: 0.5;
+    }
+
+    /* Page exit animation */
+    body.page-exit {
+      opacity: 0;
+      transform: translateY(-8px);
+      transition: opacity 0.22s ease, transform 0.22s cubic-bezier(.16, 1, .3, 1);
+      pointer-events: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
 </head>
-<body class="bg-light d-flex align-items-center justify-content-center min-vh-100 py-5">
+<body class="login-page-body">
 
-  <!-- Dark mode toggle (floating) -->
-  <button data-theme-toggle aria-label="Toggle theme" title="Toggle theme" style="position:fixed;top:16px;right:16px;z-index:9999;width:38px;height:38px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--muted-foreground);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">
-    <svg data-theme-moon xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
-    <svg data-theme-sun  xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-  </button>
+  <!-- Subtle dot-grid pattern from landing page -->
+  <div class="login-grid-bg" aria-hidden="true"></div>
 
-  <div class="container" style="max-width: 960px;">
-    <!-- Back to Home Link -->
-    <div class="mb-3">
-      <a href="/index.html" class="text-decoration-none text-secondary fw-medium fs-7">
-        ← Back to Home
+  <!-- Ambient light balance blobs -->
+  <div class="login-bg-blob login-bg-blob-1" aria-hidden="true"></div>
+  <div class="login-bg-blob login-bg-blob-2" aria-hidden="true"></div>
+
+  <!-- ===================== NAVBAR HEADER ===================== -->
+  <header class="login-header" id="loginHeader">
+    <div class="login-header-inner">
+      <!-- Logo linking back to homepage -->
+      <a href="/" class="landing-logo-link">
+        <span class="logo-icon">👥</span>
+        <span class="logo-text">GroupSpace</span>
       </a>
+
+      <!-- Right: Theme toggle & Sign up shortcut -->
+      <div class="d-flex align-items-center gap-2">
+        <button
+          id="themeToggleBtn"
+          data-theme-toggle
+          class="theme-toggle-btn"
+          aria-label="Toggle theme"
+          title="Toggle theme"
+        >
+          <svg
+            data-theme-moon
+            xmlns="http://www.w3.org/2000/svg"
+            width="17"
+            height="17"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
+          </svg>
+          <svg
+            data-theme-sun
+            xmlns="http://www.w3.org/2000/svg"
+            width="17"
+            height="17"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            style="display: none"
+          >
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        </button>
+
+        <a href="/register.html" class="landing-signup-btn">Sign up</a>
+      </div>
     </div>
+  </header>
 
-    <!-- Main Auth Card -->
-    <div class="card border border-light-subtle shadow-sm rounded-4 overflow-hidden bg-white p-4 p-md-5">
-      <div class="row g-5 align-items-center">
-        
-        <!-- Left Column: Branding & Feature Access List -->
-        <div class="col-lg-6 pe-lg-4">
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <span class="fs-2">👥</span>
-            <span class="fs-3 fw-bold text-dark">GroupSpace</span>
-          </div>
-          <p class="text-muted mb-4 fs-6">One Workspace. Better Teamwork.</p>
+  <!-- ===================== MAIN AUTH CONTAINER ===================== -->
+  <main class="login-main">
+    <div class="login-container">
+      
+      <!-- LEFT COLUMN: Product Context & macOS Dashboard Preview -->
+      <div class="login-preview-col">
+        <div class="login-context-kicker" id="loginKicker">✦ Workspace Access</div>
+        <h1 class="login-hero-title" id="loginHeading">
+          Welcome back to<br>your
+          <span class="login-heading-highlight">
+            team space.
+            <span class="login-underline" id="loginUnderline"></span>
+          </span>
+        </h1>
+        <p class="login-subtext" id="loginSubtext">
+          Manage discussions, Kanban tasks, documents, and shared budgets inside one unified platform.
+        </p>
 
-          <h5 class="fw-bold text-dark mb-3">What you'll access after logging in:</h5>
-          <ul class="list-unstyled d-flex flex-column gap-3 mb-0 text-secondary fs-7">
-            <li class="d-flex align-items-center gap-2"><span>👥</span> Choose your Workspace</li>
-            <li class="d-flex align-items-center gap-2"><span>💬</span> Join Discussions</li>
-            <li class="d-flex align-items-center gap-2"><span>✅</span> Manage Tasks</li>
-            <li class="d-flex align-items-center gap-2"><span>📁</span> Access Shared Files</li>
-            <li class="d-flex align-items-center gap-2"><span>📅</span> View Calendar</li>
-            <li class="d-flex align-items-center gap-2"><span>💰</span> Track Expenses</li>
-          </ul>
-        </div>
+        <!-- macOS Preview Card (Matching Landing Page Mockup) -->
+        <div class="preview-card-wrap" id="loginPreviewCard">
+          <div class="preview-card-deco" aria-hidden="true"></div>
 
-        <!-- Right Column: Login Form -->
-        <div class="col-lg-6 border-start-lg ps-lg-4">
-          <div class="mb-4">
-            <h3 class="fw-bold text-dark mb-1">Welcome Back 👋</h3>
-            <small class="text-muted">Sign in to continue to your workspaces.</small>
-          </div>
-
-          <!-- Alert Notification Box -->
-          <div id="loginAlert" style="display:none; padding: 12px 16px; border-radius: 8px; font-size: 0.875rem; margin-bottom: 16px; line-height: 1.4;"></div>
-
-          <form id="loginForm" class="d-flex flex-column gap-3">
-            <div>
-              <label class="form-label text-dark fw-medium fs-7 mb-1">Email Address</label>
-              <div id="emailError" class="text-danger fw-semibold fs-7 mb-1 d-none"></div>
-              <input type="email" id="email" class="form-control" placeholder="name@gmail.com" required>
+          <div class="preview-dashboard-card">
+            <!-- macOS Window Titlebar -->
+            <div class="dashboard-titlebar">
+              <div class="titlebar-dots">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+              </div>
+              <span class="titlebar-label">GroupSpace — Workspaces</span>
+              <div style="width: 48px"></div>
             </div>
 
-            <div>
-              <label class="form-label text-dark fw-medium fs-7 mb-1">Password</label>
-              <div class="input-group">
-                <input type="password" id="password" class="form-control" placeholder="••••••••" required>
-                <button type="button" id="toggleLoginPassword" class="btn btn-outline-secondary px-3" tabindex="-1"
-                  onclick="togglePwd('password', this)" aria-label="Show password" title="Show password">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg>
+            <!-- Dashboard Body -->
+            <div class="dashboard-body">
+              <!-- Stats Row -->
+              <div class="dash-stats-row">
+                <div class="dash-stat-card" id="loginStat0">
+                  <p class="stat-label">Workspaces</p>
+                  <p class="stat-value">24</p>
+                  <p class="stat-delta">+3</p>
+                </div>
+                <div class="dash-stat-card" id="loginStat1">
+                  <p class="stat-label">Members</p>
+                  <p class="stat-value">1 840</p>
+                  <p class="stat-delta">+12%</p>
+                </div>
+                <div class="dash-stat-card" id="loginStat2">
+                  <p class="stat-label">Tasks Done</p>
+                  <p class="stat-value">96%</p>
+                  <p class="stat-delta">↑</p>
+                </div>
+              </div>
+
+              <!-- Active Workspaces List -->
+              <div class="dash-section">
+                <p class="dash-section-title">Active Workspaces</p>
+                <div class="dash-list">
+                  <div class="dash-list-item" id="loginItem0">
+                    <div class="dash-item-icon">📁</div>
+                    <div class="dash-item-text">
+                      <p class="dash-item-name">CS Capstone Project</p>
+                      <p class="dash-item-sub">Due Dec 15, 2025</p>
+                    </div>
+                    <span class="dash-item-badge">8 members</span>
+                  </div>
+                  <div class="dash-list-item" id="loginItem1">
+                    <div class="dash-item-icon">💬</div>
+                    <div class="dash-item-text">
+                      <p class="dash-item-name">Student Council</p>
+                      <p class="dash-item-sub">Dec 20, 2025</p>
+                    </div>
+                    <span class="dash-item-badge">12 members</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: High-Taste Login Form Card -->
+      <div class="login-form-col">
+        <div class="login-auth-card" id="loginAuthCard">
+          <h2 class="auth-card-title">Sign In</h2>
+          <p class="auth-card-sub">Sign in to continue to your workspaces.</p>
+
+          <!-- Alert Container for notifications / lockout countdown -->
+          <div id="loginAlert" class="login-alert-box"></div>
+
+          <form id="loginForm">
+            <!-- Email Address Field -->
+            <div class="form-group-item">
+              <label class="form-label-custom" for="email">Email Address</label>
+              <div id="emailError" class="error-msg d-none"></div>
+              <input
+                type="email"
+                id="email"
+                class="form-control-custom"
+                placeholder="name@gmail.com"
+                required
+                autocomplete="email"
+              >
+            </div>
+
+            <!-- Password Field with Toggle -->
+            <div class="form-group-item">
+              <label class="form-label-custom" for="password">Password</label>
+              <div class="pwd-input-wrap">
+                <input
+                  type="password"
+                  id="password"
+                  class="form-control-custom"
+                  placeholder="••••••••"
+                  required
+                  autocomplete="current-password"
+                >
+                <button
+                  type="button"
+                  id="toggleLoginPassword"
+                  class="pwd-toggle-btn-custom"
+                  tabindex="-1"
+                  onclick="togglePwd('password', this)"
+                  aria-label="Show password"
+                  title="Show password"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                    <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                  </svg>
                 </button>
               </div>
-              <div id="passwordError" class="text-danger fw-semibold fs-7 mt-1 d-none"></div>
+              <div id="passwordError" class="error-msg d-none"></div>
             </div>
 
-            <!-- Remember Me & Forgot Password Row -->
-            <div class="d-flex justify-content-between align-items-center fs-7">
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="rememberMe">
-                <label class="form-check-label text-secondary" for="rememberMe">
-                  Remember Me
-                </label>
-              </div>
-              <a href="#" class="text-primary text-decoration-none fw-medium" data-bs-toggle="modal" data-bs-target="#resetPasswordModal">
-                Forgot Password?
+            <!-- Options: Remember me & Forgot Password -->
+            <div class="auth-options-row">
+              <label class="remember-label" for="rememberMe">
+                <input type="checkbox" id="rememberMe" class="remember-checkbox" checked>
+                <span>Remember me</span>
+              </label>
+              <a href="#" class="forgot-pass-link" data-bs-toggle="modal" data-bs-target="#resetPasswordModal">
+                Forgot password?
               </a>
             </div>
 
-            <button type="submit" id="loginBtn" class="btn btn-primary w-100 py-2.5 fw-semibold mt-2">Login</button>
+            <!-- Submit Button (Deep Navy Landing Theme) -->
+            <button type="submit" id="loginBtn" class="login-submit-btn">
+              <span>Sign In</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </button>
+
+            <!-- Bottom Register Link -->
+            <div class="auth-footer-prompt">
+              Don't have an account?
+              <a href="/register.html" class="auth-footer-link">Create one</a>
+            </div>
           </form>
-
-          <div class="text-center mt-3 fs-7 text-muted">
-            Don't have an account? <a href="/register.html" class="text-primary text-decoration-none fw-semibold">Create one</a>
-          </div>
         </div>
-
       </div>
-    </div>
-  </div>
 
-  <!-- Reset Password Modal -->
+    </div>
+  </main>
+
+  <!-- ===================== RESET PASSWORD MODAL ===================== -->
   <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-content rounded-4 border-0 shadow" style="background:var(--card);color:var(--foreground);">
         <div class="modal-header border-bottom-0 pb-0">
-          <h5 class="modal-title fw-bold text-dark" id="resetPasswordLabel">🔐 Reset Password</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <h5 class="modal-title fw-bold" id="resetPasswordLabel" style="color:var(--foreground);">🔐 Reset Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter:var(--bs-btn-close-filter);"></button>
         </div>
         <div class="modal-body pt-2">
           <div id="forgotAlert" style="display:none; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 12px;"></div>
           
           <!-- Step 1: Request Code -->
           <form id="forgotStep1Form">
-            <p class="text-muted fs-7 mb-3">Enter your registered email address and we'll send you a 6-digit verification code.</p>
+            <p class="fs-7 mb-3" style="color:var(--muted-foreground);">Enter your registered email address and we'll send you a 6-digit verification code.</p>
             <div class="mb-3">
-              <label class="form-label text-dark fw-medium fs-7 mb-1">Email Address</label>
-              <input type="email" id="forgotEmail" class="form-control" placeholder="name@gmail.com" required>
+              <label class="form-label fw-medium fs-7 mb-1" style="color:var(--foreground);">Email Address</label>
+              <input type="email" id="forgotEmail" class="form-control" placeholder="name@gmail.com" required style="background:var(--background);color:var(--foreground);border-color:var(--border);">
             </div>
-            <button type="submit" id="sendForgotBtn" class="btn btn-primary w-100 py-2 fw-semibold">Send Verification Code</button>
+            <button type="submit" id="sendForgotBtn" class="btn btn-primary w-100 py-2 fw-semibold" style="background:var(--primary);border-color:var(--primary);">Send Verification Code</button>
           </form>
 
           <!-- Step 2: Enter OTP & New Password -->
           <form id="forgotStep2Form" style="display:none;">
-            <p class="text-muted fs-7 mb-1">A 6-digit code was sent to <strong id="forgotTargetEmail"></strong>.</p>
+            <p class="fs-7 mb-1" style="color:var(--muted-foreground);">A 6-digit code was sent to <strong id="forgotTargetEmail"></strong>.</p>
             <p class="fs-7 mb-3" style="color:var(--warning, #d97706);">📬 Can't find it? Check your <strong>Spam / Junk</strong> folder.</p>
             <div class="mb-3">
-              <label class="form-label text-dark fw-medium fs-7 mb-1">6-Digit Code</label>
-              <input type="text" id="forgotOtpCode" class="form-control text-center fw-bold fs-5" maxlength="6" placeholder="••••••" required>
+              <label class="form-label fw-medium fs-7 mb-1" style="color:var(--foreground);">6-Digit Code</label>
+              <input type="text" id="forgotOtpCode" class="form-control text-center fw-bold fs-5" maxlength="6" placeholder="••••••" required style="background:var(--background);color:var(--foreground);border-color:var(--border);">
             </div>
             <div class="mb-3">
-              <label class="form-label text-dark fw-medium fs-7 mb-1">New Password</label>
+              <label class="form-label fw-medium fs-7 mb-1" style="color:var(--foreground);">New Password</label>
               <div class="input-group">
-                <input type="password" id="forgotNewPass" class="form-control" placeholder="At least 6 characters" required>
+                <input type="password" id="forgotNewPass" class="form-control" placeholder="At least 6 characters" required style="background:var(--background);color:var(--foreground);border-color:var(--border);">
                 <button type="button" class="btn btn-outline-secondary px-3" tabindex="-1"
                   onclick="togglePwd('forgotNewPass', this)" aria-label="Show password" title="Show password">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg>
@@ -145,19 +824,19 @@
               </div>
             </div>
             <div class="mb-3">
-              <label class="form-label text-dark fw-medium fs-7 mb-1">Confirm New Password</label>
+              <label class="form-label fw-medium fs-7 mb-1" style="color:var(--foreground);">Confirm New Password</label>
               <div class="input-group">
-                <input type="password" id="forgotConfirmPass" class="form-control" placeholder="Repeat new password" required>
+                <input type="password" id="forgotConfirmPass" class="form-control" placeholder="Repeat new password" required style="background:var(--background);color:var(--foreground);border-color:var(--border);">
                 <button type="button" class="btn btn-outline-secondary px-3" tabindex="-1"
                   onclick="togglePwd('forgotConfirmPass', this)" aria-label="Show password" title="Show password">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg>
                 </button>
               </div>
             </div>
-            <button type="submit" id="resetPassBtn" class="btn btn-primary w-100 py-2 fw-semibold mb-2">Reset Password</button>
+            <button type="submit" id="resetPassBtn" class="btn btn-primary w-100 py-2 fw-semibold mb-2" style="background:var(--primary);border-color:var(--primary);">Reset Password</button>
             <div class="d-flex justify-content-between align-items-center mt-2">
-              <button type="button" class="btn btn-link text-decoration-none fs-7 p-0" onclick="backToForgotStep1()">← Change Email</button>
-              <button type="button" id="forgotResendBtn" class="btn btn-link text-decoration-none fs-7 p-0">Resend Code</button>
+              <button type="button" class="btn btn-link text-decoration-none fs-7 p-0" onclick="backToForgotStep1()" style="color:var(--primary);">← Change Email</button>
+              <button type="button" id="forgotResendBtn" class="btn btn-link text-decoration-none fs-7 p-0" style="color:var(--primary);">Resend Code</button>
             </div>
           </form>
         </div>
@@ -165,8 +844,118 @@
     </div>
   </div>
 
-  <script src="js/api.js"></script>
-  <script src="js/auth.js"></script>
+  <!-- Shared App & Authentication Scripts -->
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+  <script>
+    // Smooth transition on navigation back home or to register
+    document.querySelectorAll('a[href="/"], a[href="/index.html"], a[href="index.html"], a[href="/register.html"], a[href="register.html"]').forEach((link) => {
+      link.addEventListener("click", (e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.defaultPrevented) return;
+        const target = link.getAttribute("href");
+        if (!target) return;
+        e.preventDefault();
+        document.body.classList.add("page-exit");
+        setTimeout(() => {
+          window.location.href = target;
+        }, 200);
+      });
+    });
+
+    /* ── First Load & Reload Animations (Identical to Landing Page Architecture) ── */
+    function animateIn(el, delay = 0) {
+      if (!el) return;
+      el.style.opacity = "0";
+      el.style.transform = "translateY(20px)";
+      el.style.transition = `opacity 0.6s ${delay}s ease, transform 0.6s ${delay}s cubic-bezier(.16,1,.3,1)`;
+      setTimeout(() => {
+        el.style.opacity = "1";
+        el.style.transform = "translateY(0)";
+      }, 80);
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      // 1. Header (matches landing siteHeader)
+      const hdr = document.getElementById("loginHeader");
+      if (hdr) {
+        hdr.style.transform = "translateY(-60px)";
+        hdr.style.opacity = "0";
+        hdr.style.transition = "transform 0.55s cubic-bezier(.16,1,.3,1), opacity 0.55s ease";
+        setTimeout(() => {
+          hdr.style.transform = "";
+          hdr.style.opacity = "1";
+        }, 80);
+      }
+
+      // 2. Kicker badge
+      setTimeout(() => animateIn(document.getElementById("loginKicker"), 0), 160);
+
+      // 3. Hero Heading (matches landing heroHeading)
+      setTimeout(() => animateIn(document.getElementById("loginHeading"), 0), 300);
+
+      // 4. Hero Underline sweep across (matches landing heroUnderline at 950ms)
+      setTimeout(() => {
+        const ul = document.getElementById("loginUnderline");
+        if (ul) {
+          ul.style.transform = "scaleX(1)";
+        }
+      }, 950);
+
+      // 5. Hero Subtext (matches landing heroSubtext)
+      setTimeout(() => animateIn(document.getElementById("loginSubtext"), 0), 480);
+
+      // 6. Preview Card lift & scale (matches landing heroCard)
+      const previewCard = document.getElementById("loginPreviewCard");
+      if (previewCard) {
+        previewCard.style.opacity = "0";
+        previewCard.style.transform = "translateY(32px) scale(0.97)";
+        previewCard.style.transition = "opacity 0.75s 0.35s cubic-bezier(.16,1,.3,1), transform 0.75s 0.35s cubic-bezier(.16,1,.3,1)";
+        setTimeout(() => {
+          previewCard.style.opacity = "1";
+          previewCard.style.transform = "translateY(0) scale(1)";
+        }, 80);
+      }
+
+      // 7. Stat cards stagger (matches landing stat0, stat1, stat2)
+      [0, 1, 2].forEach((i) => {
+        const el = document.getElementById(`loginStat${i}`);
+        if (!el) return;
+        el.style.opacity = "0";
+        el.style.transform = "translateY(10px)";
+        el.style.transition = `opacity 0.4s ${0.6 + i * 0.08}s ease, transform 0.4s ${0.6 + i * 0.08}s ease`;
+        setTimeout(() => {
+          el.style.opacity = "1";
+          el.style.transform = "translateY(0)";
+        }, 80);
+      });
+
+      // 8. List items stagger (matches landing item0, item1)
+      [0, 1].forEach((i) => {
+        const el = document.getElementById(`loginItem${i}`);
+        if (!el) return;
+        el.style.opacity = "0";
+        el.style.transform = "translateX(-10px)";
+        el.style.transition = `opacity 0.4s ${0.7 + i * 0.1}s ease, transform 0.4s ${0.7 + i * 0.1}s ease`;
+        setTimeout(() => {
+          el.style.opacity = "1";
+          el.style.transform = "translateX(0)";
+        }, 80);
+      });
+
+      // 9. Login Auth Card lift & scale (matches landing heroCard curve)
+      const authCard = document.getElementById("loginAuthCard");
+      if (authCard) {
+        authCard.style.opacity = "0";
+        authCard.style.transform = "translateY(32px) scale(0.97)";
+        authCard.style.transition = "opacity 0.75s 0.25s cubic-bezier(.16,1,.3,1), transform 0.75s 0.25s cubic-bezier(.16,1,.3,1)";
+        setTimeout(() => {
+          authCard.style.opacity = "1";
+          authCard.style.transform = "translateY(0) scale(1)";
+        }, 80);
+      }
+    });
+  </script>
 </body>
 </html>
