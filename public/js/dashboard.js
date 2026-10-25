@@ -1224,16 +1224,32 @@ async function handleCreateTask(e) {
   const description = document.getElementById('taskDesc').value.trim();
   const priority = document.getElementById('taskPriority').value;
   const assignedToUserId = document.getElementById('taskAssignee').value;
+  const estimatedDueDate = document.getElementById('taskDueDate') ? document.getElementById('taskDueDate').value : '';
+
+  if (!estimatedDueDate) {
+    showToast('Please select an estimated deadline date.', 'error');
+    return;
+  }
 
   try {
     await apiFetch(`/api/groups/${currentGroupId}/tasks`, {
       method: 'POST',
-      body: JSON.stringify({ title, description, priority, assignedToUserId })
+      body: JSON.stringify({
+        title,
+        description,
+        priority,
+        assignedToUserId,
+        estimated_due_date: estimatedDueDate,
+        dueDate: estimatedDueDate
+      })
     });
     closeModal('createTaskModal');
     document.getElementById('createTaskForm').reset();
     showToast('Task added to board!', 'success');
     loadTasks();
+    if (typeof calendarInstance !== 'undefined' && calendarInstance) {
+      calendarInstance.refetchEvents();
+    }
   } catch (err) {
     showToast(err.message, 'error');
   }

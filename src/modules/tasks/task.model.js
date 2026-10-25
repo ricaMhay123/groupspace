@@ -18,17 +18,18 @@ const TaskModel = {
    * The caller (service layer) is responsible for determining the correct
    * initial status (TODO vs PENDING_APPROVAL).
    */
-  async create({ groupId, title, description, priority, status, assignedToUserId, createdByUserId, dueDate }) {
+  async create({ groupId, title, description, priority, status, assignedToUserId, createdByUserId, dueDate, estimatedDueDate, estimated_due_date }) {
+    const finalDueDate = estimated_due_date || estimatedDueDate || dueDate || null;
     const [result] = await sql`
       INSERT INTO tasks (
         group_id, title, description, priority, status,
-        assigned_to_user_id, created_by_user_id, due_date
+        assigned_to_user_id, created_by_user_id, due_date, estimated_due_date
       )
       VALUES (
         ${groupId}, ${title}, ${description || null},
         ${priority || 'MEDIUM'}, ${status || 'TODO'},
         ${assignedToUserId || null}, ${createdByUserId},
-        ${dueDate || null}
+        ${finalDueDate}, ${finalDueDate}
       )
       RETURNING id
     `;
@@ -96,7 +97,8 @@ const TaskModel = {
         assigned_to_user_id = ${fields.assigned_to_user_id !== undefined ? fields.assigned_to_user_id : current.assigned_to_user_id},
         approved_by_user_id = ${fields.approved_by_user_id !== undefined ? fields.approved_by_user_id : current.approved_by_user_id},
         approval_notes      = ${fields.approval_notes      !== undefined ? fields.approval_notes      : current.approval_notes},
-        due_date            = ${fields.due_date            !== undefined ? fields.due_date            : current.due_date},
+        due_date            = ${fields.estimated_due_date !== undefined ? fields.estimated_due_date : (fields.due_date !== undefined ? fields.due_date : current.due_date)},
+        estimated_due_date  = ${fields.estimated_due_date !== undefined ? fields.estimated_due_date : (fields.due_date !== undefined ? fields.due_date : (current.estimated_due_date || current.due_date))},
         is_flagged          = ${fields.is_flagged          !== undefined ? fields.is_flagged          : current.is_flagged},
         flagged_reason      = ${fields.flagged_reason      !== undefined ? fields.flagged_reason      : current.flagged_reason},
         flagged_at          = ${fields.flagged_at          !== undefined ? fields.flagged_at          : current.flagged_at},

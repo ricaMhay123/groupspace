@@ -24,13 +24,15 @@ function initCalendar(groupId) {
       margin-bottom:20px; flex-wrap:wrap; gap:12px;
     ">
       <div>
-        <h2 style="font-size:1.25rem; font-weight:700; color:#0f172a; margin:0;">📅 Team Calendar</h2>
-        <p style="font-size:0.85rem; color:#64748b; margin:4px 0 0;">Events and task due dates for this workspace</p>
+        <h2 style="font-size:1.25rem; font-weight:700; color:#0f172a; margin:0;">Team Calendar</h2>
+        <p style="font-size:0.85rem; color:#64748b; margin:4px 0 0;">Events and estimated task deadlines for this workspace</p>
       </div>
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
         <div style="display:flex; gap:8px; font-size:0.8rem; align-items:center;">
           <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#4f46e5;display:inline-block;"></span>Event</span>
-          <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>Task Due</span>
+          <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>To Do</span>
+          <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#3b82f6;display:inline-block;"></span>In Progress</span>
+          <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#8b5cf6;display:inline-block;"></span>Review</span>
           <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#ef4444;display:inline-block;"></span>High Priority</span>
           <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#10b981;display:inline-block;"></span>Done</span>
         </div>
@@ -59,23 +61,92 @@ function initCalendar(groupId) {
     dateClick: handleDateClick,
     events: async function(info, successCallback, failureCallback) {
       try {
-        const res = await apiFetch(`/api/groups/${calendarGroupId}/events`);
-        const events = (res.data || []).map(e => ({
-          id: String(e.id),
-          title: e.is_task ? `📋 ${e.title}` : `📌 ${e.title}`,
-          start: e.event_date,
-          backgroundColor: e.color || '#4f46e5',
-          borderColor: e.color || '#4f46e5',
-          textColor: '#ffffff',
-          extendedProps: {
-            description: e.description || '',
-            creator: e.creator_name || 'Team',
-            isTask: e.is_task,
-            taskStatus: e.task_status,
-            eventType: e.event_type
+        // Fetch custom workspace events
+        let customEvents = [];
+        try {
+          const res = await apiFetch(`/api/groups/${calendarGroupId}/events`);
+          if (Array.isArray(res.data)) customEvents = res.data;
+        } catch (e) {
+          console.warn('[Calendar] Could not load events:', e);
+        }
+
+        // Fetch active Kanban board tasks directly scoped to active groupId: GET /api/tasks?groupId=X
+        let tasks = [];
+        try {
+          const taskRes = await apiFetch(`/api/tasks?groupId=${calendarGroupId}`);
+          if (Array.isArray(taskRes.data)) tasks = taskRes.data;
+        } catch (e) {
+          console.warn('[Calendar] Could not fetch tasks via /api/tasks:', e);
+          try {
+            const fallbackRes = await apiFetch(`/api/groups/${calendarGroupId}/tasks`);
+            if (Array.isArray(fallbackRes.data)) tasks = fallbackRes.data;
+          } catch (err) {}
+        }
+
+        // Keep local cache synced
+        if (tasks.length > 0) {
+          window.currentTasks = tasks;
+        }
+
+        const formattedEvents = [];
+
+        // Plot custom workspace events (filter out any backend task aliases to avoid duplication)
+        for (const e of customEvents) {
+          if (e.is_task) continue;
+          formattedEvents.push({
+            id: `event-${e.id}`,
+            title: e.title,
+            start: e.event_date,
+            backgroundColor: e.color || '#4f46e5',
+            borderColor: e.color || '#4f46e5',
+            textColor: '#ffffff',
+            extendedProps: {
+              isTask: false,
+              rawId: e.id,
+              description: e.description || '',
+              creator: e.creator_name || 'Team',
+              eventType: e.event_type
+            }
+          });
+        }
+
+        // Plot active workspace tasks onto their respective deadline dates
+        for (const t of tasks) {
+          const deadline = t.estimated_due_date || t.due_date;
+          if (!deadline) continue;
+
+          let color = '#f59e0b'; // default To Do
+          if (t.status === 'DONE') {
+            color = '#10b981'; // Done
+          } else if (t.priority === 'HIGH' || t.priority === 'URGENT') {
+            color = '#ef4444'; // High Priority
+          } else if (t.status === 'IN_PROGRESS') {
+            color = '#3b82f6'; // In Progress
+          } else if (t.status === 'PENDING_APPROVAL') {
+            color = '#8b5cf6'; // Awaiting Approval
           }
-        }));
-        successCallback(events);
+
+          formattedEvents.push({
+            id: `task-${t.id}`,
+            title: t.title,
+            start: deadline,
+            allDay: true,
+            backgroundColor: color,
+            borderColor: color,
+            textColor: '#ffffff',
+            extendedProps: {
+              isTask: true,
+              taskId: t.id,
+              task: t,
+              taskStatus: t.status,
+              priority: t.priority,
+              assignee: t.assignee_name || 'Unassigned',
+              description: t.description || ''
+            }
+          });
+        }
+
+        successCallback(formattedEvents);
       } catch (err) {
         failureCallback(err);
         showToast('Could not load calendar events.', 'error');
@@ -83,6 +154,7 @@ function initCalendar(groupId) {
     },
     eventDidMount: function(info) {
       info.el.title = info.event.extendedProps.description || info.event.title;
+      info.el.style.cursor = 'pointer';
     }
   });
 
@@ -94,21 +166,39 @@ function handleEventClick(info) {
   const ev = info.event;
   const props = ev.extendedProps;
 
+  // Clicking a task entry on the calendar opens that task's detail modal
   if (props.isTask) {
-    showToast(`📋 Task: "${ev.title.replace('📋 ', '')}" — Status: ${props.taskStatus || 'Unknown'}`, 'info');
+    const rawTaskId = props.taskId || (String(ev.id).startsWith('task-') ? ev.id.replace('task-', '') : ev.id);
+    const taskIdNum = Number(rawTaskId);
+
+    if (props.task) {
+      if (!Array.isArray(window.currentTasks)) window.currentTasks = [];
+      const existingIdx = window.currentTasks.findIndex(t => Number(t.id) === taskIdNum);
+      if (existingIdx >= 0) window.currentTasks[existingIdx] = props.task;
+      else window.currentTasks.push(props.task);
+    }
+
+    if (typeof openTaskDetailsModal === 'function') {
+      openTaskDetailsModal(taskIdNum);
+    } else if (typeof window.openTaskDetailsModal === 'function') {
+      window.openTaskDetailsModal(taskIdNum);
+    } else {
+      showToast(`Task: "${ev.title}" — Status: ${props.taskStatus || 'Unknown'}`, 'info');
+    }
     return;
   }
 
+  const eventId = props.rawId || (String(ev.id).startsWith('event-') ? ev.id.replace('event-', '') : ev.id);
   const confirmed = confirm(
-    `📌 "${ev.title.replace('📌 ', '')}"\n` +
-    `📅 ${new Date(ev.start).toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}\n` +
-    (props.description ? `📝 ${props.description}\n` : '') +
-    `👤 Added by: ${props.creator}\n\n` +
+    `"${ev.title}"\n` +
+    `Date: ${new Date(ev.start).toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}\n` +
+    (props.description ? `Description: ${props.description}\n` : '') +
+    `Added by: ${props.creator}\n\n` +
     `Delete this event?`
   );
 
   if (confirmed) {
-    deleteCalendarEvent(ev.id);
+    deleteCalendarEvent(eventId);
   }
 }
 
@@ -131,7 +221,7 @@ function openAddEventModal(prefillDate) {
   modal.innerHTML = `
     <div class="modal-card" style="max-width:440px;">
       <div class="modal-header">
-        <h3>📅 Add Calendar Event</h3>
+        <h3>Add Calendar Event</h3>
         <button class="modal-close" onclick="document.getElementById('addEventModal').remove()">✕</button>
       </div>
       <form id="addEventForm">
@@ -146,11 +236,11 @@ function openAddEventModal(prefillDate) {
         <div class="form-group">
           <label>Event Type</label>
           <select id="evType" class="form-control">
-            <option value="EVENT">📌 General Event</option>
-            <option value="MEETING">🤝 Meeting</option>
-            <option value="DEADLINE">⚠️ Deadline</option>
-            <option value="MILESTONE">🏆 Milestone</option>
-            <option value="REMINDER">🔔 Reminder</option>
+            <option value="EVENT">General Event</option>
+            <option value="MEETING">Meeting</option>
+            <option value="DEADLINE">Deadline</option>
+            <option value="MILESTONE">Milestone</option>
+            <option value="REMINDER">Reminder</option>
           </select>
         </div>
         <div class="form-group">

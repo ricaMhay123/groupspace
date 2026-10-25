@@ -82,6 +82,8 @@ async function requireGroupMembership(req, res, next) {
     });
   }
 
+  req.params.groupId = String(groupId);
+  req.groupId = Number(groupId);
 
   if (!userId) {
     return res.status(HTTP_STATUS.UNAUTHORIZED).json({

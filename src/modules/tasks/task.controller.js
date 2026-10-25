@@ -25,7 +25,11 @@ function errStatus(err) {
  */
 async function getTasks(req, res) {
   try {
-    const tasks = await taskService.getGroupTasks(req.params.groupId);
+    const groupId = req.params.groupId || req.query.groupId || req.groupId;
+    if (!groupId) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'Workspace ID is required.' });
+    }
+    const tasks = await taskService.getGroupTasks(groupId);
     return res.status(HTTP_STATUS.OK).json({ success: true, data: tasks });
   } catch (error) {
     return res.status(errStatus(error)).json({ success: false, message: error.message });
@@ -39,14 +43,24 @@ async function getTasks(req, res) {
  * - Leader   → assigned to anyone, status = TODO.
  * - Member   → self-assigned only, status = PENDING_APPROVAL.
  *
- * Body: { title, description?, priority?, assignedToUserId?, dueDate? }
+ * Body: { title, description?, priority?, assignedToUserId?, estimated_due_date }
  */
 async function create(req, res) {
   try {
-    const { title, description, priority, assignedToUserId, dueDate } = req.body;
+    const { title, description, priority, assignedToUserId, dueDate, estimated_due_date, estimatedDueDate } = req.body;
+    const finalDueDate = estimated_due_date || estimatedDueDate || dueDate;
+
+    if (!finalDueDate) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: 'Estimated deadline date (estimated_due_date) is required.'
+      });
+    }
+
+    const groupId = req.params.groupId || req.query.groupId || req.groupId;
 
     const task = await taskService.createTask({
-      groupId:          req.params.groupId,
+      groupId,
       title,
       description,
       priority,
@@ -54,7 +68,9 @@ async function create(req, res) {
       createdByUserId:  req.user.id,
       userRole:         req.membership.role,
       userFullName:     req.user.full_name,
-      dueDate
+      dueDate:          finalDueDate,
+      estimated_due_date: finalDueDate,
+      estimatedDueDate: finalDueDate
     });
 
     return res.status(HTTP_STATUS.CREATED).json({

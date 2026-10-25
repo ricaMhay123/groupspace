@@ -53,9 +53,10 @@ async function openTaskDetailsModal(taskId) {
   if (Array.isArray(window.currentTasks)) {
     task = window.currentTasks.find(t => Number(t.id) === Number(taskId));
   }
-  if (!task && typeof currentGroupId !== 'undefined' && currentGroupId) {
+  if (!task && ((typeof currentGroupId !== 'undefined' && currentGroupId) || (typeof calendarGroupId !== 'undefined' && calendarGroupId))) {
+    const activeGid = (typeof currentGroupId !== 'undefined' && currentGroupId) ? currentGroupId : calendarGroupId;
     try {
-      const res = await apiFetch(`/api/groups/${currentGroupId}/tasks`);
+      const res = await apiFetch(`/api/tasks?groupId=${activeGid}`);
       if (res && res.data) {
         window.currentTasks = res.data;
         task = window.currentTasks.find(t => Number(t.id) === Number(taskId));
@@ -128,12 +129,12 @@ async function openTaskDetailsModal(taskId) {
     <!-- Assignee & Due Date Meta -->
     <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:var(--muted, #f8fafc); border:1px solid var(--border); border-radius:8px; font-size:13px; gap:12px; flex-wrap:wrap;">
       <div>
-        <span style="color:var(--gray);">Assignee:</span>
-        <strong style="color:var(--text); margin-left:4px;">${escapeHtml(task.assignee_name || 'Unassigned')}</strong>
+        <span style="color:var(--gray); font-size:11px; text-transform:uppercase; font-weight:600; display:block; margin-bottom:2px;">Assignee</span>
+        <strong style="color:var(--text); font-size:13.5px;">${escapeHtml(task.assignee_name || 'Unassigned')}</strong>
       </div>
-      <div>
-        <span style="color:var(--gray);">Due:</span>
-        <span style="color:var(--text); margin-left:4px;">${task.due_date ? formatDate(task.due_date) : 'No due date'}</span>
+      <div style="text-align:right;">
+        <span style="color:var(--gray); font-size:11px; text-transform:uppercase; font-weight:600; display:block; margin-bottom:2px;">Estimated Deadline</span>
+        <strong style="color:var(--text); font-size:13.5px;">${(task.estimated_due_date || task.due_date) ? (typeof formatDate === 'function' ? formatDate(task.estimated_due_date || task.due_date) : new Date(task.estimated_due_date || task.due_date).toLocaleDateString()) : 'No deadline set'}</strong>
       </div>
     </div>
 

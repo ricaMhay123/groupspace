@@ -53,7 +53,7 @@ async function _resolveTask(taskId, groupId) {
  *              so a leader must approve it before it becomes actionable.
  */
 async function createTask({ groupId, title, description, priority, assignedToUserId,
-                            createdByUserId, userRole, userFullName, dueDate }) {
+                            createdByUserId, userRole, userFullName, dueDate, estimatedDueDate, estimated_due_date }) {
   const cleanTitle = sanitizeText(title);
   if (!cleanTitle) throw domainError('Task title is required.');
 
@@ -80,6 +80,8 @@ async function createTask({ groupId, title, description, priority, assignedToUse
     ? TASK_STATUS.TODO                         // leader-created tasks go straight to board
     : TASK_STATUS.PENDING_APPROVAL;            // member-created tasks await leader approval
 
+  const resolvedDueDate = estimated_due_date || estimatedDueDate || dueDate || null;
+
   const taskId = await TaskModel.create({
     groupId,
     title:           cleanTitle,
@@ -88,7 +90,9 @@ async function createTask({ groupId, title, description, priority, assignedToUse
     status:          initialStatus,
     assignedToUserId: resolvedAssignee,
     createdByUserId,
-    dueDate:         dueDate || null
+    dueDate:         resolvedDueDate,
+    estimatedDueDate: resolvedDueDate,
+    estimated_due_date: resolvedDueDate
   });
 
   await GroupModel.logActivity({

@@ -77,6 +77,7 @@ async function initDb() {
         approved_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
         approval_notes TEXT,
         due_date TIMESTAMPTZ,
+        estimated_due_date TIMESTAMPTZ,
         is_flagged BOOLEAN NOT NULL DEFAULT FALSE,
         flagged_reason TEXT,
         flagged_at TIMESTAMPTZ,
@@ -286,6 +287,9 @@ async function initDb() {
     try { await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS approved_by_user_id INTEGER`; } catch (e) {}
     try { await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS approval_notes TEXT`; } catch (e) {}
     try { await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS due_date TIMESTAMPTZ`; } catch (e) {}
+    try { await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS estimated_due_date TIMESTAMPTZ`; } catch (e) {}
+    try { await sql`UPDATE tasks SET estimated_due_date = due_date WHERE estimated_due_date IS NULL AND due_date IS NOT NULL`; } catch (e) {}
+    try { await sql`UPDATE tasks SET due_date = estimated_due_date WHERE due_date IS NULL AND estimated_due_date IS NOT NULL`; } catch (e) {}
     try { await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`; } catch (e) {}
     // Peer-assist / flagging columns (new)
     try { await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS is_flagged BOOLEAN NOT NULL DEFAULT FALSE`; } catch (e) {}
