@@ -78,12 +78,12 @@ async function postComment({ topicId, groupId, content, userId, userName }) {
     content: cleanContent
   });
 
-  // 3. Process workspace-scoped @mentions
+  // 3. Process workspace-scoped @mentions (supports multiple members in one comment)
   try {
-    const groupMembers = await DiscussionModel.findMentionableUsers(Number(groupId), '');
+    const groupMembers = await DiscussionModel.getAllGroupMembers(Number(groupId));
     const lowerContent = cleanContent.toLowerCase();
 
-    // Check each enrolled member
+    // Check each enrolled member (all mentioned members will be processed)
     for (const member of groupMembers) {
       if (Number(member.id) === Number(userId)) continue; // Don't notify self
 
@@ -92,8 +92,9 @@ async function postComment({ topicId, groupId, content, userId, userName }) {
       const compactName = memberName.replace(/\s+/g, '');
 
       const isMentioned = lowerContent.includes(`@${memberName}`) ||
-                          lowerContent.includes(`@${firstName}`) ||
-                          lowerContent.includes(`@${compactName}`);
+                          (firstName.length > 2 && lowerContent.includes(`@${firstName}`)) ||
+                          lowerContent.includes(`@${compactName}`) ||
+                          lowerContent.includes(`@[${memberName}]`);
 
       if (isMentioned) {
         await DiscussionModel.addMention({
@@ -102,6 +103,7 @@ async function postComment({ topicId, groupId, content, userId, userName }) {
           commentId,
           mentionedUserId: member.id,
           taskId: null,
+          mentionedTopicId: null,
           authorUserId: userId
         });
 
@@ -114,11 +116,46 @@ async function postComment({ topicId, groupId, content, userId, userName }) {
       }
     }
 
-    // 4. Process workspace-scoped #task mentions
-    const groupTasks = await DiscussionModel.findMentionableTasks(Number(groupId), '');
+    // 4. Process workspace-scoped #topic mentions
+    const groupTopics = await DiscussionModel.getAllGroupTopics(Number(groupId));
+    for (const t of groupTopics) {
+      if (Number(t.id) === Number(topicId)) continue; // Don't link current topic inside itself
+
+      const topicTitleLower = (t.title || '').toLowerCase();
+      const isTopicReferenced = cleanContent.includes(`#[${t.title}]`) ||
+                               lowerContent.includes(`#[${topicTitleLower}]`) ||
+                               cleanContent.includes(`#topic:${t.id}`) ||
+                               cleanContent.includes(`#topic-${t.id}`) ||
+                               (topicTitleLower.length > 3 && lowerContent.includes(`#${topicTitleLower}`));
+
+      if (isTopicReferenced) {
+        await DiscussionModel.addMention({
+          groupId: Number(groupId),
+          discussionId: Number(topicId),
+          commentId,
+          mentionedUserId: (t.author_user_id && Number(t.author_user_id) !== Number(userId)) ? t.author_user_id : null,
+          taskId: null,
+          mentionedTopicId: t.id,
+          authorUserId: userId
+        });
+
+        await GroupModel.logActivity({
+          groupId: Number(groupId),
+          userId,
+          actionType: 'TOPIC_MENTIONED',
+          description: `${userName || 'A member'} referenced topic "${t.title}" in "${topic.title}".`
+        });
+      }
+    }
+
+    // 5. Process workspace-scoped #task mentions
+    const groupTasks = await DiscussionModel.getAllGroupTasks(Number(groupId));
     for (const task of groupTasks) {
+      const taskTitleLower = (task.title || '').toLowerCase();
       const isTaskReferenced = cleanContent.includes(`#${task.id}`) ||
-                               (task.title && lowerContent.includes(`#${task.title.toLowerCase()}`));
+                               cleanContent.includes(`#[task:${task.id}]`) ||
+                               cleanContent.includes(`#[${task.title}]`) ||
+                               (taskTitleLower.length > 3 && lowerContent.includes(`#[${taskTitleLower}]`));
 
       if (isTaskReferenced) {
         if (task.assigned_to_user_id && Number(task.assigned_to_user_id) !== Number(userId)) {
@@ -128,6 +165,7 @@ async function postComment({ topicId, groupId, content, userId, userName }) {
             commentId,
             mentionedUserId: task.assigned_to_user_id,
             taskId: task.id,
+            mentionedTopicId: null,
             authorUserId: userId
           });
         }
@@ -189,6 +227,11 @@ async function getMentionableTasks(groupId, query = '') {
   return await DiscussionModel.findMentionableTasks(Number(groupId), query);
 }
 
+async function getMentionableTopics(groupId, query = '') {
+  if (!groupId) return [];
+  return await DiscussionModel.findMentionableTopics(Number(groupId), query);
+}
+
 module.exports = {
   createTopic,
   getGroupTopics,
@@ -197,5 +240,6 @@ module.exports = {
   deleteTopic,
   getActivityFeed,
   getMentionableUsers,
-  getMentionableTasks
+  getMentionableTasks,
+  getMentionableTopics
 };

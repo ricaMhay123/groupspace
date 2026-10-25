@@ -149,6 +149,21 @@ async function getMentionableTasks(req, res) {
   }
 }
 
+async function getMentionableTopics(req, res) {
+  try {
+    const topics = await discussionService.getMentionableTopics(req.params.groupId, req.query.q || '');
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: topics
+    });
+  } catch (error) {
+    return res.status(error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 module.exports = {
   getTopics,
   getTopicDetails,
@@ -157,6 +172,7 @@ module.exports = {
   removeTopic,
   getActivity,
   getMentionableUsers,
-  getMentionableTasks
+  getMentionableTasks,
+  getMentionableTopics
 };
 

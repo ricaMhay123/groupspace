@@ -97,6 +97,51 @@ const DiscussionModel = {
     `;
   },
 
+  /** Discussion topics of the workspace, optionally filtered by title. */
+  async findMentionableTopics(groupId, q = '') {
+    const pattern = `%${String(q).toLowerCase().replace(/[\\%_]/g, '\\$&')}%`;
+    return await sql`
+      SELECT d.id, d.title, d.category, d.author_user_id, u.full_name as author_name
+      FROM discussions d
+      LEFT JOIN users u ON d.author_user_id = u.id
+      WHERE d.group_id = ${groupId}
+        AND LOWER(d.title) LIKE ${pattern}
+      ORDER BY d.created_at DESC
+      LIMIT 8
+    `;
+  },
+
+  /** All members enrolled in the workspace (no pagination/limit, for complete mention parsing). */
+  async getAllGroupMembers(groupId) {
+    return await sql`
+      SELECT u.id, u.full_name AS name, u.avatar_initials
+      FROM users u
+      JOIN group_members gm ON u.id = gm.user_id
+      WHERE gm.group_id = ${groupId}
+      ORDER BY u.full_name ASC
+    `;
+  },
+
+  /** All topics in the workspace (for complete mention parsing). */
+  async getAllGroupTopics(groupId) {
+    return await sql`
+      SELECT d.id, d.title, d.category, d.author_user_id
+      FROM discussions d
+      WHERE d.group_id = ${groupId}
+      ORDER BY d.created_at DESC
+    `;
+  },
+
+  /** All active tasks in the workspace (for complete mention parsing). */
+  async getAllGroupTasks(groupId) {
+    return await sql`
+      SELECT id, title, assigned_to_user_id
+      FROM tasks
+      WHERE group_id = ${groupId} AND status <> 'DONE'
+      ORDER BY updated_at DESC
+    `;
+  },
+
   /** Keep only the given user ids that really belong to the workspace. */
   async filterGroupUsers(groupId, userIds) {
     if (!userIds.length) return [];
@@ -118,12 +163,12 @@ const DiscussionModel = {
     `;
   },
 
-  async addMention({ groupId, discussionId, commentId, mentionedUserId, taskId, authorUserId }) {
+  async addMention({ groupId, discussionId, commentId, mentionedUserId = null, taskId = null, mentionedTopicId = null, authorUserId = null }) {
     return await sql`
       INSERT INTO discussion_mentions
-        (group_id, discussion_id, comment_id, mentioned_user_id, task_id, author_user_id)
+        (group_id, discussion_id, comment_id, mentioned_user_id, task_id, mentioned_topic_id, author_user_id)
       VALUES
-        (${groupId}, ${discussionId}, ${commentId}, ${mentionedUserId}, ${taskId}, ${authorUserId})
+        (${groupId}, ${discussionId}, ${commentId}, ${mentionedUserId}, ${taskId}, ${mentionedTopicId}, ${authorUserId})
     `;
   },
 

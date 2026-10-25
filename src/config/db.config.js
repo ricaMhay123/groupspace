@@ -338,13 +338,17 @@ async function initDb() {
           group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
           discussion_id INTEGER NOT NULL REFERENCES discussions(id) ON DELETE CASCADE,
           comment_id INTEGER NOT NULL REFERENCES discussion_comments(id) ON DELETE CASCADE,
-          mentioned_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          mentioned_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
           task_id INTEGER REFERENCES tasks(id) ON DELETE SET NULL,
+          mentioned_topic_id INTEGER REFERENCES discussions(id) ON DELETE CASCADE,
           author_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
           created_at TIMESTAMPTZ DEFAULT NOW()
         );
       `;
+      try { await sql`ALTER TABLE discussion_mentions ADD COLUMN IF NOT EXISTS mentioned_topic_id INTEGER REFERENCES discussions(id) ON DELETE CASCADE`; } catch (e) {}
+      try { await sql`ALTER TABLE discussion_mentions ALTER COLUMN mentioned_user_id DROP NOT NULL`; } catch (e) {}
       await sql`CREATE INDEX IF NOT EXISTS idx_discussion_mentions_user_group ON discussion_mentions (mentioned_user_id, group_id)`;
+      try { await sql`CREATE INDEX IF NOT EXISTS idx_discussion_mentions_topic ON discussion_mentions (mentioned_topic_id, group_id)`; } catch (e) {}
     } catch (e) { console.error('discussion_mentions init failed:', e.message); }
 
     // Standardize group_members roles strictly as 'leader' | 'member'
