@@ -570,10 +570,10 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
             <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
               <div>
                 <span style="font-size:12px; font-weight:600; color:var(--gray);">Danger Zone</span>
-                <p style="margin:2px 0 0; font-size:11px; color:var(--gray);">Permanently delete your account with double password verification.</p>
+                <p style="margin:2px 0 0; font-size:11px; color:var(--gray);">Permanently delete this workspace and all its data.</p>
               </div>
-              <button type="button" class="btn-outline open-delete-account-modal" style="padding:4px 12px; font-size:11px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:6px; background:transparent; cursor:pointer;" onclick="openDeleteAccountModal()">
-                Delete Account
+              <button type="button" class="btn-outline open-delete-workspace-btn" style="padding:4px 12px; font-size:11px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:6px; background:transparent; cursor:pointer;" onclick="confirmDeleteWorkspace()">
+                Delete Workspace
               </button>
             </div>
           </div>
@@ -912,10 +912,10 @@ function openWorkspaceSettingsModal() {
         <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
           <div>
             <span style="font-size:12px; font-weight:600; color:var(--gray);">Danger Zone</span>
-            <p style="margin:2px 0 0; font-size:11px; color:var(--gray);">Permanently delete your account with double password verification.</p>
+            <p style="margin:2px 0 0; font-size:11px; color:var(--gray);">Permanently delete this workspace and all its data.</p>
           </div>
-          <button type="button" class="btn-outline open-delete-account-modal" style="padding:4px 12px; font-size:11px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:6px; background:transparent; cursor:pointer;" onclick="closeModal('workspaceSettingsModal'); openDeleteAccountModal();">
-            Delete Account
+          <button type="button" class="btn-outline open-delete-workspace-btn" style="padding:4px 12px; font-size:11px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:6px; background:transparent; cursor:pointer;" onclick="closeModal('workspaceSettingsModal'); confirmDeleteWorkspace();">
+            Delete Workspace
           </button>
         </div>
       </div>
@@ -1075,6 +1075,27 @@ async function saveMemberConstraints(apprId, discId, expId) {
     currentGroupDetails.settings = newSettings;
     showToast(res.message || 'Permission constraints saved.', 'success');
     loadOverview();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function confirmDeleteWorkspace() {
+  if (!currentGroupId || !currentGroupDetails) return;
+  const wsName = currentGroupDetails.name || 'this workspace';
+  const confirmation = confirm(`Are you sure you want to permanently delete "${wsName}"?\n\nThis will permanently remove all tasks, discussions, documents, expenses, and member records for this workspace. This action cannot be undone.`);
+  if (!confirmation) return;
+
+  try {
+    const res = await apiFetch(`/api/groups/${currentGroupId}`, {
+      method: 'DELETE'
+    });
+    showToast(res.message || `Workspace "${wsName}" deleted successfully.`, 'success');
+    closeModal('workspaceSettingsModal');
+    localStorage.removeItem('groupspace_active_group_id');
+    currentGroupId = null;
+    currentGroupDetails = null;
+    await loadWorkspacesDropdown();
   } catch (err) {
     showToast(err.message, 'error');
   }

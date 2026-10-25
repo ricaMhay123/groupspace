@@ -195,6 +195,26 @@ async function resetJoinCode(req, res) {
   }
 }
 
+async function deleteWorkspace(req, res) {
+  try {
+    const groupId = req.params.groupId || req.params.id;
+    await groupService.deleteWorkspace({
+      groupId,
+      actorUserId: req.user.id
+    });
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Workspace deleted successfully.'
+    });
+  } catch (error) {
+    return res.status(error.httpStatus || HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 module.exports = {
   create,
   join,
@@ -204,5 +224,6 @@ module.exports = {
   leave,
   removeMember,
   updateSettings,
-  resetJoinCode
+  resetJoinCode,
+  deleteWorkspace
 };

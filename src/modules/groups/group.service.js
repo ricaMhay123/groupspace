@@ -247,6 +247,29 @@ async function resetWorkspaceJoinCode({ groupId, actorUserId, actorFullName }) {
   return { joinCode: newJoinCode, workspace: updated };
 }
 
+async function deleteWorkspace({ groupId, actorUserId }) {
+  if (!groupId) {
+    throw new Error('Workspace ID is required.');
+  }
+
+  const group = await GroupModel.findById(Number(groupId));
+  if (!group) {
+    const err = new Error('Workspace not found.');
+    err.httpStatus = 404;
+    throw err;
+  }
+
+  const member = await GroupModel.findMember(Number(groupId), actorUserId);
+  if (!member || member.role !== ROLES.LEADER) {
+    const err = new Error('Forbidden: Only workspace leaders can delete this workspace.');
+    err.httpStatus = 403;
+    throw err;
+  }
+
+  await GroupModel.deleteWorkspace(Number(groupId));
+  return { success: true };
+}
+
 module.exports = {
   createWorkspace,
   joinWorkspace,
@@ -256,5 +279,6 @@ module.exports = {
   leaveWorkspace,
   removeMember,
   updateWorkspaceSettings,
-  resetWorkspaceJoinCode
+  resetWorkspaceJoinCode,
+  deleteWorkspace
 };

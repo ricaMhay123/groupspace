@@ -13,6 +13,7 @@ async function requireGroupMembership(req, res, next) {
   let groupId = req.params.groupId
     || req.params.workspaceId
     || req.params.workspace_id
+    || (req.baseUrl && req.baseUrl.includes('/groups') ? req.params.id : null)
     || req.body?.groupId
     || req.body?.workspaceId
     || req.body?.workspace_id

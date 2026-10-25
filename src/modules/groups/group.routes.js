@@ -19,5 +19,7 @@ router.patch('/:id/settings', requireGroupLeader, groupController.updateSettings
 router.post('/:id/reset-join-code', requireGroupLeader, groupController.resetJoinCode);
 router.post('/:id/leave', requireGroupMembership, groupController.leave);
 router.delete('/:groupId/members/:userId', requireGroupLeader, groupController.removeMember);
+router.delete('/:id', requireGroupLeader, groupController.deleteWorkspace);
+router.delete('/:groupId', requireGroupLeader, groupController.deleteWorkspace);
 
 module.exports = router;

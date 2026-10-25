@@ -135,6 +135,10 @@ const GroupModel = {
       RETURNING *
     `;
     return updated;
+  },
+
+  async deleteWorkspace(groupId) {
+    return await sql`DELETE FROM groups WHERE id = ${groupId}`;
   }
 };
 
