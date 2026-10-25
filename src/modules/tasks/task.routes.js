@@ -52,6 +52,7 @@ router.patch('/:taskId/status', checkTaskEditPermission, ctrl.updateStatus);
 
 // PUT /:taskId/approve — leader approves or rejects a PENDING_APPROVAL task
 router.put('/:taskId/approve', requireGroupLeader, ctrl.reviewApproval);
+router.post('/:taskId/approve', requireGroupLeader, ctrl.reviewApproval);
 
 // DELETE /:taskId — delete; creator-or-leader check is inside the service
 router.delete('/:taskId', ctrl.remove);

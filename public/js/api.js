@@ -28,6 +28,7 @@ async function apiFetch(endpoint, options = {}) {
   let response;
   try {
     response = await fetch(fullUrl, {
+      credentials: 'include',
       ...options,
       headers
     });

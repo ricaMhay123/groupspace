@@ -355,6 +355,9 @@ async function initDb() {
     try { await sql`ALTER TABLE group_members ALTER COLUMN role SET DEFAULT 'member'`; } catch (e) {}
     try { await sql`UPDATE group_members SET role = LOWER(role) WHERE role <> LOWER(role)`; } catch (e) {}
 
+    // Workspace settings column
+    try { await sql`ALTER TABLE groups ADD COLUMN IF NOT EXISTS settings JSONB DEFAULT '{}'`; } catch (e) {}
+
     // Relax any legacy NOT NULL constraints
     try { await sql`ALTER TABLE groups ALTER COLUMN group_name DROP NOT NULL`; } catch (e) {}
     try { await sql`ALTER TABLE groups ALTER COLUMN created_by DROP NOT NULL`; } catch (e) {}

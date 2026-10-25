@@ -42,7 +42,7 @@
 
       <!-- Nav Menu -->
       <ul id="sidebarMenu">
-        <li class="active" onclick="switchTab('overview')">📊 Overview</li>
+        <li class="active" onclick="switchTab('overview')">🏠 Homespace</li>
         <li onclick="switchTab('tasks')">📋 Tasks (Kanban)</li>
         <li onclick="switchTab('calendar')">📅 Calendar</li>
         <li onclick="switchTab('notebook')">📝 Notebook</li>
@@ -76,7 +76,7 @@
     <!-- Header -->
     <div class="dashboard-header">
       <div>
-        <h1 id="viewTitle">Overview</h1>
+        <h1 id="viewTitle">Homespace</h1>
         <p id="viewSubtitle">Welcome to your team workspace.</p>
       </div>
 
@@ -86,12 +86,13 @@
           <span style="color:var(--gray);">Invite Code:</span>
           <strong id="displayJoinCode" style="color:var(--primary); letter-spacing:1px; cursor:pointer;" title="Click to copy" onclick="copyJoinCode()">GS-XXXXXX</strong>
         </div>
-        <button id="notificationFeedBtn" type="button" aria-label="Notification feed" title="Notification feed" style="position:relative; background:transparent; border:1px solid var(--border); border-radius:12px; padding:9px 13px; cursor:pointer; font-size:16px;">🔔<span id="feedBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#dc2626; color:#fff; font-size:10px; font-weight:700; border-radius:10px; padding:1px 6px;">0</span></button>
+        <button id="notificationFeedBtn" type="button" aria-label="Notification feed" title="Notification feed" class="header-bell-btn">🔔<span id="feedBadge" class="feed-badge" style="display:none;">0</span></button>
+        <button id="homespaceSettingsBtn" type="button" aria-label="Workspace Settings" title="Workspace Settings" class="btn-outline" style="padding:8px 12px; font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:6px; border-radius:10px;" onclick="openWorkspaceSettingsModal()">⚙️ Settings</button>
         <button id="primaryActionBtn" class="btn-green" onclick="handlePrimaryAction()">+ Action</button>
       </div>
     </div>
 
-    <!-- TAB 1: OVERVIEW -->
+    <!-- TAB 1: HOMESPACE -->
     <section id="tab-overview" class="tab-view active">
       <div class="dashboard-cards">
         <div class="dashboard-card">
@@ -112,37 +113,11 @@
         </div>
       </div>
 
-      <div class="dashboard-grid">
-        <div class="dashboard-panel">
-          <div class="panel-header">
-            <h3>Recent Activity Feed</h3>
-            <span style="font-size:12px; color:var(--gray);">Live workspace events</span>
-          </div>
-          <div class="activity-feed" id="overviewActivityList">
-            <p style="color:var(--gray);">No recent workspace activity yet.</p>
-          </div>
-        </div>
-
-        <div>
-          <div class="dashboard-panel">
-            <div class="panel-header">
-              <h3>Team Roster</h3>
-              <span id="userRoleBadge" class="status online" style="font-size:11px;">MEMBER</span>
-            </div>
-            <ul class="task-list" id="overviewMemberList">
-              <li style="color:var(--gray);">Loading roster...</li>
-            </ul>
-          </div>
-
-          <div class="dashboard-panel">
-            <div class="panel-header">
-              <h3>Personal Quick Notes</h3>
-              <button onclick="switchTab('personal')" class="btn-outline" style="padding:4px 10px; font-size:12px;">Open 🔒</button>
-            </div>
-            <div id="overviewPersonalList">
-              <p style="color:var(--gray); font-size:13px;">Private to you. Visit your Personal Space tab to manage.</p>
-            </div>
-          </div>
+      <!-- Role-Based Homespace Section -->
+      <div id="homespaceRoleContainer">
+        <!-- Rendered dynamically by loadOverview based on role ('leader' vs 'member') -->
+        <div class="dashboard-panel" style="text-align:center; padding:32px;">
+          <p style="color:var(--gray);">Loading Homespace...</p>
         </div>
       </div>
     </section>
@@ -557,6 +532,19 @@
   </div>
   <div class="feed-body" id="feedBody"><p style="color:var(--gray);">Loading...</p></div>
 </aside>
+
+<!-- Role-Aware Workspace Settings Modal -->
+<div class="modal-overlay" id="workspaceSettingsModal">
+  <div class="modal-card" style="max-width:580px; width:100%;">
+    <div class="modal-header">
+      <h3 id="workspaceSettingsModalTitle" style="display:flex; align-items:center; gap:8px;">⚙️ Workspace Settings</h3>
+      <button type="button" class="modal-close" onclick="closeModal('workspaceSettingsModal')">✕</button>
+    </div>
+    <div id="workspaceSettingsModalBody" style="padding:6px 0;">
+      <!-- Populated dynamically based on leader vs member -->
+    </div>
+  </div>
+</div>
 
 <!-- Delete Account security modal -->
 <div class="modal-overlay" id="deleteAccountModal">

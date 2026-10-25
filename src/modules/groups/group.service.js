@@ -100,8 +100,16 @@ async function getWorkspaceDetails(groupId, userId) {
   const members = await GroupModel.findMembersByGroup(groupId);
   const activities = await GroupModel.getActivity(groupId, 15);
 
+  let parsedSettings = {};
+  try {
+    parsedSettings = typeof group.settings === 'string' ? JSON.parse(group.settings) : (group.settings || {});
+  } catch (e) {
+    parsedSettings = {};
+  }
+
   return {
     ...group,
+    settings: parsedSettings,
     role: membership.role,
     members,
     recentActivity: activities
@@ -195,6 +203,50 @@ async function removeMember({ groupId, targetUserId, actorUserId, actorFullName 
   return { success: true };
 }
 
+async function updateWorkspaceSettings({ groupId, name, settings, actorUserId, actorFullName }) {
+  let cleanName = null;
+  if (name !== undefined) {
+    cleanName = sanitizeText(name);
+    if (!cleanName || cleanName.length < 2) {
+      throw new Error('Workspace name must be at least 2 characters.');
+    }
+  }
+
+  const updated = await GroupModel.updateWorkspace(groupId, {
+    name: cleanName,
+    settings
+  });
+
+  await GroupModel.logActivity({
+    groupId,
+    userId: actorUserId,
+    actionType: 'WORKSPACE_SETTINGS_UPDATED',
+    description: `${actorFullName || 'Leader'} updated workspace settings.`
+  });
+
+  return updated;
+}
+
+async function resetWorkspaceJoinCode({ groupId, actorUserId, actorFullName }) {
+  let newJoinCode = generateJoinCode();
+  let existing = await GroupModel.findByJoinCode(newJoinCode);
+  while (existing) {
+    newJoinCode = generateJoinCode();
+    existing = await GroupModel.findByJoinCode(newJoinCode);
+  }
+
+  const updated = await GroupModel.updateJoinCode(groupId, newJoinCode);
+
+  await GroupModel.logActivity({
+    groupId,
+    userId: actorUserId,
+    actionType: 'JOIN_CODE_RESET',
+    description: `${actorFullName || 'Leader'} reset the workspace invite code.`
+  });
+
+  return { joinCode: newJoinCode, workspace: updated };
+}
+
 module.exports = {
   createWorkspace,
   joinWorkspace,
@@ -202,5 +254,7 @@ module.exports = {
   getWorkspaceDetails,
   updateMemberRole,
   leaveWorkspace,
-  removeMember
+  removeMember,
+  updateWorkspaceSettings,
+  resetWorkspaceJoinCode
 };

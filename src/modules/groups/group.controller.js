@@ -148,6 +148,53 @@ async function removeMember(req, res) {
   }
 }
 
+async function updateSettings(req, res) {
+  try {
+    const { name, settings } = req.body;
+    const groupId = req.params.id || req.params.groupId;
+    const updated = await groupService.updateWorkspaceSettings({
+      groupId,
+      name,
+      settings,
+      actorUserId: req.user.id,
+      actorFullName: req.user.full_name
+    });
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Workspace settings updated.',
+      data: updated
+    });
+  } catch (error) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+async function resetJoinCode(req, res) {
+  try {
+    const groupId = req.params.id || req.params.groupId;
+    const result = await groupService.resetWorkspaceJoinCode({
+      groupId,
+      actorUserId: req.user.id,
+      actorFullName: req.user.full_name
+    });
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Workspace invite code regenerated.',
+      data: result
+    });
+  } catch (error) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 module.exports = {
   create,
   join,
@@ -155,5 +202,7 @@ module.exports = {
   getDetails,
   updateRole,
   leave,
-  removeMember
+  removeMember,
+  updateSettings,
+  resetJoinCode
 };

@@ -96,6 +96,45 @@ const GroupModel = {
       ORDER BY al.created_at DESC
       LIMIT ${limit}
     `;
+  },
+
+  async updateWorkspace(groupId, { name, settings }) {
+    if (name && settings !== undefined) {
+      const [updated] = await sql`
+        UPDATE groups
+        SET name = ${name}, settings = ${JSON.stringify(settings)}
+        WHERE id = ${groupId}
+        RETURNING *
+      `;
+      return updated;
+    } else if (name) {
+      const [updated] = await sql`
+        UPDATE groups
+        SET name = ${name}
+        WHERE id = ${groupId}
+        RETURNING *
+      `;
+      return updated;
+    } else if (settings !== undefined) {
+      const [updated] = await sql`
+        UPDATE groups
+        SET settings = ${JSON.stringify(settings)}
+        WHERE id = ${groupId}
+        RETURNING *
+      `;
+      return updated;
+    }
+    return await this.findById(groupId);
+  },
+
+  async updateJoinCode(groupId, joinCode) {
+    const [updated] = await sql`
+      UPDATE groups
+      SET join_code = ${joinCode}
+      WHERE id = ${groupId}
+      RETURNING *
+    `;
+    return updated;
   }
 };
 

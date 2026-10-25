@@ -55,7 +55,7 @@
       const res = await fetch(`${base}/api/user/account`, {
         method: 'DELETE',
         headers,
-        credentials: 'same-origin',
+        credentials: 'include',
         body: JSON.stringify({ password, confirmPassword })
       });
       const data = await res.json().catch(() => ({}));
@@ -76,13 +76,24 @@
     }
   }
 
+  window.openDeleteAccountModal = openDeleteModal;
+  window.closeDeleteAccountModal = closeDeleteModal;
+
   document.addEventListener('DOMContentLoaded', () => {
     const openBtn = $('deleteAccountBtn');
-    if (!openBtn || !$('deleteAccountModal')) return;
+    if (openBtn && $('deleteAccountModal')) {
+      openBtn.addEventListener('click', openDeleteModal);
+    }
 
-    openBtn.addEventListener('click', openDeleteModal);
-    $('deleteAccountCloseBtn').addEventListener('click', closeDeleteModal);
-    $('deleteAccountCancelBtn').addEventListener('click', closeDeleteModal);
-    $('deleteAccountForm').addEventListener('submit', submitDeleteAccount);
+    document.addEventListener('click', (e) => {
+      if (e.target && (e.target.id === 'settingsDeleteAccountBtn' || e.target.classList.contains('open-delete-account-modal'))) {
+        e.preventDefault();
+        openDeleteModal();
+      }
+    });
+
+    if ($('deleteAccountCloseBtn')) $('deleteAccountCloseBtn').addEventListener('click', closeDeleteModal);
+    if ($('deleteAccountCancelBtn')) $('deleteAccountCancelBtn').addEventListener('click', closeDeleteModal);
+    if ($('deleteAccountForm')) $('deleteAccountForm').addEventListener('submit', submitDeleteAccount);
   });
 })();

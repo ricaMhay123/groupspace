@@ -862,15 +862,15 @@ body.dashboard-page {
 .dashboard-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 28px;
+  gap: 14px;
+  margin-bottom: 24px;
 }
 
 .dashboard-card {
   background: #ffffff;
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 22px 20px;
+  border-radius: 12px;
+  padding: 16px 18px;
   transition: var(--transition);
 }
 
@@ -880,19 +880,54 @@ body.dashboard-page {
 }
 
 .dashboard-card h4 {
-  font-size: 0.78rem !important;
+  font-size: 0.75rem !important;
   font-weight: 600 !important;
   color: var(--text-muted) !important;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
 }
 
 .dashboard-card h2 {
-  font-size: 1.75rem !important;
-  font-weight: 800 !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
   color: var(--text) !important;
   margin: 0;
+}
+
+.header-bell-btn {
+  position: relative;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.header-bell-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.feed-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 1px 6px;
+  line-height: 1.2;
+  box-shadow: 0 2px 4px rgba(220,38,38,0.3);
 }
 
 /* ─── Dashboard Grid (2-col) ─── */
@@ -1567,6 +1602,8 @@ h1, h2, h3, h4, h5, h6 {
 .dark .dashboard-card      { background: var(--card) !important; border-color: var(--border) !important; }
 .dark .dashboard-card h4   { color: var(--muted-foreground) !important; }
 .dark .dashboard-card h2   { color: var(--foreground) !important; }
+.dark .header-bell-btn      { background: var(--muted) !important; border-color: var(--border) !important; color: var(--foreground) !important; }
+.dark .header-bell-btn:hover { background: var(--card) !important; }
 .dark .dashboard-panel     { background: var(--card) !important; border-color: var(--border) !important; }
 .dark .panel-header h3     { color: var(--foreground) !important; }
 

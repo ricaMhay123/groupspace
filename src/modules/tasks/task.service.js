@@ -63,7 +63,13 @@ async function createTask({ groupId, title, description, priority, assignedToUse
     if (!isMember) throw domainError('Assigned user is not a member of this workspace.');
   }
 
-  const isLeader = userRole === ROLES.LEADER;
+  let isLeader = userRole === ROLES.LEADER;
+  if (!userRole && createdByUserId) {
+    const creatorMember = await GroupModel.findMember(groupId, createdByUserId);
+    if (creatorMember && creatorMember.role === ROLES.LEADER) {
+      isLeader = true;
+    }
+  }
 
   // Members self-assign; task starts in PENDING_APPROVAL
   const resolvedAssignee = isLeader

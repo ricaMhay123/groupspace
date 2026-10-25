@@ -87,10 +87,17 @@ async function runTests() {
     console.log('   ✅ Email verified & Leader registered successfully (AL) + Welcome Email triggered.');
 
     // Register second user (Bob)
+    await authService.requestVerificationCode(bobEmail, 'SIGNUP');
+    const [bobCodeRecord] = await sql`
+      SELECT otp_code FROM email_verifications
+      WHERE email = ${bobEmail} AND type = 'SIGNUP'
+      ORDER BY created_at DESC LIMIT 1
+    `;
     const userMember = await authService.registerUser({
       fullName: 'Bob Collaborator',
       email: bobEmail,
-      password: 'password123'
+      password: 'password123',
+      otpCode: bobCodeRecord ? bobCodeRecord.otp_code : undefined
     });
     assert.strictEqual(userMember.user.avatarInitials, 'BC');
     console.log('   ✅ Member registered successfully (BC).');
@@ -363,7 +370,63 @@ async function runTests() {
     assert.strictEqual(bobNotes.length, 0, 'Bob must NOT see Alice private personal items');
     console.log('   ✅ Personal space confirmed strictly private and isolated.');
 
-    console.log('\n🎉 ALL 8 TEST SUITES PASSED FLAWLESSLY WITH NEON POSTGRESQL!\n');
+    // 9. Homespace Settings & 2x Password Account Deletion
+    console.log('\n9️⃣ Testing Leader Settings, Reset Join Code, & 2x Password Account Deletion...');
+    const updatedWs = await groupService.updateWorkspaceSettings({
+      groupId: workspace.id,
+      name: 'CS Capstone Renamed',
+      settings: { requireApproval: true, allowMemberDiscussions: true, restrictExpensesToLeaders: false },
+      actorUserId: userLeader.user.id,
+      actorFullName: userLeader.user.fullName
+    });
+    assert.strictEqual(updatedWs.name, 'CS Capstone Renamed');
+
+    const resetCodeRes = await groupService.resetWorkspaceJoinCode({
+      groupId: workspace.id,
+      actorUserId: userLeader.user.id,
+      actorFullName: userLeader.user.fullName
+    });
+    assert(resetCodeRes.joinCode);
+    assert.notStrictEqual(resetCodeRes.joinCode, workspace.join_code);
+    console.log(`   ✅ Workspace settings updated & invite code regenerated: ${resetCodeRes.joinCode}`);
+
+    let mismatchCaught = false;
+    try {
+      await authService.deleteAccount({
+        userId: userMember.user.id,
+        password: 'newpassword456',
+        confirmPassword: 'wrongMismatchPassword'
+      });
+    } catch (e) {
+      mismatchCaught = true;
+      assert.strictEqual(e.message, 'Passwords do not match.');
+    }
+    assert(mismatchCaught, 'Mismatched passwords must be rejected');
+
+    let wrongPassCaught = false;
+    try {
+      await authService.deleteAccount({
+        userId: userMember.user.id,
+        password: 'incorrectPassword123',
+        confirmPassword: 'incorrectPassword123'
+      });
+    } catch (e) {
+      wrongPassCaught = true;
+      assert.strictEqual(e.message, 'Incorrect password');
+    }
+    assert(wrongPassCaught, 'Incorrect password must be rejected');
+
+    const delRes = await authService.deleteAccount({
+      userId: userMember.user.id,
+      password: 'newpassword456',
+      confirmPassword: 'newpassword456'
+    });
+    assert.strictEqual(delRes.success, true);
+    const [deletedUser] = await sql`SELECT id FROM users WHERE id = ${userMember.user.id}`;
+    assert(!deletedUser, 'Deleted user must be permanently removed from database');
+    console.log('   ✅ 2x password account deletion verified & executed successfully.');
+
+    console.log('\n🎉 ALL 9 TEST SUITES PASSED FLAWLESSLY WITH NEON POSTGRESQL!\n');
   } catch (error) {
     console.error('\n❌ Test suite failed with error:', error);
     process.exit(1);
