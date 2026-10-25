@@ -10,7 +10,7 @@ const GroupModel = require('../groups/group.model');
 const { ROLES } = require('../../config/constants');
 const { sanitizeText } = require('../../utils/validation.util');
 
-async function createTopic({ groupId, title, category, authorUserId, authorName }) {
+async function createTopic({ groupId, title, category, authorUserId, authorName, attachments = [] }) {
   if (!groupId) {
     throw new Error('Workspace ID is required to create a topic.');
   }
@@ -24,7 +24,8 @@ async function createTopic({ groupId, title, category, authorUserId, authorName 
     groupId: Number(groupId),
     title: cleanTitle,
     category: sanitizeText(category) || 'General',
-    authorUserId
+    authorUserId,
+    attachments: Array.isArray(attachments) ? attachments : []
   });
 
   await GroupModel.logActivity({
@@ -57,10 +58,10 @@ async function getTopicDetails(topicId, groupId) {
   };
 }
 
-async function postComment({ topicId, groupId, content, userId, userName }) {
+async function postComment({ topicId, groupId, content, userId, userName, attachments = [] }) {
   const cleanContent = sanitizeText(content);
-  if (!cleanContent) {
-    throw new Error('Comment content cannot be empty.');
+  if (!cleanContent && (!attachments || attachments.length === 0)) {
+    throw new Error('Comment must have text content or at least one attachment.');
   }
 
   // 1. Ensure topic belongs explicitly to this groupId
@@ -71,11 +72,12 @@ async function postComment({ topicId, groupId, content, userId, userName }) {
     throw err;
   }
 
-  // 2. Insert comment
+  // 2. Insert comment with attachments
   const commentId = await DiscussionModel.addComment({
     discussionId: Number(topicId),
     userId,
-    content: cleanContent
+    content: cleanContent || '',
+    attachments: Array.isArray(attachments) ? attachments : []
   });
 
   // 3. Process workspace-scoped @mentions (supports multiple members in one comment)
@@ -232,12 +234,51 @@ async function getMentionableTopics(groupId, query = '') {
   return await DiscussionModel.findMentionableTopics(Number(groupId), query);
 }
 
+async function deleteComment({ commentId, userId, userRole, groupId }) {
+  const comment = await DiscussionModel.findCommentById(Number(commentId));
+  if (!comment) {
+    const err = new Error('Comment not found.');
+    err.status = 404;
+    throw err;
+  }
+
+  // If groupId is provided, verify comment belongs to a discussion in this workspace
+  if (groupId && Number(comment.group_id) !== Number(groupId)) {
+    const err = new Error('Comment does not belong to this workspace.');
+    err.status = 404;
+    throw err;
+  }
+
+  // Check role-based permission:
+  // LEADER: Can delete ANY comment within their workspace group
+  // MEMBER: Can delete ONLY comments authored by themselves (comment.user_id === userId)
+  let isLeader = userRole === ROLES.LEADER;
+  if (!isLeader) {
+    const memberRecord = await GroupModel.findMember(comment.group_id, userId);
+    if (memberRecord && memberRecord.role === ROLES.LEADER) {
+      isLeader = true;
+    }
+  }
+
+  const isAuthor = Number(comment.user_id) === Number(userId);
+
+  if (!isLeader && !isAuthor) {
+    const err = new Error('Forbidden: You can only delete comments authored by yourself unless you are a workspace Leader.');
+    err.status = 403;
+    throw err;
+  }
+
+  await DiscussionModel.deleteComment(Number(commentId));
+  return { success: true };
+}
+
 module.exports = {
   createTopic,
   getGroupTopics,
   getTopicDetails,
   postComment,
   deleteTopic,
+  deleteComment,
   getActivityFeed,
   getMentionableUsers,
   getMentionableTasks,

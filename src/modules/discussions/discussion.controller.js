@@ -37,13 +37,14 @@ async function getTopicDetails(req, res) {
 
 async function createTopic(req, res) {
   try {
-    const { title, category } = req.body;
+    const { title, category, attachments } = req.body;
     const topic = await discussionService.createTopic({
       groupId: req.params.groupId,
       title,
       category,
       authorUserId: req.user.id,
-      authorName: req.user.full_name
+      authorName: req.user.full_name,
+      attachments: Array.isArray(attachments) ? attachments : []
     });
 
     return res.status(HTTP_STATUS.CREATED).json({
@@ -61,13 +62,14 @@ async function createTopic(req, res) {
 
 async function postComment(req, res) {
   try {
-    const { content } = req.body;
+    const { content, attachments } = req.body;
     const comment = await discussionService.postComment({
       topicId: req.params.topicId,
       groupId: req.params.groupId,
       content,
       userId: req.user.id,
-      userName: req.user.full_name
+      userName: req.user.full_name,
+      attachments: Array.isArray(attachments) ? attachments : []
     });
 
     return res.status(HTTP_STATUS.CREATED).json({
@@ -95,6 +97,28 @@ async function removeTopic(req, res) {
     return res.status(HTTP_STATUS.OK).json({
       success: true,
       message: 'Topic deleted.'
+    });
+  } catch (error) {
+    return res.status(error.status || HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+async function removeComment(req, res) {
+  try {
+    const { commentId } = req.params;
+    await discussionService.deleteComment({
+      commentId: Number(commentId),
+      userId: req.user.id,
+      userRole: req.membership ? req.membership.role : null,
+      groupId: req.params.groupId || req.groupId
+    });
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Comment deleted successfully.'
     });
   } catch (error) {
     return res.status(error.status || HTTP_STATUS.BAD_REQUEST).json({
@@ -170,6 +194,7 @@ module.exports = {
   createTopic,
   postComment,
   removeTopic,
+  removeComment,
   getActivity,
   getMentionableUsers,
   getMentionableTasks,

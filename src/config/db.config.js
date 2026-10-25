@@ -202,6 +202,7 @@ async function initDb() {
         title TEXT NOT NULL,
         category VARCHAR(50) DEFAULT 'General',
         author_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        attachments JSONB DEFAULT '[]'::jsonb,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `;
@@ -212,6 +213,7 @@ async function initDb() {
         discussion_id INTEGER NOT NULL REFERENCES discussions(id) ON DELETE CASCADE,
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         content TEXT NOT NULL,
+        attachments JSONB DEFAULT '[]'::jsonb,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `;
@@ -361,6 +363,10 @@ async function initDb() {
 
     // Workspace settings column
     try { await sql`ALTER TABLE groups ADD COLUMN IF NOT EXISTS settings JSONB DEFAULT '{}'`; } catch (e) {}
+
+    // Discussion and comments attachments column migrations
+    try { await sql`ALTER TABLE discussions ADD COLUMN IF NOT EXISTS attachments JSONB DEFAULT '[]'::jsonb`; } catch (e) {}
+    try { await sql`ALTER TABLE discussion_comments ADD COLUMN IF NOT EXISTS attachments JSONB DEFAULT '[]'::jsonb`; } catch (e) {}
 
     // Relax any legacy NOT NULL constraints
     try { await sql`ALTER TABLE groups ALTER COLUMN group_name DROP NOT NULL`; } catch (e) {}

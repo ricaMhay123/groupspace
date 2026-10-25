@@ -5,10 +5,11 @@
 const sql = require('../../config/db.config');
 
 const DiscussionModel = {
-  async createTopic({ groupId, title, category, authorUserId }) {
+  async createTopic({ groupId, title, category, authorUserId, attachments = [] }) {
+    const jsonAttachments = JSON.stringify(Array.isArray(attachments) ? attachments : []);
     const [result] = await sql`
-      INSERT INTO discussions (group_id, title, category, author_user_id)
-      VALUES (${groupId}, ${title}, ${category || 'General'}, ${authorUserId})
+      INSERT INTO discussions (group_id, title, category, author_user_id, attachments)
+      VALUES (${groupId}, ${title}, ${category || 'General'}, ${authorUserId}, ${jsonAttachments}::jsonb)
       RETURNING id
     `;
     return Number(result.id);
@@ -47,10 +48,11 @@ const DiscussionModel = {
     `;
   },
 
-  async addComment({ discussionId, userId, content }) {
+  async addComment({ discussionId, userId, content, attachments = [] }) {
+    const jsonAttachments = JSON.stringify(Array.isArray(attachments) ? attachments : []);
     const [result] = await sql`
-      INSERT INTO discussion_comments (discussion_id, user_id, content)
-      VALUES (${discussionId}, ${userId}, ${content})
+      INSERT INTO discussion_comments (discussion_id, user_id, content, attachments)
+      VALUES (${discussionId}, ${userId}, ${content}, ${jsonAttachments}::jsonb)
       RETURNING id
     `;
     return Number(result.id);
@@ -174,6 +176,16 @@ const DiscussionModel = {
 
   async deleteTopic(id) {
     return await sql`DELETE FROM discussions WHERE id = ${id}`;
+  },
+
+  async findCommentById(id) {
+    const [row] = await sql`
+      SELECT c.*, d.group_id
+      FROM discussion_comments c
+      JOIN discussions d ON c.discussion_id = d.id
+      WHERE c.id = ${id}
+    `;
+    return row || null;
   },
 
   async deleteComment(id) {

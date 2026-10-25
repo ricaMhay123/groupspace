@@ -35,6 +35,23 @@ async function requireGroupMembership(req, res, next) {
     } catch (e) {}
   }
 
+  // Resolve groupId from commentId when present
+  const commentId = req.params.commentId;
+  if (!groupId && commentId) {
+    try {
+      const [cRow] = await sql`
+        SELECT d.group_id 
+        FROM discussion_comments c 
+        JOIN discussions d ON c.discussion_id = d.id 
+        WHERE c.id = ${Number(commentId)}
+      `;
+      if (cRow) {
+        groupId = cRow.group_id;
+        req.params.groupId = groupId;
+      }
+    } catch (e) {}
+  }
+
   // Resolve groupId from notebook ID when mounted on notebook routes
   const candidateNbId = req.params.notebookId || req.params.id || req.body?.notebookId || req.query?.notebookId;
   if (!groupId && candidateNbId && !isNaN(Number(candidateNbId))) {

@@ -61,6 +61,9 @@ app.get('/api/user/personal-feed', authMiddleware, personalCtrl.getPersonalFeed)
 // Account deletion (requires JWT session + double password confirmation)
 app.delete('/api/user/account', authMiddleware, require('./modules/auth/auth.controller').deleteAccount);
 
+// Discussion comment discrete deletion
+app.delete('/api/discussions/comments/:commentId', authMiddleware, require('./modules/discussions/discussion.controller').removeComment);
+
 // Health check endpoint with Neon database ping
 app.get('/api/health', async (req, res) => {
   try {

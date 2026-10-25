@@ -266,15 +266,24 @@
         </div>
 
         <div class="dashboard-panel" id="topicChatPanel">
-          <div class="panel-header">
-            <h3 id="activeTopicTitle">Select a Topic</h3>
+          <div class="panel-header" style="border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:16px;">
+            <h3 id="activeTopicTitle" style="margin:0 0 4px 0;">Select a Topic</h3>
+            <div id="activeTopicMeta" style="font-size:12px; color:var(--gray);"></div>
+            <div id="activeTopicAttachments" style="margin-top:8px;"></div>
           </div>
-          <div id="commentsContainer" style="max-height:400px; overflow-y:auto; margin-bottom:18px;">
+          <div id="commentsContainer" style="max-height:420px; overflow-y:auto; margin-bottom:18px; padding-right:4px;">
             <p style="color:var(--gray); text-align:center; padding:30px;">Click on a topic to view its replies and thread discussion.</p>
           </div>
           <form id="postCommentForm" style="display:none;" onsubmit="handlePostComment(event)">
-            <input type="text" id="newCommentInput" class="form-control" placeholder="Write a reply..." required style="margin-bottom:10px;">
-            <button type="submit" class="btn-green" style="width:100%;">Post Reply</button>
+            <div id="commentAttachmentsPreview" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;"></div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input type="text" id="newCommentInput" class="form-control" placeholder="Write a reply... (Use @ to mention members, # for topics/tasks)" style="flex:1;">
+              <label for="commentFileInput" class="btn-outline" style="cursor:pointer; padding:8px 12px; margin:0; display:inline-flex; align-items:center; justify-content:center; border-radius:8px;" title="Attach pictures or documents">
+                📎
+              </label>
+              <input type="file" id="commentFileInput" style="display:none;" multiple accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.docx,.doc,.txt" onchange="handleCommentFileSelection(event)">
+              <button type="submit" class="btn-green" style="padding:8px 18px; white-space:nowrap;">Post Reply</button>
+            </div>
           </form>
         </div>
       </div>
@@ -494,6 +503,17 @@
           <option value="Brainstorming">Brainstorming</option>
           <option value="Announcements">Announcements</option>
         </select>
+      </div>
+      <div class="form-group">
+        <label>Attachments (Images or Documents)</label>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <label for="topicFileInput" class="btn-outline" style="cursor:pointer; padding:6px 14px; margin:0; display:inline-flex; align-items:center; gap:6px; border-radius:6px; font-size:13px;">
+            <span>📎 Choose Files</span>
+          </label>
+          <span id="topicFilesCount" style="font-size:12px; color:var(--gray);">No files attached</span>
+        </div>
+        <input type="file" id="topicFileInput" style="display:none;" multiple accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.docx,.doc,.txt" onchange="handleTopicFileSelection(event)">
+        <div id="topicAttachmentsPreview" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
       </div>
       <div class="form-actions" style="margin-top:20px;">
         <button type="button" class="btn-outline" onclick="closeModal('createTopicModal')">Cancel</button>

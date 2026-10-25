@@ -138,6 +138,14 @@ async function switchWorkspace(groupId) {
   activeTopicId = null;
   const activeTopicTitle = document.getElementById('activeTopicTitle');
   if (activeTopicTitle) activeTopicTitle.textContent = 'Select a Topic';
+  const activeTopicMeta = document.getElementById('activeTopicMeta');
+  if (activeTopicMeta) activeTopicMeta.textContent = '';
+  const activeTopicAttachments = document.getElementById('activeTopicAttachments');
+  if (activeTopicAttachments) activeTopicAttachments.innerHTML = '';
+  pendingTopicAttachments = [];
+  pendingCommentAttachments = [];
+  if (typeof renderTopicAttachmentsPreview === 'function') renderTopicAttachmentsPreview();
+  if (typeof renderCommentAttachmentsPreview === 'function') renderCommentAttachmentsPreview();
   const commentsContainer = document.getElementById('commentsContainer');
   if (commentsContainer) {
     commentsContainer.innerHTML = '<p style="color:var(--gray); text-align:center; padding:30px;">Click on a topic to view its replies and thread discussion.</p>';
@@ -1717,6 +1725,160 @@ async function deleteExpense(expenseId) {
 }
 
 // ================= TAB 5: DISCUSSIONS ================= //
+let pendingTopicAttachments = [];
+let pendingCommentAttachments = [];
+
+function isImageAttachment(att) {
+  const type = (att.file_type || '').toLowerCase();
+  const name = (att.file_name || '').toLowerCase();
+  return type.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(name);
+}
+
+function getDocumentBadgeIcon(name) {
+  const lower = (name || '').toLowerCase();
+  if (lower.endsWith('.pdf')) return '📕 PDF';
+  if (lower.endsWith('.docx') || lower.endsWith('.doc')) return '📘 DOCX';
+  if (lower.endsWith('.txt')) return '📄 TXT';
+  return '📎 DOC';
+}
+
+function renderAttachmentsHtml(attachments) {
+  let list = attachments;
+  if (typeof list === 'string') {
+    try { list = JSON.parse(list); } catch (e) { list = []; }
+  }
+  if (!Array.isArray(list) || list.length === 0) return '';
+
+  const images = list.filter(isImageAttachment);
+  const docs = list.filter(att => !isImageAttachment(att));
+
+  let html = '<div class="discussion-attachments-block" style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">';
+
+  if (images.length > 0) {
+    html += '<div class="discussion-images-grid" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">';
+    images.forEach(img => {
+      const fileName = escapeHtml(img.file_name || 'image');
+      const fileUrl = escapeHtml(img.file_url || '');
+      html += `
+        <a href="${fileUrl}" target="_blank" download="${fileName}" class="attachment-image-thumb" title="${fileName}" style="display:inline-block; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0; max-width:130px; text-decoration:none; background:#f8fafc; transition:transform 0.15s ease, box-shadow 0.15s ease;">
+          <img src="${fileUrl}" alt="${fileName}" style="width:130px; height:80px; object-fit:cover; display:block;" />
+          <div style="font-size:10px; color:#64748b; padding:3px 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; background:#ffffff; border-top:1px solid #f1f5f9;">${fileName}</div>
+        </a>
+      `;
+    });
+    html += '</div>';
+  }
+
+  if (docs.length > 0) {
+    html += '<div class="discussion-docs-list" style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">';
+    docs.forEach(doc => {
+      const fileName = escapeHtml(doc.file_name || 'document');
+      const fileUrl = escapeHtml(doc.file_url || '');
+      const badgeIcon = getDocumentBadgeIcon(doc.file_name);
+      html += `
+        <a href="${fileUrl}" target="_blank" download="${fileName}" class="attachment-doc-badge" title="Download ${fileName}" style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:16px; font-size:11px; font-weight:600; color:#334155; text-decoration:none; transition:all 0.15s ease;">
+          <span>${badgeIcon}</span>
+          <span style="max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${fileName}</span>
+          <span style="font-size:10px; color:#64748b;">⬇</span>
+        </a>
+      `;
+    });
+    html += '</div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve({
+      file_name: file.name,
+      file_url: reader.result,
+      file_type: file.type || ''
+    });
+    reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleTopicFileSelection(event) {
+  const files = Array.from(event.target.files || []);
+  if (!files.length) return;
+  for (const f of files) {
+    if (f.size > 5 * 1024 * 1024) {
+      showToast(`"${f.name}" is too large (max 5MB).`, 'warning');
+      continue;
+    }
+    try {
+      const att = await readFileAsDataUrl(f);
+      pendingTopicAttachments.push(att);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+  renderTopicAttachmentsPreview();
+  event.target.value = '';
+}
+
+function renderTopicAttachmentsPreview() {
+  const container = document.getElementById('topicAttachmentsPreview');
+  const countEl = document.getElementById('topicFilesCount');
+  if (countEl) {
+    countEl.textContent = pendingTopicAttachments.length 
+      ? `${pendingTopicAttachments.length} file(s) attached` 
+      : 'No files attached';
+  }
+  if (!container) return;
+  container.innerHTML = pendingTopicAttachments.map((att, idx) => `
+    <div style="display:inline-flex; align-items:center; gap:6px; padding:3px 8px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:12px; font-size:11px;">
+      <span style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📎 ${escapeHtml(att.file_name)}</span>
+      <button type="button" onclick="removePendingTopicAttachment(${idx})" style="background:none; border:none; cursor:pointer; color:#ef4444; font-size:11px; padding:0 2px;">✕</button>
+    </div>
+  `).join('');
+}
+
+function removePendingTopicAttachment(idx) {
+  pendingTopicAttachments.splice(idx, 1);
+  renderTopicAttachmentsPreview();
+}
+
+async function handleCommentFileSelection(event) {
+  const files = Array.from(event.target.files || []);
+  if (!files.length) return;
+  for (const f of files) {
+    if (f.size > 5 * 1024 * 1024) {
+      showToast(`"${f.name}" is too large (max 5MB).`, 'warning');
+      continue;
+    }
+    try {
+      const att = await readFileAsDataUrl(f);
+      pendingCommentAttachments.push(att);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+  renderCommentAttachmentsPreview();
+  event.target.value = '';
+}
+
+function renderCommentAttachmentsPreview() {
+  const container = document.getElementById('commentAttachmentsPreview');
+  if (!container) return;
+  container.innerHTML = pendingCommentAttachments.map((att, idx) => `
+    <div style="display:inline-flex; align-items:center; gap:6px; padding:3px 8px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:12px; font-size:11px;">
+      <span style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📎 ${escapeHtml(att.file_name)}</span>
+      <button type="button" onclick="removePendingCommentAttachment(${idx})" style="background:none; border:none; cursor:pointer; color:#ef4444; font-size:11px; padding:0 2px;">✕</button>
+    </div>
+  `).join('');
+}
+
+function removePendingCommentAttachment(idx) {
+  pendingCommentAttachments.splice(idx, 1);
+  renderCommentAttachmentsPreview();
+}
+
 async function loadDiscussions() {
   try {
     const res = await apiFetch(`/api/groups/${currentGroupId}/discussions`);
@@ -1749,31 +1911,87 @@ async function loadDiscussions() {
 
 async function selectTopic(topicId, title) {
   activeTopicId = topicId;
-  document.getElementById('activeTopicTitle').textContent = title;
-  document.getElementById('postCommentForm').style.display = 'block';
+  const titleEl = document.getElementById('activeTopicTitle');
+  if (titleEl) titleEl.textContent = title;
+  const formEl = document.getElementById('postCommentForm');
+  if (formEl) formEl.style.display = 'block';
 
   try {
     const res = await apiFetch(`/api/groups/${currentGroupId}/discussions/${topicId}`);
+    const topic = res.data.topic || {};
     const comments = res.data.comments || [];
     const container = document.getElementById('commentsContainer');
+
+    const metaEl = document.getElementById('activeTopicMeta');
+    if (metaEl) {
+      metaEl.textContent = `Started by ${topic.author_name || 'Member'} • ${formatDate(topic.created_at)} • Category: ${topic.category || 'General'}`;
+    }
+    const topicAttEl = document.getElementById('activeTopicAttachments');
+    if (topicAttEl) {
+      topicAttEl.innerHTML = renderAttachmentsHtml(topic.attachments);
+    }
 
     if (comments.length === 0) {
       container.innerHTML = '<p style="color:var(--gray); text-align:center; padding:20px;">No replies yet. Be the first to reply!</p>';
       return;
     }
 
-    container.innerHTML = comments.map(c => `
-      <div class="chat-message">
-        <div class="chat-avatar">${c.user_initials || 'GS'}</div>
-        <div class="chat-content">
-          <h4>${escapeHtml(c.user_name)}</h4>
-          <p>${typeof window.highlightMentions === 'function' ? window.highlightMentions(c.content) : escapeHtml(c.content)}</p>
-          <span>${formatDate(c.created_at)}</span>
+    const isLeader = currentGroupDetails && currentGroupDetails.role === 'leader';
+
+    container.innerHTML = comments.map(c => {
+      const isAuthor = currentUser && Number(c.user_id) === Number(currentUser.id);
+      const canDelete = isLeader || isAuthor;
+
+      return `
+        <div class="chat-message" id="comment-item-${c.id}" style="position:relative; display:flex; gap:12px; padding:12px; border-radius:10px; margin-bottom:12px; background:#f8fafc; border:1px solid #f1f5f9; transition:background 0.2s ease;">
+          <div class="chat-avatar" style="width:36px; height:36px; border-radius:50%; background:#4f46e5; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px; flex-shrink:0;">
+            ${escapeHtml(c.user_initials || 'GS')}
+          </div>
+          <div class="chat-content" style="flex:1; min-width:0;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <h4 style="margin:0 0 4px 0; font-size:13px; font-weight:600; color:#1e293b;">${escapeHtml(c.user_name)}</h4>
+              ${canDelete ? `
+                <button type="button" class="comment-delete-discrete" onclick="confirmDeleteComment(${c.id})" title="Delete comment" style="background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer; padding:2px 6px; border-radius:4px; opacity:0.6; transition:all 0.15s ease;" onmouseover="this.style.opacity='1'; this.style.color='#ef4444';" onmouseout="this.style.opacity='0.6'; this.style.color='#94a3b8';">
+                  🗑️
+                </button>
+              ` : ''}
+            </div>
+            ${c.content ? `<p style="margin:0 0 4px 0; font-size:13px; color:#334155; line-height:1.5; word-break:break-word;">${typeof window.highlightMentions === 'function' ? window.highlightMentions(c.content) : escapeHtml(c.content)}</p>` : ''}
+            ${renderAttachmentsHtml(c.attachments)}
+            <div style="font-size:11px; color:#94a3b8; margin-top:4px;">${formatDate(c.created_at)}</div>
+          </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     container.scrollTop = container.scrollHeight;
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function confirmDeleteComment(commentId) {
+  if (!confirm('Are you sure you want to delete this comment?')) {
+    return;
+  }
+  try {
+    await apiFetch(`/api/discussions/comments/${commentId}`, {
+      method: 'DELETE'
+    });
+    showToast('Comment deleted.', 'success');
+    const el = document.getElementById(`comment-item-${commentId}`);
+    if (el) {
+      el.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+      el.style.opacity = '0';
+      el.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        el.remove();
+        const container = document.getElementById('commentsContainer');
+        if (container && container.children.length === 0) {
+          container.innerHTML = '<p style="color:var(--gray); text-align:center; padding:20px;">No replies yet. Be the first to reply!</p>';
+        }
+      }, 250);
+    }
   } catch (err) {
     showToast(err.message, 'error');
   }
@@ -1787,8 +2005,14 @@ async function handleCreateTopic(e) {
   try {
     const res = await apiFetch(`/api/groups/${currentGroupId}/discussions`, {
       method: 'POST',
-      body: JSON.stringify({ title, category })
+      body: JSON.stringify({ 
+        title, 
+        category,
+        attachments: pendingTopicAttachments
+      })
     });
+    pendingTopicAttachments = [];
+    renderTopicAttachmentsPreview();
     closeModal('createTopicModal');
     document.getElementById('createTopicForm').reset();
     showToast('Topic created!', 'success');
@@ -1805,14 +2029,22 @@ async function handlePostComment(e) {
 
   const input = document.getElementById('newCommentInput');
   const content = input.value.trim();
-  if (!content) return;
+  if (!content && pendingCommentAttachments.length === 0) {
+    showToast('Please enter a message or attach a file.', 'warning');
+    return;
+  }
 
   try {
     await apiFetch(`/api/groups/${currentGroupId}/discussions/${activeTopicId}/comments`, {
       method: 'POST',
-      body: JSON.stringify({ content })
+      body: JSON.stringify({ 
+        content,
+        attachments: pendingCommentAttachments
+      })
     });
     input.value = '';
+    pendingCommentAttachments = [];
+    renderCommentAttachmentsPreview();
     selectTopic(activeTopicId, document.getElementById('activeTopicTitle').textContent);
   } catch (err) {
     showToast(err.message, 'error');
