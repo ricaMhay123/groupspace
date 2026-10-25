@@ -225,15 +225,22 @@ async function requireNotebookEditorAccess(req, res, next) {
  */
 async function checkTaskCreationPermission(req, res, next) {
   const { role } = req.membership;
-  const requesterId = req.user.id;
-  const assignedTo  = req.body.assignedToUserId != null
-    ? Number(req.body.assignedToUserId)
-    : null;
+  const requesterId = Number(req.user.id); // identity comes from the JWT cookie, never the body
+  const rawAssignee = req.body.assignedToUserId;
+  const assignedTo  = (rawAssignee === undefined || rawAssignee === null || rawAssignee === '')
+    ? null
+    : Number(rawAssignee);
 
   // Leaders have no restriction
   if (role === ROLES.LEADER) return next();
 
-  // Members must assign to themselves
+  // Members: a blank assignee defaults to themselves
+  if (assignedTo === null) {
+    req.body.assignedToUserId = requesterId;
+    return next();
+  }
+
+  // Members must never assign to anyone else
   if (assignedTo !== requesterId) {
     return res.status(HTTP_STATUS.FORBIDDEN).json({
       success: false,
@@ -275,7 +282,7 @@ async function checkTaskEditPermission(req, res, next) {
     const { TaskModel } = require('../modules/tasks/task.model');
     const task = await TaskModel.findById(taskId);
 
-    if (!task) {
+    if (!task || (req.params.groupId && String(task.group_id) !== String(req.params.groupId))) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
         success: false,
         message: SYSTEM_MESSAGES.TASK_NOT_FOUND
@@ -289,7 +296,7 @@ async function checkTaskEditPermission(req, res, next) {
     }
 
     // Only the assigned user can edit their own task
-    if (task.assigned_to_user_id !== userId) {
+    if (task.assigned_to_user_id == null || Number(task.assigned_to_user_id) !== Number(userId)) {
       return res.status(HTTP_STATUS.FORBIDDEN).json({
         success: false,
         message: SYSTEM_MESSAGES.TASK_EDIT_DENIED

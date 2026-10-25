@@ -343,6 +343,60 @@ async function checkEmailAvailability(email) {
   return { available: true, status: 'available', message: 'Email is available.' };
 }
 
+/**
+ * Permanently deletes the authenticated user's account after a double
+ * password confirmation. Related rows are handled by the schema's FKs
+ * (ON DELETE CASCADE for memberships/personal items, SET NULL for authorship
+ * on tasks, groups, activity logs, etc.).
+ */
+async function deleteAccount({ userId, password, confirmPassword }) {
+  const fail = (message, status) => {
+    const err = new Error(message);
+    err.status = status;
+    return err;
+  };
+
+  if (!password || !confirmPassword) {
+    throw fail('Password and confirmation are required.', 400);
+  }
+  if (password !== confirmPassword) {
+    throw fail('Passwords do not match.', 400);
+  }
+
+  const [user] = await sql`SELECT id, password_hash FROM users WHERE id = ${userId}`;
+  if (!user) throw fail('User account no longer exists.', 404);
+
+  const isMatch = await bcrypt.compare(password, user.password_hash);
+  if (!isMatch) throw fail('Incorrect password', 401);
+
+  // Never leave a workspace without a leader: promote the longest-standing member.
+  const ledGroups = await sql`
+    SELECT group_id FROM group_members WHERE user_id = ${userId} AND role = 'leader'
+  `;
+  for (const { group_id } of ledGroups) {
+    const [otherLeader] = await sql`
+      SELECT id FROM group_members
+      WHERE group_id = ${group_id} AND role = 'leader' AND user_id <> ${userId}
+      LIMIT 1
+    `;
+    if (otherLeader) continue;
+    const [heir] = await sql`
+      SELECT user_id FROM group_members
+      WHERE group_id = ${group_id} AND user_id <> ${userId}
+      ORDER BY joined_at ASC LIMIT 1
+    `;
+    if (heir) {
+      await sql`
+        UPDATE group_members SET role = 'leader'
+        WHERE group_id = ${group_id} AND user_id = ${heir.user_id}
+      `;
+    }
+  }
+
+  await sql`DELETE FROM users WHERE id = ${userId}`;
+  return { success: true };
+}
+
 module.exports = {
   requestVerificationCode,
   verifyCode,
@@ -351,5 +405,6 @@ module.exports = {
   resetPasswordWithOtp,
   getUserProfile,
   updateStatus,
-  checkEmailAvailability
+  checkEmailAvailability,
+  deleteAccount
 };

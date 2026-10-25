@@ -127,11 +127,33 @@ async function leave(req, res) {
   }
 }
 
+async function removeMember(req, res) {
+  try {
+    await groupService.removeMember({
+      groupId: req.params.groupId,
+      targetUserId: req.params.userId,
+      actorUserId: req.user.id,
+      actorFullName: req.user.full_name
+    });
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Member removed from workspace.'
+    });
+  } catch (error) {
+    return res.status(error.httpStatus || HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 module.exports = {
   create,
   join,
   getMyGroups,
   getDetails,
   updateRole,
-  leave
+  leave,
+  removeMember
 };

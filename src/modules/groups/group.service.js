@@ -157,11 +157,50 @@ async function leaveWorkspace({ groupId, userId, userFullName }) {
   return { success: true };
 }
 
+/**
+ * Leader removes another member from the workspace.
+ * The leader-only gate is enforced by requireGroupLeader on the route;
+ * the actor role is re-verified here as defense in depth.
+ */
+async function removeMember({ groupId, targetUserId, actorUserId, actorFullName }) {
+  const actor = await GroupModel.findMember(groupId, actorUserId);
+  if (!actor || actor.role !== ROLES.LEADER) {
+    const err = new Error('Only a workspace Leader can remove members.');
+    err.httpStatus = 403;
+    throw err;
+  }
+
+  if (Number(targetUserId) === Number(actorUserId)) {
+    const err = new Error('Leaders cannot remove themselves. Use "Leave workspace" instead.');
+    err.httpStatus = 400;
+    throw err;
+  }
+
+  const target = await GroupModel.findMember(groupId, targetUserId);
+  if (!target) {
+    const err = new Error('Target user is not a member of this workspace.');
+    err.httpStatus = 404;
+    throw err;
+  }
+
+  await GroupModel.removeMember(groupId, targetUserId);
+
+  await GroupModel.logActivity({
+    groupId,
+    userId: actorUserId,
+    actionType: 'MEMBER_REMOVED',
+    description: `${actorFullName || 'A leader'} removed a member from the workspace.`
+  });
+
+  return { success: true };
+}
+
 module.exports = {
   createWorkspace,
   joinWorkspace,
   getUserWorkspaces,
   getWorkspaceDetails,
   updateMemberRole,
-  leaveWorkspace
+  leaveWorkspace,
+  removeMember
 };

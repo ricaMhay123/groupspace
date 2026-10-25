@@ -199,6 +199,32 @@ async function debugEnv(req, res) {
   });
 }
 
+async function deleteAccount(req, res) {
+  try {
+    const { password, confirmPassword } = req.body || {};
+    await authService.deleteAccount({
+      userId: req.user.id,
+      password,
+      confirmPassword
+    });
+
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production'
+    });
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Your account has been permanently deleted.',
+      redirect: '/login.html'
+    });
+  } catch (error) {
+    return res.status(error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 module.exports = {
   sendVerificationCode,
   verifyCode,
@@ -210,5 +236,6 @@ module.exports = {
   logout,
   checkEmail,
   testEmail,
-  debugEnv
+  debugEnv,
+  deleteAccount
 };

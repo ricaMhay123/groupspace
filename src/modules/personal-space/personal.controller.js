@@ -108,7 +108,7 @@ async function getPersonalFeed(req, res) {
     `;
 
     const groupIds = memberships.map(m => m.group_id);
-    const leaderGroupIds = memberships.filter(m => m.role === 'LEADER').map(m => m.group_id);
+    const leaderGroupIds = memberships.filter(m => m.role === 'leader').map(m => m.group_id);
 
     // Early return if user has no memberships (ANY() fails on empty arrays in Neon)
     if (groupIds.length === 0) {
@@ -151,9 +151,14 @@ async function getPersonalFeed(req, res) {
     `;
 
     // @mentions in discussion comments (content contains @username)
-    const firstName = (req.user.full_name || '').split(' ')[0].toLowerCase();
-    const userHandle = `@${firstName}`;
-    if (firstName.length > 0) {
+    const fullName = (req.user.full_name || '').toLowerCase().trim();
+    const handles = new Set([
+      fullName.split(/\s+/)[0],
+      fullName.replace(/\s+/g, ''),
+      (req.user.email || '').split('@')[0].toLowerCase()
+    ]);
+    const patterns = [...handles].filter(Boolean).map(h => `%@${h}%`);
+    if (patterns.length > 0) {
       mentions = await sql`
         SELECT dc.id, dc.content, dc.created_at,
                u.full_name AS author_name, d.group_id
@@ -161,7 +166,7 @@ async function getPersonalFeed(req, res) {
         JOIN discussions d ON dc.discussion_id = d.id
         JOIN users u ON dc.user_id = u.id
         WHERE d.group_id = ANY(${groupIds}::int[])
-          AND LOWER(dc.content) LIKE ${`%${userHandle}%`}
+          AND LOWER(dc.content) LIKE ANY(${patterns}::text[])
           AND dc.user_id != ${userId}
         ORDER BY dc.created_at DESC
         LIMIT 20

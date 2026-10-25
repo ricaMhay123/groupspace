@@ -25,9 +25,10 @@ const GroupModel = {
   },
 
   async addMember({ groupId, userId, role }) {
+    const normalizedRole = String(role || 'member').toLowerCase();
     const [member] = await sql`
       INSERT INTO group_members (group_id, user_id, role)
-      VALUES (${groupId}, ${userId}, ${role})
+      VALUES (${groupId}, ${userId}, ${normalizedRole})
       RETURNING *
     `;
     return member;
@@ -47,7 +48,7 @@ const GroupModel = {
       FROM group_members gm
       JOIN users u ON gm.user_id = u.id
       WHERE gm.group_id = ${groupId}
-      ORDER BY gm.role DESC, u.full_name ASC
+      ORDER BY (gm.role = 'leader') DESC, u.full_name ASC
     `;
   },
 
@@ -64,9 +65,10 @@ const GroupModel = {
   },
 
   async updateMemberRole(groupId, userId, newRole) {
+    const normalizedRole = String(newRole).toLowerCase();
     return await sql`
       UPDATE group_members
-      SET role = ${newRole}
+      SET role = ${normalizedRole}
       WHERE group_id = ${groupId} AND user_id = ${userId}
     `;
   },

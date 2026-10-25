@@ -16,5 +16,6 @@ router.get('/', groupController.getMyGroups);
 router.get('/:id', requireGroupMembership, groupController.getDetails);
 router.patch('/:id/members/:userId/role', requireGroupLeader, groupController.updateRole);
 router.post('/:id/leave', requireGroupMembership, groupController.leave);
+router.delete('/:groupId/members/:userId', requireGroupLeader, groupController.removeMember);
 
 module.exports = router;

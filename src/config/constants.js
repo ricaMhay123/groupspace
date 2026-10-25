@@ -3,8 +3,8 @@
  */
 
 const ROLES = {
-  LEADER: 'LEADER', // Workspace admin / leader
-  MEMBER: 'MEMBER'  // Standard workspace collaborator
+  LEADER: 'leader', // Workspace admin / leader
+  MEMBER: 'member'  // Standard workspace collaborator
 };
 
 // Granular notebook-level permission roles

@@ -58,6 +58,9 @@ app.use('/api/notebooks', notebookRoutes);
 // Personal Feed alias — must be BEFORE /api/personal (which is mounted with sub-routes)
 app.get('/api/user/personal-feed', authMiddleware, personalCtrl.getPersonalFeed);
 
+// Account deletion (requires JWT session + double password confirmation)
+app.delete('/api/user/account', authMiddleware, require('./modules/auth/auth.controller').deleteAccount);
+
 // Health check endpoint with Neon database ping
 app.get('/api/health', async (req, res) => {
   try {

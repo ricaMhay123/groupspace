@@ -80,7 +80,7 @@ async function deleteEvent(req, res) {
     }
 
     // Only creator or group leader can delete
-    if (event.created_by_user_id !== req.user.id && req.membership.role !== 'LEADER') {
+    if (event.created_by_user_id !== req.user.id && req.membership.role !== 'leader') {
       return res.status(HTTP_STATUS.FORBIDDEN).json({ success: false, message: 'Not authorized to delete this event.' });
     }
 

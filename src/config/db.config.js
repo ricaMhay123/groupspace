@@ -58,7 +58,7 @@ async function initDb() {
         id SERIAL PRIMARY KEY,
         group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        role VARCHAR(20) NOT NULL DEFAULT 'MEMBER',
+        role VARCHAR(20) NOT NULL DEFAULT 'member',
         joined_at TIMESTAMPTZ DEFAULT NOW(),
         UNIQUE(group_id, user_id)
       );
@@ -329,6 +329,10 @@ async function initDb() {
     try { await sql`ALTER TABLE personal_items ADD COLUMN IF NOT EXISTS amount NUMERIC(10, 2) DEFAULT 0`; } catch (e) {}
     try { await sql`ALTER TABLE personal_items ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'Personal'`; } catch (e) {}
     try { await sql`ALTER TABLE personal_items ADD COLUMN IF NOT EXISTS due_date TIMESTAMPTZ`; } catch (e) {}
+
+    // Standardize group_members roles strictly as 'leader' | 'member'
+    try { await sql`ALTER TABLE group_members ALTER COLUMN role SET DEFAULT 'member'`; } catch (e) {}
+    try { await sql`UPDATE group_members SET role = LOWER(role) WHERE role <> LOWER(role)`; } catch (e) {}
 
     // Relax any legacy NOT NULL constraints
     try { await sql`ALTER TABLE groups ALTER COLUMN group_name DROP NOT NULL`; } catch (e) {}

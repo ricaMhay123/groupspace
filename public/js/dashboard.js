@@ -142,7 +142,7 @@ async function switchWorkspace(groupId) {
     document.getElementById('joinCodeBadge').style.display = 'flex';
     document.getElementById('displayJoinCode').textContent = currentGroupDetails.join_code;
     document.getElementById('userRoleBadge').textContent = currentGroupDetails.role;
-    document.getElementById('userRoleBadge').className = `status ${currentGroupDetails.role === 'LEADER' ? 'online' : 'pending'}`;
+    document.getElementById('userRoleBadge').className = `status ${currentGroupDetails.role === 'leader' ? 'online' : 'pending'}`;
 
     // Populate dropdowns that depend on group members
     populateMemberDropdowns(currentGroupDetails.members || []);
@@ -274,7 +274,7 @@ async function loadOverview() {
 
     document.getElementById('statActiveTasks').textContent = activeTasks;
     document.getElementById('statPendingApproval').textContent = pendingApproval;
-    document.getElementById('statTotalSpent').textContent = `$${(expRes.data?.totalSpent || 0).toFixed(2)}`;
+    document.getElementById('statTotalSpent').textContent = `₱${(expRes.data?.totalSpent || 0).toFixed(2)}`;
     document.getElementById('statMemberCount').textContent = currentGroupDetails.members ? currentGroupDetails.members.length : 1;
 
     // Roster list
@@ -289,7 +289,7 @@ async function loadOverview() {
               <div style="color:var(--gray); font-size:11px;">${escapeHtml(m.email)}</div>
             </div>
           </div>
-          <span class="status ${m.role === 'LEADER' ? 'online' : 'pending'}" style="font-size:11px;">${m.role}</span>
+          <span class="status ${m.role === 'leader' ? 'online' : 'pending'}" style="font-size:11px;">${m.role}</span>
         </li>
       `).join('');
     }
@@ -341,7 +341,7 @@ async function loadTasks() {
     const counts = { TODO: 0, IN_PROGRESS: 0, PENDING_APPROVAL: 0, DONE: 0 };
     Object.values(cols).forEach(c => c.innerHTML = '');
 
-    const isLeader = currentGroupDetails && currentGroupDetails.role === 'LEADER';
+    const isLeader = currentGroupDetails && currentGroupDetails.role === 'leader';
 
     tasks.forEach(t => {
       counts[t.status] = (counts[t.status] || 0) + 1;
@@ -816,24 +816,24 @@ async function loadExpenses() {
     const expenses = expensesRes.data || [];
     const summary = summaryRes.data || { totalSpent: 0, memberBalances: [], settlements: [] };
 
-    document.getElementById('expTotalSpent').textContent = `$${summary.totalSpent.toFixed(2)}`;
+    document.getElementById('expTotalSpent').textContent = `₱${summary.totalSpent.toFixed(2)}`;
     
     // Find current user balance
     const myBalance = summary.memberBalances.find(b => Number(b.userId) === Number(currentUser.id));
     const netEl = document.getElementById('expYourNet');
     if (myBalance) {
       if (myBalance.net > 0) {
-        netEl.textContent = `+$${myBalance.net.toFixed(2)} (Owed to you)`;
+        netEl.textContent = `+₱${myBalance.net.toFixed(2)} (Owed to you)`;
         netEl.style.color = 'var(--primary)';
       } else if (myBalance.net < 0) {
-        netEl.textContent = `-$${Math.abs(myBalance.net).toFixed(2)} (You owe)`;
+        netEl.textContent = `-₱${Math.abs(myBalance.net).toFixed(2)} (You owe)`;
         netEl.style.color = '#FF7272';
       } else {
-        netEl.textContent = '$0.00 (Settled)';
+        netEl.textContent = '₱0.00 (Settled)';
         netEl.style.color = 'white';
       }
     } else {
-      netEl.textContent = '$0.00';
+      netEl.textContent = '₱0.00';
     }
 
     // Settlements plan
@@ -851,7 +851,7 @@ async function loadExpenses() {
             <span class="settlement-arrow">pays →</span>
             <span class="settlement-receiver">👤 ${escapeHtml(s.toName)}</span>
           </div>
-          <span class="settlement-amount">$${s.amount.toFixed(2)}</span>
+          <span class="settlement-amount">₱${s.amount.toFixed(2)}</span>
         </div>
       `).join('');
     }
@@ -870,7 +870,7 @@ async function loadExpenses() {
         <td><span style="padding:3px 8px; background:#202522; border-radius:6px; font-size:12px;">${escapeHtml(e.category)}</span></td>
         <td>${escapeHtml(e.payer_name)}</td>
         <td>${e.splits ? `${e.splits.length} members` : 'Equal'}</td>
-        <td style="color:var(--primary); font-weight:700;">$${Number(e.amount).toFixed(2)}</td>
+        <td style="color:var(--primary); font-weight:700;">₱${Number(e.amount).toFixed(2)}</td>
         <td>
           <button style="background:transparent; border:none; color:#FF7272; cursor:pointer;" onclick="deleteExpense(${e.id})">🗑️</button>
         </td>
@@ -1091,7 +1091,7 @@ async function loadPersonalItems() {
       const total = items.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
       container.innerHTML = `
         <div style="margin-bottom:18px; font-size:18px; color:var(--primary); font-weight:700;">
-          Total Personal Spending: $${total.toFixed(2)}
+          Total Personal Spending: ₱${total.toFixed(2)}
         </div>
         <table class="expense-table">
           <thead><tr><th>Item</th><th>Category</th><th>Amount</th><th>Action</th></tr></thead>
@@ -1100,7 +1100,7 @@ async function loadPersonalItems() {
               <tr>
                 <td><strong>${escapeHtml(e.title)}</strong></td>
                 <td>${escapeHtml(e.category || 'General')}</td>
-                <td style="color:var(--primary); font-weight:600;">$${Number(e.amount).toFixed(2)}</td>
+                <td style="color:var(--primary); font-weight:600;">₱${Number(e.amount).toFixed(2)}</td>
                 <td><span style="cursor:pointer; color:#FF7272;" onclick="deletePersonalItem(${e.id})">🗑️</span></td>
               </tr>
             `).join('')}
