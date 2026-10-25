@@ -286,73 +286,102 @@
       background: var(--nb-bg);
     }
 
+    /* ── High Contrast Dark Toolbar (#0f172a) ── */
     .nb-toolbar {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 12px;
-      padding: 10px 24px;
-      background: var(--nb-surface);
-      border-bottom: 1px solid var(--nb-border);
+      gap: 10px;
+      padding: 8px 24px;
+      background: #0f172a !important;
+      border-bottom: 1px solid #1e293b !important;
+      color: #ffffff !important;
+      z-index: 50;
     }
     .nb-toolbar-group {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding-right: 12px;
-      border-right: 1px solid var(--nb-border);
+      gap: 6px;
+      padding-right: 10px;
+      border-right: 1px solid #1e293b;
     }
     .nb-toolbar-group:last-child {
       border-right: none;
       padding-right: 0;
     }
     .nb-toolbar label {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
-      color: var(--nb-text-muted);
+      color: #94a3b8 !important;
       white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
-    .nb-toolbar select, .notebook-toolbar select {
-      background: var(--nb-select-bg) !important;
-      color: var(--nb-select-text) !important;
-      border: 1px solid var(--nb-select-border) !important;
+    .nb-toolbar select {
+      background: #1e293b !important;
+      color: #ffffff !important;
+      border: 1px solid #334155 !important;
       border-radius: 6px;
-      padding: 5px 10px;
+      padding: 5px 9px;
       font-size: 12px;
       font-family: inherit;
       font-weight: 500;
       cursor: pointer;
       outline: none;
-      transition: border-color 0.2s;
+      transition: all 0.15s;
     }
-    .nb-toolbar select:focus, .notebook-toolbar select:focus {
+    .nb-toolbar select:focus {
       outline: none;
-      border-color: var(--nb-primary) !important;
+      border-color: #38bdf8 !important;
+      box-shadow: 0 0 0 1px #38bdf8;
     }
-    .nb-toolbar select option, .notebook-toolbar select option {
-      background: var(--nb-select-bg) !important;
-      background-color: var(--nb-select-bg) !important;
-      color: var(--nb-select-text) !important;
+    .nb-toolbar select option {
+      background: #0f172a !important;
+      color: #ffffff !important;
     }
 
+    /* ── High Contrast Toolbar Buttons ── */
+    .btn-toolbar-fmt {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 30px;
+      height: 30px;
+      padding: 0 7px;
+      border-radius: 6px;
+      background: #1e293b;
+      color: #ffffff !important;
+      border: 1px solid #334155;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .btn-toolbar-fmt:hover, .btn-toolbar-fmt.active {
+      background: #2563eb;
+      border-color: #38bdf8;
+      color: #ffffff !important;
+      transform: translateY(-1px);
+    }
     .btn-export-sm {
       display: inline-flex;
       align-items: center;
       gap: 4px;
       padding: 5px 11px;
       border-radius: 6px;
-      border: 1px solid var(--nb-select-border);
-      background: var(--nb-surface);
-      color: var(--nb-text);
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #ffffff !important;
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.15s;
     }
     .btn-export-sm:hover {
-      border-color: var(--nb-primary);
-      color: var(--nb-primary);
-      background: var(--nb-hover);
+      border-color: #38bdf8;
+      color: #ffffff !important;
+      background: #2563eb;
       transform: translateY(-1px);
     }
 
@@ -376,51 +405,118 @@
       border: 1px solid var(--nb-canvas-border);
       border-radius: 12px;
       box-shadow: var(--nb-canvas-shadow);
-      min-height: 540px;
+      min-height: 580px;
+      position: relative !important;
+      overflow: visible;
     }
 
-    #nbPageTitle {
-      font-size: 28px;
-      font-weight: 800;
-      color: var(--nb-canvas-title) !important;
-      background: transparent;
-      border: none;
-      border-bottom: 2px solid var(--nb-canvas-border);
-      width: 100%;
-      padding: 0 0 12px;
-      margin-bottom: 24px;
-      font-family: inherit;
-      transition: border-color 0.2s;
-    }
-    #nbPageTitle:focus {
-      outline: none;
-      border-bottom-color: var(--nb-primary);
-    }
-    #nbPageTitle::placeholder {
-      color: var(--nb-placeholder) !important;
-      opacity: 0.8;
-    }
-
-    #nbPageContent {
+    /* ── Rich Text Canvas Editor ── */
+    .nb-canvas-editor {
       flex: 1;
       width: 100%;
-      min-height: 480px;
+      min-height: 500px;
       background: transparent;
       border: none;
       color: var(--nb-canvas-text) !important;
       font-size: 15px;
       font-family: inherit;
       line-height: 1.7;
-      resize: none;
       padding: 0;
       outline: none;
+      position: relative;
+      z-index: 1;
+      word-break: break-word;
     }
-    #nbPageContent:focus {
-      outline: none;
-    }
-    #nbPageContent::placeholder {
+    .nb-canvas-editor:empty::before {
+      content: attr(data-placeholder);
       color: var(--nb-placeholder) !important;
       opacity: 0.8;
+      cursor: text;
+    }
+
+    /* ── Interactive Shapes Overlay System ── */
+    .nb-shapes-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .interactive-shape {
+      position: absolute;
+      pointer-events: auto;
+      cursor: move;
+      user-select: none;
+      box-sizing: border-box;
+      touch-action: none;
+    }
+    .interactive-shape.selected {
+      outline: 2px dashed #38bdf8;
+      outline-offset: 3px;
+    }
+    .shape-rot-handle {
+      position: absolute;
+      top: -26px;
+      left: calc(50% - 10px);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #0f172a;
+      border: 2px solid #38bdf8;
+      color: #38bdf8;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      cursor: grab;
+      z-index: 30;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      user-select: none;
+    }
+    .interactive-shape.selected .shape-rot-handle {
+      display: flex;
+    }
+    .shape-resize-handle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #38bdf8;
+      border: 1px solid #ffffff;
+      border-radius: 2px;
+      display: none;
+      z-index: 30;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .interactive-shape.selected .shape-resize-handle {
+      display: block;
+    }
+    .shape-resize-handle.tl { top: -5px; left: -5px; cursor: nwse-resize; }
+    .shape-resize-handle.tr { top: -5px; right: -5px; cursor: nesw-resize; }
+    .shape-resize-handle.bl { bottom: -5px; left: -5px; cursor: nesw-resize; }
+    .shape-resize-handle.br { bottom: -5px; right: -5px; cursor: nwse-resize; }
+    .shape-delete-btn {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ef4444;
+      color: #ffffff;
+      border: 1px solid #ffffff;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: bold;
+      z-index: 31;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+    .interactive-shape.selected .shape-delete-btn {
+      display: flex;
     }
 
     .nb-status-bar {
@@ -511,7 +607,32 @@
   </aside>
 
   <div class="nb-editor-area">
+    <!-- High Contrast Dark Toolbar (#0f172a) -->
     <div class="nb-toolbar">
+      <!-- Formatting Toggles: Bold, Italic, Underline -->
+      <div class="nb-toolbar-group">
+        <button type="button" class="btn-toolbar-fmt" title="Bold (Ctrl+B)" onclick="execFmt('bold')"><b>B</b></button>
+        <button type="button" class="btn-toolbar-fmt" title="Italic (Ctrl+I)" onclick="execFmt('italic')"><i>I</i></button>
+        <button type="button" class="btn-toolbar-fmt" title="Underline (Ctrl+U)" onclick="execFmt('underline')"><u>U</u></button>
+      </div>
+
+      <!-- Text Alignment: Left, Center, Right, Justify -->
+      <div class="nb-toolbar-group">
+        <button type="button" class="btn-toolbar-fmt" title="Align Left" onclick="execFmt('justifyLeft')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+        </button>
+        <button type="button" class="btn-toolbar-fmt" title="Align Center" onclick="execFmt('justifyCenter')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg>
+        </button>
+        <button type="button" class="btn-toolbar-fmt" title="Align Right" onclick="execFmt('justifyRight')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>
+        </button>
+        <button type="button" class="btn-toolbar-fmt" title="Justify" onclick="execFmt('justifyFull')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Typography Dropdowns -->
       <div class="nb-toolbar-group">
         <label>Font:</label>
         <select id="nbFontFamily" onchange="applyFont(this.value)">
@@ -540,21 +661,42 @@
           <option value="2.0">Double</option>
         </select>
       </div>
+
+      <!-- Insert Shapes Dropdown -->
       <div class="nb-toolbar-group">
-        <label>Export:</label>
-        <button class="btn-export-sm" onclick="exportPage('txt')">&#x1F4C4; .txt</button>
-        <button class="btn-export-sm" onclick="exportPage('pdf')">&#x1F4D5; .pdf</button>
-        <button class="btn-export-sm" onclick="exportPage('docx')">&#x1F4D8; .docx</button>
+        <select id="nbShapeSelect" onchange="handleInsertShapeSelect(this)" style="color:#38bdf8 !important; font-weight:600;">
+          <option value="" disabled selected>+ Insert Shape</option>
+          <option value="rectangle">▭ Rectangle</option>
+          <option value="circle">◯ Circle</option>
+          <option value="arrow">➔ Arrow</option>
+          <option value="line">― Line</option>
+          <option value="callout">🗨 Callout Box</option>
+        </select>
+      </div>
+
+      <!-- Document Import & Export System -->
+      <div class="nb-toolbar-group" style="margin-left:auto;">
+        <input type="file" id="nbFileInput" accept=".txt,.md,.markdown" style="display:none;" onchange="handleImportFile(event)">
+        <button type="button" class="btn-export-sm" onclick="triggerImportDocument()" title="Import .txt or .markdown document">📥 Import</button>
+        <button type="button" class="btn-export-sm" onclick="exportPage('txt')">.txt</button>
+        <button type="button" class="btn-export-sm" onclick="exportPage('pdf')">.pdf</button>
+        <button type="button" class="btn-export-sm" onclick="exportPage('docx')">.docx</button>
       </div>
     </div>
 
-    <div class="nb-canvas-container">
-      <div class="nb-canvas">
-        <input type="text" id="nbPageTitle" placeholder="Page Title..." autocomplete="off">
-        <textarea id="nbPageContent" placeholder="Start writing your notes here...&#10;&#10;Your work auto-saves every 4 seconds. Use Ctrl+S to save now."></textarea>
+    <!-- Canvas Container (Removed separate top title line) -->
+    <div class="nb-canvas-container" id="nbCanvasContainer" onclick="handleCanvasContainerClick(event)">
+      <div class="nb-canvas" id="nbCanvas">
+        <!-- Interactive Shapes Layer Overlay -->
+        <div id="nbShapesLayer" class="nb-shapes-layer"></div>
+
+        <!-- Rich Text Canvas Editor (Auto-titled from first sentence/line) -->
+        <div id="nbPageContent" class="nb-canvas-editor" contenteditable="true" spellcheck="true"
+             data-placeholder="Start typing your notes here (auto-titles from first phrase)..."></div>
       </div>
     </div>
 
+    <!-- Status Bar -->
     <div class="nb-status-bar">
       <span id="nbAuthorInfo">-</span>
       <span id="nbSaveStatus">Not saved yet</span>
@@ -569,22 +711,31 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
 'use strict';
+
 let currentUser = null, currentGroupId = null, currentNotebookId = null, currentPageId = null;
 let pages = [], autoSaveTimer = null;
+let currentShapes = []; // Array of shape states: [{ id, type, x, y, w, h, rot }]
+let activeSelectedShapeId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   currentUser = await checkAuth();
   if (!currentUser) return;
+
   const params = new URLSearchParams(window.location.search);
   currentGroupId = params.get('groupId') || params.get('workspaceId') || params.get('workspace_id') || localStorage.getItem('groupspace_active_group_id');
   currentNotebookId = params.get('notebookId') || null;
-  // noteId passed from dashboard card click — pre-load that legacy note
   const inboundNoteId = params.get('noteId') || null;
-  if (currentGroupId) document.getElementById('backBtn').href = 'dashboard.html?groupId=' + currentGroupId;
+
+  if (currentGroupId) {
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn) backBtn.href = 'dashboard.html?groupId=' + currentGroupId;
+  }
+
   await loadNotebook();
-  setupAutoSave();
+  setupEditorListeners();
   updateWordCount();
-  // If a specific noteId was requested via URL, try to open it in the editor and focus canvas
+
+  // If specific note was requested via URL, auto-open and focus canvas
   if (inboundNoteId && pages.length > 0) {
     const match = pages.find(p => String(p.id) === String(inboundNoteId));
     if (match) {
@@ -606,12 +757,15 @@ async function loadNotebook() {
       const notebooks = nbRes.data || [];
       if (notebooks.length > 0) {
         currentNotebookId = notebooks[0].id;
-        document.getElementById('notebookName').textContent = '\uD83D\uDCDD ' + (notebooks[0].title || 'Notebook');
+        document.getElementById('notebookName').textContent = '📝 ' + (notebooks[0].title || 'Notebook');
         document.getElementById('notebookMeta').textContent = notebooks[0].description || 'Collaborative workspace notebook';
       } else {
-        const created = await apiFetch('/api/notebooks', { method: 'POST', body: JSON.stringify({ groupId: currentGroupId, title: 'Workspace Notebook', visibility: 'shared' }) });
+        const created = await apiFetch('/api/notebooks', {
+          method: 'POST',
+          body: JSON.stringify({ groupId: currentGroupId, title: 'Workspace Notebook', visibility: 'shared' })
+        });
         currentNotebookId = created.data.id;
-        document.getElementById('notebookName').textContent = '\uD83D\uDCDD Workspace Notebook';
+        document.getElementById('notebookName').textContent = '📝 Workspace Notebook';
       }
     }
     await loadPages();
@@ -645,13 +799,12 @@ async function loadPages() {
         const legacyRes = await apiFetch('/api/groups/' + currentGroupId + '/notes');
         const legacyNotes = Array.isArray(legacyRes.data) ? legacyRes.data : [];
         if (legacyNotes.length > 0) {
-          // Map legacy note shape to page shape for the editor
           pages = legacyNotes.map(n => ({
             id: n.id,
             title: n.title || 'Untitled',
             content: n.content || '',
             author_name: n.author_name || 'Member',
-            is_legacy: true   // flag so save uses the legacy endpoint
+            is_legacy: true
           }));
           loaded = true;
         }
@@ -667,7 +820,9 @@ async function loadPages() {
     }
 
     renderPagesList();
-    if (!currentPageId || !pages.find(p => p.id === currentPageId)) openPage(pages[0]);
+    if (!currentPageId || !pages.find(p => p.id === currentPageId)) {
+      openPage(pages[0]);
+    }
   } catch (err) {
     list.innerHTML = '<div class="nb-empty-pages">Error loading pages.</div>';
     console.error('[Notebook] loadPages error:', err);
@@ -676,19 +831,37 @@ async function loadPages() {
 
 function renderPagesList() {
   const list = document.getElementById('nbPagesList');
-  list.innerHTML = pages.map(p => '<div class="nb-page-item ' + (p.id === currentPageId ? 'active' : '') + '" onclick="openPageById(' + p.id + ')">'
-    + '<div class="nb-page-item-title">' + escapeHtml(p.title || 'Untitled') + '</div>'
-    + '<div class="nb-page-item-meta">\u270D\uFE0F ' + escapeHtml(p.author_name || 'Member') + '</div>'
-    + '</div>').join('');
+  if (!list) return;
+  list.innerHTML = pages.map(p => {
+    const activeClass = p.id === currentPageId ? 'active' : '';
+    return `
+      <div class="nb-page-item ${activeClass}" onclick="openPageById(${p.id})">
+        <div class="nb-page-item-title">${escapeHtml(p.title || 'Untitled Page')}</div>
+        <div class="nb-page-item-meta">✍️ ${escapeHtml(p.author_name || 'Member')}</div>
+      </div>
+    `;
+  }).join('');
 }
 
-function openPageById(id) { const p = pages.find(pg => pg.id === id); if (p) openPage(p); }
+function openPageById(id) {
+  const p = pages.find(pg => pg.id === id);
+  if (p) openPage(p);
+}
 
 function openPage(page) {
   currentPageId = page.id;
-  document.getElementById('nbPageTitle').value = page.title || '';
-  document.getElementById('nbPageContent').value = page.content || '';
-  document.getElementById('nbAuthorInfo').textContent = '\u270D\uFE0F ' + (page.author_name || (currentUser && currentUser.fullName) || 'You');
+  const editor = document.getElementById('nbPageContent');
+
+  // Deserialize shapes payload and HTML content
+  const { shapes, html } = deserializePageContent(page.content || '');
+  currentShapes = shapes;
+  renderAllShapes();
+
+  if (editor) {
+    editor.innerHTML = html || '';
+  }
+
+  document.getElementById('nbAuthorInfo').textContent = '✍️ ' + (page.author_name || (currentUser && currentUser.fullName) || 'You');
   document.getElementById('nbSaveStatus').textContent = 'Loaded';
   renderPagesList();
   updateWordCount();
@@ -696,128 +869,570 @@ function openPage(page) {
 
 function clearEditor() {
   currentPageId = null;
-  document.getElementById('nbPageTitle').value = '';
-  document.getElementById('nbPageContent').value = '';
+  const editor = document.getElementById('nbPageContent');
+  if (editor) editor.innerHTML = '';
+  currentShapes = [];
+  renderAllShapes();
   document.getElementById('nbAuthorInfo').textContent = '-';
   document.getElementById('nbSaveStatus').textContent = 'New page';
 }
 
+function newPage() {
+  clearEditor();
+  const editor = document.getElementById('nbPageContent');
+  if (editor) editor.focus();
+  document.querySelectorAll('.nb-page-item').forEach(el => el.classList.remove('active'));
+  showToast('New page started! Type your notes to auto-title.', 'info');
+}
+
+/**
+ * Auto-Title System:
+ * Automatically extracts the title of the page from the first non-empty word/phrase/sentence
+ * typed in the note canvas upon saving.
+ */
+function extractAutoTitle() {
+  const editor = document.getElementById('nbPageContent');
+  if (!editor) return 'Untitled Page';
+
+  const rawText = (editor.innerText || editor.textContent || '').trim();
+  if (!rawText) return 'Untitled Page';
+
+  const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (lines.length === 0) return 'Untitled Page';
+
+  let firstLine = lines[0];
+  // Match first punctuated sentence if exists within first line
+  const sentenceMatch = firstLine.match(/^(.+?[.!?])(\s|$)/);
+  let titleCandidate = sentenceMatch ? sentenceMatch[1] : firstLine;
+
+  if (titleCandidate.length > 55) {
+    titleCandidate = titleCandidate.slice(0, 52) + '...';
+  }
+  return titleCandidate.trim() || 'Untitled Page';
+}
+
+/**
+ * Serializes current editor state: combines shapes metadata and rich text HTML
+ */
+function serializePageContent() {
+  const editor = document.getElementById('nbPageContent');
+  const htmlContent = editor ? editor.innerHTML : '';
+  const shapesJson = JSON.stringify(currentShapes);
+  return `<!--GS_SHAPES_JSON:${shapesJson}-->` + htmlContent;
+}
+
+/**
+ * Deserializes raw stored content into shapes state and rich HTML
+ */
+function deserializePageContent(rawContent) {
+  if (!rawContent) return { shapes: [], html: '' };
+  const shapeMatch = rawContent.match(/^<!--GS_SHAPES_JSON:(.*?)-->/);
+  if (shapeMatch) {
+    try {
+      const parsedShapes = JSON.parse(shapeMatch[1]);
+      const html = rawContent.slice(shapeMatch[0].length);
+      return { shapes: Array.isArray(parsedShapes) ? parsedShapes : [], html };
+    } catch (e) {
+      console.warn('[Notebook] Failed to parse shapes payload:', e);
+    }
+  }
+  return { shapes: [], html: rawContent };
+}
+
+/**
+ * Save Current Page
+ */
 async function saveCurrentPage() {
-  const title = document.getElementById('nbPageTitle').value.trim();
-  const content = document.getElementById('nbPageContent').value;
-  if (!title) { showToast('Please enter a page title.', 'error'); document.getElementById('nbPageTitle').focus(); return; }
+  const title = extractAutoTitle();
+  const serializedContent = serializePageContent();
+
   const btn = document.getElementById('savePageBtn');
-  const orig = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Saving...';
+  const orig = btn ? btn.textContent : 'Save';
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
   document.getElementById('nbSaveStatus').textContent = 'Saving...';
+
   try {
     const currentPageObj = pages.find(p => p.id === currentPageId);
     const isLegacy = currentPageObj && currentPageObj.is_legacy;
 
     if (currentPageId) {
       if (isLegacy && currentGroupId) {
-        // Legacy flat note — use the notes endpoint
         await apiFetch('/api/groups/' + currentGroupId + '/notes/' + currentPageId, {
           method: 'PATCH',
-          body: JSON.stringify({ title, content })
+          body: JSON.stringify({ title, content: serializedContent })
         });
       } else {
-        // Collaborative notebook page
         await apiFetch('/api/notebooks/' + currentNotebookId + '/pages/' + currentPageId, {
           method: 'PATCH',
-          body: JSON.stringify({ title, content })
+          body: JSON.stringify({ title, content: serializedContent })
         });
       }
     } else {
-      // New page — always goes to collaborative notebook
       const res = await apiFetch('/api/notebooks/' + currentNotebookId + '/pages', {
         method: 'POST',
-        body: JSON.stringify({ title, content, position: pages.length, groupId: currentGroupId })
+        body: JSON.stringify({ title, content: serializedContent, position: pages.length, groupId: currentGroupId })
       });
       currentPageId = (res.data && res.data.id) ? res.data.id : res.data;
     }
-    document.getElementById('nbSaveStatus').textContent = '\u2705 Saved ' + new Date().toLocaleTimeString();
-    showToast('Page saved!', 'success');
+
+    document.getElementById('nbSaveStatus').textContent = '✅ Saved ' + new Date().toLocaleTimeString();
+
+    // Update in-memory pages list title dynamically
+    const currentMemPage = pages.find(p => p.id === currentPageId);
+    if (currentMemPage) {
+      currentMemPage.title = title;
+      currentMemPage.content = serializedContent;
+    }
+    renderPagesList();
+
+    // Reload list from backend to keep sync
     await loadPages();
-    // Immediately load and focus the newly created page on the editor canvas
+
     if (currentPageId) {
       const targetPage = pages.find(p => String(p.id) === String(currentPageId));
-      if (targetPage) openPage(targetPage);
+      if (targetPage) {
+        // Keep active class synced without clobbering canvas cursor
+        document.querySelectorAll('.nb-page-item').forEach(el => el.classList.remove('active'));
+        const activeItem = document.querySelector(`.nb-page-item[onclick*="${currentPageId}"]`);
+        if (activeItem) activeItem.classList.add('active');
+      }
     }
-    const canvas = document.getElementById('nbPageContent');
-    if (canvas) canvas.focus();
   } catch (err) {
-    document.getElementById('nbSaveStatus').textContent = '\u274C Save failed';
+    document.getElementById('nbSaveStatus').textContent = '❌ Save failed';
     showToast(err.message || 'Failed to save.', 'error');
-  } finally { btn.disabled = false; btn.textContent = orig; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = orig; }
+  }
 }
 
-function newPage() {
-  clearEditor();
-  document.getElementById('nbPageTitle').focus();
-  document.querySelectorAll('.nb-page-item').forEach(el => el.classList.remove('active'));
-  showToast('New page started!', 'info');
+function scheduleAutoSave() {
+  document.getElementById('nbSaveStatus').textContent = 'Unsaved...';
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(saveCurrentPage, 3500);
 }
 
-function setupAutoSave() {
-  [document.getElementById('nbPageTitle'), document.getElementById('nbPageContent')].forEach(el => {
-    el.addEventListener('input', () => {
-      document.getElementById('nbSaveStatus').textContent = 'Unsaved...';
-      clearTimeout(autoSaveTimer);
-      autoSaveTimer = setTimeout(saveCurrentPage, 4000);
+function setupEditorListeners() {
+  const editor = document.getElementById('nbPageContent');
+  if (editor) {
+    editor.addEventListener('input', () => {
+      // Dynamically update sidebar title in real-time
+      const activeTitleEl = document.querySelector('.nb-page-item.active .nb-page-item-title');
+      if (activeTitleEl) {
+        activeTitleEl.textContent = extractAutoTitle();
+      }
       updateWordCount();
+      scheduleAutoSave();
     });
+  }
+
+  // Keyboard shortcuts (Ctrl+S, Ctrl+B, Ctrl+I, Ctrl+U)
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      saveCurrentPage();
+    }
   });
-  document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCurrentPage(); } });
 }
 
 function updateWordCount() {
-  const text = (document.getElementById('nbPageTitle').value || '') + ' ' + (document.getElementById('nbPageContent').value || '');
+  const editor = document.getElementById('nbPageContent');
+  const text = editor ? (editor.innerText || editor.textContent || '') : '';
   const w = text.trim().split(/\s+/).filter(Boolean).length;
   const el = document.getElementById('nbWordCount');
   if (el) el.textContent = w + ' word' + (w !== 1 ? 's' : '');
 }
 
-function applyFont(f) { document.getElementById('nbPageContent').style.fontFamily = f; }
-function applyFontSize(s) { document.getElementById('nbPageContent').style.fontSize = s; }
-function applyLineHeight(l) { document.getElementById('nbPageContent').style.lineHeight = l; }
+/* ── Rich Text Formatting & Alignment ── */
+function execFmt(command) {
+  const editor = document.getElementById('nbPageContent');
+  if (editor) editor.focus();
+  document.execCommand(command, false, null);
+  updateWordCount();
+  scheduleAutoSave();
+}
 
-async function exportPage(format) {
-  const title = document.getElementById('nbPageTitle').value.trim() || 'Notebook Page';
-  const content = document.getElementById('nbPageContent').value || '';
-  const safe = title.replace(/[^a-z0-9_-]/gi, '_').slice(0, 80);
-  const font = document.getElementById('nbFontFamily').value || 'Inter, sans-serif';
-  const lh = document.getElementById('nbLineHeight').value || '1.7';
-  if (format === 'txt') {
-    const blob = new Blob([title + '\n' + '='.repeat(title.length) + '\n\n' + content], { type: 'text/plain' });
-    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: safe + '.txt' });
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    showToast('Downloaded .txt', 'success');
-  } else if (format === 'pdf') {
-    if (typeof html2pdf === 'undefined') { showToast('Loading PDF engine...', 'info'); return; }
-    const div = document.createElement('div');
-    div.style.cssText = 'padding:28px;font-family:' + font + ';line-height:' + lh + ';color:#111;background:#fff;';
-    div.innerHTML = '<h1 style="font-size:22px;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:16px;">' + title + '</h1><div style="font-size:14px;white-space:pre-wrap;">' + content + '</div>';
-    html2pdf().from(div).set({ margin:[10,10,10,10], filename: safe+'.pdf', html2canvas:{scale:2}, jsPDF:{unit:'mm',format:'a4'} }).save().then(() => showToast('Downloaded .pdf','success'));
-  } else if (format === 'docx') {
-    try {
-      showToast('Generating Word doc...', 'info');
-      const r = await fetch('/api/notebooks/export/docx', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify({ notebookId: currentNotebookId, pageId: currentPageId || 0, title, htmlContent: '<h2>' + title + '</h2><p>' + content.replace(/\n/g,'<br/>') + '</p>', font: font.split(',')[0].replace(/'/g,'').trim(), lineHeight: parseFloat(lh) }) });
-      if (!r.ok) throw new Error('Server error generating DOCX');
-      const blob = await r.blob();
-      const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: safe + '.docx' });
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      showToast('Downloaded .docx', 'success');
-    } catch (err) { showToast(err.message || 'DOCX failed', 'error'); }
+function applyFont(f) {
+  const editor = document.getElementById('nbPageContent');
+  if (editor) editor.style.fontFamily = f;
+  scheduleAutoSave();
+}
+
+function applyFontSize(s) {
+  const editor = document.getElementById('nbPageContent');
+  if (editor) editor.style.fontSize = s;
+  scheduleAutoSave();
+}
+
+function applyLineHeight(l) {
+  const editor = document.getElementById('nbPageContent');
+  if (editor) editor.style.lineHeight = l;
+  scheduleAutoSave();
+}
+
+/* ── Interactive Shapes System (Draggable & Rotatable) ── */
+function handleInsertShapeSelect(selectEl) {
+  const type = selectEl.value;
+  if (!type) return;
+  insertShape(type);
+  selectEl.value = '';
+}
+
+function insertShape(type) {
+  const id = 'shape_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+  const canvas = document.getElementById('nbCanvas');
+  const canvasW = canvas ? canvas.offsetWidth : 800;
+
+  let w = 150, h = 90;
+  if (type === 'circle') { w = 110; h = 110; }
+  else if (type === 'arrow') { w = 140; h = 36; }
+  else if (type === 'line') { w = 150; h = 20; }
+  else if (type === 'callout') { w = 160; h = 80; }
+
+  const x = Math.max(30, Math.min(canvasW - w - 40, 40 + (currentShapes.length * 20) % 200));
+  const y = 40 + (currentShapes.length * 25) % 250;
+
+  const newShape = { id, type, x, y, w, h, rot: 0 };
+  currentShapes.push(newShape);
+  renderAllShapes();
+  selectShapeById(id);
+  scheduleAutoSave();
+  showToast(`Inserted ${type} shape! Drag or rotate it on canvas.`, 'info');
+}
+
+function renderAllShapes() {
+  const layer = document.getElementById('nbShapesLayer');
+  if (!layer) return;
+  layer.innerHTML = '';
+  currentShapes.forEach(shapeData => {
+    const el = createShapeElement(shapeData);
+    layer.appendChild(el);
+  });
+}
+
+function createShapeElement(shapeData) {
+  const el = document.createElement('div');
+  el.className = 'interactive-shape' + (shapeData.id === activeSelectedShapeId ? ' selected' : '');
+  el.id = shapeData.id;
+  el.style.left = shapeData.x + 'px';
+  el.style.top = shapeData.y + 'px';
+  el.style.width = shapeData.w + 'px';
+  el.style.height = shapeData.h + 'px';
+  el.style.transform = `rotate(${shapeData.rot || 0}deg)`;
+
+  // Generate shape visual graphics
+  let shapeInnerHtml = '';
+  if (shapeData.type === 'rectangle') {
+    shapeInnerHtml = '<div style="width:100%; height:100%; border:2px solid #2563eb; background:rgba(37,99,235,0.12); border-radius:6px; box-sizing:border-box;"></div>';
+  } else if (shapeData.type === 'circle') {
+    shapeInnerHtml = '<div style="width:100%; height:100%; border:2px solid #10b981; background:rgba(16,185,129,0.12); border-radius:50%; box-sizing:border-box;"></div>';
+  } else if (shapeData.type === 'arrow') {
+    shapeInnerHtml = `
+      <svg width="100%" height="100%" viewBox="0 0 100 40" preserveAspectRatio="none" style="display:block; overflow:visible;">
+        <defs>
+          <marker id="arrowhead_${shapeData.id}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#f59e0b" />
+          </marker>
+        </defs>
+        <line x1="6" y1="20" x2="84" y2="20" stroke="#f59e0b" stroke-width="5" stroke-linecap="round" marker-end="url(#arrowhead_${shapeData.id})" />
+      </svg>
+    `;
+  } else if (shapeData.type === 'line') {
+    shapeInnerHtml = `
+      <svg width="100%" height="100%" viewBox="0 0 100 20" preserveAspectRatio="none" style="display:block;">
+        <line x1="4" y1="10" x2="96" y2="10" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round" />
+      </svg>
+    `;
+  } else if (shapeData.type === 'callout') {
+    shapeInnerHtml = `
+      <div style="width:100%; height:100%; position:relative; background:rgba(244,63,94,0.12); border:2px solid #f43f5e; border-radius:8px; padding:6px 10px; font-size:12px; color:#f43f5e; font-weight:600; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">
+        Callout Note
+        <div style="position:absolute; bottom:-8px; left:18px; width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:8px solid #f43f5e;"></div>
+      </div>
+    `;
+  }
+
+  el.innerHTML = `
+    ${shapeInnerHtml}
+    <!-- Circular Rotation Widget Above Shape -->
+    <div class="shape-rot-handle" title="Click and drag to rotate shape">⟳</div>
+    <!-- 4 Corner Resize Handles -->
+    <div class="shape-resize-handle tl" data-corner="tl"></div>
+    <div class="shape-resize-handle tr" data-corner="tr"></div>
+    <div class="shape-resize-handle bl" data-corner="bl"></div>
+    <div class="shape-resize-handle br" data-corner="br"></div>
+    <!-- Delete Button -->
+    <div class="shape-delete-btn" title="Delete shape" onclick="deleteShape('${shapeData.id}')">✕</div>
+  `;
+
+  // Attach interactive drag, rotation, and resize handlers
+  bindShapeInteractions(el, shapeData);
+  return el;
+}
+
+function bindShapeInteractions(shapeEl, shapeData) {
+  // 1. Dragging behavior
+  shapeEl.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.shape-rot-handle') || e.target.closest('.shape-resize-handle') || e.target.closest('.shape-delete-btn')) {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    selectShapeById(shapeData.id);
+
+    const startPointerX = e.clientX;
+    const startPointerY = e.clientY;
+    const initialX = shapeData.x;
+    const initialY = shapeData.y;
+
+    function onPointerMove(moveEvent) {
+      const dx = moveEvent.clientX - startPointerX;
+      const dy = moveEvent.clientY - startPointerY;
+      shapeData.x = Math.max(0, initialX + dx);
+      shapeData.y = Math.max(0, initialY + dy);
+      shapeEl.style.left = shapeData.x + 'px';
+      shapeEl.style.top = shapeData.y + 'px';
+      scheduleAutoSave();
+    }
+
+    function onPointerUp() {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+    }
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+  });
+
+  // 2. Rotation behavior (calculating angle from center)
+  const rotHandle = shapeEl.querySelector('.shape-rot-handle');
+  if (rotHandle) {
+    rotHandle.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      selectShapeById(shapeData.id);
+
+      function onRotMove(moveEvent) {
+        const rect = shapeEl.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const rad = Math.atan2(moveEvent.clientY - centerY, moveEvent.clientX - centerX);
+        let deg = Math.round((rad * (180 / Math.PI)) + 90);
+        if (deg < 0) deg += 360;
+
+        shapeData.rot = deg;
+        shapeEl.style.transform = `rotate(${deg}deg)`;
+        scheduleAutoSave();
+      }
+
+      function onRotUp() {
+        window.removeEventListener('pointermove', onRotMove);
+        window.removeEventListener('pointerup', onRotUp);
+      }
+
+      window.addEventListener('pointermove', onRotMove);
+      window.addEventListener('pointerup', onRotUp);
+    });
+  }
+
+  // 3. Resizing behavior on corner handles
+  shapeEl.querySelectorAll('.shape-resize-handle').forEach(handle => {
+    handle.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      selectShapeById(shapeData.id);
+
+      const corner = handle.getAttribute('data-corner');
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const initW = shapeData.w;
+      const initH = shapeData.h;
+      const initX = shapeData.x;
+      const initY = shapeData.y;
+
+      function onResizeMove(moveEvent) {
+        const dx = moveEvent.clientX - startX;
+        const dy = moveEvent.clientY - startY;
+
+        let newW = initW;
+        let newH = initH;
+        let newX = initX;
+        let newY = initY;
+
+        if (corner === 'br') {
+          newW = Math.max(30, initW + dx);
+          newH = Math.max(20, initH + dy);
+        } else if (corner === 'bl') {
+          newW = Math.max(30, initW - dx);
+          newH = Math.max(20, initH + dy);
+          newX = initX + (initW - newW);
+        } else if (corner === 'tr') {
+          newW = Math.max(30, initW + dx);
+          newH = Math.max(20, initH - dy);
+          newY = initY + (initH - newH);
+        } else if (corner === 'tl') {
+          newW = Math.max(30, initW - dx);
+          newH = Math.max(20, initH - dy);
+          newX = initX + (initW - newW);
+          newY = initY + (initH - newH);
+        }
+
+        shapeData.w = Math.round(newW);
+        shapeData.h = Math.round(newH);
+        shapeData.x = Math.round(newX);
+        shapeData.y = Math.round(newY);
+
+        shapeEl.style.width = shapeData.w + 'px';
+        shapeEl.style.height = shapeData.h + 'px';
+        shapeEl.style.left = shapeData.x + 'px';
+        shapeEl.style.top = shapeData.y + 'px';
+        scheduleAutoSave();
+      }
+
+      function onResizeUp() {
+        window.removeEventListener('pointermove', onResizeMove);
+        window.removeEventListener('pointerup', onResizeUp);
+      }
+
+      window.addEventListener('pointermove', onResizeMove);
+      window.addEventListener('pointerup', onResizeUp);
+    });
+  });
+}
+
+function selectShapeById(id) {
+  activeSelectedShapeId = id;
+  document.querySelectorAll('.interactive-shape').forEach(el => {
+    if (el.id === id) el.classList.add('selected');
+    else el.classList.remove('selected');
+  });
+}
+
+function deselectAllShapes() {
+  activeSelectedShapeId = null;
+  document.querySelectorAll('.interactive-shape').forEach(el => el.classList.remove('selected'));
+}
+
+function deleteShape(id) {
+  currentShapes = currentShapes.filter(s => s.id !== id);
+  if (activeSelectedShapeId === id) activeSelectedShapeId = null;
+  renderAllShapes();
+  scheduleAutoSave();
+  showToast('Shape removed.', 'info');
+}
+
+function handleCanvasContainerClick(event) {
+  if (!event.target.closest('.interactive-shape')) {
+    deselectAllShapes();
   }
 }
 
-function escapeHtml(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+/* ── Document Import & Export System ── */
+function triggerImportDocument() {
+  const input = document.getElementById('nbFileInput');
+  if (input) input.click();
+}
+
+function handleImportFile(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const raw = e.target.result || '';
+    const editor = document.getElementById('nbPageContent');
+    if (!editor) return;
+
+    // Convert double linebreaks to paragraphs for clean rich formatting
+    const paragraphs = raw.split(/\r?\n\r?\n/).map(para => {
+      const clean = escapeHtml(para.trim()).replace(/\r?\n/g, '<br>');
+      return clean ? `<p>${clean}</p>` : '';
+    }).filter(Boolean).join('');
+
+    editor.innerHTML = paragraphs || `<p>${escapeHtml(raw)}</p>`;
+    currentShapes = [];
+    renderAllShapes();
+
+    updateWordCount();
+    const activeTitleEl = document.querySelector('.nb-page-item.active .nb-page-item-title');
+    if (activeTitleEl) activeTitleEl.textContent = extractAutoTitle();
+
+    showToast(`Imported "${file.name}" cleanly!`, 'success');
+    saveCurrentPage();
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+async function exportPage(format) {
+  const title = extractAutoTitle();
+  const editor = document.getElementById('nbPageContent');
+  const textContent = editor ? (editor.innerText || editor.textContent || '') : '';
+  const htmlContent = editor ? editor.innerHTML : '';
+  const safeName = title.replace(/[^a-z0-9_-]/gi, '_').slice(0, 80) || 'Notebook_Page';
+  const font = document.getElementById('nbFontFamily').value || 'Inter, sans-serif';
+  const lh = document.getElementById('nbLineHeight').value || '1.7';
+
+  if (format === 'txt') {
+    const blob = new Blob([title + '\n' + '='.repeat(Math.max(title.length, 12)) + '\n\n' + textContent], { type: 'text/plain;charset=utf-8' });
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: safeName + '.txt' });
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    showToast('Downloaded .txt', 'success');
+  } else if (format === 'pdf') {
+    if (typeof html2pdf === 'undefined') {
+      showToast('Loading PDF engine...', 'info');
+      return;
+    }
+    const pdfContainer = document.createElement('div');
+    pdfContainer.style.cssText = `padding:28px; font-family:${font}; line-height:${lh}; color:#0f172a; background:#ffffff; position:relative;`;
+    pdfContainer.innerHTML = `
+      <h1 style="font-size:24px; font-weight:800; border-bottom:2px solid #0f172a; padding-bottom:8px; margin-bottom:20px;">${escapeHtml(title)}</h1>
+      <div style="font-size:14px; position:relative; min-height:300px;">
+        ${htmlContent}
+      </div>
+    `;
+
+    html2pdf().from(pdfContainer).set({
+      margin: [10, 10, 10, 10],
+      filename: safeName + '.pdf',
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).save().then(() => showToast('Downloaded .pdf', 'success'));
+  } else if (format === 'docx') {
+    try {
+      showToast('Generating Word doc...', 'info');
+      const r = await fetch('/api/notebooks/export/docx', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          notebookId: currentNotebookId,
+          pageId: currentPageId || 0,
+          title,
+          htmlContent: `<h2>${escapeHtml(title)}</h2><div>${htmlContent}</div>`,
+          font: font.split(',')[0].replace(/'/g, '').trim(),
+          lineHeight: parseFloat(lh)
+        })
+      });
+      if (!r.ok) throw new Error('Server error generating DOCX');
+      const blob = await r.blob();
+      const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: safeName + '.docx' });
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      showToast('Downloaded .docx', 'success');
+    } catch (err) {
+      showToast(err.message || 'DOCX download failed', 'error');
+    }
+  }
+}
+
+function escapeHtml(s) {
+  return s ? String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') : '';
+}
+
 function showToast(msg, type) {
   const c = document.getElementById('toastContainer');
   if (!c) return;
   const t = document.createElement('div');
-  t.className = 'toast ' + (type||'success');
+  t.className = 'toast ' + (type || 'success');
   t.textContent = msg;
   c.appendChild(t);
   setTimeout(() => t.remove(), 3500);

@@ -90,7 +90,7 @@ async function loadNotebookPages(groupId = null) {
               ${escapeHtml(title)}
               <span style="font-size:10px; padding:2px 7px; background:rgba(82,214,138,0.12); color:#52D68A; border-radius:10px; font-weight:600; white-space:nowrap;">↗ Edit</span>
             </h4>
-            <p style="white-space:pre-wrap;">${escapeHtml(content.slice(0, 200))}${content.length > 200 ? '…' : ''}</p>
+            <p style="white-space:pre-wrap;">${escapeHtml((content || '').replace(/^<!--GS_SHAPES_JSON:.*?-->/, '').replace(/<[^>]*>/g, '').trim().slice(0, 200))}${(content || '').length > 200 ? '…' : ''}</p>
           </div>
           <div onclick="event.stopPropagation();">
             ${tags ? `

@@ -1368,7 +1368,7 @@ async function loadNotebook(query = '') {
             ${escapeHtml(n.title || 'Untitled')}
             <span style="font-size:11px; padding:2px 8px; background:rgba(82,214,138,0.15); color:#52D68A; border-radius:12px; font-weight:600; white-space:nowrap;">↗ Edit</span>
           </h4>
-          <p style="white-space:pre-wrap;">${escapeHtml(n.content || '')}</p>
+          <p style="white-space:pre-wrap;">${escapeHtml((n.content || '').replace(/^<!--GS_SHAPES_JSON:.*?-->/, '').replace(/<[^>]*>/g, '').trim())}</p>
         </div>
         <div onclick="event.stopPropagation();">
           ${n.tags ? `
