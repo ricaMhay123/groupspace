@@ -685,7 +685,7 @@ function injectPersonalFeedDrawer() {
     ">
       <div style="padding:20px 18px 14px; border-bottom:1px solid var(--border,#2B342F); display:flex; justify-content:space-between; align-items:center;">
         <div>
-          <h3 style="margin:0; font-size:16px; font-weight:700; color:var(--text,#E1E7E3);">🔔 My Feed</h3>
+          <h3 style="margin:0; font-size:16px; font-weight:700; color:var(--text,#E1E7E3);">My Feed</h3>
           <p style="margin:4px 0 0; font-size:12px; color:var(--gray,#7A8C84);">Mentions, approvals & help requests</p>
         </div>
         <button onclick="openPersonalFeedDrawer()" style="background:none; border:none; color:var(--gray,#7A8C84); font-size:18px; cursor:pointer; padding:4px 8px;">✕</button>
@@ -694,20 +694,6 @@ function injectPersonalFeedDrawer() {
         <p style="color:var(--gray,#7A8C84); text-align:center; padding:30px 0;">Loading feed...</p>
       </div>
     </div>
-    <button id="feedBellBtn" onclick="openPersonalFeedDrawer()" title="Open Personal Feed" style="
-      position:fixed; bottom:24px; right:24px; z-index:9998;
-      width:48px; height:48px; border-radius:50%; border:none;
-      background:var(--primary,#52D68A); color:#fff; font-size:20px;
-      cursor:pointer; box-shadow:0 4px 16px rgba(82,214,138,0.4);
-      display:flex; align-items:center; justify-content:center;
-      transition:transform 0.2s; animation: feedPulse 2.5s infinite;
-    ">🔔</button>
-    <style>
-      @keyframes feedPulse {
-        0%,100%{box-shadow:0 4px 16px rgba(82,214,138,0.4);}
-        50%{box-shadow:0 4px 28px rgba(82,214,138,0.75);}
-      }
-    </style>
   `;
   document.body.insertAdjacentHTML('beforeend', drawerHtml);
 }
@@ -725,13 +711,6 @@ async function renderPersonalFeed() {
     const helpRequests = data.helpRequests || [];
 
     const total = mentions.length + pendingApprovals.length + helpRequests.length;
-
-    // Update bell badge
-    const bellBtn = document.getElementById('feedBellBtn');
-    if (bellBtn) {
-      bellBtn.innerHTML = total > 0 ? `🔔<span style="position:absolute;top:6px;right:6px;background:#FF5252;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;">${total > 9 ? '9+' : total}</span>` : '🔔';
-      if (total > 0) bellBtn.style.position = 'fixed';
-    }
 
     if (total === 0) {
       content.innerHTML = `
@@ -800,9 +779,10 @@ async function renderPersonalFeed() {
   }
 }
 
-// Auto-inject drawer when dashboard loads
+// Clean up any lingering floating bell button if present in DOM
 document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(injectPersonalFeedDrawer, 500);
+  const legacyBell = document.getElementById('feedBellBtn');
+  if (legacyBell) legacyBell.remove();
 });
 
 // ================= TAB 4: EXPENSES & SETTLEMENTS ================= //
