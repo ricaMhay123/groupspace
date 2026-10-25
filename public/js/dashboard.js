@@ -134,6 +134,23 @@ async function switchWorkspace(groupId) {
   currentGroupId = Number(groupId);
   localStorage.setItem('groupspace_active_group_id', currentGroupId);
 
+  // Reset discussions state to prevent leaking previous workspace topic/comments
+  activeTopicId = null;
+  const activeTopicTitle = document.getElementById('activeTopicTitle');
+  if (activeTopicTitle) activeTopicTitle.textContent = 'Select a Topic';
+  const commentsContainer = document.getElementById('commentsContainer');
+  if (commentsContainer) {
+    commentsContainer.innerHTML = '<p style="color:var(--gray); text-align:center; padding:30px;">Click on a topic to view its replies and thread discussion.</p>';
+  }
+  const postCommentForm = document.getElementById('postCommentForm');
+  if (postCommentForm) postCommentForm.style.display = 'none';
+  if (typeof window.resetDiscussionMentions === 'function') {
+    window.resetDiscussionMentions();
+  }
+  if (typeof window.refreshAppFeed === 'function') {
+    window.refreshAppFeed();
+  }
+
   try {
     const res = await apiFetch(`/api/groups/${currentGroupId}`);
     currentGroupDetails = res.data;
@@ -946,7 +963,7 @@ async function selectTopic(topicId, title) {
         <div class="chat-avatar">${c.user_initials || 'GS'}</div>
         <div class="chat-content">
           <h4>${escapeHtml(c.user_name)}</h4>
-          <p>${escapeHtml(c.content)}</p>
+          <p>${typeof window.highlightMentions === 'function' ? window.highlightMentions(c.content) : escapeHtml(c.content)}</p>
           <span>${formatDate(c.created_at)}</span>
         </div>
       </div>

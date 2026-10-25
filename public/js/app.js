@@ -70,12 +70,20 @@
   async function loadFeed() {
     const body = $('feedBody');
     try {
-      const res = await apiFetch('/api/user/personal-feed');
+      const activeGroupId = (typeof currentGroupId !== 'undefined' && currentGroupId)
+        ? currentGroupId
+        : localStorage.getItem('groupspace_active_group_id');
+      const url = activeGroupId
+        ? `/api/user/personal-feed?groupId=${encodeURIComponent(activeGroupId)}`
+        : '/api/user/personal-feed';
+      const res = await apiFetch(url);
       renderFeed(res.data || {});
     } catch (err) {
       if (body) body.innerHTML = `<p style="color:#dc2626;">${esc(err.message || 'Failed to load feed.')}</p>`;
     }
   }
+
+  window.refreshAppFeed = loadFeed;
 
   document.addEventListener('DOMContentLoaded', () => {
     const btn = $('notificationFeedBtn');

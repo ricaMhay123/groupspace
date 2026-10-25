@@ -14,6 +14,8 @@ router.use(requireGroupMembership);
 router.get('/', discussionController.getTopics);
 router.post('/', discussionController.createTopic);
 router.get('/activity', discussionController.getActivity);
+router.get('/mentions/users', discussionController.getMentionableUsers);
+router.get('/mentions/tasks', discussionController.getMentionableTasks);
 router.get('/:topicId', discussionController.getTopicDetails);
 router.post('/:topicId/comments', discussionController.postComment);
 router.delete('/:topicId', discussionController.removeTopic);

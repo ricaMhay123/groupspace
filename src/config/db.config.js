@@ -330,6 +330,23 @@ async function initDb() {
     try { await sql`ALTER TABLE personal_items ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'Personal'`; } catch (e) {}
     try { await sql`ALTER TABLE personal_items ADD COLUMN IF NOT EXISTS due_date TIMESTAMPTZ`; } catch (e) {}
 
+    // discussion_mentions — every row is pinned to one workspace (group_id)
+    try {
+      await sql`
+        CREATE TABLE IF NOT EXISTS discussion_mentions (
+          id SERIAL PRIMARY KEY,
+          group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+          discussion_id INTEGER NOT NULL REFERENCES discussions(id) ON DELETE CASCADE,
+          comment_id INTEGER NOT NULL REFERENCES discussion_comments(id) ON DELETE CASCADE,
+          mentioned_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          task_id INTEGER REFERENCES tasks(id) ON DELETE SET NULL,
+          author_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+      `;
+      await sql`CREATE INDEX IF NOT EXISTS idx_discussion_mentions_user_group ON discussion_mentions (mentioned_user_id, group_id)`;
+    } catch (e) { console.error('discussion_mentions init failed:', e.message); }
+
     // Standardize group_members roles strictly as 'leader' | 'member'
     try { await sql`ALTER TABLE group_members ALTER COLUMN role SET DEFAULT 'member'`; } catch (e) {}
     try { await sql`UPDATE group_members SET role = LOWER(role) WHERE role <> LOWER(role)`; } catch (e) {}

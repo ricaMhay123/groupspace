@@ -76,7 +76,7 @@ async function postComment(req, res) {
       data: comment
     });
   } catch (error) {
-    return res.status(HTTP_STATUS.BAD_REQUEST).json({
+    return res.status(error.status || HTTP_STATUS.BAD_REQUEST).json({
       success: false,
       message: error.message
     });
@@ -97,7 +97,7 @@ async function removeTopic(req, res) {
       message: 'Topic deleted.'
     });
   } catch (error) {
-    return res.status(HTTP_STATUS.BAD_REQUEST).json({
+    return res.status(error.status || HTTP_STATUS.BAD_REQUEST).json({
       success: false,
       message: error.message
     });
@@ -112,7 +112,37 @@ async function getActivity(req, res) {
       data: activity
     });
   } catch (error) {
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+    return res.status(error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+async function getMentionableUsers(req, res) {
+  try {
+    const users = await discussionService.getMentionableUsers(req.params.groupId, req.query.q || '');
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: users
+    });
+  } catch (error) {
+    return res.status(error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+async function getMentionableTasks(req, res) {
+  try {
+    const tasks = await discussionService.getMentionableTasks(req.params.groupId, req.query.q || '');
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: tasks
+    });
+  } catch (error) {
+    return res.status(error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: error.message
     });
@@ -125,5 +155,8 @@ module.exports = {
   createTopic,
   postComment,
   removeTopic,
-  getActivity
+  getActivity,
+  getMentionableUsers,
+  getMentionableTasks
 };
+

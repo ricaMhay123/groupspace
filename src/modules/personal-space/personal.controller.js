@@ -107,11 +107,28 @@ async function getPersonalFeed(req, res) {
       WHERE gm.user_id = ${userId}
     `;
 
-    const groupIds = memberships.map(m => m.group_id);
-    const leaderGroupIds = memberships.filter(m => m.role === 'leader').map(m => m.group_id);
+    const userGroupIds = memberships.map(m => m.group_id);
+    const userLeaderGroupIds = memberships.filter(m => m.role === 'leader').map(m => m.group_id);
 
-    // Early return if user has no memberships (ANY() fails on empty arrays in Neon)
-    if (groupIds.length === 0) {
+    // If active workspace specified in query, scope strictly to it
+    const requestedGroupId = req.query.groupId || req.query.group_id ? Number(req.query.groupId || req.query.group_id) : null;
+    let targetGroupIds = userGroupIds;
+    let targetLeaderGroupIds = userLeaderGroupIds;
+
+    if (requestedGroupId) {
+      if (!userGroupIds.includes(requestedGroupId)) {
+        // User is not a member of the requested workspace
+        return res.status(HTTP_STATUS.OK).json({
+          success: true,
+          data: { pendingApprovals: [], helpRequests: [], mentions: [] }
+        });
+      }
+      targetGroupIds = [requestedGroupId];
+      targetLeaderGroupIds = userLeaderGroupIds.includes(requestedGroupId) ? [requestedGroupId] : [];
+    }
+
+    // Early return if user has no memberships or target is empty
+    if (targetGroupIds.length === 0) {
       return res.status(HTTP_STATUS.OK).json({
         success: true,
         data: { pendingApprovals: [], helpRequests: [], mentions: [] }
@@ -123,7 +140,7 @@ async function getPersonalFeed(req, res) {
     let mentions = [];
 
     // Pending approval tasks — only shown to leaders
-    if (leaderGroupIds.length > 0) {
+    if (targetLeaderGroupIds.length > 0) {
       pendingApprovals = await sql`
         SELECT t.id, t.title, t.description, t.group_id,
                u.full_name AS creator_name, a.full_name AS assignee_name
@@ -131,26 +148,26 @@ async function getPersonalFeed(req, res) {
         LEFT JOIN users u ON t.created_by_user_id = u.id
         LEFT JOIN users a ON t.assigned_to_user_id = a.id
         WHERE t.status = 'PENDING_APPROVAL'
-          AND t.group_id = ANY(${leaderGroupIds}::int[])
+          AND t.group_id = ANY(${targetLeaderGroupIds}::int[])
         ORDER BY t.updated_at DESC
         LIMIT 20
       `;
     }
 
-    // Flagged (help needed) tasks — shown to all group members
+    // Flagged (help needed) tasks — shown to group members
     helpRequests = await sql`
       SELECT t.id, t.title, t.flagged_reason, t.group_id,
              a.full_name AS assignee_name
       FROM tasks t
       LEFT JOIN users a ON t.assigned_to_user_id = a.id
       WHERE t.is_flagged = TRUE
-        AND t.group_id = ANY(${groupIds}::int[])
+        AND t.group_id = ANY(${targetGroupIds}::int[])
         AND (t.assigned_to_user_id IS NULL OR t.assigned_to_user_id != ${userId})
       ORDER BY t.flagged_at DESC NULLS LAST
       LIMIT 20
     `;
 
-    // @mentions in discussion comments (content contains @username)
+    // @mentions in discussion comments (via discussion_mentions table or @username pattern)
     const fullName = (req.user.full_name || '').toLowerCase().trim();
     const handles = new Set([
       fullName.split(/\s+/)[0],
@@ -158,20 +175,25 @@ async function getPersonalFeed(req, res) {
       (req.user.email || '').split('@')[0].toLowerCase()
     ]);
     const patterns = [...handles].filter(Boolean).map(h => `%@${h}%`);
-    if (patterns.length > 0) {
-      mentions = await sql`
-        SELECT dc.id, dc.content, dc.created_at,
-               u.full_name AS author_name, d.group_id
-        FROM discussion_comments dc
-        JOIN discussions d ON dc.discussion_id = d.id
-        JOIN users u ON dc.user_id = u.id
-        WHERE d.group_id = ANY(${groupIds}::int[])
-          AND LOWER(dc.content) LIKE ANY(${patterns}::text[])
-          AND dc.user_id != ${userId}
-        ORDER BY dc.created_at DESC
-        LIMIT 20
-      `;
-    }
+
+    mentions = await sql`
+      SELECT dc.id, dc.content, dc.created_at,
+             u.full_name AS author_name, d.group_id, d.title AS topic_title
+      FROM discussion_comments dc
+      JOIN discussions d ON dc.discussion_id = d.id
+      JOIN users u ON dc.user_id = u.id
+      WHERE d.group_id = ANY(${targetGroupIds}::int[])
+        AND dc.user_id != ${userId}
+        AND (
+          EXISTS (
+            SELECT 1 FROM discussion_mentions dm
+            WHERE dm.comment_id = dc.id AND dm.mentioned_user_id = ${userId}
+          )
+          ${patterns.length > 0 ? sql`OR LOWER(dc.content) LIKE ANY(${patterns}::text[])` : sql``}
+        )
+      ORDER BY dc.created_at DESC
+      LIMIT 20
+    `;
 
     return res.status(HTTP_STATUS.OK).json({
       success: true,
