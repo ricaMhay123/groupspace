@@ -335,27 +335,26 @@ function renderHomespaceScratchpadHtml(personalNotes, inputId) {
     <div class="dashboard-panel" style="border-top:3px solid var(--secondary, #10b981);">
       <div class="panel-header">
         <div style="display:flex; align-items:center; gap:8px;">
-          <h3 style="margin:0;">📝 Quick Scratchpad / Personal Notes</h3>
+          <h3 style="margin:0;">Quick Scratchpad</h3>
         </div>
-        <button onclick="switchTab('personal')" class="btn-outline" style="padding:4px 10px; font-size:12px;">Open Space 🔒</button>
+        <button onclick="switchTab('personal')" class="btn-outline" style="padding:4px 10px; font-size:12px;">Open Space</button>
       </div>
       <div style="padding:14px 16px;">
         <div style="display:flex; gap:8px; margin-bottom:12px;">
           <input type="text" id="${inputId}" class="form-control" placeholder="Quick personal reminder or note..." style="font-size:12px; padding:7px 10px; flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();saveHomespaceScratchpad('${inputId}');}">
-          <button type="button" class="btn-green" style="padding:7px 14px; font-size:12px; font-weight:600; white-space:nowrap;" onclick="saveHomespaceScratchpad('${inputId}')">+ Save</button>
+          <button type="button" class="btn-green" style="padding:7px 14px; font-size:12px; font-weight:600; white-space:nowrap;" onclick="saveHomespaceScratchpad('${inputId}')">Save</button>
         </div>
         <div style="display:flex; flex-direction:column; gap:8px; max-height:230px; overflow-y:auto;">
           ${notes.length === 0 ? `
             <div style="text-align:center; padding:18px 10px; color:var(--gray);">
-              <span style="font-size:1.5rem; display:block; margin-bottom:4px;">📌</span>
-              <p style="margin:0; font-size:12px;">Private to you. Save quick personal reminders, bookmarks, or thoughts here.</p>
+              <p style="margin:0; font-size:12px;">Private reminders and personal notes saved here.</p>
             </div>
           ` : notes.map(n => `
             <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:8px 10px; background:var(--muted, #f8fafc); border:1px solid var(--border); border-radius:8px;">
               <div style="flex:1; min-width:0;">
                 <div style="font-size:12px; font-weight:600; color:var(--text); word-break:break-word;">${escapeHtml(n.title || n.content || 'Personal Note')}</div>
                 ${n.content && n.content !== n.title ? `<div style="font-size:11px; color:var(--gray); margin-top:2px; word-break:break-word;">${escapeHtml(n.content)}</div>` : ''}
-                <div style="font-size:10px; color:var(--gray); margin-top:2px;">🔒 Only visible to you · ${formatDate(n.created_at)}</div>
+                <div style="font-size:10px; color:var(--gray); margin-top:2px;">Private · ${formatDate(n.created_at)}</div>
               </div>
               <button type="button" class="btn-outline" style="padding:2px 6px; font-size:11px; color:var(--gray); border-color:var(--border); border-radius:4px; cursor:pointer;" onclick="deleteHomespaceScratchpadNote(${n.id}, event)" title="Delete reminder">
                 ✕
@@ -412,8 +411,7 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
 
   const pendingHtml = pendingTasks.length === 0
     ? `
-      <div style="text-align:center; padding:32px 20px; color:var(--gray);">
-        <div style="font-size:2rem; margin-bottom:6px;">✅</div>
+      <div style="text-align:center; padding:28px 20px; color:var(--gray);">
         <h4 style="margin:0 0 4px 0; font-size:14px; font-weight:700; color:var(--text);">All Tasks Approved</h4>
         <p style="margin:0; font-size:12px;">There are no tasks currently awaiting review.</p>
       </div>
@@ -428,16 +426,16 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
                 <strong style="font-size:14px; color:var(--text);">${escapeHtml(t.title)}</strong>
               </div>
               <div style="font-size:12px; color:var(--gray); display:flex; gap:12px; flex-wrap:wrap;">
-                <span>👤 Assignee: <strong>${escapeHtml(t.assignee_name || 'Unassigned')}</strong></span>
-                <span>📅 Due: ${t.due_date ? formatDate(t.due_date) : 'No due date'}</span>
+                <span>Assignee: <strong>${escapeHtml(t.assignee_name || 'Unassigned')}</strong></span>
+                <span>Due: ${t.due_date ? formatDate(t.due_date) : 'No due date'}</span>
               </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
               <button type="button" class="btn-green" style="padding:6px 14px; font-size:12px; font-weight:600; border-radius:8px; cursor:pointer;" onclick="approveTaskInline(${t.id}, event)">
-                ✓ Approve
+                Approve
               </button>
               <button type="button" class="btn-outline" style="padding:6px 14px; font-size:12px; font-weight:600; color:#dc2626; border-color:#fca5a5; border-radius:8px; cursor:pointer;" onclick="rejectTaskInline(${t.id}, '${escapeHtml(t.title).replace(/'/g, "\\'")}', event)">
-                ✕ Reject
+                Reject
               </button>
             </div>
           </div>
@@ -460,14 +458,14 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
         </div>
         <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
           ${isSelf ? `
-            <span class="status online" style="font-size:11px; font-weight:700;">👑 Leader</span>
+            <span class="status online" style="font-size:11px; font-weight:700;">Leader</span>
           ` : `
             <select onchange="changeMemberRole(${m.user_id}, this.value)" style="font-size:11px; padding:3px 6px; border-radius:6px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer;">
               <option value="leader" ${m.role === 'leader' ? 'selected' : ''}>Leader</option>
               <option value="member" ${m.role === 'member' ? 'selected' : ''}>Member</option>
             </select>
             <button type="button" class="btn-outline" style="padding:3px 8px; font-size:11px; color:#dc2626; border-color:#fca5a5; border-radius:6px; cursor:pointer;" onclick="removeMemberFromWorkspace(${m.user_id}, '${escapeHtml(m.full_name).replace(/'/g, "\\'")}')" title="Remove member">
-              🗑️
+              Remove
             </button>
           `}
         </div>
@@ -495,7 +493,7 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
         <div class="dashboard-panel" style="border-top:3px solid #f59e0b;">
           <div class="panel-header">
             <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0;">🛡️ Pending Task Approvals</h3>
+              <h3 style="margin:0;">Pending Task Approvals</h3>
               <span class="col-badge" style="background:#fef3c7; color:#92400e; font-weight:700;">${pendingTasks.length}</span>
             </div>
             <span style="font-size:12px; color:var(--gray);">Dual-approval quality gate</span>
@@ -509,7 +507,7 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
         <div class="dashboard-panel" style="border-top:3px solid var(--primary);">
           <div class="panel-header">
             <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0;">⚙️ Workspace Settings & Controls</h3>
+              <h3 style="margin:0;">Workspace Settings & Controls</h3>
               <span class="status online" style="font-size:11px; font-weight:700;">LEADER</span>
             </div>
             <span style="font-size:12px; color:var(--gray);">Active Workspace</span>
@@ -532,7 +530,7 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
               </div>
               <div style="display:flex; align-items:center; gap:8px;">
                 <strong style="color:var(--primary); font-size:14px; letter-spacing:1px; background:#eef2ff; padding:4px 10px; border-radius:6px; border:1px solid #c7d2fe;" id="leaderJoinCodeDisplay">${escapeHtml(currentGroupDetails.join_code)}</strong>
-                <button type="button" class="btn-outline" style="padding:6px 12px; font-size:12px; font-weight:600; border-radius:6px;" onclick="resetWorkspaceInviteCode()">🔄 Reset Code</button>
+                <button type="button" class="btn-outline" style="padding:6px 12px; font-size:12px; font-weight:600; border-radius:6px;" onclick="resetWorkspaceInviteCode()">Reset Code</button>
               </div>
             </div>
 
@@ -591,7 +589,7 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
         <div class="dashboard-panel" style="border-top:3px solid var(--primary);">
           <div class="panel-header">
             <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0;">👥 Workspace Roster & Roles</h3>
+              <h3 style="margin:0;">Workspace Roster & Roles</h3>
               <span class="status online" style="font-size:11px; font-weight:700;">LEADER</span>
             </div>
             <span style="font-size:12px; color:var(--gray);">${members.length} members</span>
@@ -620,9 +618,8 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
 
   const deliverablesHtml = myAssignedDeliverables.length === 0
     ? `
-      <div style="text-align:center; padding:32px 20px; color:var(--gray);">
-        <div style="font-size:2rem; margin-bottom:6px;">✨</div>
-        <h4 style="margin:0 0 4px 0; font-size:14px; font-weight:700; color:var(--text);">All Caught Up!</h4>
+      <div style="text-align:center; padding:28px 20px; color:var(--gray);">
+        <h4 style="margin:0 0 4px 0; font-size:14px; font-weight:700; color:var(--text);">All Caught Up</h4>
         <p style="margin:0; font-size:12px;">You have no active deliverables assigned to you right now.</p>
       </div>
     `
@@ -639,8 +636,8 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
                   <strong style="font-size:14px; color:var(--text);">${escapeHtml(t.title)}</strong>
                 </div>
                 <div style="font-size:12px; color:var(--gray); display:flex; gap:12px; flex-wrap:wrap;">
-                  <span>Status: <strong style="color:${isPending ? '#d97706' : 'var(--text)'};">${isPending ? '⏳ Awaiting Leader Review' : escapeHtml(statusDisplay)}</strong></span>
-                  <span>📅 Due: ${t.due_date ? formatDate(t.due_date) : 'No due date'}</span>
+                  <span>Status: <strong style="color:${isPending ? '#d97706' : 'var(--text)'};">${isPending ? 'Awaiting Review' : escapeHtml(statusDisplay)}</strong></span>
+                  <span>Due: ${t.due_date ? formatDate(t.due_date) : 'No due date'}</span>
                 </div>
               </div>
               <div style="display:flex; align-items:center; gap:8px;">
@@ -665,7 +662,7 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
             <div style="color:var(--gray); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(l.email)}</div>
           </div>
         </div>
-        <span style="font-size:11px; font-weight:700; color:var(--primary); background:#eef2ff; padding:2px 8px; border-radius:6px;">👑 Leader</span>
+        <span style="font-size:11px; font-weight:700; color:var(--primary); background:#eef2ff; padding:2px 8px; border-radius:6px;">Leader</span>
       </div>
     `).join('');
 
@@ -706,7 +703,7 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
         <div class="dashboard-panel" style="border-top:3px solid var(--primary);">
           <div class="panel-header">
             <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0;">📋 My Assigned Deliverables</h3>
+              <h3 style="margin:0;">My Assigned Deliverables</h3>
               <span class="col-badge" style="background:#e0e7ff; color:#3730a3; font-weight:700;">${myAssignedDeliverables.length}</span>
             </div>
             <span style="font-size:12px; color:var(--gray);">Active assigned deliverables</span>
@@ -720,7 +717,7 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
         <div class="dashboard-panel" style="border-top:3px solid var(--primary);">
           <div class="panel-header">
             <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0;">⚙️ Personal Profile & Preferences</h3>
+              <h3 style="margin:0;">Personal Profile & Preferences</h3>
               <span class="status pending" style="font-size:11px;">MEMBER</span>
             </div>
             <span style="font-size:12px; color:var(--gray);">Account & View Controls</span>
@@ -766,12 +763,12 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
                 <div>
                   <label style="display:block; font-size:12px; color:var(--gray); margin-bottom:4px;">Default Landing Tab</label>
                   <select class="form-control" style="font-size:12px; padding:6px 10px;" onchange="saveMemberPref('landing_view', this.value)">
-                    <option value="overview" ${prefLanding === 'overview' ? 'selected' : ''}>🏠 Homespace</option>
-                    <option value="tasks" ${prefLanding === 'tasks' ? 'selected' : ''}>📋 Tasks (Kanban)</option>
-                    <option value="calendar" ${prefLanding === 'calendar' ? 'selected' : ''}>📅 Calendar</option>
-                    <option value="notebook" ${prefLanding === 'notebook' ? 'selected' : ''}>📝 Notebook</option>
-                    <option value="expenses" ${prefLanding === 'expenses' ? 'selected' : ''}>💰 Expenses</option>
-                    <option value="discussions" ${prefLanding === 'discussions' ? 'selected' : ''}>💬 Discussions</option>
+                    <option value="overview" ${prefLanding === 'overview' ? 'selected' : ''}>Homespace</option>
+                    <option value="tasks" ${prefLanding === 'tasks' ? 'selected' : ''}>Tasks</option>
+                    <option value="calendar" ${prefLanding === 'calendar' ? 'selected' : ''}>Calendar</option>
+                    <option value="notebook" ${prefLanding === 'notebook' ? 'selected' : ''}>Notebook</option>
+                    <option value="expenses" ${prefLanding === 'expenses' ? 'selected' : ''}>Expenses</option>
+                    <option value="discussions" ${prefLanding === 'discussions' ? 'selected' : ''}>Discussions</option>
                   </select>
                 </div>
                 <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); cursor:pointer;">
@@ -812,14 +809,14 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
         <div class="dashboard-panel" style="border-top:3px solid var(--primary);">
           <div class="panel-header">
             <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0;">👥 Workspace Teammates</h3>
+              <h3 style="margin:0;">Workspace Teammates</h3>
               <span class="status pending" style="font-size:11px;">MEMBER</span>
             </div>
             <span style="font-size:12px; color:var(--gray);">${members.length} members</span>
           </div>
           <div style="padding:12px 14px;">
             <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:var(--gray); margin-bottom:8px;">
-              👑 Workspace Leader
+              Workspace Leader
             </div>
             ${leadersHtml}
 
@@ -851,7 +848,7 @@ function openWorkspaceSettingsModal() {
   const currentUserId = currentUser ? currentUser.id : null;
 
   if (isLeader) {
-    if (modalTitle) modalTitle.innerHTML = '⚙️ Leader Workspace Settings';
+    if (modalTitle) modalTitle.innerHTML = 'Leader Workspace Settings';
     const requireApproval = settings.requireApproval !== false;
     const allowDiscussions = settings.allowMemberDiscussions !== false;
     const restrictExpenses = settings.restrictExpensesToLeaders === true;
@@ -875,7 +872,7 @@ function openWorkspaceSettingsModal() {
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
             <strong style="color:var(--primary); font-size:14px; letter-spacing:1px; background:#eef2ff; padding:4px 10px; border-radius:6px; border:1px solid #c7d2fe;" id="modalJoinCodeDisplay">${escapeHtml(currentGroupDetails.join_code)}</strong>
-            <button type="button" class="btn-outline" style="padding:6px 12px; font-size:12px; font-weight:600; border-radius:6px;" onclick="resetWorkspaceInviteCode()">🔄 Reset Code</button>
+            <button type="button" class="btn-outline" style="padding:6px 12px; font-size:12px; font-weight:600; border-radius:6px;" onclick="resetWorkspaceInviteCode()">Reset Code</button>
           </div>
         </div>
 
@@ -916,7 +913,7 @@ function openWorkspaceSettingsModal() {
       </div>
     `;
   } else {
-    if (modalTitle) modalTitle.innerHTML = '⚙️ Member Settings & Preferences';
+    if (modalTitle) modalTitle.innerHTML = 'Member Settings & Preferences';
     const prefApprovals = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_approvals`) !== 'false';
     const prefMentions = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_mentions`) !== 'false';
     const prefHelp = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_help`) !== 'false';
@@ -965,12 +962,12 @@ function openWorkspaceSettingsModal() {
             <div>
               <label style="display:block; font-size:12px; color:var(--gray); margin-bottom:4px;">Default Landing Tab</label>
               <select class="form-control" style="font-size:12px; padding:6px 10px;" onchange="saveMemberPref('landing_view', this.value)">
-                <option value="overview" ${prefLanding === 'overview' ? 'selected' : ''}>🏠 Homespace</option>
-                <option value="tasks" ${prefLanding === 'tasks' ? 'selected' : ''}>📋 Tasks (Kanban)</option>
-                <option value="calendar" ${prefLanding === 'calendar' ? 'selected' : ''}>📅 Calendar</option>
-                <option value="notebook" ${prefLanding === 'notebook' ? 'selected' : ''}>📝 Notebook</option>
-                <option value="expenses" ${prefLanding === 'expenses' ? 'selected' : ''}>💰 Expenses</option>
-                <option value="discussions" ${prefLanding === 'discussions' ? 'selected' : ''}>💬 Discussions</option>
+                <option value="overview" ${prefLanding === 'overview' ? 'selected' : ''}>Homespace</option>
+                <option value="tasks" ${prefLanding === 'tasks' ? 'selected' : ''}>Tasks</option>
+                <option value="calendar" ${prefLanding === 'calendar' ? 'selected' : ''}>Calendar</option>
+                <option value="notebook" ${prefLanding === 'notebook' ? 'selected' : ''}>Notebook</option>
+                <option value="expenses" ${prefLanding === 'expenses' ? 'selected' : ''}>Expenses</option>
+                <option value="discussions" ${prefLanding === 'discussions' ? 'selected' : ''}>Discussions</option>
               </select>
             </div>
             <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); cursor:pointer;">
@@ -1157,6 +1154,7 @@ async function loadTasks() {
   try {
     const res = await apiFetch(`/api/groups/${currentGroupId}/tasks`);
     const tasks = res.data || [];
+    window.currentTasks = tasks;
 
     const cols = {
       TODO: document.getElementById('col-todo'),
@@ -1174,54 +1172,9 @@ async function loadTasks() {
       counts[t.status] = (counts[t.status] || 0) + 1;
       const targetCol = cols[t.status] || cols.TODO;
 
-      const card = document.createElement('div');
-      card.className = `kanban-card ${t.status === 'PENDING_APPROVAL' ? 'pending-approval' : t.status === 'DONE' ? 'done' : ''}`;
-      
-      const tagClass = `tag-${(t.priority || 'medium').toLowerCase()}`;
-      
-      let actionButtons = '';
-      if (t.status === 'TODO') {
-        actionButtons = `<button class="btn-task-action" onclick="updateTaskStatus(${t.id}, 'IN_PROGRESS')">▶ Start Task</button>`;
-      } else if (t.status === 'IN_PROGRESS') {
-        actionButtons = `<button class="btn-task-action btn-approve" onclick="updateTaskStatus(${t.id}, 'PENDING_APPROVAL')">🛡️ Submit for Review</button>`;
-      } else if (t.status === 'PENDING_APPROVAL') {
-        if (isLeader) {
-          actionButtons = `<button class="btn-task-action btn-approve" onclick="openReviewModal(${t.id}, '${escapeHtml(t.title)}')">👑 Review & Approve</button>`;
-        } else {
-          actionButtons = `<span style="font-size:11px; color:var(--warning);">Awaiting Leader Review</span>`;
-        }
-      }
-
-      // Enhance with peer help flag & assist controls if tasks.js is loaded
-      const { flagHtml, actionExtra } = typeof enhanceTaskCardUI === 'function'
-        ? enhanceTaskCardUI(t, isLeader, currentUser?.id)
-        : { flagHtml: '', actionExtra: '' };
-
-      card.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-          <span class="task-tag ${tagClass}">${t.priority}</span>
-          ${t.is_flagged ? '<span style="font-size:11px; color:#FF5252; font-weight:700;">⚠️ Blocked</span>' : ''}
-        </div>
-        ${flagHtml}
-        <h4>${escapeHtml(t.title)}</h4>
-        <p>${escapeHtml(t.description || 'No description.')}</p>
-        
-        ${t.approval_notes ? `
-          <div style="font-size:12px; padding:6px 10px; background:#1C221F; border-radius:8px; border-left:3px solid var(--primary); margin-bottom:8px;">
-            <strong>Leader Note:</strong> ${escapeHtml(t.approval_notes)}
-          </div>
-        ` : ''}
-
-        <div class="task-meta">
-          <span>👤 ${t.assignee_name ? escapeHtml(t.assignee_name) : 'Unassigned'}</span>
-          <span style="cursor:pointer; color:#FF7272;" onclick="deleteTask(${t.id})">🗑️</span>
-        </div>
-
-        <div class="task-actions" style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
-          ${actionButtons}
-          ${actionExtra}
-        </div>
-      `;
+      const card = typeof renderKanbanCard === 'function'
+        ? renderKanbanCard(t)
+        : createDefaultKanbanCard(t);
 
       targetCol.appendChild(card);
     });
@@ -1238,6 +1191,31 @@ async function loadTasks() {
   } catch (err) {
     showToast(err.message, 'error');
   }
+}
+
+function createDefaultKanbanCard(task) {
+  const card = document.createElement('div');
+  const statusClass = task.status === 'PENDING_APPROVAL' ? 'pending-approval' : task.status === 'DONE' ? 'done' : '';
+  card.className = `kanban-card ${statusClass}`.trim();
+  card.setAttribute('data-task-id', task.id);
+  card.onclick = () => {
+    if (typeof openTaskDetailsModal === 'function') openTaskDetailsModal(task.id);
+  };
+  card.style.cssText = 'cursor:pointer; padding:12px 14px; border:1px solid var(--border); border-radius:8px; background:var(--card, #ffffff);';
+
+  const titleEl = document.createElement('div');
+  titleEl.className = 'kanban-card-title';
+  titleEl.style.cssText = 'font-weight:700; font-size:0.92rem; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.35; margin-bottom:4px;';
+  titleEl.textContent = task.title || 'Untitled Task';
+
+  const assigneeEl = document.createElement('div');
+  assigneeEl.className = 'kanban-card-assignee';
+  assigneeEl.style.cssText = 'font-size:0.8rem; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.2;';
+  assigneeEl.textContent = task.assignee_name ? task.assignee_name : 'Unassigned';
+
+  card.appendChild(titleEl);
+  card.appendChild(assigneeEl);
+  return card;
 }
 
 async function handleCreateTask(e) {
