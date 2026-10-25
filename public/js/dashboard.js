@@ -285,15 +285,16 @@ async function loadOverview() {
   if (!container || !currentGroupId) return;
 
   try {
-    const [tasksRes, expRes, actRes] = await Promise.all([
+    const [tasksRes, expRes, actRes, personalRes] = await Promise.all([
       apiFetch(`/api/groups/${currentGroupId}/tasks`),
       apiFetch(`/api/groups/${currentGroupId}/expenses/summary`),
-      apiFetch(`/api/groups/${currentGroupId}/discussions/activity`)
+      apiFetch(`/api/groups/${currentGroupId}/discussions/activity`),
+      apiFetch('/api/personal?type=NOTE').catch(() => ({ data: [] }))
     ]);
 
     const tasks = tasksRes.data || [];
-    const activeTasks = tasks.filter(t => t.status !== 'DONE').length;
-    const pendingTasks = tasks.filter(t => t.status === 'PENDING_APPROVAL');
+    const activeTasks = tasks.filter(t => (t.status || '').toUpperCase() !== 'DONE').length;
+    const pendingTasks = tasks.filter(t => (t.status || '').toLowerCase() === 'pending_approval');
     const pendingApprovalCount = pendingTasks.length;
 
     const statActive = document.getElementById('statActiveTasks');
@@ -311,22 +312,99 @@ async function loadOverview() {
     const currentUserId = currentUser ? currentUser.id : null;
     const members = (currentGroupDetails && currentGroupDetails.members) ? currentGroupDetails.members : [];
     const activities = actRes.data || [];
+    const personalNotes = personalRes && personalRes.data ? personalRes.data : [];
 
     if (isLeader) {
-      renderLeaderHomespace(container, pendingTasks, members, activities, currentUserId);
+      renderLeaderHomespace(container, pendingTasks, members, activities, currentUserId, personalNotes);
     } else {
-      const myPendingTasks = tasks.filter(t => 
-        t.status === 'PENDING_APPROVAL' && 
-        (Number(t.assigned_to_user_id) === Number(currentUserId) || Number(t.created_by_user_id) === Number(currentUserId))
+      const myAssignedDeliverables = tasks.filter(t => 
+        Number(t.assigned_to_user_id) === Number(currentUserId) && 
+        (t.status || '').toUpperCase() !== 'DONE'
       );
-      renderMemberHomespace(container, myPendingTasks, members, activities, currentUserId);
+      renderMemberHomespace(container, myAssignedDeliverables, members, activities, currentUserId, personalNotes);
     }
   } catch (err) {
     showToast(err.message, 'error');
   }
 }
 
-function renderLeaderHomespace(container, pendingTasks, members, activities, currentUserId) {
+// Minimalist Quick Scratchpad / Personal Notes widget helper
+function renderHomespaceScratchpadHtml(personalNotes, inputId) {
+  const notes = Array.isArray(personalNotes) ? personalNotes.slice(0, 8) : [];
+  return `
+    <div class="dashboard-panel" style="border-top:3px solid var(--secondary, #10b981);">
+      <div class="panel-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <h3 style="margin:0;">📝 Quick Scratchpad / Personal Notes</h3>
+        </div>
+        <button onclick="switchTab('personal')" class="btn-outline" style="padding:4px 10px; font-size:12px;">Open Space 🔒</button>
+      </div>
+      <div style="padding:14px 16px;">
+        <div style="display:flex; gap:8px; margin-bottom:12px;">
+          <input type="text" id="${inputId}" class="form-control" placeholder="Quick personal reminder or note..." style="font-size:12px; padding:7px 10px; flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();saveHomespaceScratchpad('${inputId}');}">
+          <button type="button" class="btn-green" style="padding:7px 14px; font-size:12px; font-weight:600; white-space:nowrap;" onclick="saveHomespaceScratchpad('${inputId}')">+ Save</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px; max-height:230px; overflow-y:auto;">
+          ${notes.length === 0 ? `
+            <div style="text-align:center; padding:18px 10px; color:var(--gray);">
+              <span style="font-size:1.5rem; display:block; margin-bottom:4px;">📌</span>
+              <p style="margin:0; font-size:12px;">Private to you. Save quick personal reminders, bookmarks, or thoughts here.</p>
+            </div>
+          ` : notes.map(n => `
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:8px 10px; background:var(--muted, #f8fafc); border:1px solid var(--border); border-radius:8px;">
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:12px; font-weight:600; color:var(--text); word-break:break-word;">${escapeHtml(n.title || n.content || 'Personal Note')}</div>
+                ${n.content && n.content !== n.title ? `<div style="font-size:11px; color:var(--gray); margin-top:2px; word-break:break-word;">${escapeHtml(n.content)}</div>` : ''}
+                <div style="font-size:10px; color:var(--gray); margin-top:2px;">🔒 Only visible to you · ${formatDate(n.created_at)}</div>
+              </div>
+              <button type="button" class="btn-outline" style="padding:2px 6px; font-size:11px; color:var(--gray); border-color:var(--border); border-radius:4px; cursor:pointer;" onclick="deleteHomespaceScratchpadNote(${n.id}, event)" title="Delete reminder">
+                ✕
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function saveHomespaceScratchpad(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const noteText = input.value.trim();
+  if (!noteText) {
+    showToast('Please enter a note or reminder.', 'error');
+    return;
+  }
+  try {
+    await apiFetch('/api/personal', {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'NOTE',
+        title: noteText,
+        content: noteText
+      })
+    });
+    input.value = '';
+    showToast('Personal reminder saved.', 'success');
+    loadOverview();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function deleteHomespaceScratchpadNote(noteId, e) {
+  if (e) e.stopPropagation();
+  try {
+    await apiFetch(`/api/personal/${noteId}`, { method: 'DELETE' });
+    showToast('Reminder deleted.', 'success');
+    loadOverview();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+function renderLeaderHomespace(container, pendingTasks, members, activities, currentUserId, personalNotes) {
   const settings = (currentGroupDetails && currentGroupDetails.settings) ? currentGroupDetails.settings : {};
   const requireApproval = settings.requireApproval !== false; // default true
   const allowDiscussions = settings.allowMemberDiscussions !== false; // default true
@@ -336,8 +414,8 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
     ? `
       <div style="text-align:center; padding:32px 20px; color:var(--gray);">
         <div style="font-size:2rem; margin-bottom:6px;">✅</div>
-        <h4 style="margin:0 0 4px 0; font-size:14px; font-weight:700; color:var(--text);">All Requests Reviewed</h4>
-        <p style="margin:0; font-size:12px;">There are no tasks currently awaiting leader approval.</p>
+        <h4 style="margin:0 0 4px 0; font-size:14px; font-weight:700; color:var(--text);">All Tasks Approved</h4>
+        <p style="margin:0; font-size:12px;">There are no tasks currently awaiting review.</p>
       </div>
     `
     : `
@@ -413,11 +491,11 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
     <div class="dashboard-grid">
       <!-- Col 1: Pending Approvals, Leader Settings & Activity -->
       <div style="display:flex; flex-direction:column; gap:20px;">
-        <!-- Pending Requests & Approvals -->
+        <!-- Pending Task Approvals -->
         <div class="dashboard-panel" style="border-top:3px solid #f59e0b;">
           <div class="panel-header">
             <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0;">🛡️ Pending Requests & Approvals</h3>
+              <h3 style="margin:0;">🛡️ Pending Task Approvals</h3>
               <span class="col-badge" style="background:#fef3c7; color:#92400e; font-weight:700;">${pendingTasks.length}</span>
             </div>
             <span style="font-size:12px; color:var(--gray);">Dual-approval quality gate</span>
@@ -482,14 +560,14 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
               </button>
             </div>
 
-            <!-- Danger Zone -->
-            <div style="border-top:1px solid rgba(220,38,38,0.25); padding-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <!-- Discrete Danger Zone Footer -->
+            <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
               <div>
-                <strong style="color:#dc2626; font-size:13px;">Security & Account Deletion</strong>
+                <span style="font-size:12px; font-weight:600; color:var(--gray);">Danger Zone</span>
                 <p style="margin:2px 0 0; font-size:11px; color:var(--gray);">Permanently delete your account with double password verification.</p>
               </div>
-              <button type="button" class="btn-danger-solid open-delete-account-modal" style="background:#dc2626; color:#fff; border:none; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;" onclick="openDeleteAccountModal()">
-                🗑️ Delete Account
+              <button type="button" class="btn-outline open-delete-account-modal" style="padding:4px 12px; font-size:11px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:6px; background:transparent; cursor:pointer;" onclick="openDeleteAccountModal()">
+                Delete Account
               </button>
             </div>
           </div>
@@ -507,13 +585,13 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
         </div>
       </div>
 
-      <!-- Col 2: Workspace Roster & Personal Quick Notes -->
+      <!-- Col 2: Workspace Roster & Roles & Quick Scratchpad -->
       <div style="display:flex; flex-direction:column; gap:20px;">
-        <!-- Workspace Roster -->
+        <!-- Workspace Roster & Roles -->
         <div class="dashboard-panel" style="border-top:3px solid var(--primary);">
           <div class="panel-header">
             <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0;">👥 Workspace Roster</h3>
+              <h3 style="margin:0;">👥 Workspace Roster & Roles</h3>
               <span class="status online" style="font-size:11px; font-weight:700;">LEADER</span>
             </div>
             <span style="font-size:12px; color:var(--gray);">${members.length} members</span>
@@ -523,25 +601,14 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
           </ul>
         </div>
 
-        <!-- Quick Access to Personal Notes -->
-        <div class="dashboard-panel">
-          <div class="panel-header">
-            <h3>Personal Quick Notes</h3>
-            <button onclick="switchTab('personal')" class="btn-outline" style="padding:4px 10px; font-size:12px;">Open 🔒</button>
-          </div>
-          <div style="padding:12px 14px;">
-            <p style="color:var(--gray); font-size:13px; margin:0 0 10px 0;">Encrypted and isolated to your account. No other workspace members can view your private notes or credentials.</p>
-            <button onclick="switchTab('personal')" class="btn-green" style="font-size:12px; padding:6px 14px; width:100%;">
-              Go to Isolated Personal Space →
-            </button>
-          </div>
-        </div>
+        <!-- Minimalist Quick Scratchpad / Personal Notes -->
+        ${renderHomespaceScratchpadHtml(personalNotes, 'leaderHomespaceScratchpad')}
       </div>
     </div>
   `;
 }
 
-function renderMemberHomespace(container, myPendingTasks, members, activities, currentUserId) {
+function renderMemberHomespace(container, myAssignedDeliverables, members, activities, currentUserId, personalNotes) {
   const leaders = members.filter(m => m.role === 'leader');
   const fellowMembers = members.filter(m => m.role !== 'leader');
 
@@ -551,34 +618,39 @@ function renderMemberHomespace(container, myPendingTasks, members, activities, c
   const prefLanding = localStorage.getItem(`groupspace_pref_${currentUserId}_landing_view`) || 'overview';
   const prefCompact = localStorage.getItem(`groupspace_pref_${currentUserId}_compact_view`) === 'true';
 
-  const pendingHtml = myPendingTasks.length === 0
+  const deliverablesHtml = myAssignedDeliverables.length === 0
     ? `
       <div style="text-align:center; padding:32px 20px; color:var(--gray);">
         <div style="font-size:2rem; margin-bottom:6px;">✨</div>
-        <h4 style="margin:0 0 4px 0; font-size:14px; font-weight:700; color:var(--text);">No Pending Requests</h4>
-        <p style="margin:0; font-size:12px;">Tasks you submit for completion or review will be listed here until a Leader approves them.</p>
+        <h4 style="margin:0 0 4px 0; font-size:14px; font-weight:700; color:var(--text);">All Caught Up!</h4>
+        <p style="margin:0; font-size:12px;">You have no active deliverables assigned to you right now.</p>
       </div>
     `
     : `
       <div style="display:flex; flex-direction:column; gap:10px;">
-        ${myPendingTasks.map(t => `
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 14px; border:1px solid rgba(245,158,11,0.25); background:rgba(245,158,11,0.04); border-radius:10px;">
-            <div style="flex:1;">
-              <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-                <span class="tag tag-${(t.priority || 'medium').toLowerCase()}" style="font-size:10px; padding:2px 6px;">${escapeHtml(t.priority || 'MEDIUM')}</span>
-                <strong style="font-size:14px; color:var(--text);">${escapeHtml(t.title)}</strong>
+        ${myAssignedDeliverables.map(t => {
+          const statusDisplay = (t.status || 'TODO').replace(/_/g, ' ');
+          const isPending = (t.status || '').toLowerCase() === 'pending_approval';
+          return `
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 14px; border:1px solid ${isPending ? 'rgba(245,158,11,0.25)' : 'var(--border)'}; background:${isPending ? 'rgba(245,158,11,0.04)' : 'var(--card)'}; border-radius:10px; flex-wrap:wrap;">
+              <div style="flex:1; min-width:200px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                  <span class="tag tag-${(t.priority || 'medium').toLowerCase()}" style="font-size:10px; padding:2px 6px;">${escapeHtml(t.priority || 'MEDIUM')}</span>
+                  <strong style="font-size:14px; color:var(--text);">${escapeHtml(t.title)}</strong>
+                </div>
+                <div style="font-size:12px; color:var(--gray); display:flex; gap:12px; flex-wrap:wrap;">
+                  <span>Status: <strong style="color:${isPending ? '#d97706' : 'var(--text)'};">${isPending ? '⏳ Awaiting Leader Review' : escapeHtml(statusDisplay)}</strong></span>
+                  <span>📅 Due: ${t.due_date ? formatDate(t.due_date) : 'No due date'}</span>
+                </div>
               </div>
-              <div style="font-size:12px; color:var(--gray);">
-                <span>Submitted for approval · 🕒 ${formatDate(t.updated_at || t.created_at)}</span>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button type="button" class="btn-outline" style="padding:6px 12px; font-size:12px; font-weight:600; border-radius:8px; cursor:pointer;" onclick="switchTab('tasks')">
+                  View in Tasks →
+                </button>
               </div>
             </div>
-            <div>
-              <span class="status pending" style="font-size:11px; padding:4px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
-                ⏳ Awaiting Leader Review
-              </span>
-            </div>
-          </div>
-        `).join('')}
+          `;
+        }).join('')}
       </div>
     `;
 
@@ -628,19 +700,19 @@ function renderMemberHomespace(container, myPendingTasks, members, activities, c
 
   container.innerHTML = `
     <div class="dashboard-grid">
-      <!-- Col 1: My Pending Requests, Member Settings & Activity Feed -->
+      <!-- Col 1: My Assigned Deliverables, Member Settings & Activity Feed -->
       <div style="display:flex; flex-direction:column; gap:20px;">
-        <!-- My Pending Requests -->
-        <div class="dashboard-panel" style="border-top:3px solid var(--warning);">
+        <!-- My Assigned Deliverables -->
+        <div class="dashboard-panel" style="border-top:3px solid var(--primary);">
           <div class="panel-header">
             <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0;">⏳ My Pending Requests</h3>
-              <span class="col-badge" style="background:#fef3c7; color:#92400e; font-weight:700;">${myPendingTasks.length}</span>
+              <h3 style="margin:0;">📋 My Assigned Deliverables</h3>
+              <span class="col-badge" style="background:#e0e7ff; color:#3730a3; font-weight:700;">${myAssignedDeliverables.length}</span>
             </div>
-            <span style="font-size:12px; color:var(--gray);">Awaiting leader approval</span>
+            <span style="font-size:12px; color:var(--gray);">Active assigned deliverables</span>
           </div>
           <div style="padding:14px 16px;">
-            ${pendingHtml}
+            ${deliverablesHtml}
           </div>
         </div>
 
@@ -709,14 +781,14 @@ function renderMemberHomespace(container, myPendingTasks, members, activities, c
               </div>
             </div>
 
-            <!-- Danger Zone -->
-            <div style="border-top:1px solid rgba(220,38,38,0.25); padding-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <!-- Discrete Danger Zone Footer -->
+            <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
               <div>
-                <strong style="color:#dc2626; font-size:13px;">Security & Account Deletion</strong>
+                <span style="font-size:12px; font-weight:600; color:var(--gray);">Danger Zone</span>
                 <p style="margin:2px 0 0; font-size:11px; color:var(--gray);">Permanently delete your account with double password verification.</p>
               </div>
-              <button type="button" class="btn-danger-solid open-delete-account-modal" style="background:#dc2626; color:#fff; border:none; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;" onclick="openDeleteAccountModal()">
-                🗑️ Delete Account
+              <button type="button" class="btn-outline open-delete-account-modal" style="padding:4px 12px; font-size:11px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:6px; background:transparent; cursor:pointer;" onclick="openDeleteAccountModal()">
+                Delete Account
               </button>
             </div>
           </div>
@@ -734,13 +806,13 @@ function renderMemberHomespace(container, myPendingTasks, members, activities, c
         </div>
       </div>
 
-      <!-- Col 2: Compact Team Roster & Personal Space -->
+      <!-- Col 2: Workspace Teammates & Quick Scratchpad -->
       <div style="display:flex; flex-direction:column; gap:20px;">
-        <!-- Compact Team Roster -->
+        <!-- Workspace Teammates (Highlighting Leader) -->
         <div class="dashboard-panel" style="border-top:3px solid var(--primary);">
           <div class="panel-header">
             <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0;">👥 Workspace Team</h3>
+              <h3 style="margin:0;">👥 Workspace Teammates</h3>
               <span class="status pending" style="font-size:11px;">MEMBER</span>
             </div>
             <span style="font-size:12px; color:var(--gray);">${members.length} members</span>
@@ -760,19 +832,8 @@ function renderMemberHomespace(container, myPendingTasks, members, activities, c
           </div>
         </div>
 
-        <!-- Personal Quick Notes -->
-        <div class="dashboard-panel">
-          <div class="panel-header">
-            <h3>Personal Quick Notes</h3>
-            <button onclick="switchTab('personal')" class="btn-outline" style="padding:4px 10px; font-size:12px;">Open 🔒</button>
-          </div>
-          <div style="padding:12px 14px;">
-            <p style="color:var(--gray); font-size:13px; margin:0 0 10px 0;">Private to you. Visit your Personal Space tab to create and manage personal notes.</p>
-            <button onclick="switchTab('personal')" class="btn-green" style="font-size:12px; padding:6px 14px; width:100%;">
-              Open Personal Space →
-            </button>
-          </div>
-        </div>
+        <!-- Minimalist Quick Scratchpad / Personal Notes -->
+        ${renderHomespaceScratchpadHtml(personalNotes, 'memberHomespaceScratchpad')}
       </div>
     </div>
   `;
@@ -842,14 +903,14 @@ function openWorkspaceSettingsModal() {
           </button>
         </div>
 
-        <!-- Danger Zone -->
-        <div style="border-top:1px solid rgba(220,38,38,0.25); padding-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <!-- Discrete Danger Zone Footer -->
+        <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
           <div>
-            <strong style="color:#dc2626; font-size:13px;">Security & Account Deletion</strong>
+            <span style="font-size:12px; font-weight:600; color:var(--gray);">Danger Zone</span>
             <p style="margin:2px 0 0; font-size:11px; color:var(--gray);">Permanently delete your account with double password verification.</p>
           </div>
-          <button type="button" class="btn-danger-solid open-delete-account-modal" style="background:#dc2626; color:#fff; border:none; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;" onclick="closeModal('workspaceSettingsModal'); openDeleteAccountModal();">
-            🗑️ Delete Account
+          <button type="button" class="btn-outline open-delete-account-modal" style="padding:4px 12px; font-size:11px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:6px; background:transparent; cursor:pointer;" onclick="closeModal('workspaceSettingsModal'); openDeleteAccountModal();">
+            Delete Account
           </button>
         </div>
       </div>
@@ -919,14 +980,14 @@ function openWorkspaceSettingsModal() {
           </div>
         </div>
 
-        <!-- Danger Zone -->
-        <div style="border-top:1px solid rgba(220,38,38,0.25); padding-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <!-- Discrete Danger Zone Footer -->
+        <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
           <div>
-            <strong style="color:#dc2626; font-size:13px;">Security & Account Deletion</strong>
+            <span style="font-size:12px; font-weight:600; color:var(--gray);">Danger Zone</span>
             <p style="margin:2px 0 0; font-size:11px; color:var(--gray);">Permanently delete your account with double password verification.</p>
           </div>
-          <button type="button" class="btn-danger-solid open-delete-account-modal" style="background:#dc2626; color:#fff; border:none; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;" onclick="closeModal('workspaceSettingsModal'); openDeleteAccountModal();">
-            🗑️ Delete Account
+          <button type="button" class="btn-outline open-delete-account-modal" style="padding:4px 12px; font-size:11px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:6px; background:transparent; cursor:pointer;" onclick="closeModal('workspaceSettingsModal'); openDeleteAccountModal();">
+            Delete Account
           </button>
         </div>
       </div>
