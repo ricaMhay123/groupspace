@@ -57,6 +57,11 @@ router.post('/:taskId/approve', requireGroupLeader, ctrl.reviewApproval);
 // DELETE /:taskId — delete; creator-or-leader check is inside the service
 router.delete('/:taskId', ctrl.remove);
 
+// ─── Follow-Up Ping ──────────────────────────────────────────────────────────
+// POST /:taskId/follow-up — leader sends a follow-up ping to assigned member
+router.post('/:taskId/follow-up', requireGroupLeader, ctrl.followUpTask);
+router.post('/:id/follow-up', requireGroupLeader, ctrl.followUpTask);
+
 // ─── Flagging (Blocked / Help Needed) ────────────────────────────────────────
 
 // POST /:taskId/flag and /:id/flag — flag as blocked (assignee or leader)

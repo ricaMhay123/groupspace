@@ -388,17 +388,17 @@
 
     // 1. Replace bracketed topics: #[Topic Title]
     escaped = escaped.replace(/#\[([^\]\r\n]{1,60})\]/g, (match, title) => {
-      return `<span class="mention-pill topic-mention-pill">💬 ${title.trim()}</span>`;
+      return `<span class="mention-pill topic-mention-pill">#${title.trim()}</span>`;
     });
 
     // 2. Replace topic IDs: #topic:12 or #topic-12
     escaped = escaped.replace(/#topic[:\-](\d+)\b/gi, (match, id) => {
-      return `<span class="mention-pill topic-mention-pill">💬 Topic #${id}</span>`;
+      return `<span class="mention-pill topic-mention-pill">#topic-${id}</span>`;
     });
 
     // 3. Replace task IDs: #123 (numeric)
     escaped = escaped.replace(/#(\d+)\b/g, (match, id) => {
-      return `<span class="mention-pill task-mention-pill">📋 #${id}</span>`;
+      return `<span class="mention-pill task-mention-pill">#task-${id}</span>`;
     });
 
     // 4. Replace bracketed user mentions: @[John Doe]
@@ -414,12 +414,174 @@
     return escaped;
   }
 
+  // Explicit event listener and button click repairs for Discussion Board
+  function setupDiscussionBoardListeners() {
+    const submitTopicBtn = document.getElementById('submitTopicBtn');
+    const createTopicForm = document.getElementById('createTopicForm');
+
+    async function handleTopicSubmit(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      const titleInput = document.getElementById('topicTitle');
+      const categoryInput = document.getElementById('topicCategory');
+      const title = titleInput ? titleInput.value.trim() : '';
+      const category = categoryInput ? categoryInput.value : 'General';
+
+      // Empty state validation
+      if (!title) {
+        if (typeof showToast === 'function') {
+          showToast('Please enter a topic title.', 'warning');
+        } else {
+          alert('Please enter a topic title.');
+        }
+        if (titleInput) titleInput.focus();
+        return;
+      }
+
+      const activeGid = (typeof currentGroupId !== 'undefined' && currentGroupId)
+        ? currentGroupId
+        : localStorage.getItem('groupspace_active_group_id');
+
+      if (!activeGid) {
+        if (typeof showToast === 'function') showToast('No active workspace selected.', 'error');
+        return;
+      }
+
+      const attachments = (typeof pendingTopicAttachments !== 'undefined' && Array.isArray(pendingTopicAttachments))
+        ? pendingTopicAttachments
+        : (window.pendingTopicAttachments || []);
+
+      if (submitTopicBtn) submitTopicBtn.disabled = true;
+
+      try {
+        const res = await apiFetch(`/api/groups/${activeGid}/discussions`, {
+          method: 'POST',
+          body: JSON.stringify({ title, category, attachments })
+        });
+
+        if (typeof pendingTopicAttachments !== 'undefined') pendingTopicAttachments.length = 0;
+        if (window.pendingTopicAttachments) window.pendingTopicAttachments = [];
+        if (typeof renderTopicAttachmentsPreview === 'function') renderTopicAttachmentsPreview();
+
+        if (typeof closeModal === 'function') closeModal('createTopicModal');
+        if (createTopicForm) createTopicForm.reset();
+
+        if (typeof showToast === 'function') showToast('Topic created successfully!', 'success');
+
+        if (typeof loadDiscussions === 'function') {
+          await loadDiscussions();
+        }
+
+        if (res && res.data && typeof selectTopic === 'function') {
+          selectTopic(res.data.id, res.data.title);
+        }
+      } catch (err) {
+        if (typeof showToast === 'function') {
+          showToast(err.message || 'Failed to create discussion topic.', 'error');
+        }
+      } finally {
+        if (submitTopicBtn) submitTopicBtn.disabled = false;
+      }
+    }
+
+    if (createTopicForm) {
+      createTopicForm.removeEventListener('submit', handleTopicSubmit);
+      createTopicForm.addEventListener('submit', handleTopicSubmit);
+    }
+    if (submitTopicBtn) {
+      submitTopicBtn.removeEventListener('click', handleTopicSubmit);
+      submitTopicBtn.addEventListener('click', (e) => {
+        if (!createTopicForm) handleTopicSubmit(e);
+      });
+    }
+
+    const postDiscussionBtn = document.getElementById('postDiscussionBtn');
+    const postCommentForm = document.getElementById('postCommentForm');
+
+    async function handleCommentSubmit(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      const input = document.getElementById('newCommentInput');
+      const content = input ? input.value.trim() : '';
+      const attachments = (typeof pendingCommentAttachments !== 'undefined' && Array.isArray(pendingCommentAttachments))
+        ? pendingCommentAttachments
+        : (window.pendingCommentAttachments || []);
+
+      if (!content && attachments.length === 0) {
+        if (typeof showToast === 'function') {
+          showToast('Please write a reply or attach a file before posting.', 'warning');
+        }
+        if (input) input.focus();
+        return;
+      }
+
+      const topicId = typeof activeTopicId !== 'undefined' ? activeTopicId : null;
+      const activeGid = (typeof currentGroupId !== 'undefined' && currentGroupId)
+        ? currentGroupId
+        : localStorage.getItem('groupspace_active_group_id');
+
+      if (!topicId || !activeGid) return;
+
+      if (postDiscussionBtn) postDiscussionBtn.disabled = true;
+
+      try {
+        await apiFetch(`/api/groups/${activeGid}/discussions/${topicId}/comments`, {
+          method: 'POST',
+          body: JSON.stringify({ content, attachments })
+        });
+
+        if (input) input.value = '';
+        if (typeof pendingCommentAttachments !== 'undefined') pendingCommentAttachments.length = 0;
+        if (window.pendingCommentAttachments) window.pendingCommentAttachments = [];
+        if (typeof renderCommentAttachmentsPreview === 'function') renderCommentAttachmentsPreview();
+
+        const titleEl = document.getElementById('activeTopicTitle');
+        if (typeof selectTopic === 'function') {
+          selectTopic(topicId, titleEl ? titleEl.textContent : '');
+        }
+      } catch (err) {
+        if (typeof showToast === 'function') {
+          showToast(err.message || 'Failed to post reply.', 'error');
+        }
+      } finally {
+        if (postDiscussionBtn) postDiscussionBtn.disabled = false;
+      }
+    }
+
+    if (postCommentForm) {
+      postCommentForm.removeEventListener('submit', handleCommentSubmit);
+      postCommentForm.addEventListener('submit', handleCommentSubmit);
+    }
+    if (postDiscussionBtn) {
+      postDiscussionBtn.removeEventListener('click', handleCommentSubmit);
+      postDiscussionBtn.addEventListener('click', (e) => {
+        if (!postCommentForm) handleCommentSubmit(e);
+      });
+    }
+  }
+
   // Export functions to window
   window.resetDiscussionMentions = hideDropdown;
   window.highlightMentions = highlightMentions;
+  window.setupDiscussionBoardListeners = setupDiscussionBoardListeners;
+  window.handleCreateTopic = handleTopicSubmit;
+  window.handlePostComment = handleCommentSubmit;
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function initDiscussions() {
     injectMentionStyles();
     setupMentionInput();
-  });
+    setupDiscussionBoardListeners();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDiscussions);
+  } else {
+    initDiscussions();
+  }
 })();

@@ -26,11 +26,42 @@ router.post(
   ctrl.exportDocx
 );
 
+// ─── Folder Routes (/api/notebooks/folders) ──────────────────────────────────
+router.get(
+  '/folders/:groupId',
+  requireGroupMembership,
+  ctrl.getFolders
+);
+
+router.get(
+  '/folders',
+  requireGroupMembership,
+  ctrl.getFolders
+);
+
+router.post(
+  '/folders',
+  requireGroupMembership,
+  ctrl.createFolder
+);
+
+router.delete(
+  '/folders/:folderId',
+  requireGroupMembership,
+  ctrl.deleteFolder
+);
+
 // ─── Top-level /pages routes (/api/notebooks/pages) ──────────────────────────
 router.post(
   '/pages',
   requireGroupMembership,
   ctrl.createPage
+);
+
+router.put(
+  '/pages/:pageId/permissions',
+  requireGroupMembership,
+  ctrl.updatePagePermissions
 );
 
 router.get(
@@ -97,12 +128,16 @@ router.get(
 );
 
 // ─── Notebook-level operations ────────────────────────────────────────────────
-// PUT /api/notebooks/:id/permissions — admin only
+// PUT /api/notebooks/:id/permissions or /api/groups/:groupId/notes/:id/permissions
 router.put(
   '/:id/permissions',
   requireGroupMembership,
-  requireNotebookEditorAccess,
-  ctrl.updatePermissions
+  (req, res, next) => {
+    if (req.baseUrl.includes('/notes') || req.body.permittedEditors !== undefined || req.body.permitted_editors !== undefined) {
+      return ctrl.updatePagePermissions(req, res, next);
+    }
+    return requireNotebookEditorAccess(req, res, () => ctrl.updatePermissions(req, res, next));
+  }
 );
 
 // DELETE /api/notebooks/:id — admin only
@@ -121,27 +156,31 @@ router.get(
   ctrl.getPages
 );
 
-// POST /api/notebooks/:id/pages — editor or admin
+// POST /api/notebooks/:id/pages — any workspace member can create a page
 router.post(
   '/:id/pages',
   requireGroupMembership,
-  requireNotebookEditorAccess,
   ctrl.createPage
 );
 
-// PATCH /api/notebooks/:id/pages/:pageId — editor or admin
+// PUT /api/notebooks/:id/pages/:pageId/permissions — page creator or leader
+router.put(
+  '/:id/pages/:pageId/permissions',
+  requireGroupMembership,
+  ctrl.updatePagePermissions
+);
+
+// PATCH /api/notebooks/:id/pages/:pageId — page creator, permitted_editors, or leader
 router.patch(
   '/:id/pages/:pageId',
   requireGroupMembership,
-  requireNotebookEditorAccess,
   ctrl.updatePage
 );
 
-// DELETE /api/notebooks/:id/pages/:pageId — editor or admin
+// DELETE /api/notebooks/:id/pages/:pageId — page creator or leader
 router.delete(
   '/:id/pages/:pageId',
   requireGroupMembership,
-  requireNotebookEditorAccess,
   ctrl.deletePage
 );
 

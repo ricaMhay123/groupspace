@@ -138,14 +138,28 @@ async function initDb() {
     `;
 
     await sql`
+      CREATE TABLE IF NOT EXISTS notebook_folders (
+        id          SERIAL PRIMARY KEY,
+        group_id    INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+        notebook_id INTEGER REFERENCES notebooks(id) ON DELETE CASCADE,
+        name        TEXT    NOT NULL,
+        created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at  TIMESTAMPTZ DEFAULT NOW(),
+        updated_at  TIMESTAMPTZ DEFAULT NOW()
+      );
+    `;
+
+    await sql`
       CREATE TABLE IF NOT EXISTS notebook_pages (
         id          SERIAL PRIMARY KEY,
         notebook_id INTEGER NOT NULL REFERENCES notebooks(id) ON DELETE CASCADE,
+        folder_id   INTEGER REFERENCES notebook_folders(id) ON DELETE CASCADE,
         title       TEXT    NOT NULL,
         content     TEXT,
         position    INTEGER NOT NULL DEFAULT 0,   -- display order within notebook
         author_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
         last_edited_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        permitted_editors JSONB DEFAULT '[]'::jsonb,
         created_at  TIMESTAMPTZ DEFAULT NOW(),
         updated_at  TIMESTAMPTZ DEFAULT NOW()
       );
@@ -247,6 +261,20 @@ async function initDb() {
     `;
 
     await sql`
+      CREATE TABLE IF NOT EXISTS personal_feed (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+        task_id INTEGER REFERENCES tasks(id) ON DELETE SET NULL,
+        author_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        content TEXT NOT NULL,
+        type VARCHAR(50) DEFAULT 'follow_up',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `;
+    try { await sql`CREATE INDEX IF NOT EXISTS idx_personal_feed_user_group ON personal_feed (user_id, group_id)`; } catch (e) {}
+
+    await sql`
       CREATE TABLE IF NOT EXISTS calendar_events (
         id SERIAL PRIMARY KEY,
         group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
@@ -302,6 +330,8 @@ async function initDb() {
     try { await sql`ALTER TABLE notes ADD COLUMN IF NOT EXISTS is_pinned INTEGER DEFAULT 0`; } catch (e) {}
     try { await sql`ALTER TABLE notes ADD COLUMN IF NOT EXISTS tags TEXT`; } catch (e) {}
     try { await sql`ALTER TABLE notes ADD COLUMN IF NOT EXISTS author_user_id INTEGER`; } catch (e) {}
+    try { await sql`ALTER TABLE notes ADD COLUMN IF NOT EXISTS folder_id INTEGER REFERENCES notebook_folders(id) ON DELETE CASCADE`; } catch (e) {}
+    try { await sql`ALTER TABLE notes ADD COLUMN IF NOT EXISTS permitted_editors JSONB DEFAULT '[]'::jsonb`; } catch (e) {}
     try { await sql`ALTER TABLE notes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`; } catch (e) {}
 
     // notebooks table migrations
@@ -313,6 +343,8 @@ async function initDb() {
     try { await sql`ALTER TABLE notebook_pages ADD COLUMN IF NOT EXISTS content TEXT`; } catch (e) {}
     try { await sql`ALTER TABLE notebook_pages ADD COLUMN IF NOT EXISTS position INTEGER NOT NULL DEFAULT 0`; } catch (e) {}
     try { await sql`ALTER TABLE notebook_pages ADD COLUMN IF NOT EXISTS last_edited_by_user_id INTEGER`; } catch (e) {}
+    try { await sql`ALTER TABLE notebook_pages ADD COLUMN IF NOT EXISTS folder_id INTEGER REFERENCES notebook_folders(id) ON DELETE CASCADE`; } catch (e) {}
+    try { await sql`ALTER TABLE notebook_pages ADD COLUMN IF NOT EXISTS permitted_editors JSONB DEFAULT '[]'::jsonb`; } catch (e) {}
     try { await sql`ALTER TABLE notebook_pages ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`; } catch (e) {}
 
     // notebook_permissions table migrations
@@ -353,6 +385,9 @@ async function initDb() {
       `;
       try { await sql`ALTER TABLE discussion_mentions ADD COLUMN IF NOT EXISTS mentioned_topic_id INTEGER REFERENCES discussions(id) ON DELETE CASCADE`; } catch (e) {}
       try { await sql`ALTER TABLE discussion_mentions ALTER COLUMN mentioned_user_id DROP NOT NULL`; } catch (e) {}
+      try { await sql`ALTER TABLE discussion_mentions ALTER COLUMN discussion_id DROP NOT NULL`; } catch (e) {}
+      try { await sql`ALTER TABLE discussion_mentions ALTER COLUMN comment_id DROP NOT NULL`; } catch (e) {}
+      try { await sql`ALTER TABLE discussion_mentions ADD COLUMN IF NOT EXISTS content TEXT`; } catch (e) {}
       await sql`CREATE INDEX IF NOT EXISTS idx_discussion_mentions_user_group ON discussion_mentions (mentioned_user_id, group_id)`;
       try { await sql`CREATE INDEX IF NOT EXISTS idx_discussion_mentions_topic ON discussion_mentions (mentioned_topic_id, group_id)`; } catch (e) {}
     } catch (e) { console.error('discussion_mentions init failed:', e.message); }

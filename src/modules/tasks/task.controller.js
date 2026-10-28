@@ -299,6 +299,34 @@ async function respondAssist(req, res) {
   }
 }
 
+/**
+ * POST /api/tasks/:taskId/follow-up
+ * Leader sends a follow-up ping on a task to the assigned member.
+ */
+async function followUpTask(req, res) {
+  try {
+    const taskId = req.params.taskId || req.params.id;
+    const { message } = req.body || {};
+
+    const result = await taskService.followUpOnTask({
+      taskId,
+      groupId: req.params.groupId || req.groupId,
+      leaderUserId: req.user.id,
+      leaderFullName: req.user.full_name,
+      leaderRole: req.membership.role,
+      message
+    });
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: result.message,
+      data: result.feedEntry
+    });
+  } catch (error) {
+    return res.status(errStatus(error)).json({ success: false, message: error.message });
+  }
+}
+
 module.exports = {
   // Task CRUD
   getTasks,
@@ -306,6 +334,7 @@ module.exports = {
   updateStatus,
   reviewApproval,
   remove,
+  followUpTask,
   // Flagging
   flagTask,
   unflagTask,

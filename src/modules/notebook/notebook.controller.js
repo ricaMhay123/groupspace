@@ -33,12 +33,14 @@ async function getGroupNotebooks(req, res) {
     const groupId = req.params.groupId;
     const notebooks = await notebookService.getGroupNotebooks(groupId, req.user.id);
     const flatNotes = await notebookService.getGroupNotes(groupId, req.query.search);
+    const folders   = await notebookService.getGroupFolders(groupId);
 
     return res.status(HTTP_STATUS.OK).json({
       success: true,
       data: notebooks,
       notebooks,
-      notes: flatNotes
+      notes: flatNotes,
+      folders
     });
   } catch (error) {
     return res.status(errorStatus(error)).json({ success: false, message: error.message });
@@ -176,6 +178,7 @@ async function getPages(req, res) {
 
     let notebook = null;
     let pages = [];
+    let folders = [];
     try {
       const result = await notebookService.getNotebookPages(
         notebookId,
@@ -184,22 +187,86 @@ async function getPages(req, res) {
       );
       notebook = result.notebook;
       pages = result.pages || [];
+      if (notebook && notebook.group_id) {
+        folders = await notebookService.getGroupFolders(notebook.group_id);
+      } else if (groupId) {
+        folders = await notebookService.getGroupFolders(groupId);
+      }
     } catch (err) {
       // Empty or non-existent notebook: return empty list safely instead of 500 / 404
-      return res.status(HTTP_STATUS.OK).json({ success: true, data: { notebook: null, pages: [] }, pages: [] });
+      return res.status(HTTP_STATUS.OK).json({ success: true, data: { notebook: null, pages: [], folders: [] }, pages: [], folders: [] });
     }
 
-    return res.status(HTTP_STATUS.OK).json({ success: true, data: { notebook, pages }, pages });
+    return res.status(HTTP_STATUS.OK).json({ success: true, data: { notebook, pages, folders }, pages, folders });
   } catch (error) {
-    return res.status(HTTP_STATUS.OK).json({ success: true, data: { notebook: null, pages: [] }, pages: [] });
+    return res.status(HTTP_STATUS.OK).json({ success: true, data: { notebook: null, pages: [], folders: [] }, pages: [], folders: [] });
+  }
+}
+
+// ─── Folder Sub-Resource ──────────────────────────────────────────────────────
+
+async function getFolders(req, res) {
+  try {
+    const groupId = req.params.groupId || req.query.groupId || req.body?.groupId;
+    if (!groupId) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'groupId is required.' });
+    }
+    const folders = await notebookService.getGroupFolders(groupId);
+    return res.status(HTTP_STATUS.OK).json({ success: true, data: folders });
+  } catch (error) {
+    return res.status(errorStatus(error)).json({ success: false, message: error.message });
+  }
+}
+
+async function createFolder(req, res) {
+  try {
+    const groupId = req.params.groupId || req.body.groupId || req.query.groupId;
+    const { name, notebookId } = req.body;
+    if (!groupId) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'groupId is required.' });
+    }
+    const folder = await notebookService.createFolder({
+      groupId,
+      notebookId,
+      name,
+      userId: req.user.id,
+      userName: req.user.full_name
+    });
+    return res.status(HTTP_STATUS.CREATED).json({
+      success: true,
+      message: 'Folder created successfully.',
+      data: folder
+    });
+  } catch (error) {
+    return res.status(errorStatus(error)).json({ success: false, message: error.message });
+  }
+}
+
+async function deleteFolder(req, res) {
+  try {
+    const folderId = req.params.folderId || req.params.id;
+    const groupId = req.params.groupId || req.query.groupId || req.body?.groupId;
+    await notebookService.deleteFolder({
+      folderId,
+      groupId,
+      userId: req.user.id,
+      userRole: req.membership?.role,
+      userName: req.user.full_name
+    });
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Folder and all notes inside it deleted.'
+    });
+  } catch (error) {
+    return res.status(errorStatus(error)).json({ success: false, message: error.message });
   }
 }
 
 /**
  * POST /api/notebooks/:id/pages and POST /api/notebooks/pages
- * Add a page to a notebook (requires editor or admin).
+ * Add a page to a notebook.
  *
- * Body: { title, content?, position?, groupId? }
+ * Body: { title?, content?, position?, folderId?, groupId? }
  */
 async function createPage(req, res) {
   try {
@@ -249,13 +316,15 @@ async function createPage(req, res) {
       });
     }
 
-    const { title, content, position } = req.body;
+    const { title, content, position, folderId, folder_id, permittedEditors, permitted_editors } = req.body;
 
     const page = await notebookService.createPage({
       notebookId,
+      folderId: folderId !== undefined ? folderId : folder_id,
       title,
       content,
       position,
+      permittedEditors: permittedEditors !== undefined ? permittedEditors : permitted_editors,
       authorUserId: req.user.id,
       authorName:   req.user.full_name,
       groupRole:    req.membership?.role || 'MEMBER'
@@ -273,23 +342,23 @@ async function createPage(req, res) {
 
 /**
  * PATCH /api/notebooks/:id/pages/:pageId
- * Update a page's content (requires editor or admin).
- *
- * Body: { title?, content?, position? }
+ * Update a page's content, folder, or permissions.
  */
 async function updatePage(req, res) {
   try {
-    const { title, content, position } = req.body;
+    const { title, content, position, folderId, folder_id, permittedEditors, permitted_editors } = req.body;
 
     const page = await notebookService.updatePage({
-      pageId:       req.params.pageId,
-      notebookId:   req.params.id,
+      pageId:           req.params.pageId,
+      notebookId:       req.params.id,
+      folderId:         folderId !== undefined ? folderId : folder_id,
       title,
       content,
       position,
-      editorUserId: req.user.id,
-      editorName:   req.user.full_name,
-      groupRole:    req.membership.role
+      permittedEditors: permittedEditors !== undefined ? permittedEditors : permitted_editors,
+      editorUserId:     req.user.id,
+      editorName:       req.user.full_name,
+      groupRole:        req.membership?.role
     });
 
     return res.status(HTTP_STATUS.OK).json({
@@ -303,8 +372,38 @@ async function updatePage(req, res) {
 }
 
 /**
+ * PUT /api/notebooks/pages/:pageId/permissions
+ * Update granular creator-based permitted_editors for a page or note.
+ */
+async function updatePagePermissions(req, res) {
+  try {
+    const pageId = req.params.pageId || req.params.noteId || req.params.id;
+    const groupId = req.params.groupId || req.body.groupId || req.query.groupId;
+    const permittedEditors = req.body.permittedEditors !== undefined
+      ? req.body.permittedEditors
+      : req.body.permitted_editors;
+
+    const updated = await notebookService.updatePagePermissions({
+      pageId,
+      groupId,
+      actorUserId: req.user.id,
+      actorRole: req.membership?.role,
+      permittedEditors
+    });
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Page share permissions updated.',
+      data: updated
+    });
+  } catch (error) {
+    return res.status(errorStatus(error)).json({ success: false, message: error.message });
+  }
+}
+
+/**
  * DELETE /api/notebooks/:id/pages/:pageId
- * Delete a page (requires editor or admin).
+ * Delete a page (creator or leader).
  */
 async function deletePage(req, res) {
   try {
@@ -312,7 +411,7 @@ async function deletePage(req, res) {
       pageId:     req.params.pageId,
       notebookId: req.params.id,
       userId:     req.user.id,
-      groupRole:  req.membership.role
+      groupRole:  req.membership?.role
     });
 
     return res.status(HTTP_STATUS.OK).json({ success: true, message: 'Page deleted.' });
@@ -326,15 +425,6 @@ async function deletePage(req, res) {
 /**
  * POST /api/notebooks/export/docx
  * Generate and stream a .docx file for a single notebook page.
- *
- * Body: {
- *   notebookId  : number,   // Parent notebook ID (used for access check & filename)
- *   pageId      : number,   // Page to export
- *   htmlContent : string,   // Raw Quill editor HTML from the client
- *   title       : string,   // Page title (becomes H1 + filename)
- *   font?       : string,   // Optional: 'Arial' | 'Calibri' | 'Times New Roman'
- *   lineHeight? : number,   // Optional: 1.0 | 1.15 | 1.5 | 2.0
- * }
  */
 async function exportDocx(req, res) {
   try {
@@ -347,17 +437,16 @@ async function exportDocx(req, res) {
       lineHeight = 1.5,
     } = req.body;
 
-    if (!notebookId || !pageId) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        success: false,
-        message: 'notebookId and pageId are required.'
-      });
+    let resolvedTitle = 'Untitled Page';
+    if (notebookId && pageId) {
+      try {
+        const resolved = await notebookExport.resolvePageForExport(pageId, notebookId);
+        resolvedTitle = resolved.title;
+      } catch (e) {
+        // Fallback to client-supplied title if page is unsaved or in flat notes table
+      }
     }
 
-    // Verify page exists and belongs to this notebook (server-side guard)
-    const { title: resolvedTitle } = await notebookExport.resolvePageForExport(pageId, notebookId);
-
-    // Use client-supplied title if present (may be dirty/unsaved); fall back to DB title
     const documentTitle = (title || resolvedTitle || 'Untitled Page').trim();
 
     // Build .docx buffer
@@ -392,9 +481,11 @@ async function getNotes(req, res) {
   try {
     const groupId = req.params.groupId;
     const notes = await notebookService.getGroupNotes(groupId, req.query.search);
+    const folders = await notebookService.getGroupFolders(groupId);
     return res.status(HTTP_STATUS.OK).json({
       success: true,
-      data: notes
+      data: notes,
+      folders
     });
   } catch (error) {
     return res.status(errorStatus(error)).json({
@@ -407,13 +498,15 @@ async function getNotes(req, res) {
 async function create(req, res) {
   try {
     const groupId = req.params.groupId || req.body.groupId;
-    const { title, content, tags, isPinned } = req.body;
+    const { title, content, tags, isPinned, folderId, folder_id, permittedEditors, permitted_editors } = req.body;
     const note = await notebookService.createNote({
       groupId,
+      folderId: folderId !== undefined ? folderId : folder_id,
       title,
       content,
       tags,
       isPinned,
+      permittedEditors: permittedEditors !== undefined ? permittedEditors : permitted_editors,
       authorUserId: req.user.id,
       authorName: req.user.full_name
     });
@@ -435,14 +528,16 @@ async function update(req, res) {
   try {
     const groupId = req.params.groupId;
     const noteId = req.params.noteId;
-    const { title, content, tags, isPinned } = req.body;
+    const { title, content, tags, isPinned, folderId, folder_id, permittedEditors, permitted_editors } = req.body;
     const note = await notebookService.updateNote({
       noteId,
       groupId,
+      folderId: folderId !== undefined ? folderId : folder_id,
       title,
       content,
       tags,
       isPinned,
+      permittedEditors: permittedEditors !== undefined ? permittedEditors : permitted_editors,
       userId: req.user.id,
       userRole: req.membership?.role,
       userName: req.user.full_name
@@ -489,9 +584,13 @@ module.exports = {
   createNotebook,
   updatePermissions,
   deleteNotebook,
+  getFolders,
+  createFolder,
+  deleteFolder,
   getPages,
   createPage,
   updatePage,
+  updatePagePermissions,
   deletePage,
   exportDocx,
   // Legacy / Dashboard note handlers:

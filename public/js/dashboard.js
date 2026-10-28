@@ -114,15 +114,15 @@ function showDashboardEmptyState() {
             padding: 13px 28px; background: transparent; color: #4f46e5;
             border: 1.5px solid #c7d2fe; border-radius: 12px;
             font-weight: 600; font-size: 0.95rem; text-decoration: none;
-          ">🔗 Join with Invite Code</a>
+          ">Join with Invite Code</a>
         </div>
         <div style="
           margin-top: 36px; padding-top: 28px; border-top: 1px solid #f1f5f9;
           display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
         ">
-          <div><div style="font-size:1.5rem;margin-bottom:6px;">📋</div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Kanban Tasks</div></div>
-          <div><div style="font-size:1.5rem;margin-bottom:6px;">💬</div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Discussions</div></div>
-          <div><div style="font-size:1.5rem;margin-bottom:6px;">💰</div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Expenses</div></div>
+          <div><div style="display:flex;justify-content:center;margin-bottom:6px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.75"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Kanban Tasks</div></div>
+          <div><div style="display:flex;justify-content:center;margin-bottom:6px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.75"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Discussions</div></div>
+          <div><div style="display:flex;justify-content:center;margin-bottom:6px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.75"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Expenses</div></div>
         </div>
       </div>
     </div>
@@ -1169,13 +1169,25 @@ async function removeMemberFromWorkspace(userId, memberName) {
 }
 
 function getActivityIcon(type) {
-  if (type.includes('FLAGGED') || type.includes('BLOCKED')) return '⚠️';
-  if (type.includes('TASK')) return '📋';
-  if (type.includes('EXPENSE')) return '💰';
-  if (type.includes('NOTE') || type.includes('NOTEBOOK')) return '📝';
-  if (type.includes('TOPIC') || type.includes('COMMENT')) return '💬';
-  if (type.includes('WORKSPACE') || type.includes('MEMBER')) return '👥';
-  return '⚡';
+  if (type.includes('FLAGGED') || type.includes('BLOCKED')) {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>`;
+  }
+  if (type.includes('TASK')) {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`;
+  }
+  if (type.includes('EXPENSE')) {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`;
+  }
+  if (type.includes('NOTE') || type.includes('NOTEBOOK')) {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+  }
+  if (type.includes('TOPIC') || type.includes('COMMENT') || type.includes('MENTION')) {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+  }
+  if (type.includes('WORKSPACE') || type.includes('MEMBER')) {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+  }
+  return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>`;
 }
 
 // ================= TAB 2: KANBAN TASKS & DUAL-APPROVAL ================= //
@@ -1223,6 +1235,9 @@ async function loadTasks() {
 }
 
 function createDefaultKanbanCard(task) {
+  if (typeof renderKanbanCard === 'function') {
+    return renderKanbanCard(task);
+  }
   const card = document.createElement('div');
   const statusClass = task.status === 'PENDING_APPROVAL' ? 'pending-approval' : task.status === 'DONE' ? 'done' : '';
   card.className = `kanban-card ${statusClass}`.trim();
@@ -1333,6 +1348,298 @@ async function deleteTask(taskId) {
 }
 
 // ================= TAB 3: NOTEBOOK ================= //
+let dashboardNotebookFolders = [];
+let activeDashboardFolderFilter = 'ALL';
+let dashboardNotebookNotesCache = [];
+let activeShareNoteId = null;
+
+function extractDashboardAutoTitle(rawContent = '') {
+  const cleaned = String(rawContent || '')
+    .replace(/^<!--GS_SHAPES_JSON:.*?-->/, '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .trim();
+  if (!cleaned) return 'Untitled Page';
+  const firstLine = cleaned.split(/\r?\n/).map(l => l.trim()).find(Boolean) || cleaned;
+  const sentenceMatch = firstLine.match(/^(.+?[.!?])(?:\s|$)/);
+  const candidate = (sentenceMatch ? sentenceMatch[1] : firstLine).trim();
+  return candidate.length > 65 ? candidate.slice(0, 65).trim() : candidate;
+}
+
+async function loadDashboardFolders() {
+  if (!currentGroupId) return [];
+  try {
+    const res = await apiFetch(`/api/notebooks/folders/${currentGroupId}`);
+    dashboardNotebookFolders = Array.isArray(res.data) ? res.data : [];
+  } catch (err) {
+    dashboardNotebookFolders = [];
+  }
+  renderDashboardFoldersBar();
+  populateNoteFolderSelect();
+  return dashboardNotebookFolders;
+}
+
+function populateNoteFolderSelect() {
+  const select = document.getElementById('noteFolderSelect');
+  if (!select) return;
+  select.innerHTML = `<option value="">Uncategorized (Root)</option>` +
+    dashboardNotebookFolders.map(f => `<option value="${f.id}">📁 ${escapeHtml(f.name)}</option>`).join('');
+}
+
+function renderDashboardFoldersBar() {
+  const bar = document.getElementById('notebookFoldersBar');
+  if (!bar) return;
+
+  const allActive = activeDashboardFolderFilter === 'ALL';
+  let html = `
+    <button type="button" onclick="filterDashboardNotesByFolder('ALL')" style="padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid ${allActive ? '#10b981' : 'var(--border)'}; background:${allActive ? 'rgba(16,185,129,0.15)' : 'var(--card)'}; color:${allActive ? '#10b981' : 'var(--text)'};">
+      📚 All Pages
+    </button>
+  `;
+
+  dashboardNotebookFolders.forEach(f => {
+    const isActive = String(activeDashboardFolderFilter) === String(f.id);
+    html += `
+      <div style="display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; border:1px solid ${isActive ? '#38bdf8' : 'var(--border)'}; background:${isActive ? 'rgba(56,189,248,0.15)' : 'var(--card)'}; color:${isActive ? '#38bdf8' : 'var(--text)'};">
+        <span style="cursor:pointer;" onclick="filterDashboardNotesByFolder(${f.id})">📁 ${escapeHtml(f.name)}</span>
+        <button type="button" title="Delete Folder" onclick="deleteDashboardFolder(${f.id}, event)" style="background:transparent; border:none; color:#ef4444; font-size:11px; cursor:pointer; padding:0 2px; line-height:1;">✕</button>
+      </div>
+    `;
+  });
+
+  bar.innerHTML = html;
+}
+
+function filterDashboardNotesByFolder(folderId) {
+  activeDashboardFolderFilter = folderId;
+  renderDashboardFoldersBar();
+  renderDashboardNotesGrid(dashboardNotebookNotesCache);
+}
+
+async function promptCreateDashboardFolder() {
+  const name = window.prompt('Enter new folder name:');
+  if (!name || !name.trim()) return;
+  try {
+    await apiFetch('/api/notebooks/folders', {
+      method: 'POST',
+      body: JSON.stringify({ groupId: currentGroupId, name: name.trim() })
+    });
+    showToast('Folder created!', 'success');
+    await loadDashboardFolders();
+  } catch (err) {
+    showToast(err.message || 'Failed to create folder.', 'error');
+  }
+}
+
+async function deleteDashboardFolder(folderId, e) {
+  if (e) e.stopPropagation();
+  const confirmed = window.confirm('Are you sure you want to delete this folder and all notes inside it? This action cannot be undone.');
+  if (!confirmed) return;
+
+  try {
+    await apiFetch(`/api/notebooks/folders/${folderId}?groupId=${currentGroupId}`, {
+      method: 'DELETE'
+    });
+    if (String(activeDashboardFolderFilter) === String(folderId)) {
+      activeDashboardFolderFilter = 'ALL';
+    }
+    showToast('Folder and its notes deleted.', 'success');
+    await loadNotebook();
+  } catch (err) {
+    showToast(err.message || 'Failed to delete folder.', 'error');
+  }
+}
+
+function openCreateNoteModal() {
+  populateNoteFolderSelect();
+  const select = document.getElementById('noteFolderSelect');
+  if (select && activeDashboardFolderFilter !== 'ALL') {
+    select.value = String(activeDashboardFolderFilter);
+  }
+  openModal('createNoteModal');
+}
+
+async function handleDashboardImportDocument(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    const rawText = String(ev.target.result || '');
+    const autoTitle = extractDashboardAutoTitle(rawText);
+    const folderId = activeDashboardFolderFilter !== 'ALL' ? Number(activeDashboardFolderFilter) : null;
+    try {
+      const res = await apiFetch(`/api/groups/${currentGroupId}/notes`, {
+        method: 'POST',
+        body: JSON.stringify({
+          title: autoTitle,
+          content: rawText,
+          folderId,
+          tags: 'imported'
+        })
+      });
+      showToast(`Imported "${autoTitle}"!`, 'success');
+      event.target.value = '';
+      await loadNotebook();
+      if (res && res.data && res.data.id) {
+        window.location.href = `/notebook.html?groupId=${currentGroupId}&noteId=${res.data.id}`;
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to import document.', 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+async function moveDashboardNoteToFolder(noteId, folderIdValue) {
+  const note = dashboardNotebookNotesCache.find(n => Number(n.id) === Number(noteId));
+  if (!note) return;
+  const folderId = folderIdValue ? Number(folderIdValue) : null;
+  try {
+    await apiFetch(`/api/groups/${currentGroupId}/notes/${noteId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        title: note.title,
+        content: note.content,
+        tags: note.tags || '',
+        isPinned: Boolean(note.is_pinned),
+        folderId
+      })
+    });
+    showToast('Moved page to folder.', 'success');
+    await loadNotebook();
+  } catch (err) {
+    showToast(err.message || 'Failed to move page.', 'error');
+  }
+}
+
+function openDashboardShareModal(noteId) {
+  const note = dashboardNotebookNotesCache.find(n => Number(n.id) === Number(noteId));
+  if (!note) return;
+  activeShareNoteId = note.id;
+
+  const titleLabel = document.getElementById('shareNoteTitleLabel');
+  if (titleLabel) titleLabel.textContent = note.title || extractDashboardAutoTitle(note.content);
+
+  let permitted = [];
+  if (Array.isArray(note.permitted_editors)) {
+    permitted = note.permitted_editors.map(Number);
+  } else if (typeof note.permitted_editors === 'string') {
+    try { permitted = JSON.parse(note.permitted_editors).map(Number); } catch (e) {}
+  }
+
+  const creatorId = Number(note.created_by || note.author_user_id || 0);
+  const members = (currentGroupDetails && Array.isArray(currentGroupDetails.members)) ? currentGroupDetails.members : [];
+  const listEl = document.getElementById('shareNoteMembersList');
+  if (listEl) {
+    if (members.length === 0) {
+      listEl.innerHTML = '<p style="color:var(--gray); font-size:12px;">No workspace members found.</p>';
+    } else {
+      listEl.innerHTML = members.map(m => {
+        const uid = Number(m.user_id || m.id);
+        const isCreator = uid === creatorId;
+        const isLeader = String(m.role || '').toLowerCase() === 'leader';
+        const isAlwaysAllowed = isCreator || isLeader;
+        const checked = isAlwaysAllowed || permitted.includes(uid);
+        return `
+          <label style="display:flex; align-items:center; justify-content:space-between; padding:8px 10px; border:1px solid var(--border); border-radius:8px; cursor:${isAlwaysAllowed ? 'default' : 'pointer'}; background:var(--card);">
+            <div>
+              <div style="font-size:13px; font-weight:600; color:var(--text);">${escapeHtml(m.full_name || m.email || 'Member')}</div>
+              <div style="font-size:11px; color:var(--gray);">${isCreator ? 'Page Creator (Owner)' : (isLeader ? 'Workspace Leader' : 'Member')}</div>
+            </div>
+            <input type="checkbox" class="share-note-member-cb" value="${uid}" ${checked ? 'checked' : ''} ${isAlwaysAllowed ? 'disabled' : ''}>
+          </label>
+        `;
+      }).join('');
+    }
+  }
+  openModal('shareNotePermissionsModal');
+}
+
+async function saveDashboardNotePermissions() {
+  if (!activeShareNoteId) return;
+  const checkboxes = document.querySelectorAll('.share-note-member-cb:not(:disabled)');
+  const permittedEditors = [];
+  checkboxes.forEach(cb => {
+    if (cb.checked) permittedEditors.push(Number(cb.value));
+  });
+
+  try {
+    await apiFetch(`/api/groups/${currentGroupId}/notes/${activeShareNoteId}/permissions`, {
+      method: 'PUT',
+      body: JSON.stringify({ permittedEditors })
+    });
+    closeModal('shareNotePermissionsModal');
+    showToast('Page edit permissions updated!', 'success');
+    await loadNotebook();
+  } catch (err) {
+    showToast(err.message || 'Failed to update permissions.', 'error');
+  }
+}
+
+function renderDashboardNotesGrid(notes) {
+  const container = document.getElementById('notebookGrid');
+  if (!container) return;
+
+  const filtered = activeDashboardFolderFilter === 'ALL'
+    ? notes
+    : notes.filter(n => String(n.folder_id || '') === String(activeDashboardFolderFilter));
+
+  if (!filtered || filtered.length === 0) {
+    container.innerHTML = '<p style="color:var(--gray); padding:30px;">No notebook pages in this view. Click <strong>+ New Page</strong> or <strong>📥 Import Document</strong> to add one!</p>';
+    return;
+  }
+
+  const currUid = currentUser ? Number(currentUser.id) : 0;
+  const isLeaderRole = currentGroupDetails && String(currentGroupDetails.role || '').toLowerCase() === 'leader';
+
+  container.innerHTML = filtered.map(n => {
+    const displayTitle = n.title || extractDashboardAutoTitle(n.content || '');
+    const cleanPreview = (n.content || '').replace(/^<!--GS_SHAPES_JSON:.*?-->/, '').replace(/<[^>]*>/g, '').trim();
+    const creatorId = Number(n.created_by || n.author_user_id || 0);
+    let permitted = [];
+    if (Array.isArray(n.permitted_editors)) permitted = n.permitted_editors.map(Number);
+    const canEdit = isLeaderRole || creatorId === currUid || permitted.includes(currUid);
+    const canManagePerms = isLeaderRole || creatorId === currUid;
+
+    return `
+      <div class="note-card ${n.is_pinned ? 'pinned' : ''}" style="cursor:pointer;" onclick="window.location.href='/notebook.html?groupId=' + currentGroupId + '&noteId=' + ${n.id}" title="Click to open in Full Editor">
+        <div>
+          <h4 style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <span>${escapeHtml(displayTitle)}</span>
+            <span style="font-size:11px; padding:2px 8px; background:${canEdit ? 'rgba(82,214,138,0.15)' : 'rgba(148,163,184,0.18)'}; color:${canEdit ? '#52D68A' : '#94a3b8'}; border-radius:12px; font-weight:600; white-space:nowrap;">
+              ${canEdit ? '↗ Edit' : '🔒 Read-Only'}
+            </span>
+          </h4>
+          <p style="white-space:pre-wrap;">${escapeHtml(cleanPreview.slice(0, 220))}${cleanPreview.length > 220 ? '…' : ''}</p>
+        </div>
+        <div onclick="event.stopPropagation();">
+          <div style="margin-top:8px; display:flex; align-items:center; justify-content:space-between; gap:6px; flex-wrap:wrap;">
+            <select onchange="moveDashboardNoteToFolder(${n.id}, this.value)" style="font-size:11px; padding:2px 6px; border-radius:6px; background:var(--card); color:var(--text); border:1px solid var(--border); cursor:pointer;" title="Move to folder">
+              <option value="">📁 Uncategorized</option>
+              ${dashboardNotebookFolders.map(f => `<option value="${f.id}" ${Number(n.folder_id) === Number(f.id) ? 'selected' : ''}>📁 ${escapeHtml(f.name)}</option>`).join('')}
+            </select>
+            ${canManagePerms ? `<button type="button" onclick="openDashboardShareModal(${n.id})" style="background:#0f172a; color:#ffffff; border:1px solid #334155; border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;" title="Share / Page Permissions">🔗 Share / Permissions</button>` : ''}
+          </div>
+          ${n.tags ? `
+            <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
+              ${n.tags.split(',').filter(t => t.trim()).map(t => `<span style="font-size:11px; padding:2px 8px; background:#202522; border-radius:6px; color:var(--primary); font-weight:600;">#${escapeHtml(t.trim())}</span>`).join('')}
+            </div>
+          ` : ''}
+          <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px;">
+            <span>✍️ ${escapeHtml(n.author_name || 'Member')}</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">📄 .txt</button>
+              <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">📕 .pdf</button>
+              <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">📘 .docx</button>
+              ${canManagePerms ? `<span style="cursor:pointer; color:#FF7272; margin-left:4px;" title="Delete Note" onclick="deleteNote(${n.id})">🗑️</span>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 async function loadNotebook(query = '') {
   const container = document.getElementById('notebookGrid');
   if (!container || !currentGroupId) return;
@@ -1340,6 +1647,8 @@ async function loadNotebook(query = '') {
   container.innerHTML = '<p style="color:var(--gray); padding:30px;">Loading notebook pages...</p>';
 
   try {
+    await loadDashboardFolders();
+
     // Primary: legacy flat notes endpoint
     const url = query
       ? `/api/groups/${currentGroupId}/notes?search=${encodeURIComponent(query)}`
@@ -1357,11 +1666,9 @@ async function loadNotebook(query = '') {
     if (notes.length === 0) {
       try {
         const nbRes = await apiFetch(`/api/notebooks/${currentGroupId}`);
-        // Try flat notes from response
         if (Array.isArray(nbRes.notes) && nbRes.notes.length > 0) {
           notes = nbRes.notes;
         } else if (Array.isArray(nbRes.data) && nbRes.data.length > 0) {
-          // nbRes.data are notebook objects — fetch pages from first one
           const primaryNotebook = nbRes.data[0];
           try {
             const pagesRes = await apiFetch(`/api/notebooks/${primaryNotebook.id}/pages`);
@@ -1373,6 +1680,10 @@ async function loadNotebook(query = '') {
                 content: p.content || '',
                 tags: '',
                 is_pinned: false,
+                folder_id: p.folder_id || null,
+                folder_name: p.folder_name || null,
+                created_by: p.created_by || p.author_user_id,
+                permitted_editors: p.permitted_editors || [],
                 author_name: p.author_name || 'Member'
               }));
             }
@@ -1385,38 +1696,8 @@ async function loadNotebook(query = '') {
       }
     }
 
-    if (!notes || notes.length === 0) {
-      container.innerHTML = '<p style="color:var(--gray); padding:30px;">No notebook pages yet. Click <strong>+ New Page</strong> to create one!</p>';
-      return;
-    }
-
-    container.innerHTML = notes.map(n => `
-      <div class="note-card ${n.is_pinned ? 'pinned' : ''}" style="cursor:pointer;" onclick="window.location.href='/notebook.html?groupId=' + currentGroupId + '&noteId=' + ${n.id}" title="Click to open in Full Editor">
-        <div>
-          <h4 style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-            ${escapeHtml(n.title || 'Untitled')}
-            <span style="font-size:11px; padding:2px 8px; background:rgba(82,214,138,0.15); color:#52D68A; border-radius:12px; font-weight:600; white-space:nowrap;">↗ Edit</span>
-          </h4>
-          <p style="white-space:pre-wrap;">${escapeHtml((n.content || '').replace(/^<!--GS_SHAPES_JSON:.*?-->/, '').replace(/<[^>]*>/g, '').trim())}</p>
-        </div>
-        <div onclick="event.stopPropagation();">
-          ${n.tags ? `
-            <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
-              ${n.tags.split(',').filter(t => t.trim()).map(t => `<span style="font-size:11px; padding:2px 8px; background:#202522; border-radius:6px; color:var(--primary); font-weight:600;">#${escapeHtml(t.trim())}</span>`).join('')}
-            </div>
-          ` : ''}
-          <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px;">
-            <span>✍️ ${escapeHtml(n.author_name || 'Member')}</span>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id}, '${escapeHtml(n.title)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">📄 .txt</button>
-              <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id}, '${escapeHtml(n.title)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">📕 .pdf</button>
-              <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id}, '${escapeHtml(n.title)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">📘 .docx</button>
-              <span style="cursor:pointer; color:#FF7272; margin-left:4px;" title="Delete Note" onclick="deleteNote(${n.id})">🗑️</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    `).join('');
+    dashboardNotebookNotesCache = notes;
+    renderDashboardNotesGrid(notes);
   } catch (err) {
     console.error('[Notebook] loadNotebook error:', err);
     container.innerHTML = '<p style="color:var(--danger,#ff6b6b); padding:30px;">Error loading notebook. Please try again.</p>';
@@ -1440,15 +1721,18 @@ async function handleCreateNote(e) {
   const contentEl = document.getElementById('noteContent');
   const tagsEl    = document.getElementById('noteTags');
   const pinnedEl  = document.getElementById('notePinned');
+  const folderEl  = document.getElementById('noteFolderSelect');
 
-  const title    = titleEl ? titleEl.value.trim() : '';
   const content  = contentEl ? contentEl.value : '';
+  const manualTitle = titleEl ? titleEl.value.trim() : '';
+  const title    = manualTitle || extractDashboardAutoTitle(content);
   const tags     = tagsEl ? tagsEl.value.trim() : '';
   const isPinned = pinnedEl ? pinnedEl.checked : false;
+  const folderId = (folderEl && folderEl.value) ? Number(folderEl.value) : null;
 
-  if (!title) {
-    showToast('Page title is required.', 'error');
-    if (titleEl) titleEl.focus();
+  if (!content.trim() && !manualTitle) {
+    showToast('Please type some content into the note canvas.', 'error');
+    if (contentEl) contentEl.focus();
     return;
   }
 
@@ -1463,7 +1747,7 @@ async function handleCreateNote(e) {
   try {
     const res = await apiFetch(`/api/groups/${currentGroupId}/notes`, {
       method: 'POST',
-      body: JSON.stringify({ title, content, tags, isPinned })
+      body: JSON.stringify({ title, content, tags, isPinned, folderId })
     });
 
     closeModal('createNoteModal');
@@ -1471,7 +1755,7 @@ async function handleCreateNote(e) {
     const form = document.getElementById('createNoteForm');
     if (form) form.reset();
 
-    showToast('Page added! Opening in editor...', 'success');
+    showToast(`Page "${title}" saved! Opening in editor...`, 'success');
     await loadNotebook();
 
     const newNoteId = res && res.data ? res.data.id : null;
@@ -1508,124 +1792,20 @@ async function deleteNote(noteId) {
 }
 
 // ================= PERSONAL FEED DRAWER ================= //
-let personalFeedOpen = false;
-
 async function openPersonalFeedDrawer() {
-  const drawer = document.getElementById('personalFeedDrawer');
-  if (!drawer) { injectPersonalFeedDrawer(); return openPersonalFeedDrawer(); }
-
-  personalFeedOpen = !personalFeedOpen;
-  drawer.style.transform = personalFeedOpen ? 'translateX(0)' : 'translateX(100%)';
-
-  if (personalFeedOpen) {
-    await renderPersonalFeed();
+  if (typeof window.togglePersonalFeed === 'function') {
+    return window.togglePersonalFeed();
   }
-}
-
-function injectPersonalFeedDrawer() {
-  if (document.getElementById('personalFeedDrawer')) return;
-
-  const drawerHtml = `
-    <div id="personalFeedDrawer" style="
-      position:fixed; top:0; right:0; width:340px; height:100vh;
-      background:var(--sidebar-bg,#0f1613); border-left:1px solid var(--border,#2B342F);
-      z-index:9999; transform:translateX(100%); transition:transform 0.3s cubic-bezier(.4,0,.2,1);
-      display:flex; flex-direction:column; overflow:hidden;
-      box-shadow:-8px 0 32px rgba(0,0,0,0.35);
-    ">
-      <div style="padding:20px 18px 14px; border-bottom:1px solid var(--border,#2B342F); display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <h3 style="margin:0; font-size:16px; font-weight:700; color:var(--text,#E1E7E3);">My Feed</h3>
-          <p style="margin:4px 0 0; font-size:12px; color:var(--gray,#7A8C84);">Mentions, approvals & help requests</p>
-        </div>
-        <button onclick="openPersonalFeedDrawer()" style="background:none; border:none; color:var(--gray,#7A8C84); font-size:18px; cursor:pointer; padding:4px 8px;">✕</button>
-      </div>
-      <div id="personalFeedContent" style="flex:1; overflow-y:auto; padding:16px;">
-        <p style="color:var(--gray,#7A8C84); text-align:center; padding:30px 0;">Loading feed...</p>
-      </div>
-    </div>
-  `;
-  document.body.insertAdjacentHTML('beforeend', drawerHtml);
-}
-
-async function renderPersonalFeed() {
-  const content = document.getElementById('personalFeedContent');
-  if (!content) return;
-  content.innerHTML = '<p style="color:var(--gray,#7A8C84); text-align:center; padding:30px 0;">Loading feed...</p>';
-
-  try {
-    const res = await apiFetch('/api/user/personal-feed');
-    const data = res.data || {};
-    const mentions = data.mentions || [];
-    const pendingApprovals = data.pendingApprovals || [];
-    const helpRequests = data.helpRequests || [];
-
-    const total = mentions.length + pendingApprovals.length + helpRequests.length;
-
-    if (total === 0) {
-      content.innerHTML = `
-        <div style="text-align:center; padding:40px 20px;">
-          <div style="font-size:3rem; margin-bottom:12px;">✅</div>
-          <h4 style="color:var(--text,#E1E7E3); margin-bottom:6px;">You're all caught up!</h4>
-          <p style="color:var(--gray,#7A8C84); font-size:13px;">No pending mentions, approvals or help requests.</p>
-        </div>
-      `;
-      return;
+  const drawer = document.getElementById('feedDrawer');
+  const overlay = document.getElementById('feedDrawerOverlay');
+  if (drawer && overlay) {
+    const willOpen = !drawer.classList.contains('open');
+    drawer.classList.toggle('open', willOpen);
+    overlay.classList.toggle('open', willOpen);
+    drawer.setAttribute('aria-hidden', willOpen ? 'false' : 'true');
+    if (willOpen && typeof window.refreshAppFeed === 'function') {
+      window.refreshAppFeed();
     }
-
-    let html = '';
-
-    if (pendingApprovals.length > 0) {
-      html += `<div style="margin-bottom:20px;">
-        <h4 style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--warning,#FFB347); margin-bottom:10px;">⏳ Pending Approvals (${pendingApprovals.length})</h4>
-        ${pendingApprovals.map(t => `
-          <div style="background:#1C2A22; border:1px solid #2B4028; border-radius:10px; padding:12px 14px; margin-bottom:8px;">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-              <div style="font-weight:600; font-size:13px; color:#E1E7E3;">${escapeHtml(t.title)}</div>
-              <span style="font-size:10px; padding:2px 8px; background:#FFB34722; color:#FFB347; border-radius:20px; font-weight:700; white-space:nowrap; margin-left:8px;">PENDING</span>
-            </div>
-            <div style="font-size:11px; color:var(--gray,#7A8C84); margin-top:4px;">Requested by: ${escapeHtml(t.creator_name || 'Member')}</div>
-            <div style="display:flex; gap:8px; margin-top:10px;">
-              <button onclick="approveTask(${t.id}, true); renderPersonalFeed();" style="flex:1; padding:6px; background:#52D68A; border:none; color:#0a1610; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">✅ Approve</button>
-              <button onclick="approveTask(${t.id}, false); renderPersonalFeed();" style="flex:1; padding:6px; background:#2B342F; border:1px solid #3D5045; color:#E1E7E3; border-radius:6px; font-size:12px; cursor:pointer;">🔄 Revise</button>
-            </div>
-          </div>
-        `).join('')}
-      </div>`;
-    }
-
-    if (helpRequests.length > 0) {
-      html += `<div style="margin-bottom:20px;">
-        <h4 style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#FF7272; margin-bottom:10px;">⚠️ Help Needed (${helpRequests.length})</h4>
-        ${helpRequests.map(t => `
-          <div style="background:#2A1C1C; border:1px solid #3D2828; border-radius:10px; padding:12px 14px; margin-bottom:8px;">
-            <div style="font-weight:600; font-size:13px; color:#E1E7E3;">${escapeHtml(t.title)}</div>
-            <div style="font-size:11px; color:var(--gray,#7A8C84); margin-top:4px;">
-              ${t.flagged_reason ? `Blocked: ${escapeHtml(t.flagged_reason)}` : 'Member needs peer assistance'}
-            </div>
-            <div style="font-size:11px; color:#7A8C84; margin-top:2px;">Assigned to: ${escapeHtml(t.assignee_name || 'Member')}</div>
-            <button onclick="switchTab('tasks'); openPersonalFeedDrawer();" style="width:100%; margin-top:10px; padding:6px; background:#2B342F; border:1px solid #FF727244; color:#FF9999; border-radius:6px; font-size:12px; cursor:pointer;">🙋 View in Tasks</button>
-          </div>
-        `).join('')}
-      </div>`;
-    }
-
-    if (mentions.length > 0) {
-      html += `<div style="margin-bottom:20px;">
-        <h4 style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--primary,#52D68A); margin-bottom:10px;">💬 Mentions (${mentions.length})</h4>
-        ${mentions.map(m => `
-          <div style="background:#1C221F; border:1px solid #2B342F; border-radius:10px; padding:12px 14px; margin-bottom:8px;">
-            <div style="font-size:13px; color:#E1E7E3;">${escapeHtml(m.content || '')}</div>
-            <div style="font-size:11px; color:var(--gray,#7A8C84); margin-top:6px;">— ${escapeHtml(m.author_name || 'Member')} · ${formatDate(m.created_at)}</div>
-          </div>
-        `).join('')}
-      </div>`;
-    }
-
-    content.innerHTML = html;
-  } catch (err) {
-    console.warn('[PersonalFeed] Error:', err);
-    content.innerHTML = `<p style="color:var(--gray,#7A8C84); text-align:center; padding:30px;">Feed unavailable — check back later.</p>`;
   }
 }
 
@@ -1915,7 +2095,7 @@ async function loadDiscussions() {
       <div class="file-item" onclick="selectTopic(${t.id}, '${escapeHtml(t.title)}')">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <h4 style="margin-bottom:4px;">${escapeHtml(t.title)}</h4>
-          <span style="font-size:12px; color:var(--primary);">${t.comment_count || 0} 💬</span>
+          <span style="font-size:11px; font-weight:600; color:var(--text-muted, #64748b); background:var(--muted, #f1f5f9); padding:2px 8px; border-radius:12px;">${t.comment_count || 0} replies</span>
         </div>
         <div style="font-size:12px; color:var(--gray);">Started by ${escapeHtml(t.author_name)} • ${formatDate(t.created_at)}</div>
       </div>
@@ -1972,8 +2152,8 @@ async function selectTopic(topicId, title) {
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
               <h4 style="margin:0 0 4px 0; font-size:13px; font-weight:600; color:#1e293b;">${escapeHtml(c.user_name)}</h4>
               ${canDelete ? `
-                <button type="button" class="comment-delete-discrete" onclick="confirmDeleteComment(${c.id})" title="Delete comment" style="background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer; padding:2px 6px; border-radius:4px; opacity:0.6; transition:all 0.15s ease;" onmouseover="this.style.opacity='1'; this.style.color='#ef4444';" onmouseout="this.style.opacity='0.6'; this.style.color='#94a3b8';">
-                  🗑️
+                <button type="button" class="comment-delete-discrete" onclick="confirmDeleteComment(${c.id})" title="Delete comment" style="background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer; padding:2px 6px; border-radius:4px; opacity:0.6; transition:all 0.15s ease; display:inline-flex; align-items:center; justify-content:center;" onmouseover="this.style.opacity='1'; this.style.color='#ef4444';" onmouseout="this.style.opacity='0.6'; this.style.color='#94a3b8';">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                 </button>
               ` : ''}
             </div>
@@ -2019,9 +2199,26 @@ async function confirmDeleteComment(commentId) {
 }
 
 async function handleCreateTopic(e) {
-  e.preventDefault();
-  const title = document.getElementById('topicTitle').value.trim();
-  const category = document.getElementById('topicCategory').value;
+  if (e && e.preventDefault) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  if (typeof window.handleCreateTopic === 'function' && window.handleCreateTopic !== handleCreateTopic) {
+    return window.handleCreateTopic(e);
+  }
+  const titleInput = document.getElementById('topicTitle');
+  const title = titleInput ? titleInput.value.trim() : '';
+  const categoryEl = document.getElementById('topicCategory');
+  const category = categoryEl ? categoryEl.value : 'General';
+
+  if (!title) {
+    showToast('Topic title cannot be empty.', 'warning');
+    if (titleInput) titleInput.focus();
+    return;
+  }
+
+  const submitBtn = document.getElementById('submitTopicBtn');
+  if (submitBtn) submitBtn.disabled = true;
 
   try {
     const res = await apiFetch(`/api/groups/${currentGroupId}/discussions`, {
@@ -2035,25 +2232,38 @@ async function handleCreateTopic(e) {
     pendingTopicAttachments = [];
     renderTopicAttachmentsPreview();
     closeModal('createTopicModal');
-    document.getElementById('createTopicForm').reset();
-    showToast('Topic created!', 'success');
-    loadDiscussions();
+    const form = document.getElementById('createTopicForm');
+    if (form) form.reset();
+    showToast('Topic created successfully!', 'success');
+    await loadDiscussions();
     selectTopic(res.data.id, res.data.title);
   } catch (err) {
-    showToast(err.message, 'error');
+    showToast(err.message || 'Failed to create topic', 'error');
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
   }
 }
 
 async function handlePostComment(e) {
-  e.preventDefault();
+  if (e && e.preventDefault) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  if (typeof window.handlePostComment === 'function' && window.handlePostComment !== handlePostComment) {
+    return window.handlePostComment(e);
+  }
   if (!activeTopicId) return;
 
   const input = document.getElementById('newCommentInput');
-  const content = input.value.trim();
+  const content = input ? input.value.trim() : '';
   if (!content && pendingCommentAttachments.length === 0) {
     showToast('Please enter a message or attach a file.', 'warning');
+    if (input) input.focus();
     return;
   }
+
+  const postBtn = document.getElementById('postDiscussionBtn');
+  if (postBtn) postBtn.disabled = true;
 
   try {
     await apiFetch(`/api/groups/${currentGroupId}/discussions/${activeTopicId}/comments`, {
@@ -2063,12 +2273,15 @@ async function handlePostComment(e) {
         attachments: pendingCommentAttachments
       })
     });
-    input.value = '';
+    if (input) input.value = '';
     pendingCommentAttachments = [];
     renderCommentAttachmentsPreview();
-    selectTopic(activeTopicId, document.getElementById('activeTopicTitle').textContent);
+    const titleEl = document.getElementById('activeTopicTitle');
+    selectTopic(activeTopicId, titleEl ? titleEl.textContent : '');
   } catch (err) {
-    showToast(err.message, 'error');
+    showToast(err.message || 'Failed to post reply', 'error');
+  } finally {
+    if (postBtn) postBtn.disabled = false;
   }
 }
 

@@ -195,12 +195,35 @@ async function getPersonalFeed(req, res) {
       LIMIT 20
     `;
 
+    // Follow-up ping notifications from leaders (personal_feed)
+    let followUpItems = [];
+    try {
+      followUpItems = await sql`
+        SELECT pf.id, pf.content, pf.created_at, pf.group_id, pf.type,
+               COALESCE(u.full_name, 'Leader') AS author_name, t.title AS topic_title
+        FROM personal_feed pf
+        LEFT JOIN users u ON pf.author_user_id = u.id
+        LEFT JOIN tasks t ON pf.task_id = t.id
+        WHERE pf.user_id = ${userId}
+          AND pf.group_id = ANY(${targetGroupIds}::int[])
+        ORDER BY pf.created_at DESC
+        LIMIT 20
+      `;
+    } catch (e) {
+      followUpItems = [];
+    }
+
+    const combinedMentions = [...followUpItems, ...mentions]
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 20);
+
     return res.status(HTTP_STATUS.OK).json({
       success: true,
       data: {
         pendingApprovals,
         helpRequests,
-        mentions
+        mentions: combinedMentions,
+        followUps: followUpItems
       }
     });
   } catch (error) {

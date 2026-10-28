@@ -22,7 +22,7 @@ async function requireGroupMembership(req, res, next) {
     || req.query?.workspace_id
     || req.headers?.['x-group-id']
     || req.headers?.['x-workspace-id'];
-  const taskId = req.params.taskId; // only for task routes, NOT req.params.id generically
+  const taskId = req.params.taskId || (req.baseUrl && req.baseUrl.includes('/tasks') ? req.params.id : null);
   const userId = req.user && req.user.id;
 
   // If mounted at /api/tasks/:id/flag, resolve groupId from tasks table
@@ -49,6 +49,40 @@ async function requireGroupMembership(req, res, next) {
       if (cRow) {
         groupId = cRow.group_id;
         req.params.groupId = groupId;
+      }
+    } catch (e) {}
+  }
+
+  // Resolve groupId from folderId when mounted on notebook folder routes
+  const candidateFolderId = req.params.folderId || req.body?.folderId;
+  if (!groupId && candidateFolderId && !isNaN(Number(candidateFolderId))) {
+    try {
+      const [fld] = await sql`SELECT group_id FROM notebook_folders WHERE id = ${Number(candidateFolderId)}`;
+      if (fld && fld.group_id) {
+        groupId = fld.group_id;
+        req.params.groupId = groupId;
+      }
+    } catch (e) {}
+  }
+
+  // Resolve groupId from pageId when mounted on notebook page routes
+  const candidatePageId = req.params.pageId || req.body?.pageId;
+  if (!groupId && candidatePageId && !isNaN(Number(candidatePageId))) {
+    try {
+      const [pg] = await sql`
+        SELECT nb.group_id FROM notebook_pages p
+        JOIN notebooks nb ON p.notebook_id = nb.id
+        WHERE p.id = ${Number(candidatePageId)}
+      `;
+      if (pg && pg.group_id) {
+        groupId = pg.group_id;
+        req.params.groupId = groupId;
+      } else {
+        const [nt] = await sql`SELECT group_id FROM notes WHERE id = ${Number(candidatePageId)}`;
+        if (nt && nt.group_id) {
+          groupId = nt.group_id;
+          req.params.groupId = groupId;
+        }
       }
     } catch (e) {}
   }
@@ -309,8 +343,14 @@ async function checkTaskEditPermission(req, res, next) {
       });
     }
 
-    // Leaders can always edit
+    // Leaders can edit, but cannot start tasks assigned to teammates
     if (role === ROLES.LEADER) {
+      if (req.body && req.body.status === 'IN_PROGRESS' && task.assigned_to_user_id && Number(task.assigned_to_user_id) !== Number(userId)) {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({
+          success: false,
+          message: 'Leaders cannot start tasks assigned to teammates.'
+        });
+      }
       req.task = task;
       return next();
     }

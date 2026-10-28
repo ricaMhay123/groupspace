@@ -43,21 +43,30 @@
     const html =
       section('Pending Approvals', approvals, t => `
         <a class="feed-item" href="dashboard.html?groupId=${encodeURIComponent(t.group_id)}">
-          📋 <strong>${esc(t.title)}</strong>
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:3px;">
+            <span style="font-size:9.5px; font-weight:700; color:var(--warning); background:rgba(245,158,11,0.12); padding:1px 6px; border-radius:4px; text-transform:uppercase;">Review</span>
+            <strong>${esc(t.title)}</strong>
+          </div>
           <small>Awaiting your approval${t.assignee_name ? ' · ' + esc(t.assignee_name) : ''}</small>
         </a>`) +
-      section('⚠️ Help Needed', help, t => `
+      section('Help Needed', help, t => `
         <a class="feed-item" href="dashboard.html?groupId=${encodeURIComponent(t.group_id)}">
-          ⚠️ <strong>${esc(t.title)}</strong>
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:3px;">
+            <span style="font-size:9.5px; font-weight:700; color:#ef4444; background:rgba(239,68,68,0.12); padding:1px 6px; border-radius:4px; text-transform:uppercase;">Blocked</span>
+            <strong>${esc(t.title)}</strong>
+          </div>
           <small>${esc(t.flagged_reason || 'Blocked')}${t.assignee_name ? ' · ' + esc(t.assignee_name) : ''}</small>
         </a>`) +
-      section('@Mentions', mentions, m => `
+      section('Mentions', mentions, m => `
         <a class="feed-item" href="dashboard.html?groupId=${encodeURIComponent(m.group_id)}">
-          💬 <strong>${esc(m.author_name)}</strong>
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:3px;">
+            <span style="font-size:9.5px; font-weight:700; color:${m.type === 'follow_up' ? '#f59e0b' : 'var(--primary)'}; background:${m.type === 'follow_up' ? 'rgba(245,158,11,0.12)' : 'rgba(99,102,241,0.12)'}; padding:1px 6px; border-radius:4px; text-transform:uppercase;">${m.type === 'follow_up' ? 'Follow-Up' : 'Mention'}</span>
+            <strong>${esc(m.author_name || 'Leader')}</strong>
+          </div>
           <small>${esc(String(m.content || '').slice(0, 140))}</small>
         </a>`);
 
-    body.innerHTML = html || '<p style="color:var(--gray);">You\'re all caught up. 🎉</p>';
+    body.innerHTML = html || '<p style="color:var(--gray); text-align:center; padding:30px 0;">You\'re all caught up.</p>';
 
     const badge = $('feedBadge');
     if (badge) {
@@ -79,26 +88,43 @@
       const res = await apiFetch(url);
       renderFeed(res.data || {});
     } catch (err) {
-      if (body) body.innerHTML = `<p style="color:#dc2626;">${esc(err.message || 'Failed to load feed.')}</p>`;
+      if (body) body.innerHTML = `<p style="color:#dc2626; padding:12px 0; font-size:13px;">${esc(err.message || 'Failed to load feed.')}</p>`;
     }
   }
 
   window.refreshAppFeed = loadFeed;
+  window.openPersonalFeedDrawer = function() {
+    setDrawer(!isOpen());
+  };
+  window.togglePersonalFeed = function() {
+    setDrawer(!isOpen());
+  };
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function setupFeedListeners() {
     const btn = $('notificationFeedBtn');
     if (!btn || !$('feedDrawer')) return;
 
     btn.addEventListener('click', (e) => {
+      e.preventDefault();
       e.stopPropagation();
       setDrawer(!isOpen());
     });
 
     const closeBtn = $('feedCloseBtn');
-    if (closeBtn) closeBtn.addEventListener('click', () => setDrawer(false));
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        setDrawer(false);
+      });
+    }
 
     const overlay = $('feedDrawerOverlay');
-    if (overlay) overlay.addEventListener('click', () => setDrawer(false));
+    if (overlay) {
+      overlay.addEventListener('click', (e) => {
+        e.preventDefault();
+        setDrawer(false);
+      });
+    }
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && isOpen()) setDrawer(false);
@@ -106,5 +132,11 @@
 
     // Prime the unread badge once the session is available
     if (localStorage.getItem('groupspace_token')) loadFeed();
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupFeedListeners);
+  } else {
+    setupFeedListeners();
+  }
 })();

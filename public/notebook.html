@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Notebook | GroupSpace</title>
-  <meta name="description" content="Collaborative Notebook - GroupSpace full-page editor">
+  <meta name="description" content="Collaborative Notebook - GroupSpace full-page rich editor">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -38,9 +38,6 @@
       --nb-canvas-title: #0f172a;
       --nb-canvas-text: #1e293b;
       --nb-placeholder: #94a3b8;
-      --nb-select-bg: #ffffff;
-      --nb-select-border: #cbd5e1;
-      --nb-select-text: #0f172a;
       --nb-status-bg: #ffffff;
       --nb-status-border: #e2e8f0;
       --nb-status-text: #64748b;
@@ -71,9 +68,6 @@
       --nb-canvas-title: #f8fafc;
       --nb-canvas-text: #f1f5f9;
       --nb-placeholder: #64748b;
-      --nb-select-bg: #1e293b;
-      --nb-select-border: #334155;
-      --nb-select-text: #f8fafc;
       --nb-status-bg: #0f172a;
       --nb-status-border: #1e293b;
       --nb-status-text: #94a3b8;
@@ -96,12 +90,12 @@
       z-index: 100;
       background: var(--nb-surface);
       border-bottom: 1px solid var(--nb-border);
-      padding: 0 24px;
+      padding: 0 20px;
       height: 62px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
+      gap: 14px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
     }
 
@@ -144,7 +138,7 @@
     .nb-header-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .btn-nb-theme {
@@ -167,10 +161,10 @@
     }
 
     .btn-nb {
-      padding: 8px 16px;
+      padding: 7px 14px;
       border-radius: 8px;
       border: none;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
@@ -198,6 +192,19 @@
       transform: translateY(-1px);
     }
 
+    .nb-readonly-badge {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 700;
+      background: rgba(245, 158, 11, 0.15);
+      color: #d97706;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+
     .nb-layout {
       display: flex;
       flex: 1;
@@ -205,9 +212,9 @@
     }
 
     .nb-sidebar {
-      width: 250px;
-      min-width: 210px;
-      max-width: 290px;
+      width: 280px;
+      min-width: 240px;
+      max-width: 310px;
       background: var(--nb-sidebar-bg);
       border-right: 1px solid var(--nb-border);
       display: flex;
@@ -215,15 +222,34 @@
       overflow: hidden;
     }
     .nb-sidebar-header {
-      padding: 16px;
+      padding: 12px 14px;
       border-bottom: 1px solid var(--nb-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
     }
     .nb-sidebar-header h3 {
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.8px;
       color: var(--nb-text-muted);
+    }
+    .btn-sidebar-action {
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid var(--nb-border);
+      background: var(--nb-surface);
+      color: var(--nb-text);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-sidebar-action:hover {
+      border-color: var(--nb-primary);
+      color: var(--nb-primary);
     }
 
     .nb-pages-list {
@@ -231,14 +257,89 @@
       overflow-y: auto;
       padding: 10px 8px;
     }
-    .nb-page-item {
-      padding: 10px 12px;
+
+    /* ── Folder Tree Structure ── */
+    .nb-folder-block {
+      margin-bottom: 8px;
+      border: 1px solid var(--nb-border);
       border-radius: 8px;
+      background: var(--nb-surface);
+      overflow: hidden;
+    }
+    .nb-folder-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: rgba(148, 163, 184, 0.08);
+      cursor: pointer;
+      user-select: none;
+      gap: 6px;
+    }
+    .nb-folder-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--nb-text);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .nb-folder-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-folder-icon {
+      border: none;
+      background: transparent;
+      color: var(--nb-text-muted);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+    .btn-folder-icon:hover {
+      background: var(--nb-hover);
+      color: var(--nb-text);
+    }
+    .btn-folder-icon.danger:hover {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+    .nb-folder-children {
+      padding: 6px 6px 4px 12px;
+      border-top: 1px solid var(--nb-border);
+    }
+    .nb-folder-children.collapsed {
+      display: none;
+    }
+
+    .nb-section-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--nb-text-muted);
+      margin: 10px 4px 6px;
+    }
+
+    .nb-page-item {
+      padding: 8px 10px;
+      border-radius: 7px;
       cursor: pointer;
       transition: all 0.15s;
       margin-bottom: 4px;
       border: 1px solid transparent;
       background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
     }
     .nb-page-item:hover {
       background: var(--nb-hover);
@@ -248,8 +349,12 @@
       background: var(--nb-active-bg);
       border-color: var(--nb-active-border);
     }
+    .nb-page-item-info {
+      flex: 1;
+      min-width: 0;
+    }
     .nb-page-item-title {
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 600;
       color: var(--nb-text);
       white-space: nowrap;
@@ -261,15 +366,21 @@
       font-weight: 700;
     }
     .nb-page-item-meta {
-      font-size: 11px;
+      font-size: 10.5px;
       color: var(--nb-text-muted);
-      margin-top: 3px;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .nb-sidebar-footer {
-      padding: 12px;
+      padding: 10px 12px;
       border-top: 1px solid var(--nb-border);
       background: var(--nb-sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
     .nb-sidebar-footer .btn-nb-outline {
       width: 100%;
@@ -286,13 +397,13 @@
       background: var(--nb-bg);
     }
 
-    /* ── High Contrast Dark Toolbar (#0f172a) ── */
+    /* ── High Contrast Dark Slate Toolbar (#0f172a) with Bright White Text/Icons (#ffffff) ── */
     .nb-toolbar {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 10px;
-      padding: 8px 24px;
+      gap: 8px;
+      padding: 8px 18px;
       background: #0f172a !important;
       border-bottom: 1px solid #1e293b !important;
       color: #ffffff !important;
@@ -301,31 +412,31 @@
     .nb-toolbar-group {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding-right: 10px;
-      border-right: 1px solid #1e293b;
+      gap: 5px;
+      padding-right: 8px;
+      border-right: 1px solid #334155;
     }
     .nb-toolbar-group:last-child {
       border-right: none;
       padding-right: 0;
     }
     .nb-toolbar label {
-      font-size: 11px;
-      font-weight: 600;
-      color: #94a3b8 !important;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #ffffff !important;
       white-space: nowrap;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
     }
     .nb-toolbar select {
       background: #1e293b !important;
       color: #ffffff !important;
-      border: 1px solid #334155 !important;
+      border: 1px solid #475569 !important;
       border-radius: 6px;
-      padding: 5px 9px;
+      padding: 4px 8px;
       font-size: 12px;
       font-family: inherit;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
       outline: none;
       transition: all 0.15s;
@@ -335,9 +446,39 @@
       border-color: #38bdf8 !important;
       box-shadow: 0 0 0 1px #38bdf8;
     }
+    .nb-toolbar select:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
     .nb-toolbar select option {
       background: #0f172a !important;
       color: #ffffff !important;
+    }
+
+    .nb-color-picker-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 6px;
+      padding: 2px 6px;
+      height: 30px;
+      color: #ffffff !important;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .nb-color-picker-wrap input[type="color"] {
+      width: 20px;
+      height: 20px;
+      border: none;
+      padding: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+    .nb-color-picker-wrap input[type="color"]:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
 
     /* ── High Contrast Toolbar Buttons ── */
@@ -351,26 +492,31 @@
       border-radius: 6px;
       background: #1e293b;
       color: #ffffff !important;
-      border: 1px solid #334155;
+      border: 1px solid #475569;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.15s;
       user-select: none;
+      gap: 4px;
     }
-    .btn-toolbar-fmt:hover, .btn-toolbar-fmt.active {
+    .btn-toolbar-fmt:hover:not(:disabled), .btn-toolbar-fmt.active:not(:disabled) {
       background: #2563eb;
       border-color: #38bdf8;
       color: #ffffff !important;
       transform: translateY(-1px);
     }
+    .btn-toolbar-fmt:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
     .btn-export-sm {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      padding: 5px 11px;
+      padding: 5px 10px;
       border-radius: 6px;
-      border: 1px solid #334155;
+      border: 1px solid #475569;
       background: #1e293b;
       color: #ffffff !important;
       font-size: 11px;
@@ -378,11 +524,15 @@
       cursor: pointer;
       transition: all 0.15s;
     }
-    .btn-export-sm:hover {
+    .btn-export-sm:hover:not(:disabled) {
       border-color: #38bdf8;
       color: #ffffff !important;
       background: #2563eb;
       transform: translateY(-1px);
+    }
+    .btn-export-sm:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
 
     .nb-canvas-container {
@@ -405,7 +555,7 @@
       border: 1px solid var(--nb-canvas-border);
       border-radius: 12px;
       box-shadow: var(--nb-canvas-shadow);
-      min-height: 580px;
+      min-height: 620px;
       position: relative !important;
       overflow: visible;
     }
@@ -414,11 +564,11 @@
     .nb-canvas-editor {
       flex: 1;
       width: 100%;
-      min-height: 500px;
+      min-height: 520px;
       background: transparent;
       border: none;
       color: var(--nb-canvas-text) !important;
-      font-size: 15px;
+      font-size: 16px;
       font-family: inherit;
       line-height: 1.7;
       padding: 0;
@@ -434,7 +584,7 @@
       cursor: text;
     }
 
-    /* ── Interactive Shapes Overlay System ── */
+    /* ── Interactive Shapes & TextBoxes Overlay System ── */
     .nb-shapes-layer {
       position: absolute;
       top: 0;
@@ -458,14 +608,14 @@
     }
     .shape-rot-handle {
       position: absolute;
-      top: -26px;
-      left: calc(50% - 10px);
-      width: 20px;
-      height: 20px;
+      top: -28px;
+      left: calc(50% - 11px);
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       background: #0f172a;
       border: 2px solid #38bdf8;
-      color: #38bdf8;
+      color: #ffffff;
       display: none;
       align-items: center;
       justify-content: center;
@@ -483,7 +633,7 @@
       width: 10px;
       height: 10px;
       background: #38bdf8;
-      border: 1px solid #ffffff;
+      border: 1.5px solid #ffffff;
       border-radius: 2px;
       display: none;
       z-index: 30;
@@ -496,10 +646,13 @@
     .shape-resize-handle.tr { top: -5px; right: -5px; cursor: nesw-resize; }
     .shape-resize-handle.bl { bottom: -5px; left: -5px; cursor: nesw-resize; }
     .shape-resize-handle.br { bottom: -5px; right: -5px; cursor: nwse-resize; }
+    .shape-resize-handle.ml { top: calc(50% - 5px); left: -6px; cursor: ew-resize; border-radius: 50%; }
+    .shape-resize-handle.mr { top: calc(50% - 5px); right: -6px; cursor: ew-resize; border-radius: 50%; }
+
     .shape-delete-btn {
       position: absolute;
-      top: -10px;
-      right: -10px;
+      top: -11px;
+      right: -11px;
       width: 20px;
       height: 20px;
       border-radius: 50%;
@@ -519,6 +672,47 @@
       display: flex;
     }
 
+    /* ── Floating Draggable & Rotatable TextBox ── */
+    .interactive-textbox-inner {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      border-radius: 6px;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    .textbox-drag-bar {
+      height: 14px;
+      background: rgba(15, 23, 42, 0.12);
+      cursor: move;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: rgba(15, 23, 42, 0.5);
+      letter-spacing: 2px;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    .textbox-editable {
+      flex: 1;
+      width: 100%;
+      padding: 8px 10px;
+      outline: none;
+      cursor: text;
+      user-select: text;
+      overflow-y: auto;
+      font-size: 14px;
+      line-height: 1.45;
+      color: #0f172a;
+      word-break: break-word;
+    }
+    .textbox-editable:empty::before {
+      content: "Type text here...";
+      color: rgba(15, 23, 42, 0.45);
+    }
+
     .nb-status-bar {
       padding: 8px 24px;
       border-top: 1px solid var(--nb-status-border);
@@ -530,16 +724,9 @@
       background: var(--nb-status-bg);
       font-weight: 500;
     }
-    #nbAuthorInfo {
-      color: var(--nb-text-muted);
-    }
-    #nbSaveStatus {
-      color: var(--nb-status-success);
-      font-weight: 600;
-    }
-    #nbWordCount {
-      color: var(--nb-text-muted);
-    }
+    #nbAuthorInfo { color: var(--nb-text-muted); }
+    #nbSaveStatus { color: var(--nb-status-success); font-weight: 600; }
+    #nbWordCount { color: var(--nb-text-muted); }
 
     .nb-empty-pages {
       padding: 24px 16px;
@@ -547,6 +734,54 @@
       color: var(--nb-text-muted);
       font-size: 13px;
       line-height: 1.6;
+    }
+
+    /* ── Share / Permissions Modal ── */
+    .nb-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(3px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9000;
+      padding: 16px;
+    }
+    .nb-modal-overlay.open {
+      display: flex;
+    }
+    .nb-modal-card {
+      background: var(--nb-surface);
+      color: var(--nb-text);
+      border: 1px solid var(--nb-border);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 460px;
+      padding: 20px 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    }
+    .nb-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--nb-border);
+    }
+    .nb-modal-header h3 {
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .nb-member-perm-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border: 1px solid var(--nb-border);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      font-size: 13px;
     }
 
     .toast-container {
@@ -585,13 +820,15 @@
   <a href="dashboard.html" id="backBtn" class="nb-back-btn">&#8592; Back to Workspace</a>
   <div class="nb-header-center">
     <h1 id="notebookName">&#x1F4DD; Collaborative Notebook</h1>
-    <p id="notebookMeta">Loading workspace...</p>
+    <p id="notebookMeta">Auto-titled upon saving from first phrase</p>
   </div>
   <div class="nb-header-actions">
+    <span id="readOnlyBadge" class="nb-readonly-badge">&#x1F512; Read-Only Mode</span>
     <button data-theme-toggle aria-label="Toggle theme" title="Toggle theme" class="btn-nb-theme">
       <svg data-theme-moon xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
       <svg data-theme-sun xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
     </button>
+    <button class="btn-nb btn-nb-outline" id="sharePageBtn" onclick="openSharePermissionsModal()" style="display:none;" title="Manage who can edit this page">&#x1F517; Share / Permissions</button>
     <button class="btn-nb btn-nb-outline" onclick="newPage()">+ New Page</button>
     <button class="btn-nb btn-nb-green" id="savePageBtn" onclick="saveCurrentPage()">&#x1F4BE; Save Page</button>
   </div>
@@ -599,108 +836,172 @@
 
 <div class="nb-layout">
   <aside class="nb-sidebar">
-    <div class="nb-sidebar-header"><h3>&#x1F4C4; Pages</h3></div>
+    <div class="nb-sidebar-header">
+      <h3>&#x1F4C2; Folders &amp; Pages</h3>
+      <button type="button" class="btn-sidebar-action" onclick="createNewFolderPrompt()" title="Create a new folder">+ Folder</button>
+    </div>
     <div class="nb-pages-list" id="nbPagesList"><div class="nb-empty-pages">Loading pages...</div></div>
     <div class="nb-sidebar-footer">
-      <button class="btn-nb btn-nb-outline" onclick="newPage()">+ Add Page</button>
+      <button class="btn-nb btn-nb-outline" onclick="newPage()">+ New Blank Page</button>
+      <button class="btn-nb btn-nb-outline" onclick="triggerImportDocument(null)">&#x1F4E5; Import Document (.txt / .md)</button>
     </div>
   </aside>
 
   <div class="nb-editor-area">
-    <!-- High Contrast Dark Toolbar (#0f172a) -->
-    <div class="nb-toolbar">
-      <!-- Formatting Toggles: Bold, Italic, Underline -->
+    <!-- High Contrast Dark Slate Toolbar (#0f172a) with Bright White Text/Icons (#ffffff) -->
+    <div class="nb-toolbar" id="nbMainToolbar">
+      <!-- Text Styling: Bold, Italic, Underline, Text Color, Highlight -->
       <div class="nb-toolbar-group">
-        <button type="button" class="btn-toolbar-fmt" title="Bold (Ctrl+B)" onclick="execFmt('bold')"><b>B</b></button>
-        <button type="button" class="btn-toolbar-fmt" title="Italic (Ctrl+I)" onclick="execFmt('italic')"><i>I</i></button>
-        <button type="button" class="btn-toolbar-fmt" title="Underline (Ctrl+U)" onclick="execFmt('underline')"><u>U</u></button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Bold (Ctrl+B)" onclick="execFmt('bold')"><b>B</b></button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Italic (Ctrl+I)" onclick="execFmt('italic')"><i>I</i></button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Underline (Ctrl+U)" onclick="execFmt('underline')"><u>U</u></button>
+        <div class="nb-color-picker-wrap" title="Text Color (foreColor)">
+          <span>A</span>
+          <input type="color" id="nbTextColor" class="nb-edit-ctrl" value="#0f172a" onchange="applyTextColor(this.value)">
+        </div>
+        <div class="nb-color-picker-wrap" title="Text Highlight / Background (hiliteColor)">
+          <span>&#x1F58D;</span>
+          <input type="color" id="nbHighlightColor" class="nb-edit-ctrl" value="#fef08a" onchange="applyHighlightColor(this.value)">
+        </div>
       </div>
 
       <!-- Text Alignment: Left, Center, Right, Justify -->
       <div class="nb-toolbar-group">
-        <button type="button" class="btn-toolbar-fmt" title="Align Left" onclick="execFmt('justifyLeft')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Left (justifyLeft)" onclick="execFmt('justifyLeft')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
         </button>
-        <button type="button" class="btn-toolbar-fmt" title="Align Center" onclick="execFmt('justifyCenter')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Center (justifyCenter)" onclick="execFmt('justifyCenter')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg>
         </button>
-        <button type="button" class="btn-toolbar-fmt" title="Align Right" onclick="execFmt('justifyRight')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Right (justifyRight)" onclick="execFmt('justifyRight')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>
         </button>
-        <button type="button" class="btn-toolbar-fmt" title="Justify" onclick="execFmt('justifyFull')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Justify (justifyFull)" onclick="execFmt('justifyFull')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
         </button>
       </div>
 
-      <!-- Typography Dropdowns -->
+      <!-- Font Family & Numeric Font Sizes (12px - 36px) -->
       <div class="nb-toolbar-group">
-        <label>Font:</label>
-        <select id="nbFontFamily" onchange="applyFont(this.value)">
+        <label for="nbFontFamily">Font:</label>
+        <select id="nbFontFamily" class="nb-edit-ctrl" onchange="applyFont(this.value)">
           <option value="Inter, sans-serif" selected>Inter</option>
           <option value="Arial, sans-serif">Arial</option>
           <option value="Calibri, sans-serif">Calibri</option>
           <option value="'Times New Roman', serif">Times New Roman</option>
           <option value="'Courier New', monospace">Courier New</option>
         </select>
-      </div>
-      <div class="nb-toolbar-group">
-        <label>Size:</label>
-        <select id="nbFontSize" onchange="applyFontSize(this.value)">
-          <option value="13px">Small</option>
-          <option value="15px" selected>Normal</option>
-          <option value="17px">Large</option>
-          <option value="20px">XL</option>
+
+        <label for="nbFontSize">Size:</label>
+        <select id="nbFontSize" class="nb-edit-ctrl" onchange="applyFontSize(this.value)">
+          <option value="12px">12px</option>
+          <option value="14px">14px</option>
+          <option value="16px" selected>16px</option>
+          <option value="18px">18px</option>
+          <option value="20px">20px</option>
+          <option value="24px">24px</option>
+          <option value="28px">28px</option>
+          <option value="32px">32px</option>
+          <option value="36px">36px</option>
         </select>
-      </div>
-      <div class="nb-toolbar-group">
-        <label>Spacing:</label>
-        <select id="nbLineHeight" onchange="applyLineHeight(this.value)">
-          <option value="1.2">Compact</option>
-          <option value="1.5">Normal</option>
-          <option value="1.7" selected>Relaxed</option>
-          <option value="2.0">Double</option>
+
+        <label for="nbLineHeight">Spacing:</label>
+        <select id="nbLineHeight" class="nb-edit-ctrl" onchange="applyLineHeight(this.value)">
+          <option value="1.2">1.2</option>
+          <option value="1.5">1.5</option>
+          <option value="1.7" selected>1.7</option>
+          <option value="2.0">2.0</option>
         </select>
       </div>
 
-      <!-- Insert Shapes Dropdown -->
+      <!-- Customizable Shapes, Lines, Arrows & Text Box Controls -->
       <div class="nb-toolbar-group">
-        <select id="nbShapeSelect" onchange="handleInsertShapeSelect(this)" style="color:#38bdf8 !important; font-weight:600;">
-          <option value="" disabled selected>+ Insert Shape</option>
-          <option value="rectangle">▭ Rectangle</option>
-          <option value="circle">◯ Circle</option>
-          <option value="arrow">➔ Arrow</option>
-          <option value="line">― Line</option>
-          <option value="callout">🗨 Callout Box</option>
+        <select id="nbShapeSelect" class="nb-edit-ctrl" onchange="handleInsertShapeSelect(this)" style="color:#38bdf8 !important; font-weight:700;">
+          <option value="" disabled selected>+ Insert Shape / Line</option>
+          <option value="rectangle">&#x25AD; Rectangle</option>
+          <option value="circle">&#x25EF; Circle</option>
+          <option value="arrow">&#x2794; Arrow</option>
+          <option value="straight_line">&#x2015; Straight Line</option>
+          <option value="dashed_line">&#x2505; Broken/Dashed Line</option>
+          <option value="straight_arrow_line">&#x27F6; Straight Arrow Line</option>
+          <option value="broken_arrow_line">&#x21E2; Broken Arrow Line</option>
+          <option value="callout">&#x1F5E8; Callout Box</option>
         </select>
+
+        <button type="button" id="insertTextBoxBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTextBox()" title="Insert Draggable &amp; Rotatable Text Box">
+          &#x1F524; Insert Text Box
+        </button>
+
+        <label for="nbStrokeWidth">Stroke:</label>
+        <select id="nbStrokeWidth" class="nb-edit-ctrl" onchange="updateSelectedShapeStyle()" title="Stroke Thickness">
+          <option value="1">1px</option>
+          <option value="2" selected>2px</option>
+          <option value="4">4px</option>
+          <option value="6">6px</option>
+          <option value="8">8px</option>
+        </select>
+
+        <div class="nb-color-picker-wrap" title="Shape / Text Box Fill Color">
+          <span>Fill</span>
+          <input type="color" id="nbShapeFillColor" class="nb-edit-ctrl" value="#dbeafe" onchange="updateSelectedShapeStyle()">
+        </div>
+
+        <div class="nb-color-picker-wrap" title="Stroke / Line Color">
+          <span>Line</span>
+          <input type="color" id="nbShapeStrokeColor" class="nb-edit-ctrl" value="#2563eb" onchange="updateSelectedShapeStyle()">
+        </div>
       </div>
 
-      <!-- Document Import & Export System -->
+      <!-- Folder Assignment & Import/Export System -->
       <div class="nb-toolbar-group" style="margin-left:auto;">
+        <label for="nbPageFolderSelect">Folder:</label>
+        <select id="nbPageFolderSelect" class="nb-edit-ctrl" onchange="handleMovePageToFolder(this.value)" title="Move page to folder">
+          <option value="">(Root / No Folder)</option>
+        </select>
+
         <input type="file" id="nbFileInput" accept=".txt,.md,.markdown" style="display:none;" onchange="handleImportFile(event)">
-        <button type="button" class="btn-export-sm" onclick="triggerImportDocument()" title="Import .txt or .markdown document">📥 Import</button>
-        <button type="button" class="btn-export-sm" onclick="exportPage('txt')">.txt</button>
-        <button type="button" class="btn-export-sm" onclick="exportPage('pdf')">.pdf</button>
-        <button type="button" class="btn-export-sm" onclick="exportPage('docx')">.docx</button>
+        <button type="button" class="btn-export-sm nb-edit-ctrl" onclick="triggerImportDocument(null)" title="Import .txt or .markdown document as new page">&#x1F4E5; Import Document</button>
+        <button type="button" class="btn-export-sm" onclick="exportPage('txt')" title="Export Plain Text (.txt)">.txt</button>
+        <button type="button" class="btn-export-sm" onclick="exportPage('pdf')" title="Export PDF (.pdf)">.pdf</button>
+        <button type="button" class="btn-export-sm" onclick="exportPage('docx')" title="Export Word (.docx)">.docx</button>
       </div>
     </div>
 
-    <!-- Canvas Container (Removed separate top title line) -->
+    <!-- Canvas Container (Auto-Title System: no separate mandatory top title box) -->
     <div class="nb-canvas-container" id="nbCanvasContainer" onclick="handleCanvasContainerClick(event)">
       <div class="nb-canvas" id="nbCanvas">
-        <!-- Interactive Shapes Layer Overlay -->
+        <!-- Interactive Shapes, Lines & Text Boxes Overlay -->
         <div id="nbShapesLayer" class="nb-shapes-layer"></div>
 
-        <!-- Rich Text Canvas Editor (Auto-titled from first sentence/line) -->
+        <!-- Rich Text Canvas Editor (Auto-titled from first non-empty phrase/sentence) -->
         <div id="nbPageContent" class="nb-canvas-editor" contenteditable="true" spellcheck="true"
-             data-placeholder="Start typing your notes here (auto-titles from first phrase)..."></div>
+             data-placeholder="Start typing your note here (the first phrase/sentence automatically becomes the page title upon saving)..."></div>
       </div>
     </div>
 
     <!-- Status Bar -->
     <div class="nb-status-bar">
       <span id="nbAuthorInfo">-</span>
-      <span id="nbSaveStatus">Not saved yet</span>
+      <span id="nbSaveStatus">Ready</span>
       <span id="nbWordCount">0 words</span>
+    </div>
+  </div>
+</div>
+
+<!-- Share / Permissions Modal -->
+<div class="nb-modal-overlay" id="sharePermissionsModal">
+  <div class="nb-modal-card">
+    <div class="nb-modal-header">
+      <h3>&#x1F517; Page Share &amp; Edit Permissions</h3>
+      <button type="button" class="btn-folder-icon" onclick="closeSharePermissionsModal()">&#x2715;</button>
+    </div>
+    <p style="font-size:12px; color:var(--nb-text-muted); margin-bottom:12px;">
+      Only the page creator, workspace Leaders, and checked teammates below can edit and save this page. Unchecked members have Read-Only access.
+    </p>
+    <div id="shareMembersList" style="max-height:240px; overflow-y:auto; margin-bottom:16px;"></div>
+    <div style="display:flex; justify-content:flex-end; gap:8px;">
+      <button type="button" class="btn-nb btn-nb-outline" onclick="closeSharePermissionsModal()">Cancel</button>
+      <button type="button" class="btn-nb btn-nb-green" onclick="saveSharePermissions()">Save Permissions</button>
     </div>
   </div>
 </div>
@@ -712,9 +1013,26 @@
 <script>
 'use strict';
 
-let currentUser = null, currentGroupId = null, currentNotebookId = null, currentPageId = null;
-let pages = [], autoSaveTimer = null;
-let currentShapes = []; // Array of shape states: [{ id, type, x, y, w, h, rot }]
+let currentUser = null;
+let currentGroupId = null;
+let currentGroupRole = 'member';
+let currentGroupMembers = [];
+let currentNotebookId = null;
+let currentPageId = null;
+let currentFolderId = null;
+let pendingImportFolderId = null;
+let shareTargetPageId = null;
+
+let pages = [];
+let folders = [];
+let collapsedFolders = new Set();
+let autoSaveTimer = null;
+
+/**
+ * Shape / Line / TextBox state array:
+ * [{ id, type, x, y, w, h, rot, strokeWidth, strokeColor, fillColor, text }]
+ */
+let currentShapes = [];
 let activeSelectedShapeId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -729,36 +1047,51 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (currentGroupId) {
     const backBtn = document.getElementById('backBtn');
     if (backBtn) backBtn.href = 'dashboard.html?groupId=' + currentGroupId;
+    await loadWorkspaceContext();
   }
 
   await loadNotebook();
   setupEditorListeners();
   updateWordCount();
 
-  // If specific note was requested via URL, auto-open and focus canvas
   if (inboundNoteId && pages.length > 0) {
     const match = pages.find(p => String(p.id) === String(inboundNoteId));
     if (match) {
       openPage(match);
       const canvas = document.getElementById('nbPageContent');
-      if (canvas) canvas.focus();
+      if (canvas && canCurrentUserEditPage(match)) canvas.focus();
     }
   }
 });
 
+async function loadWorkspaceContext() {
+  try {
+    const res = await apiFetch('/api/groups/' + currentGroupId);
+    if (res && res.data) {
+      currentGroupRole = (res.data.role || 'member').toLowerCase();
+      if (currentUser) currentUser.role = currentGroupRole;
+      currentGroupMembers = Array.isArray(res.data.members) ? res.data.members : [];
+    }
+  } catch (e) {
+    console.warn('[Notebook] Could not load workspace members:', e.message);
+  }
+}
+
 async function loadNotebook() {
   if (!currentGroupId) {
-    document.getElementById('nbPagesList').innerHTML = '<div class="nb-empty-pages">No workspace selected.<br><a href="dashboard.html" style="color:var(--primary);">Go to Dashboard</a></div>';
+    document.getElementById('nbPagesList').innerHTML = '<div class="nb-empty-pages">No workspace selected.<br><a href="dashboard.html" style="color:var(--nb-primary);">Go to Dashboard</a></div>';
     return;
   }
   try {
     if (!currentNotebookId) {
       const nbRes = await apiFetch('/api/notebooks/' + currentGroupId);
       const notebooks = nbRes.data || [];
+      if (Array.isArray(nbRes.folders)) {
+        folders = nbRes.folders;
+      }
       if (notebooks.length > 0) {
         currentNotebookId = notebooks[0].id;
-        document.getElementById('notebookName').textContent = '📝 ' + (notebooks[0].title || 'Notebook');
-        document.getElementById('notebookMeta').textContent = notebooks[0].description || 'Collaborative workspace notebook';
+        document.getElementById('notebookName').textContent = '📝 ' + (notebooks[0].title || 'Workspace Notebook');
       } else {
         const created = await apiFetch('/api/notebooks', {
           method: 'POST',
@@ -779,49 +1112,70 @@ async function loadPages() {
   if (!currentNotebookId && !currentGroupId) return;
   const list = document.getElementById('nbPagesList');
   try {
-    let loaded = false;
+    // Load folders
+    if (currentGroupId) {
+      try {
+        const fRes = await apiFetch('/api/notebooks/folders/' + currentGroupId);
+        if (fRes && Array.isArray(fRes.data)) {
+          folders = fRes.data;
+        }
+      } catch (e) {}
+    }
 
-    // 1. Try collaborative notebook pages
+    let combinedPages = [];
+
+    // 1. Collaborative notebook pages
     if (currentNotebookId) {
       try {
         const res = await apiFetch('/api/notebooks/' + currentNotebookId + '/pages');
         const pagesData = res.data;
-        pages = (pagesData && Array.isArray(pagesData.pages)) ? pagesData.pages : [];
-        if (pages.length > 0) loaded = true;
+        const nbPages = (pagesData && Array.isArray(pagesData.pages)) ? pagesData.pages : [];
+        combinedPages.push(...nbPages);
       } catch (e) {
         console.warn('[Notebook] pages fetch failed:', e.message);
       }
     }
 
-    // 2. Fallback: load legacy flat notes from /api/groups/:groupId/notes
-    if (!loaded && currentGroupId) {
+    // 2. Also check flat notes from /api/groups/:groupId/notes
+    if (currentGroupId) {
       try {
         const legacyRes = await apiFetch('/api/groups/' + currentGroupId + '/notes');
         const legacyNotes = Array.isArray(legacyRes.data) ? legacyRes.data : [];
-        if (legacyNotes.length > 0) {
-          pages = legacyNotes.map(n => ({
-            id: n.id,
-            title: n.title || 'Untitled',
-            content: n.content || '',
-            author_name: n.author_name || 'Member',
-            is_legacy: true
-          }));
-          loaded = true;
-        }
-      } catch (e) {
-        console.warn('[Notebook] legacy notes fallback failed:', e.message);
-      }
+        legacyNotes.forEach(n => {
+          if (!combinedPages.some(p => Number(p.id) === Number(n.id))) {
+            combinedPages.push({
+              id: n.id,
+              title: n.title || 'Untitled Page',
+              content: n.content || '',
+              folder_id: n.folder_id || null,
+              author_user_id: n.author_user_id,
+              created_by: n.created_by ?? n.author_user_id,
+              permitted_editors: Array.isArray(n.permitted_editors) ? n.permitted_editors : [],
+              author_name: n.author_name || 'Member',
+              is_legacy: true
+            });
+          }
+        });
+      } catch (e) {}
     }
 
-    if (!loaded || pages.length === 0) {
-      list.innerHTML = '<div class="nb-empty-pages">No pages yet.<br>Click <strong>+ Add Page</strong> to start.</div>';
+    pages = combinedPages;
+    populateFolderSelectDropdown();
+    renderPagesList();
+
+    if (pages.length === 0) {
+      if (folders.length === 0) {
+        list.innerHTML = '<div class="nb-empty-pages">No folders or pages yet.<br>Click <strong>+ Folder</strong> or <strong>+ New Page</strong> to start.</div>';
+      }
       clearEditor();
       return;
     }
 
-    renderPagesList();
-    if (!currentPageId || !pages.find(p => p.id === currentPageId)) {
+    if (!currentPageId || !pages.find(p => Number(p.id) === Number(currentPageId))) {
       openPage(pages[0]);
+    } else {
+      const refreshed = pages.find(p => Number(p.id) === Number(currentPageId));
+      if (refreshed) applyPagePermissionsUI(refreshed);
     }
   } catch (err) {
     list.innerHTML = '<div class="nb-empty-pages">Error loading pages.</div>';
@@ -829,79 +1183,364 @@ async function loadPages() {
   }
 }
 
+function populateFolderSelectDropdown() {
+  const sel = document.getElementById('nbPageFolderSelect');
+  if (!sel) return;
+  const currentVal = currentFolderId ? String(currentFolderId) : '';
+  sel.innerHTML = '<option value="">(Root / No Folder)</option>' +
+    folders.map(f => `<option value="${f.id}" ${String(f.id) === currentVal ? 'selected' : ''}>📁 ${escapeHtml(f.name)}</option>`).join('');
+}
+
 function renderPagesList() {
   const list = document.getElementById('nbPagesList');
   if (!list) return;
-  list.innerHTML = pages.map(p => {
-    const activeClass = p.id === currentPageId ? 'active' : '';
-    return `
-      <div class="nb-page-item ${activeClass}" onclick="openPageById(${p.id})">
-        <div class="nb-page-item-title">${escapeHtml(p.title || 'Untitled Page')}</div>
-        <div class="nb-page-item-meta">✍️ ${escapeHtml(p.author_name || 'Member')}</div>
-      </div>
-    `;
-  }).join('');
+
+  let html = '';
+
+  // Render Folder Tree
+  if (folders.length > 0) {
+    html += folders.map(folder => {
+      const folderPages = pages.filter(p => Number(p.folder_id) === Number(folder.id));
+      const isCollapsed = collapsedFolders.has(Number(folder.id));
+      return `
+        <div class="nb-folder-block" data-folder-id="${folder.id}">
+          <div class="nb-folder-header" onclick="toggleFolderCollapse(${folder.id})">
+            <div class="nb-folder-title">
+              <span>${isCollapsed ? '▶' : '▼'} 📁</span>
+              <span>${escapeHtml(folder.name)}</span>
+              <span style="font-size:10.5px; color:var(--nb-text-muted);">(${folderPages.length})</span>
+            </div>
+            <div class="nb-folder-actions" onclick="event.stopPropagation();">
+              <button type="button" class="btn-folder-icon" title="New page in this folder" onclick="newPageInFolder(${folder.id})">+Page</button>
+              <button type="button" class="btn-folder-icon" title="Import document into this folder" onclick="triggerImportDocument(${folder.id})">📥</button>
+              <button type="button" class="btn-folder-icon danger" title="Delete Folder" onclick="deleteFolderWithConfirm(${folder.id}, '${escapeHtml(folder.name).replace(/'/g, "\\'")}')">🗑️</button>
+            </div>
+          </div>
+          <div class="nb-folder-children ${isCollapsed ? 'collapsed' : ''}">
+            ${folderPages.length === 0
+              ? '<div style="font-size:11px; color:var(--nb-text-muted); padding:6px 4px;">Empty folder</div>'
+              : folderPages.map(p => renderSidebarPageItem(p)).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Render Root / Uncategorized Pages
+  const rootPages = pages.filter(p => !p.folder_id || !folders.some(f => Number(f.id) === Number(p.folder_id)));
+  if (folders.length > 0 && rootPages.length > 0) {
+    html += `<div class="nb-section-label">📄 Uncategorized Pages</div>`;
+  }
+  html += rootPages.map(p => renderSidebarPageItem(p)).join('');
+
+  list.innerHTML = html || '<div class="nb-empty-pages">No pages yet.</div>';
 }
 
+function renderSidebarPageItem(p) {
+  const activeClass = Number(p.id) === Number(currentPageId) ? 'active' : '';
+  const canEdit = canCurrentUserEditPage(p);
+  const isOwnerOrLeader = canCurrentUserManagePermissions(p);
+  return `
+    <div class="nb-page-item ${activeClass}" onclick="openPageById(${p.id})">
+      <div class="nb-page-item-info">
+        <div class="nb-page-item-title">${escapeHtml(p.title || 'Untitled Page')}</div>
+        <div class="nb-page-item-meta">
+          <span>✍️ ${escapeHtml(p.author_name || 'Member')}</span>
+          <span>${canEdit ? '' : '🔒 Read-Only'}</span>
+        </div>
+      </div>
+      ${isOwnerOrLeader ? `
+        <button type="button" class="btn-folder-icon" title="Share / Edit Permissions" onclick="event.stopPropagation(); openSharePermissionsModal(${p.id})">🔗</button>
+      ` : ''}
+    </div>
+  `;
+}
+
+function toggleFolderCollapse(folderId) {
+  const id = Number(folderId);
+  if (collapsedFolders.has(id)) collapsedFolders.delete(id);
+  else collapsedFolders.add(id);
+  renderPagesList();
+}
+
+/* ── Folders Creation, Movement & Safe Deletion Confirmation ── */
+async function createNewFolderPrompt() {
+  const name = prompt('Enter a name for the new folder:');
+  if (!name || !name.trim()) return;
+
+  try {
+    const res = await apiFetch('/api/notebooks/folders', {
+      method: 'POST',
+      body: JSON.stringify({
+        groupId: currentGroupId,
+        notebookId: currentNotebookId,
+        name: name.trim()
+      })
+    });
+    if (res && res.data) {
+      folders.push(res.data);
+      populateFolderSelectDropdown();
+      renderPagesList();
+      showToast(`Folder "${res.data.name}" created!`, 'success');
+    }
+  } catch (err) {
+    showToast(err.message || 'Failed to create folder.', 'error');
+  }
+}
+
+/**
+ * Safe Folder Deletion Confirmation:
+ * MUST trigger the exact browser confirmation message before deleting from database.
+ */
+async function deleteFolderWithConfirm(folderId, folderName) {
+  const confirmed = window.confirm(
+    'Are you sure you want to delete this folder and all notes inside it? This action cannot be undone.'
+  );
+  if (!confirmed) return;
+
+  try {
+    await apiFetch(`/api/notebooks/folders/${folderId}?groupId=${encodeURIComponent(currentGroupId)}`, {
+      method: 'DELETE'
+    });
+    folders = folders.filter(f => Number(f.id) !== Number(folderId));
+    pages = pages.filter(p => Number(p.folder_id) !== Number(folderId));
+    if (Number(currentFolderId) === Number(folderId)) {
+      currentFolderId = null;
+    }
+    showToast(`Deleted folder "${folderName || 'Folder'}" and all notes inside it.`, 'info');
+    await loadPages();
+  } catch (err) {
+    showToast(err.message || 'Failed to delete folder.', 'error');
+  }
+}
+
+function newPageInFolder(folderId) {
+  newPage(folderId);
+}
+
+async function handleMovePageToFolder(folderIdVal) {
+  currentFolderId = folderIdVal ? Number(folderIdVal) : null;
+  if (currentPageId) {
+    await saveCurrentPage();
+    showToast('Moved page to selected folder.', 'info');
+  }
+}
+
+/* ── Granular Creator-Based Page Permissions ── */
+function canCurrentUserEditPage(page) {
+  if (!page || !page.id) return true; // Brand new unsaved page
+  if (!currentUser) return false;
+  const role = String(currentUser.role || currentGroupRole || 'member').toLowerCase();
+  if (role === 'leader') return true;
+
+  const creatorId = page.created_by ?? page.author_user_id;
+  if (creatorId !== undefined && creatorId !== null && Number(creatorId) === Number(currentUser.id)) {
+    return true;
+  }
+
+  const permitted = Array.isArray(page.permitted_editors)
+    ? page.permitted_editors.map(Number)
+    : [];
+  return permitted.includes(Number(currentUser.id));
+}
+
+function canCurrentUserManagePermissions(page) {
+  if (!page || !page.id || !currentUser) return false;
+  const role = String(currentUser.role || currentGroupRole || 'member').toLowerCase();
+  if (role === 'leader') return true;
+  const creatorId = page.created_by ?? page.author_user_id;
+  return creatorId !== undefined && creatorId !== null && Number(creatorId) === Number(currentUser.id);
+}
+
+function applyPagePermissionsUI(page) {
+  const canEdit = canCurrentUserEditPage(page);
+  const canManage = canCurrentUserManagePermissions(page);
+
+  const editor = document.getElementById('nbPageContent');
+  if (editor) {
+    editor.setAttribute('contenteditable', canEdit ? 'true' : 'false');
+  }
+
+  document.querySelectorAll('.textbox-editable').forEach(tb => {
+    tb.setAttribute('contenteditable', canEdit ? 'true' : 'false');
+  });
+
+  document.querySelectorAll('.nb-edit-ctrl').forEach(ctrl => {
+    ctrl.disabled = !canEdit;
+  });
+
+  const saveBtn = document.getElementById('savePageBtn');
+  if (saveBtn) {
+    saveBtn.style.display = canEdit ? 'inline-flex' : 'none';
+  }
+
+  const roBadge = document.getElementById('readOnlyBadge');
+  if (roBadge) {
+    roBadge.style.display = canEdit ? 'none' : 'inline-flex';
+  }
+
+  const shareBtn = document.getElementById('sharePageBtn');
+  if (shareBtn) {
+    shareBtn.style.display = canManage ? 'inline-flex' : 'none';
+  }
+
+  if (!canEdit) {
+    deselectAllShapes();
+  }
+}
+
+function openSharePermissionsModal(targetId = null) {
+  const pageId = targetId || currentPageId;
+  const page = pages.find(p => Number(p.id) === Number(pageId));
+  if (!page) {
+    showToast('Please save this page first before sharing.', 'info');
+    return;
+  }
+  if (!canCurrentUserManagePermissions(page)) {
+    showToast('Only the page creator or a workspace Leader can manage permissions.', 'error');
+    return;
+  }
+
+  shareTargetPageId = page.id;
+  const permitted = Array.isArray(page.permitted_editors) ? page.permitted_editors.map(Number) : [];
+  const creatorId = Number(page.created_by ?? page.author_user_id);
+
+  const container = document.getElementById('shareMembersList');
+  const otherMembers = currentGroupMembers.filter(m => Number(m.user_id) !== creatorId);
+
+  if (otherMembers.length === 0) {
+    container.innerHTML = '<div style="font-size:12.5px; color:var(--nb-text-muted); padding:10px 0;">No other members in this workspace yet.</div>';
+  } else {
+    container.innerHTML = otherMembers.map(m => {
+      const isLeader = String(m.role || '').toLowerCase() === 'leader';
+      const isChecked = isLeader || permitted.includes(Number(m.user_id));
+      return `
+        <label class="nb-member-perm-row" style="cursor:${isLeader ? 'default' : 'pointer'};">
+          <div>
+            <strong>${escapeHtml(m.full_name)}</strong>
+            <span style="font-size:11px; color:var(--nb-text-muted); margin-left:6px;">(${escapeHtml(m.role)})</span>
+          </div>
+          <input type="checkbox" class="share-perm-checkbox" value="${m.user_id}"
+                 ${isChecked ? 'checked' : ''} ${isLeader ? 'disabled' : ''}>
+        </label>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('sharePermissionsModal').classList.add('open');
+}
+
+function closeSharePermissionsModal() {
+  document.getElementById('sharePermissionsModal').classList.remove('open');
+  shareTargetPageId = null;
+}
+
+async function saveSharePermissions() {
+  if (!shareTargetPageId) return;
+  const checkboxes = document.querySelectorAll('.share-perm-checkbox:not(:disabled)');
+  const permittedEditors = [];
+  checkboxes.forEach(cb => {
+    if (cb.checked) permittedEditors.push(Number(cb.value));
+  });
+
+  try {
+    await apiFetch(`/api/notebooks/pages/${shareTargetPageId}/permissions`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        groupId: currentGroupId,
+        permittedEditors
+      })
+    });
+
+    const page = pages.find(p => Number(p.id) === Number(shareTargetPageId));
+    if (page) {
+      page.permitted_editors = permittedEditors;
+    }
+    closeSharePermissionsModal();
+    renderPagesList();
+    showToast('Edit permissions updated!', 'success');
+  } catch (err) {
+    showToast(err.message || 'Failed to update permissions.', 'error');
+  }
+}
+
+/* ── Page Navigation & Auto-Title System ── */
 function openPageById(id) {
-  const p = pages.find(pg => pg.id === id);
+  const p = pages.find(pg => Number(pg.id) === Number(id));
   if (p) openPage(p);
 }
 
 function openPage(page) {
   currentPageId = page.id;
-  const editor = document.getElementById('nbPageContent');
+  currentFolderId = page.folder_id || null;
+  populateFolderSelectDropdown();
 
-  // Deserialize shapes payload and HTML content
+  const editor = document.getElementById('nbPageContent');
   const { shapes, html } = deserializePageContent(page.content || '');
   currentShapes = shapes;
+  activeSelectedShapeId = null;
   renderAllShapes();
 
   if (editor) {
     editor.innerHTML = html || '';
   }
 
-  document.getElementById('nbAuthorInfo').textContent = '✍️ ' + (page.author_name || (currentUser && currentUser.fullName) || 'You');
-  document.getElementById('nbSaveStatus').textContent = 'Loaded';
+  applyPagePermissionsUI(page);
+  document.getElementById('nbAuthorInfo').textContent = '✍️ ' + (page.author_name || (currentUser && currentUser.fullName) || 'Member');
+  document.getElementById('nbSaveStatus').textContent = canCurrentUserEditPage(page) ? 'Loaded' : '🔒 Read-Only View';
   renderPagesList();
   updateWordCount();
 }
 
-function clearEditor() {
+function clearEditor(folderId = null) {
   currentPageId = null;
+  currentFolderId = folderId || null;
+  populateFolderSelectDropdown();
+
   const editor = document.getElementById('nbPageContent');
   if (editor) editor.innerHTML = '';
   currentShapes = [];
+  activeSelectedShapeId = null;
   renderAllShapes();
-  document.getElementById('nbAuthorInfo').textContent = '-';
-  document.getElementById('nbSaveStatus').textContent = 'New page';
+
+  applyPagePermissionsUI({ id: null, created_by: currentUser ? currentUser.id : null });
+  document.getElementById('nbAuthorInfo').textContent = '✍️ ' + ((currentUser && currentUser.fullName) || 'You');
+  document.getElementById('nbSaveStatus').textContent = 'New page (auto-titles on save)';
 }
 
-function newPage() {
-  clearEditor();
+function newPage(folderId = null) {
+  clearEditor(folderId);
   const editor = document.getElementById('nbPageContent');
   if (editor) editor.focus();
   document.querySelectorAll('.nb-page-item').forEach(el => el.classList.remove('active'));
-  showToast('New page started! Type your notes to auto-title.', 'info');
+  showToast('New page started! Type in the canvas — first phrase becomes the title.', 'info');
 }
 
 /**
- * Auto-Title System:
- * Automatically extracts the title of the page from the first non-empty word/phrase/sentence
- * typed in the note canvas upon saving.
+ * 1. AUTO-TITLE SYSTEM (MICROSOFT OFFICE STYLE):
+ * Automatically extracts the title of the notebook page from the first non-empty
+ * word/phrase/sentence typed into the note canvas upon saving.
  */
 function extractAutoTitle() {
   const editor = document.getElementById('nbPageContent');
-  if (!editor) return 'Untitled Page';
+  let rawText = editor ? (editor.innerText || editor.textContent || '').trim() : '';
 
-  const rawText = (editor.innerText || editor.textContent || '').trim();
+  // If main canvas is empty, check if any floating text box has text
+  if (!rawText && currentShapes.length > 0) {
+    const tbWithText = currentShapes.find(s => s.type === 'textbox' && s.text && s.text.trim());
+    if (tbWithText) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = tbWithText.text;
+      rawText = (tmp.innerText || tmp.textContent || '').trim();
+    }
+  }
+
   if (!rawText) return 'Untitled Page';
 
   const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   if (lines.length === 0) return 'Untitled Page';
 
-  let firstLine = lines[0];
-  // Match first punctuated sentence if exists within first line
+  const firstLine = lines[0];
   const sentenceMatch = firstLine.match(/^(.+?[.!?])(\s|$)/);
   let titleCandidate = sentenceMatch ? sentenceMatch[1] : firstLine;
 
@@ -911,9 +1550,6 @@ function extractAutoTitle() {
   return titleCandidate.trim() || 'Untitled Page';
 }
 
-/**
- * Serializes current editor state: combines shapes metadata and rich text HTML
- */
 function serializePageContent() {
   const editor = document.getElementById('nbPageContent');
   const htmlContent = editor ? editor.innerHTML : '';
@@ -921,12 +1557,9 @@ function serializePageContent() {
   return `<!--GS_SHAPES_JSON:${shapesJson}-->` + htmlContent;
 }
 
-/**
- * Deserializes raw stored content into shapes state and rich HTML
- */
 function deserializePageContent(rawContent) {
   if (!rawContent) return { shapes: [], html: '' };
-  const shapeMatch = rawContent.match(/^<!--GS_SHAPES_JSON:(.*?)-->/);
+  const shapeMatch = rawContent.match(/^<!--GS_SHAPES_JSON:(.*?)-->/s);
   if (shapeMatch) {
     try {
       const parsedShapes = JSON.parse(shapeMatch[1]);
@@ -939,64 +1572,52 @@ function deserializePageContent(rawContent) {
   return { shapes: [], html: rawContent };
 }
 
-/**
- * Save Current Page
- */
 async function saveCurrentPage() {
+  const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+  if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) {
+    showToast('Read-Only Mode: You do not have permission to edit this page.', 'error');
+    return;
+  }
+
   const title = extractAutoTitle();
   const serializedContent = serializePageContent();
 
   const btn = document.getElementById('savePageBtn');
-  const orig = btn ? btn.textContent : 'Save';
+  const orig = btn ? btn.textContent : '💾 Save Page';
   if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
   document.getElementById('nbSaveStatus').textContent = 'Saving...';
 
   try {
-    const currentPageObj = pages.find(p => p.id === currentPageId);
     const isLegacy = currentPageObj && currentPageObj.is_legacy;
 
     if (currentPageId) {
       if (isLegacy && currentGroupId) {
         await apiFetch('/api/groups/' + currentGroupId + '/notes/' + currentPageId, {
           method: 'PATCH',
-          body: JSON.stringify({ title, content: serializedContent })
+          body: JSON.stringify({ title, content: serializedContent, folderId: currentFolderId })
         });
       } else {
         await apiFetch('/api/notebooks/' + currentNotebookId + '/pages/' + currentPageId, {
           method: 'PATCH',
-          body: JSON.stringify({ title, content: serializedContent })
+          body: JSON.stringify({ title, content: serializedContent, folderId: currentFolderId })
         });
       }
     } else {
       const res = await apiFetch('/api/notebooks/' + currentNotebookId + '/pages', {
         method: 'POST',
-        body: JSON.stringify({ title, content: serializedContent, position: pages.length, groupId: currentGroupId })
+        body: JSON.stringify({
+          title,
+          content: serializedContent,
+          folderId: currentFolderId,
+          position: pages.length,
+          groupId: currentGroupId
+        })
       });
       currentPageId = (res.data && res.data.id) ? res.data.id : res.data;
     }
 
     document.getElementById('nbSaveStatus').textContent = '✅ Saved ' + new Date().toLocaleTimeString();
-
-    // Update in-memory pages list title dynamically
-    const currentMemPage = pages.find(p => p.id === currentPageId);
-    if (currentMemPage) {
-      currentMemPage.title = title;
-      currentMemPage.content = serializedContent;
-    }
-    renderPagesList();
-
-    // Reload list from backend to keep sync
     await loadPages();
-
-    if (currentPageId) {
-      const targetPage = pages.find(p => String(p.id) === String(currentPageId));
-      if (targetPage) {
-        // Keep active class synced without clobbering canvas cursor
-        document.querySelectorAll('.nb-page-item').forEach(el => el.classList.remove('active'));
-        const activeItem = document.querySelector(`.nb-page-item[onclick*="${currentPageId}"]`);
-        if (activeItem) activeItem.classList.add('active');
-      }
-    }
   } catch (err) {
     document.getElementById('nbSaveStatus').textContent = '❌ Save failed';
     showToast(err.message || 'Failed to save.', 'error');
@@ -1006,7 +1627,9 @@ async function saveCurrentPage() {
 }
 
 function scheduleAutoSave() {
-  document.getElementById('nbSaveStatus').textContent = 'Unsaved...';
+  const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+  if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+  document.getElementById('nbSaveStatus').textContent = 'Unsaved changes...';
   clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(saveCurrentPage, 3500);
 }
@@ -1015,7 +1638,6 @@ function setupEditorListeners() {
   const editor = document.getElementById('nbPageContent');
   if (editor) {
     editor.addEventListener('input', () => {
-      // Dynamically update sidebar title in real-time
       const activeTitleEl = document.querySelector('.nb-page-item.active .nb-page-item-title');
       if (activeTitleEl) {
         activeTitleEl.textContent = extractAutoTitle();
@@ -1025,7 +1647,6 @@ function setupEditorListeners() {
     });
   }
 
-  // Keyboard shortcuts (Ctrl+S, Ctrl+B, Ctrl+I, Ctrl+U)
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
@@ -1042,34 +1663,76 @@ function updateWordCount() {
   if (el) el.textContent = w + ' word' + (w !== 1 ? 's' : '');
 }
 
-/* ── Rich Text Formatting & Alignment ── */
-function execFmt(command) {
-  const editor = document.getElementById('nbPageContent');
-  if (editor) editor.focus();
-  document.execCommand(command, false, null);
+/* ── 2. TOOLBAR RICH TEXT FORMATTING & NUMERIC FONT SIZES ── */
+function execFmt(command, value = null) {
+  const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+  if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+
+  document.execCommand(command, false, value);
   updateWordCount();
   scheduleAutoSave();
 }
 
-function applyFont(f) {
-  const editor = document.getElementById('nbPageContent');
-  if (editor) editor.style.fontFamily = f;
+function applyTextColor(color) {
+  const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+  if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+
+  try { document.execCommand('styleWithCSS', false, true); } catch (e) {}
+  document.execCommand('foreColor', false, color);
   scheduleAutoSave();
 }
 
-function applyFontSize(s) {
-  const editor = document.getElementById('nbPageContent');
-  if (editor) editor.style.fontSize = s;
+function applyHighlightColor(color) {
+  const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+  if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+
+  try { document.execCommand('styleWithCSS', false, true); } catch (e) {}
+  if (!document.execCommand('hiliteColor', false, color)) {
+    document.execCommand('backColor', false, color);
+  }
   scheduleAutoSave();
 }
 
-function applyLineHeight(l) {
+function applyFont(fontFamily) {
   const editor = document.getElementById('nbPageContent');
-  if (editor) editor.style.lineHeight = l;
+  if (editor) editor.style.fontFamily = fontFamily;
   scheduleAutoSave();
 }
 
-/* ── Interactive Shapes System (Draggable & Rotatable) ── */
+/**
+ * Explicit Numeric Pixel Font Size (12px - 36px):
+ * Applies inline pixel font-size to selected text if a selection exists,
+ * or updates the canvas editor's base font-size.
+ */
+function applyFontSize(pixelSize) {
+  const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+  if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+
+  const editor = document.getElementById('nbPageContent');
+  const sel = window.getSelection();
+
+  if (sel && sel.rangeCount > 0 && !sel.isCollapsed && editor && editor.contains(sel.anchorNode)) {
+    document.execCommand('fontSize', false, '7');
+    const fontElements = editor.querySelectorAll('font[size="7"]');
+    fontElements.forEach(fontEl => {
+      const span = document.createElement('span');
+      span.style.fontSize = pixelSize;
+      span.innerHTML = fontEl.innerHTML;
+      fontEl.parentNode.replaceChild(span, fontEl);
+    });
+  } else if (editor) {
+    editor.style.fontSize = pixelSize;
+  }
+  scheduleAutoSave();
+}
+
+function applyLineHeight(lh) {
+  const editor = document.getElementById('nbPageContent');
+  if (editor) editor.style.lineHeight = lh;
+  scheduleAutoSave();
+}
+
+/* ── 3 & 4. CUSTOMIZABLE LINES, ARROWS, VECTOR SHAPES & TEXT BOXES ── */
 function handleInsertShapeSelect(selectEl) {
   const type = selectEl.value;
   if (!type) return;
@@ -1077,26 +1740,108 @@ function handleInsertShapeSelect(selectEl) {
   selectEl.value = '';
 }
 
+function isLineType(type) {
+  return ['line', 'straight_line', 'dashed_line', 'arrow', 'straight_arrow_line', 'broken_arrow_line'].includes(type);
+}
+
 function insertShape(type) {
+  const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+  if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+
   const id = 'shape_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
   const canvas = document.getElementById('nbCanvas');
   const canvasW = canvas ? canvas.offsetWidth : 800;
 
-  let w = 150, h = 90;
-  if (type === 'circle') { w = 110; h = 110; }
-  else if (type === 'arrow') { w = 140; h = 36; }
-  else if (type === 'line') { w = 150; h = 20; }
-  else if (type === 'callout') { w = 160; h = 80; }
+  const strokeWidth = Number(document.getElementById('nbStrokeWidth')?.value || 2);
+  const fillColor = document.getElementById('nbShapeFillColor')?.value || '#dbeafe';
+  const strokeColor = document.getElementById('nbShapeStrokeColor')?.value || '#2563eb';
 
-  const x = Math.max(30, Math.min(canvasW - w - 40, 40 + (currentShapes.length * 20) % 200));
-  const y = 40 + (currentShapes.length * 25) % 250;
+  let w = 160, h = 95;
+  if (type === 'circle') { w = 115; h = 115; }
+  else if (isLineType(type)) { w = 180; h = 36; }
+  else if (type === 'callout') { w = 175; h = 90; }
 
-  const newShape = { id, type, x, y, w, h, rot: 0 };
+  const x = Math.max(30, Math.min(canvasW - w - 40, 50 + (currentShapes.length * 22) % 240));
+  const y = 50 + (currentShapes.length * 26) % 260;
+
+  const newShape = {
+    id,
+    type,
+    x,
+    y,
+    w,
+    h,
+    rot: 0,
+    strokeWidth,
+    fillColor,
+    strokeColor,
+    text: type === 'callout' ? 'Callout Note' : ''
+  };
+
   currentShapes.push(newShape);
   renderAllShapes();
   selectShapeById(id);
   scheduleAutoSave();
-  showToast(`Inserted ${type} shape! Drag or rotate it on canvas.`, 'info');
+}
+
+function insertTextBox() {
+  const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+  if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+
+  const id = 'textbox_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+  const canvas = document.getElementById('nbCanvas');
+  const canvasW = canvas ? canvas.offsetWidth : 800;
+
+  const strokeWidth = Number(document.getElementById('nbStrokeWidth')?.value || 2);
+  const fillColor = document.getElementById('nbShapeFillColor')?.value || '#ffffff';
+  const strokeColor = document.getElementById('nbShapeStrokeColor')?.value || '#2563eb';
+
+  const w = 220, h = 110;
+  const x = Math.max(30, Math.min(canvasW - w - 40, 60 + (currentShapes.length * 24) % 240));
+  const y = 60 + (currentShapes.length * 28) % 260;
+
+  const newTextBox = {
+    id,
+    type: 'textbox',
+    x,
+    y,
+    w,
+    h,
+    rot: 0,
+    strokeWidth,
+    fillColor,
+    strokeColor,
+    text: ''
+  };
+
+  currentShapes.push(newTextBox);
+  renderAllShapes();
+  selectShapeById(id);
+  scheduleAutoSave();
+
+  setTimeout(() => {
+    const el = document.getElementById(id);
+    const editable = el ? el.querySelector('.textbox-editable') : null;
+    if (editable) editable.focus();
+  }, 30);
+}
+
+function updateSelectedShapeStyle() {
+  if (!activeSelectedShapeId) return;
+  const shape = currentShapes.find(s => s.id === activeSelectedShapeId);
+  if (!shape) return;
+
+  const strokeWidth = Number(document.getElementById('nbStrokeWidth')?.value || 2);
+  const fillColor = document.getElementById('nbShapeFillColor')?.value || '#dbeafe';
+  const strokeColor = document.getElementById('nbShapeStrokeColor')?.value || '#2563eb';
+
+  shape.strokeWidth = strokeWidth;
+  shape.fillColor = fillColor;
+  shape.strokeColor = strokeColor;
+
+  renderAllShapes();
+  selectShapeById(shape.id);
+  scheduleAutoSave();
 }
 
 function renderAllShapes() {
@@ -1119,62 +1864,115 @@ function createShapeElement(shapeData) {
   el.style.height = shapeData.h + 'px';
   el.style.transform = `rotate(${shapeData.rot || 0}deg)`;
 
-  // Generate shape visual graphics
-  let shapeInnerHtml = '';
-  if (shapeData.type === 'rectangle') {
-    shapeInnerHtml = '<div style="width:100%; height:100%; border:2px solid #2563eb; background:rgba(37,99,235,0.12); border-radius:6px; box-sizing:border-box;"></div>';
-  } else if (shapeData.type === 'circle') {
-    shapeInnerHtml = '<div style="width:100%; height:100%; border:2px solid #10b981; background:rgba(16,185,129,0.12); border-radius:50%; box-sizing:border-box;"></div>';
-  } else if (shapeData.type === 'arrow') {
-    shapeInnerHtml = `
-      <svg width="100%" height="100%" viewBox="0 0 100 40" preserveAspectRatio="none" style="display:block; overflow:visible;">
+  const sw = Number(shapeData.strokeWidth || 2);
+  const stroke = shapeData.strokeColor || '#2563eb';
+  const fill = shapeData.fillColor || 'rgba(37,99,235,0.12)';
+  const canEdit = canCurrentUserEditPage(pages.find(p => Number(p.id) === Number(currentPageId)));
+
+  let innerVisual = '';
+  const t = shapeData.type;
+
+  if (t === 'rectangle') {
+    innerVisual = `<div style="width:100%; height:100%; border:${sw}px solid ${stroke}; background:${fill}; border-radius:6px; box-sizing:border-box;"></div>`;
+  } else if (t === 'circle') {
+    innerVisual = `<div style="width:100%; height:100%; border:${sw}px solid ${stroke}; background:${fill}; border-radius:50%; box-sizing:border-box;"></div>`;
+  } else if (t === 'line' || t === 'straight_line') {
+    innerVisual = `
+      <svg width="100%" height="100%" viewBox="0 0 100 36" preserveAspectRatio="none" style="display:block; overflow:visible;">
+        <line x1="4" y1="18" x2="96" y2="18" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" />
+      </svg>
+    `;
+  } else if (t === 'dashed_line') {
+    innerVisual = `
+      <svg width="100%" height="100%" viewBox="0 0 100 36" preserveAspectRatio="none" style="display:block; overflow:visible;">
+        <line x1="4" y1="18" x2="96" y2="18" stroke="${stroke}" stroke-width="${sw}" stroke-dasharray="8,6" stroke-linecap="round" />
+      </svg>
+    `;
+  } else if (t === 'arrow' || t === 'straight_arrow_line') {
+    innerVisual = `
+      <svg width="100%" height="100%" viewBox="0 0 100 36" preserveAspectRatio="none" style="display:block; overflow:visible;">
         <defs>
-          <marker id="arrowhead_${shapeData.id}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-            <polygon points="0 0, 8 3, 0 6" fill="#f59e0b" />
+          <marker id="ah_${shapeData.id}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="${stroke}" />
           </marker>
         </defs>
-        <line x1="6" y1="20" x2="84" y2="20" stroke="#f59e0b" stroke-width="5" stroke-linecap="round" marker-end="url(#arrowhead_${shapeData.id})" />
+        <line x1="4" y1="18" x2="88" y2="18" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" marker-end="url(#ah_${shapeData.id})" />
       </svg>
     `;
-  } else if (shapeData.type === 'line') {
-    shapeInnerHtml = `
-      <svg width="100%" height="100%" viewBox="0 0 100 20" preserveAspectRatio="none" style="display:block;">
-        <line x1="4" y1="10" x2="96" y2="10" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round" />
+  } else if (t === 'broken_arrow_line') {
+    innerVisual = `
+      <svg width="100%" height="100%" viewBox="0 0 100 36" preserveAspectRatio="none" style="display:block; overflow:visible;">
+        <defs>
+          <marker id="bah_${shapeData.id}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="${stroke}" />
+          </marker>
+        </defs>
+        <line x1="4" y1="18" x2="88" y2="18" stroke="${stroke}" stroke-width="${sw}" stroke-dasharray="8,6" stroke-linecap="round" marker-end="url(#bah_${shapeData.id})" />
       </svg>
     `;
-  } else if (shapeData.type === 'callout') {
-    shapeInnerHtml = `
-      <div style="width:100%; height:100%; position:relative; background:rgba(244,63,94,0.12); border:2px solid #f43f5e; border-radius:8px; padding:6px 10px; font-size:12px; color:#f43f5e; font-weight:600; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">
-        Callout Note
-        <div style="position:absolute; bottom:-8px; left:18px; width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:8px solid #f43f5e;"></div>
+  } else if (t === 'callout') {
+    innerVisual = `
+      <div style="width:100%; height:100%; position:relative; background:${fill}; border:${sw}px solid ${stroke}; border-radius:8px; padding:6px 10px; box-sizing:border-box; display:flex; align-items:center; justify-content:center;">
+        <div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}" style="text-align:center; font-weight:600; color:${stroke}; width:100%;">${shapeData.text || 'Callout'}</div>
+        <div style="position:absolute; bottom:-9px; left:20px; width:0; height:0; border-left:7px solid transparent; border-right:7px solid transparent; border-top:9px solid ${stroke};"></div>
+      </div>
+    `;
+  } else if (t === 'textbox') {
+    innerVisual = `
+      <div class="interactive-textbox-inner" style="background:${fill}; border:${sw}px solid ${stroke};">
+        <div class="textbox-drag-bar" title="Drag Text Box">•••</div>
+        <div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}">${shapeData.text || ''}</div>
       </div>
     `;
   }
 
+  const lineHandles = isLineType(t)
+    ? `<div class="shape-resize-handle ml" data-corner="ml" title="Adjust line start"></div>
+       <div class="shape-resize-handle mr" data-corner="mr" title="Adjust line length"></div>`
+    : `<div class="shape-resize-handle tl" data-corner="tl"></div>
+       <div class="shape-resize-handle tr" data-corner="tr"></div>
+       <div class="shape-resize-handle bl" data-corner="bl"></div>
+       <div class="shape-resize-handle br" data-corner="br"></div>`;
+
   el.innerHTML = `
-    ${shapeInnerHtml}
-    <!-- Circular Rotation Widget Above Shape -->
-    <div class="shape-rot-handle" title="Click and drag to rotate shape">⟳</div>
-    <!-- 4 Corner Resize Handles -->
-    <div class="shape-resize-handle tl" data-corner="tl"></div>
-    <div class="shape-resize-handle tr" data-corner="tr"></div>
-    <div class="shape-resize-handle bl" data-corner="bl"></div>
-    <div class="shape-resize-handle br" data-corner="br"></div>
-    <!-- Delete Button -->
-    <div class="shape-delete-btn" title="Delete shape" onclick="deleteShape('${shapeData.id}')">✕</div>
+    ${innerVisual}
+    <div class="shape-rot-handle" title="Drag to rotate">⟳</div>
+    ${lineHandles}
+    <div class="shape-delete-btn" title="Delete" onclick="deleteShape('${shapeData.id}')">✕</div>
   `;
 
-  // Attach interactive drag, rotation, and resize handlers
+  // Save editable text changes inside textbox or callout
+  const editableEl = el.querySelector('.textbox-editable');
+  if (editableEl) {
+    editableEl.addEventListener('input', () => {
+      shapeData.text = editableEl.innerHTML;
+      scheduleAutoSave();
+    });
+    editableEl.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      selectShapeById(shapeData.id);
+    });
+  }
+
   bindShapeInteractions(el, shapeData);
   return el;
 }
 
 function bindShapeInteractions(shapeEl, shapeData) {
-  // 1. Dragging behavior
+  // 1. Dragging
   shapeEl.addEventListener('pointerdown', (e) => {
-    if (e.target.closest('.shape-rot-handle') || e.target.closest('.shape-resize-handle') || e.target.closest('.shape-delete-btn')) {
+    const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+    if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+
+    if (
+      e.target.closest('.shape-rot-handle') ||
+      e.target.closest('.shape-resize-handle') ||
+      e.target.closest('.shape-delete-btn') ||
+      (e.target.closest('.textbox-editable') && !e.target.closest('.textbox-drag-bar'))
+    ) {
       return;
     }
+
     e.preventDefault();
     e.stopPropagation();
     selectShapeById(shapeData.id);
@@ -1203,10 +2001,13 @@ function bindShapeInteractions(shapeEl, shapeData) {
     window.addEventListener('pointerup', onPointerUp);
   });
 
-  // 2. Rotation behavior (calculating angle from center)
+  // 2. Rotation via circular top handle
   const rotHandle = shapeEl.querySelector('.shape-rot-handle');
   if (rotHandle) {
     rotHandle.addEventListener('pointerdown', (e) => {
+      const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+      if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+
       e.preventDefault();
       e.stopPropagation();
       selectShapeById(shapeData.id);
@@ -1234,9 +2035,12 @@ function bindShapeInteractions(shapeEl, shapeData) {
     });
   }
 
-  // 3. Resizing behavior on corner handles
+  // 3. Resizing & Line Length/Angle adjustment on anchor handles
   shapeEl.querySelectorAll('.shape-resize-handle').forEach(handle => {
     handle.addEventListener('pointerdown', (e) => {
+      const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+      if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+
       e.preventDefault();
       e.stopPropagation();
       selectShapeById(shapeData.id);
@@ -1258,20 +2062,25 @@ function bindShapeInteractions(shapeEl, shapeData) {
         let newX = initX;
         let newY = initY;
 
-        if (corner === 'br') {
-          newW = Math.max(30, initW + dx);
-          newH = Math.max(20, initH + dy);
+        if (corner === 'mr') {
+          newW = Math.max(40, initW + dx);
+        } else if (corner === 'ml') {
+          newW = Math.max(40, initW - dx);
+          newX = initX + (initW - newW);
+        } else if (corner === 'br') {
+          newW = Math.max(40, initW + dx);
+          newH = Math.max(24, initH + dy);
         } else if (corner === 'bl') {
-          newW = Math.max(30, initW - dx);
-          newH = Math.max(20, initH + dy);
+          newW = Math.max(40, initW - dx);
+          newH = Math.max(24, initH + dy);
           newX = initX + (initW - newW);
         } else if (corner === 'tr') {
-          newW = Math.max(30, initW + dx);
-          newH = Math.max(20, initH - dy);
+          newW = Math.max(40, initW + dx);
+          newH = Math.max(24, initH - dy);
           newY = initY + (initH - newH);
         } else if (corner === 'tl') {
-          newW = Math.max(30, initW - dx);
-          newH = Math.max(20, initH - dy);
+          newW = Math.max(40, initW - dx);
+          newH = Math.max(24, initH - dy);
           newX = initX + (initW - newW);
           newY = initY + (initH - newH);
         }
@@ -1305,6 +2114,17 @@ function selectShapeById(id) {
     if (el.id === id) el.classList.add('selected');
     else el.classList.remove('selected');
   });
+
+  // Sync toolbar controls with the selected shape's properties
+  const shape = currentShapes.find(s => s.id === id);
+  if (shape) {
+    const swEl = document.getElementById('nbStrokeWidth');
+    const fillEl = document.getElementById('nbShapeFillColor');
+    const strokeEl = document.getElementById('nbShapeStrokeColor');
+    if (swEl && shape.strokeWidth) swEl.value = String(shape.strokeWidth);
+    if (fillEl && shape.fillColor && shape.fillColor.startsWith('#')) fillEl.value = shape.fillColor;
+    if (strokeEl && shape.strokeColor && shape.strokeColor.startsWith('#')) strokeEl.value = shape.strokeColor;
+  }
 }
 
 function deselectAllShapes() {
@@ -1313,11 +2133,14 @@ function deselectAllShapes() {
 }
 
 function deleteShape(id) {
+  const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+  if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+
   currentShapes = currentShapes.filter(s => s.id !== id);
   if (activeSelectedShapeId === id) activeSelectedShapeId = null;
   renderAllShapes();
   scheduleAutoSave();
-  showToast('Shape removed.', 'info');
+  showToast('Element removed from canvas.', 'info');
 }
 
 function handleCanvasContainerClick(event) {
@@ -1326,8 +2149,9 @@ function handleCanvasContainerClick(event) {
   }
 }
 
-/* ── Document Import & Export System ── */
-function triggerImportDocument() {
+/* ── 7. DOCUMENT IMPORT & EXPORT SYSTEM ── */
+function triggerImportDocument(folderId = null) {
+  pendingImportFolderId = folderId || currentFolderId || null;
   const input = document.getElementById('nbFileInput');
   if (input) input.click();
 }
@@ -1337,27 +2161,32 @@ function handleImportFile(event) {
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = async function(e) {
     const raw = e.target.result || '';
     const editor = document.getElementById('nbPageContent');
     if (!editor) return;
 
-    // Convert double linebreaks to paragraphs for clean rich formatting
+    // Prepare a brand new page in the target folder
+    clearEditor(pendingImportFolderId);
+    pendingImportFolderId = null;
+
+    // Convert Markdown headings/lists or plain text paragraphs into clean HTML
     const paragraphs = raw.split(/\r?\n\r?\n/).map(para => {
-      const clean = escapeHtml(para.trim()).replace(/\r?\n/g, '<br>');
-      return clean ? `<p>${clean}</p>` : '';
+      const trimmed = para.trim();
+      if (!trimmed) return '';
+      if (trimmed.startsWith('### ')) return `<h3>${escapeHtml(trimmed.slice(4))}</h3>`;
+      if (trimmed.startsWith('## ')) return `<h2>${escapeHtml(trimmed.slice(3))}</h2>`;
+      if (trimmed.startsWith('# ')) return `<h1>${escapeHtml(trimmed.slice(2))}</h1>`;
+      return `<p>${escapeHtml(trimmed).replace(/\r?\n/g, '<br>')}</p>`;
     }).filter(Boolean).join('');
 
     editor.innerHTML = paragraphs || `<p>${escapeHtml(raw)}</p>`;
     currentShapes = [];
     renderAllShapes();
-
     updateWordCount();
-    const activeTitleEl = document.querySelector('.nb-page-item.active .nb-page-item-title');
-    if (activeTitleEl) activeTitleEl.textContent = extractAutoTitle();
 
-    showToast(`Imported "${file.name}" cleanly!`, 'success');
-    saveCurrentPage();
+    showToast(`Imported "${file.name}" as a new page!`, 'success');
+    await saveCurrentPage();
   };
   reader.readAsText(file);
   event.target.value = '';
@@ -1369,46 +2198,67 @@ async function exportPage(format) {
   const textContent = editor ? (editor.innerText || editor.textContent || '') : '';
   const htmlContent = editor ? editor.innerHTML : '';
   const safeName = title.replace(/[^a-z0-9_-]/gi, '_').slice(0, 80) || 'Notebook_Page';
-  const font = document.getElementById('nbFontFamily').value || 'Inter, sans-serif';
-  const lh = document.getElementById('nbLineHeight').value || '1.7';
+  const font = document.getElementById('nbFontFamily')?.value || 'Inter, sans-serif';
+  const lh = document.getElementById('nbLineHeight')?.value || '1.7';
 
   if (format === 'txt') {
-    const blob = new Blob([title + '\n' + '='.repeat(Math.max(title.length, 12)) + '\n\n' + textContent], { type: 'text/plain;charset=utf-8' });
+    const textboxTexts = currentShapes
+      .filter(s => (s.type === 'textbox' || s.type === 'callout') && s.text)
+      .map(s => {
+        const d = document.createElement('div');
+        d.innerHTML = s.text;
+        return d.innerText || d.textContent || '';
+      })
+      .filter(Boolean)
+      .join('\n\n');
+
+    const fullText = [
+      title,
+      '='.repeat(Math.max(title.length, 12)),
+      '',
+      textContent,
+      textboxTexts ? '\n--- Text Boxes ---\n' + textboxTexts : ''
+    ].join('\n');
+
+    const blob = new Blob([fullText], { type: 'text/plain;charset=utf-8' });
     const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: safeName + '.txt' });
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     showToast('Downloaded .txt', 'success');
   } else if (format === 'pdf') {
     if (typeof html2pdf === 'undefined') {
       showToast('Loading PDF engine...', 'info');
       return;
     }
-    const pdfContainer = document.createElement('div');
-    pdfContainer.style.cssText = `padding:28px; font-family:${font}; line-height:${lh}; color:#0f172a; background:#ffffff; position:relative;`;
-    pdfContainer.innerHTML = `
-      <h1 style="font-size:24px; font-weight:800; border-bottom:2px solid #0f172a; padding-bottom:8px; margin-bottom:20px;">${escapeHtml(title)}</h1>
-      <div style="font-size:14px; position:relative; min-height:300px;">
-        ${htmlContent}
-      </div>
-    `;
+    deselectAllShapes();
+    const canvasEl = document.getElementById('nbCanvas');
+    const clone = canvasEl ? canvasEl.cloneNode(true) : document.createElement('div');
+    clone.style.cssText = `padding:28px; font-family:${font}; line-height:${lh}; color:#0f172a; background:#ffffff; position:relative; min-height:500px; box-shadow:none; border:none;`;
 
-    html2pdf().from(pdfContainer).set({
+    html2pdf().from(clone).set({
       margin: [10, 10, 10, 10],
       filename: safeName + '.pdf',
-      html2canvas: { scale: 2 },
+      html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     }).save().then(() => showToast('Downloaded .pdf', 'success'));
   } else if (format === 'docx') {
     try {
-      showToast('Generating Word doc...', 'info');
+      showToast('Generating Word (.docx)...', 'info');
+      const token = localStorage.getItem('groupspace_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const r = await fetch('/api/notebooks/export/docx', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
+        headers,
+        credentials: 'include',
         body: JSON.stringify({
-          notebookId: currentNotebookId,
+          groupId: currentGroupId,
+          notebookId: currentNotebookId || 0,
           pageId: currentPageId || 0,
           title,
-          htmlContent: `<h2>${escapeHtml(title)}</h2><div>${htmlContent}</div>`,
+          htmlContent: `<div>${htmlContent}</div>`,
           font: font.split(',')[0].replace(/'/g, '').trim(),
           lineHeight: parseFloat(lh)
         })
@@ -1416,7 +2266,9 @@ async function exportPage(format) {
       if (!r.ok) throw new Error('Server error generating DOCX');
       const blob = await r.blob();
       const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: safeName + '.docx' });
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       showToast('Downloaded .docx', 'success');
     } catch (err) {
       showToast(err.message || 'DOCX download failed', 'error');

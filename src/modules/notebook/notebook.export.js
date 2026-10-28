@@ -26,7 +26,8 @@ const { SYSTEM_MESSAGES } = require('../../config/constants');
  */
 function _buildDocumentHtml(title, htmlContent, font = 'Arial, sans-serif') {
   const safeTitle   = title   ? title.replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Untitled';
-  const safeContent = htmlContent || '<p></p>';
+  const cleanedHtml = (htmlContent || '<p></p>').replace(/<!--GS_SHAPES_JSON:.*?-->/gs, '');
+  const safeContent = cleanedHtml || '<p></p>';
 
   return `<!DOCTYPE html>
 <html lang="en">

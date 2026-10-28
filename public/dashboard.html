@@ -33,10 +33,10 @@
         </select>
         <div style="display:flex; gap:8px; margin-top:10px;">
           <a href="workspaces.html" style="
-            flex:1; display:flex; align-items:center; justify-content:center; gap:5px;
+            flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
             padding:8px 12px; background:var(--primary); color:#fff; border-radius:8px;
             font-size:0.78rem; font-weight:600; text-decoration:none; transition:all 0.2s;
-          ">📂 Workspaces</a>
+          "><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Workspaces</a>
         </div>
       </div>
 
@@ -85,7 +85,10 @@
           <span style="color:var(--gray);">Invite Code:</span>
           <strong id="displayJoinCode" style="color:var(--primary); letter-spacing:1px; cursor:pointer;" title="Click to copy" onclick="copyJoinCode()">GS-XXXXXX</strong>
         </div>
-        <button id="notificationFeedBtn" type="button" aria-label="Notification feed" title="Notification feed" class="header-bell-btn">🔔<span id="feedBadge" class="feed-badge" style="display:none;">0</span></button>
+        <button id="notificationFeedBtn" type="button" aria-label="Notification feed" title="Notification feed" class="header-bell-btn" style="display:inline-flex; align-items:center; justify-content:center; gap:4px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <span id="feedBadge" class="feed-badge" style="display:none;">0</span>
+        </button>
         <button id="homespaceSettingsBtn" type="button" aria-label="Workspace Settings" title="Workspace Settings" class="btn-outline" style="padding:8px 14px; font-size:13px; font-weight:600; display:inline-flex; align-items:center; border-radius:10px;" onclick="openWorkspaceSettingsModal()">Settings</button>
         <button id="primaryActionBtn" class="btn-green" onclick="handlePrimaryAction()">+ Action</button>
       </div>
@@ -176,15 +179,21 @@
 
     <!-- TAB 3: NOTEBOOK -->
     <section id="tab-notebook" class="tab-view" style="display:none;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; gap:20px;">
-        <div class="dashboard-search" style="flex:1;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:14px; flex-wrap:wrap;">
+        <div class="dashboard-search" style="flex:1; min-width:220px;">
           <input type="text" id="noteSearchInput" placeholder="🔍 Search notebook pages and tags..." oninput="debounceNotesSearch()">
         </div>
-        <div style="display:flex; gap:10px; align-items:center;">
-          <button onclick="window.open('notebook.html?groupId=' + currentGroupId, '_blank')" class="btn-outline" style="font-size:13px; padding:8px 16px;">↗ Full Editor</button>
-          <button onclick="openModal('createNoteModal')" class="btn-green">+ New Page</button>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <button type="button" onclick="promptCreateDashboardFolder()" class="btn-outline" style="font-size:13px; padding:8px 14px;">📁 + Folder</button>
+          <button type="button" onclick="document.getElementById('dashboardImportFileInput').click()" class="btn-outline" style="font-size:13px; padding:8px 14px;">📥 Import Document</button>
+          <input type="file" id="dashboardImportFileInput" accept=".txt,.md,.markdown" style="display:none;" onchange="handleDashboardImportDocument(event)">
+          <button type="button" onclick="window.open('notebook.html?groupId=' + currentGroupId, '_blank')" class="btn-outline" style="font-size:13px; padding:8px 16px;">↗ Full Editor</button>
+          <button type="button" onclick="openCreateNoteModal()" class="btn-green">+ New Page</button>
         </div>
       </div>
+
+      <!-- Folder Filter & Management Bar -->
+      <div id="notebookFoldersBar" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:20px;"></div>
 
       <div class="notebook-grid" id="notebookGrid">
         <p style="color:var(--gray);">Loading shared notes...</p>
@@ -279,10 +288,10 @@
             <div style="display:flex; gap:8px; align-items:center;">
               <input type="text" id="newCommentInput" class="form-control" placeholder="Write a reply... (Use @ to mention members, # for topics/tasks)" style="flex:1;">
               <label for="commentFileInput" class="btn-outline" style="cursor:pointer; padding:8px 12px; margin:0; display:inline-flex; align-items:center; justify-content:center; border-radius:8px;" title="Attach pictures or documents">
-                📎
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
               </label>
               <input type="file" id="commentFileInput" style="display:none;" multiple accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.docx,.doc,.txt" onchange="handleCommentFileSelection(event)">
-              <button type="submit" class="btn-green" style="padding:8px 18px; white-space:nowrap;">Post Reply</button>
+              <button type="submit" id="postDiscussionBtn" class="btn-green" style="padding:8px 18px; white-space:nowrap;">Post Reply</button>
             </div>
           </form>
         </div>
@@ -292,15 +301,15 @@
     <!-- TAB 6: PERSONAL SPACE -->
     <section id="tab-personal" class="tab-view" style="display:none;">
       <div style="margin-bottom:20px;">
-        <span class="hero-tag">🔒 STRICTLY PRIVATE TO YOU</span>
+        <span class="hero-tag" style="display:inline-flex; align-items:center; gap:5px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> STRICTLY PRIVATE TO YOU</span>
         <h2>Your Isolated Space</h2>
         <p style="color:var(--gray);">Items saved here are stored privately for your account and are completely invisible to other workspace members.</p>
       </div>
 
       <div class="personal-tabs">
-        <button class="personal-tab-btn active" onclick="switchPersonalSubTab('NOTE')">📝 Private Notes</button>
-        <button class="personal-tab-btn" onclick="switchPersonalSubTab('TASK')">☑️ Personal To-Dos</button>
-        <button class="personal-tab-btn" onclick="switchPersonalSubTab('EXPENSE')">💵 Personal Budget</button>
+        <button class="personal-tab-btn active" onclick="switchPersonalSubTab('NOTE')">Private Notes</button>
+        <button class="personal-tab-btn" onclick="switchPersonalSubTab('TASK')">Personal To-Dos</button>
+        <button class="personal-tab-btn" onclick="switchPersonalSubTab('EXPENSE')">Personal Budget</button>
       </div>
 
       <div class="dashboard-panel">
@@ -355,7 +364,7 @@
       </div>
       <div class="form-actions" style="margin-top:20px;">
         <button type="button" class="btn-outline" onclick="closeModal('createTaskModal')">Cancel</button>
-        <button type="submit" class="btn-green">Create Task</button>
+        <button type="submit" id="createTaskSubmitBtn" class="btn-green">Create Task</button>
       </div>
     </form>
   </div>
@@ -406,7 +415,7 @@
   </div>
 </div>
 
-<!-- Create Note Modal -->
+<!-- Create Note Modal (Auto-Titled from Content) -->
 <div class="modal-overlay" id="createNoteModal">
   <div class="modal-card">
     <div class="modal-header">
@@ -415,12 +424,17 @@
     </div>
     <form id="createNoteForm" onsubmit="handleCreateNote(event)">
       <div class="form-group">
-        <label>Page Title *</label>
-        <input type="text" id="noteTitle" name="pageTitle" data-alt-id="pageTitle" class="form-control" placeholder="e.g. Sprint 1 Meeting Minutes" required>
+        <label style="display:flex; justify-content:space-between; align-items:center;">
+          <span>Note Canvas *</span>
+          <span style="font-size:11px; color:var(--primary); font-weight:600;">✨ Auto-titled from first phrase/sentence</span>
+        </label>
+        <textarea id="noteContent" name="pageContent" data-alt-id="pageContent" class="form-control" rows="6" placeholder="Start typing your note... The first line or sentence automatically becomes the page title." required></textarea>
       </div>
       <div class="form-group">
-        <label>Content (Markdown / Notes)</label>
-        <textarea id="noteContent" name="pageContent" data-alt-id="pageContent" class="form-control" rows="6" placeholder="Document decisions, links, notes..."></textarea>
+        <label>Folder (Optional)</label>
+        <select id="noteFolderSelect" class="form-control">
+          <option value="">Uncategorized (Root)</option>
+        </select>
       </div>
       <div class="form-group">
         <label>Tags (comma separated)</label>
@@ -436,6 +450,24 @@
         <button type="submit" id="savePageBtn" class="btn-green">Save Page</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Share / Permissions Modal for Notebook Pages -->
+<div class="modal-overlay" id="shareNotePermissionsModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>🔗 Share / Page Edit Permissions</h3>
+      <button class="modal-close" onclick="closeModal('shareNotePermissionsModal')">✕</button>
+    </div>
+    <div style="font-size:13px; color:var(--gray); margin-bottom:14px;">
+      Select teammates who are allowed to edit <strong id="shareNoteTitleLabel" style="color:var(--text);">this page</strong>. Workspace Leaders and the page creator always have edit access; all other members will view in Read-Only mode.
+    </div>
+    <div id="shareNoteMembersList" style="display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto; margin-bottom:18px;"></div>
+    <div class="form-actions">
+      <button type="button" class="btn-outline" onclick="closeModal('shareNotePermissionsModal')">Cancel</button>
+      <button type="button" class="btn-green" onclick="saveDashboardNotePermissions()">Save Permissions</button>
+    </div>
   </div>
 </div>
 
@@ -508,7 +540,7 @@
         <label>Attachments (Images or Documents)</label>
         <div style="display:flex; gap:10px; align-items:center;">
           <label for="topicFileInput" class="btn-outline" style="cursor:pointer; padding:6px 14px; margin:0; display:inline-flex; align-items:center; gap:6px; border-radius:6px; font-size:13px;">
-            <span>📎 Choose Files</span>
+            <span style="display:inline-flex; align-items:center; gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Choose Files</span>
           </label>
           <span id="topicFilesCount" style="font-size:12px; color:var(--gray);">No files attached</span>
         </div>
@@ -517,7 +549,7 @@
       </div>
       <div class="form-actions" style="margin-top:20px;">
         <button type="button" class="btn-outline" onclick="closeModal('createTopicModal')">Cancel</button>
-        <button type="submit" class="btn-green">Create Topic</button>
+        <button type="submit" id="submitTopicBtn" class="btn-green">Create Topic</button>
       </div>
     </form>
   </div>
@@ -570,7 +602,7 @@
 <div id="feedDrawerOverlay"></div>
 <aside id="feedDrawer" aria-hidden="true">
   <div class="feed-head">
-    <h3 style="margin:0; font-size:17px;">🔔 Personal Feed</h3>
+    <h3 style="margin:0; font-size:16px; font-weight:700; display:inline-flex; align-items:center; gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg> Personal Feed</h3>
     <button type="button" id="feedCloseBtn" class="modal-close" aria-label="Close feed">✕</button>
   </div>
   <div class="feed-body" id="feedBody"><p style="color:var(--gray);">Loading...</p></div>

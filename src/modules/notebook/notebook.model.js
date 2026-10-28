@@ -98,22 +98,70 @@ const NotebookModel = {
   }
 };
 
+// ─── Notebook Folders ──────────────────────────────────────────────────────────
+
+const NotebookFolderModel = {
+  /** Create a new folder inside a workspace / notebook. */
+  async create({ groupId, notebookId, name, createdByUserId }) {
+    const [row] = await sql`
+      INSERT INTO notebook_folders (group_id, notebook_id, name, created_by_user_id)
+      VALUES (${groupId}, ${notebookId || null}, ${name}, ${createdByUserId || null})
+      RETURNING *
+    `;
+    return row;
+  },
+
+  /** Fetch all folders for a workspace. */
+  async findByGroup(groupId) {
+    return await sql`
+      SELECT
+        f.*,
+        u.full_name AS creator_name
+      FROM notebook_folders f
+      LEFT JOIN users u ON f.created_by_user_id = u.id
+      WHERE f.group_id = ${groupId}
+      ORDER BY f.created_at ASC
+    `;
+  },
+
+  /** Fetch a single folder by primary key. */
+  async findById(id) {
+    const [row] = await sql`
+      SELECT * FROM notebook_folders WHERE id = ${id}
+    `;
+    return row || null;
+  },
+
+  /** Delete a folder and all pages/notes inside it. */
+  async delete(id, groupId) {
+    await sql`DELETE FROM notebook_pages WHERE folder_id = ${id}`;
+    await sql`DELETE FROM notes WHERE folder_id = ${id}`;
+    return await sql`DELETE FROM notebook_folders WHERE id = ${id} AND group_id = ${groupId}`;
+  }
+};
+
 // ─── Notebook Pages ────────────────────────────────────────────────────────────
 
 const NotebookPageModel = {
   /** Add a new page to a notebook. */
-  async create({ notebookId, title, content, position, authorUserId }) {
+  async create({ notebookId, folderId, title, content, position, authorUserId, permittedEditors }) {
+    const editorsJson = JSON.stringify(Array.isArray(permittedEditors) ? permittedEditors : []);
     const [row] = await sql`
-      INSERT INTO notebook_pages (notebook_id, title, content, position, author_user_id, last_edited_by_user_id)
+      INSERT INTO notebook_pages (
+        notebook_id, folder_id, title, content, position,
+        author_user_id, last_edited_by_user_id, permitted_editors
+      )
       VALUES (
         ${notebookId},
+        ${folderId || null},
         ${title},
         ${content || ''},
         ${position ?? 0},
         ${authorUserId},
-        ${authorUserId}
+        ${authorUserId},
+        ${editorsJson}::jsonb
       )
-      RETURNING *
+      RETURNING *, author_user_id AS created_by
     `;
     return row;
   },
@@ -123,12 +171,16 @@ const NotebookPageModel = {
     const [row] = await sql`
       SELECT
         p.*,
+        p.author_user_id   AS created_by,
+        COALESCE(p.permitted_editors, '[]'::jsonb) AS permitted_editors,
         a.full_name        AS author_name,
         a.avatar_initials  AS author_initials,
-        e.full_name        AS last_editor_name
+        e.full_name        AS last_editor_name,
+        f.name             AS folder_name
       FROM notebook_pages p
       LEFT JOIN users a ON p.author_user_id         = a.id
       LEFT JOIN users e ON p.last_edited_by_user_id = e.id
+      LEFT JOIN notebook_folders f ON p.folder_id   = f.id
       WHERE p.id = ${id}
     `;
     return row || null;
@@ -139,21 +191,30 @@ const NotebookPageModel = {
     return await sql`
       SELECT
         p.*,
+        p.author_user_id   AS created_by,
+        COALESCE(p.permitted_editors, '[]'::jsonb) AS permitted_editors,
         a.full_name        AS author_name,
         a.avatar_initials  AS author_initials,
-        e.full_name        AS last_editor_name
+        e.full_name        AS last_editor_name,
+        f.name             AS folder_name
       FROM notebook_pages p
       LEFT JOIN users a ON p.author_user_id         = a.id
       LEFT JOIN users e ON p.last_edited_by_user_id = e.id
+      LEFT JOIN notebook_folders f ON p.folder_id   = f.id
       WHERE p.notebook_id = ${notebookId}
       ORDER BY p.position ASC, p.created_at ASC
     `;
   },
 
-  /** Update a page's content. Records last editor. */
-  async update(id, { title, content, position, editorUserId }) {
+  /** Update a page's content, folder, or permitted editors. Records last editor. */
+  async update(id, { title, content, position, folderId, permittedEditors, editorUserId }) {
     const current = await this.findById(id);
     if (!current) return null;
+
+    const newFolderId = folderId !== undefined ? (folderId === null || folderId === '' ? null : Number(folderId)) : current.folder_id;
+    const newPermitted = permittedEditors !== undefined
+      ? JSON.stringify(Array.isArray(permittedEditors) ? permittedEditors.map(Number) : [])
+      : JSON.stringify(Array.isArray(current.permitted_editors) ? current.permitted_editors : []);
 
     const [updated] = await sql`
       UPDATE notebook_pages
@@ -161,10 +222,12 @@ const NotebookPageModel = {
         title                  = ${title    !== undefined ? title    : current.title},
         content                = ${content  !== undefined ? content  : current.content},
         position               = ${position !== undefined ? position : current.position},
-        last_edited_by_user_id = ${editorUserId},
+        folder_id              = ${newFolderId},
+        permitted_editors      = ${newPermitted}::jsonb,
+        last_edited_by_user_id = ${editorUserId || current.last_edited_by_user_id},
         updated_at             = NOW()
       WHERE id = ${id}
-      RETURNING *
+      RETURNING *, author_user_id AS created_by
     `;
     return updated;
   },
@@ -232,20 +295,37 @@ const NotebookPermissionModel = {
 // ─── Legacy / Flat Note Model (Dashboard Workspace Notes) ─────────────────────
 
 const NoteModel = {
-  async create({ groupId, title, content, tags, isPinned, authorUserId }) {
+  async create({ groupId, folderId, title, content, tags, isPinned, authorUserId, permittedEditors }) {
+    const editorsJson = JSON.stringify(Array.isArray(permittedEditors) ? permittedEditors : []);
     const [result] = await sql`
-      INSERT INTO notes (group_id, title, content, tags, is_pinned, author_user_id)
-      VALUES (${groupId}, ${title}, ${content || ''}, ${tags || ''}, ${isPinned ? 1 : 0}, ${authorUserId})
-      RETURNING *
+      INSERT INTO notes (group_id, folder_id, title, content, tags, is_pinned, author_user_id, permitted_editors)
+      VALUES (
+        ${groupId},
+        ${folderId || null},
+        ${title},
+        ${content || ''},
+        ${tags || ''},
+        ${isPinned ? 1 : 0},
+        ${authorUserId},
+        ${editorsJson}::jsonb
+      )
+      RETURNING *, author_user_id AS created_by
     `;
     return result;
   },
 
   async findById(id) {
     const [note] = await sql`
-      SELECT n.*, u.full_name as author_name, u.avatar_initials as author_initials
+      SELECT
+        n.*,
+        n.author_user_id AS created_by,
+        COALESCE(n.permitted_editors, '[]'::jsonb) AS permitted_editors,
+        u.full_name as author_name,
+        u.avatar_initials as author_initials,
+        f.name AS folder_name
       FROM notes n
       JOIN users u ON n.author_user_id = u.id
+      LEFT JOIN notebook_folders f ON n.folder_id = f.id
       WHERE n.id = ${id}
     `;
     return note || null;
@@ -255,18 +335,32 @@ const NoteModel = {
     if (searchQuery) {
       const term = `%${searchQuery}%`;
       return await sql`
-        SELECT n.*, u.full_name as author_name, u.avatar_initials as author_initials
+        SELECT
+          n.*,
+          n.author_user_id AS created_by,
+          COALESCE(n.permitted_editors, '[]'::jsonb) AS permitted_editors,
+          u.full_name as author_name,
+          u.avatar_initials as author_initials,
+          f.name AS folder_name
         FROM notes n
         JOIN users u ON n.author_user_id = u.id
+        LEFT JOIN notebook_folders f ON n.folder_id = f.id
         WHERE n.group_id = ${groupId} AND (n.title ILIKE ${term} OR n.content ILIKE ${term} OR n.tags ILIKE ${term})
         ORDER BY n.is_pinned DESC, n.updated_at DESC
       `;
     }
 
     return await sql`
-      SELECT n.*, u.full_name as author_name, u.avatar_initials as author_initials
+      SELECT
+        n.*,
+        n.author_user_id AS created_by,
+        COALESCE(n.permitted_editors, '[]'::jsonb) AS permitted_editors,
+        u.full_name as author_name,
+        u.avatar_initials as author_initials,
+        f.name AS folder_name
       FROM notes n
       JOIN users u ON n.author_user_id = u.id
+      LEFT JOIN notebook_folders f ON n.folder_id = f.id
       WHERE n.group_id = ${groupId}
       ORDER BY n.is_pinned DESC, n.updated_at DESC
     `;
@@ -280,6 +374,12 @@ const NoteModel = {
     const newContent = fields.content !== undefined ? fields.content : current.content;
     const newTags = fields.tags !== undefined ? fields.tags : current.tags;
     const newPinned = fields.is_pinned !== undefined ? (fields.is_pinned ? 1 : 0) : current.is_pinned;
+    const newFolderId = fields.folder_id !== undefined
+      ? (fields.folder_id === null || fields.folder_id === '' ? null : Number(fields.folder_id))
+      : current.folder_id;
+    const newPermitted = fields.permitted_editors !== undefined
+      ? JSON.stringify(Array.isArray(fields.permitted_editors) ? fields.permitted_editors.map(Number) : [])
+      : JSON.stringify(Array.isArray(current.permitted_editors) ? current.permitted_editors : []);
 
     await sql`
       UPDATE notes
@@ -288,6 +388,8 @@ const NoteModel = {
         content = ${newContent},
         tags = ${newTags},
         is_pinned = ${newPinned},
+        folder_id = ${newFolderId},
+        permitted_editors = ${newPermitted}::jsonb,
         updated_at = NOW()
       WHERE id = ${id}
     `;
@@ -303,6 +405,7 @@ const NoteModel = {
 module.exports = {
   NoteModel,
   NotebookModel,
+  NotebookFolderModel,
   NotebookPageModel,
   NotebookPermissionModel
 };

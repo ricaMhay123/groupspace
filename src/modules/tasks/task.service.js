@@ -12,6 +12,7 @@
 
 const { TaskModel, TaskAssistantModel } = require('./task.model');
 const GroupModel   = require('../groups/group.model');
+const sql = require('../../config/db.config');
 const {
   TASK_STATUS, TASK_PRIORITY, ROLES, ASSIST_STATUS, SYSTEM_MESSAGES
 } = require('../../config/constants');
@@ -133,6 +134,11 @@ async function updateTaskStatus({ taskId, groupId, status, userId, userRole, use
   // Only leader or assignee may move the task
   if (!isLeader && !isAssignee) {
     throw domainError(SYSTEM_MESSAGES.TASK_EDIT_DENIED, 403);
+  }
+
+  // Strict role isolation: Leaders cannot start tasks assigned to teammates
+  if (status === TASK_STATUS.IN_PROGRESS && isLeader && task.assigned_to_user_id && Number(task.assigned_to_user_id) !== Number(userId)) {
+    throw domainError('Leaders cannot start tasks assigned to teammates.', 403);
   }
 
   // Only leaders can mark a task DONE
@@ -385,6 +391,66 @@ async function getTaskAssistOffers(taskId, groupId) {
   return await TaskAssistantModel.findByTask(taskId);
 }
 
+/**
+ * Leader sends a follow-up ping/notification on a task to the assigned member.
+ * Inserts a notification entry into personal_feed / discussion_mentions targeting the assigned member's ID.
+ */
+async function followUpOnTask({ taskId, groupId, leaderUserId, leaderFullName, leaderRole, message }) {
+  const task = await _resolveTask(taskId, groupId);
+
+  const isLeader = leaderRole === ROLES.LEADER;
+  if (!isLeader) {
+    throw domainError('Only workspace leaders can send task follow-ups.', 403);
+  }
+
+  const assignedUserId = task.assigned_to_user_id || task.assigned_to;
+  if (!assignedUserId) {
+    throw domainError('This task does not have an assigned member to follow up with.', 400);
+  }
+
+  if (Number(assignedUserId) === Number(leaderUserId)) {
+    throw domainError('You cannot send a follow-up on your own assigned task.', 400);
+  }
+
+  const content = message || `Leader followed up on task: ${task.title}`;
+
+  // Insert notification entry into personal_feed targeting assigned member
+  const [feedEntry] = await sql`
+    INSERT INTO personal_feed (user_id, group_id, task_id, author_user_id, content, type)
+    VALUES (${assignedUserId}, ${task.group_id}, ${task.id}, ${leaderUserId}, ${content}, 'follow_up')
+    RETURNING *
+  `;
+
+  // Insert notification entry into discussion_mentions targeting assigned member
+  try {
+    await sql`
+      INSERT INTO discussion_mentions (group_id, mentioned_user_id, task_id, author_user_id, content)
+      VALUES (${task.group_id}, ${assignedUserId}, ${task.id}, ${leaderUserId}, ${content})
+    `;
+  } catch (e) {
+    try {
+      await sql`
+        INSERT INTO discussion_mentions (group_id, mentioned_user_id, task_id, author_user_id)
+        VALUES (${task.group_id}, ${assignedUserId}, ${task.id}, ${leaderUserId})
+      `;
+    } catch (err) {}
+  }
+
+  // Log activity
+  await GroupModel.logActivity({
+    groupId: task.group_id,
+    userId: leaderUserId,
+    actionType: 'TASK_FOLLOW_UP',
+    description: `Leader ${leaderFullName || ''} followed up on task: "${task.title}".`
+  });
+
+  return {
+    success: true,
+    message: `Follow-up sent to ${task.assignee_name || 'assigned member'}.`,
+    feedEntry
+  };
+}
+
 module.exports = {
   // Task CRUD
   createTask,
@@ -392,6 +458,7 @@ module.exports = {
   updateTaskStatus,
   reviewTaskApproval,
   deleteTask,
+  followUpOnTask,
   // Flagging
   flagTask,
   unflagTask,

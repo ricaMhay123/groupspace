@@ -7,10 +7,73 @@
 
 'use strict';
 
-const { NoteModel, NotebookModel, NotebookPageModel, NotebookPermissionModel } = require('./notebook.model');
+const { NoteModel, NotebookModel, NotebookFolderModel, NotebookPageModel, NotebookPermissionModel } = require('./notebook.model');
 const GroupModel   = require('../groups/group.model');
 const { ROLES, NOTEBOOK_ROLES, NOTEBOOK_VISIBILITY, SYSTEM_MESSAGES } = require('../../config/constants');
 const { sanitizeText } = require('../../utils/validation.util');
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+
+/**
+ * Automatically extract the page title from the first non-empty word/phrase/sentence
+ * of content if an explicit title is not provided.
+ */
+function extractAutoTitleFromContent(title, content) {
+  const cleanExplicit = sanitizeText(title);
+  if (cleanExplicit) return cleanExplicit;
+
+  if (!content) return 'Untitled Page';
+  const stripped = String(content)
+    .replace(/^<!--GS_SHAPES_JSON:.*?-->/s, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<\/(p|div|h[1-6]|li|br|tr)>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .trim();
+
+  if (!stripped) return 'Untitled Page';
+  const lines = stripped.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (lines.length === 0) return 'Untitled Page';
+
+  const firstLine = lines[0];
+  const sentenceMatch = firstLine.match(/^(.+?[.!?])(\s|$)/);
+  let candidate = sentenceMatch ? sentenceMatch[1] : firstLine;
+  if (candidate.length > 55) {
+    candidate = candidate.slice(0, 52) + '...';
+  }
+  return sanitizeText(candidate) || 'Untitled Page';
+}
+
+/**
+ * Granular Creator-Based Page Permission Check:
+ * Only the original page creator (created_by === userId), explicitly permitted members
+ * in permitted_editors, or workspace Leaders can edit/save the note canvas.
+ */
+function canUserEditPage(item, userId, groupRole) {
+  if (!item || !userId) return false;
+  const role = String(groupRole || '').toLowerCase();
+  if (role === ROLES.LEADER) return true;
+
+  const creatorId = item.created_by ?? item.author_user_id;
+  if (creatorId !== null && creatorId !== undefined && Number(creatorId) === Number(userId)) {
+    return true;
+  }
+
+  const permitted = Array.isArray(item.permitted_editors)
+    ? item.permitted_editors.map(Number)
+    : [];
+  if (permitted.includes(Number(userId))) {
+    return true;
+  }
+
+  return false;
+}
 
 // ─── Permission Helpers ────────────────────────────────────────────────────────
 
@@ -203,7 +266,63 @@ async function deleteNotebook({ notebookId, userId, groupRole, userName }) {
   return { success: true };
 }
 
-// ─── Page Operations (bonus, used internally by extended routes) ───────────────
+// ─── Folder Operations ─────────────────────────────────────────────────────────
+
+async function getGroupFolders(groupId) {
+  return await NotebookFolderModel.findByGroup(Number(groupId));
+}
+
+async function createFolder({ groupId, notebookId, name, userId, userName }) {
+  const cleanName = sanitizeText(name);
+  if (!cleanName) {
+    throw Object.assign(new Error('Folder name is required.'), { httpStatus: 400 });
+  }
+
+  const folder = await NotebookFolderModel.create({
+    groupId: Number(groupId),
+    notebookId: notebookId ? Number(notebookId) : null,
+    name: cleanName,
+    createdByUserId: userId
+  });
+
+  try {
+    await GroupModel.logActivity({
+      groupId: Number(groupId),
+      userId,
+      actionType: 'NOTEBOOK_FOLDER_CREATED',
+      description: `${userName || 'A member'} created notebook folder: "${cleanName}".`
+    });
+  } catch (e) {}
+
+  return folder;
+}
+
+async function deleteFolder({ folderId, groupId, userId, userRole, userName }) {
+  const folder = await NotebookFolderModel.findById(folderId);
+  if (!folder || Number(folder.group_id) !== Number(groupId)) {
+    throw Object.assign(new Error('Folder not found in this workspace.'), { httpStatus: 404 });
+  }
+
+  const role = String(userRole || '').toLowerCase();
+  if (folder.created_by_user_id && Number(folder.created_by_user_id) !== Number(userId) && role !== ROLES.LEADER) {
+    throw accessDenied('Only the folder creator or a workspace Leader can delete this folder.');
+  }
+
+  await NotebookFolderModel.delete(folderId, Number(groupId));
+
+  try {
+    await GroupModel.logActivity({
+      groupId: Number(groupId),
+      userId,
+      actionType: 'NOTEBOOK_FOLDER_DELETED',
+      description: `${userName || 'A member'} deleted notebook folder "${folder.name}" and its pages.`
+    });
+  } catch (e) {}
+
+  return { success: true };
+}
+
+// ─── Page Operations ───────────────────────────────────────────────────────────
 
 async function getNotebookPages(notebookId, userId, groupRole) {
   const notebook = await NotebookModel.findById(notebookId);
@@ -216,54 +335,65 @@ async function getNotebookPages(notebookId, userId, groupRole) {
   return { notebook, pages };
 }
 
-async function createPage({ notebookId, title, content, position, authorUserId, authorName, groupRole }) {
+async function createPage({ notebookId, folderId, title, content, position, authorUserId, authorName, groupRole, permittedEditors }) {
   const notebook = await NotebookModel.findById(notebookId);
   if (!notebook) throw Object.assign(new Error(SYSTEM_MESSAGES.NOTEBOOK_NOT_FOUND), { httpStatus: 404 });
 
+  // Any workspace member with access to the notebook can create a new page (they become its creator)
   const role = await resolveNotebookRole(notebook, authorUserId, groupRole);
-  if (!role || role === NOTEBOOK_ROLES.VIEWER) {
-    throw accessDenied(SYSTEM_MESSAGES.NOTEBOOK_EDITOR_REQUIRED);
+  if (!role) {
+    throw accessDenied(SYSTEM_MESSAGES.NOTEBOOK_ACCESS_DENIED);
   }
 
-  const cleanTitle = sanitizeText(title);
-  if (!cleanTitle) throw new Error('Page title is required.');
+  const cleanTitle = extractAutoTitleFromContent(title, content);
 
   const page = await NotebookPageModel.create({
     notebookId,
-    title:        cleanTitle,
-    content:      content || '',
-    position:     position ?? 0,
-    authorUserId
+    folderId:         folderId || null,
+    title:            cleanTitle,
+    content:          content || '',
+    position:         position ?? 0,
+    authorUserId,
+    permittedEditors: Array.isArray(permittedEditors) ? permittedEditors : []
   });
 
-  await GroupModel.logActivity({
-    groupId:    notebook.group_id,
-    userId:     authorUserId,
-    actionType: 'NOTEBOOK_PAGE_CREATED',
-    description: `${authorName || 'A member'} added page "${cleanTitle}" to notebook "${notebook.title}".`
-  });
+  try {
+    await GroupModel.logActivity({
+      groupId:    notebook.group_id,
+      userId:     authorUserId,
+      actionType: 'NOTEBOOK_PAGE_CREATED',
+      description: `${authorName || 'A member'} added page "${cleanTitle}" to notebook "${notebook.title}".`
+    });
+  } catch (e) {}
 
   return page;
 }
 
-async function updatePage({ pageId, notebookId, title, content, position, editorUserId, editorName, groupRole }) {
+async function updatePage({ pageId, notebookId, folderId, title, content, position, permittedEditors, editorUserId, editorName, groupRole }) {
   const notebook = await NotebookModel.findById(notebookId);
   if (!notebook) throw Object.assign(new Error(SYSTEM_MESSAGES.NOTEBOOK_NOT_FOUND), { httpStatus: 404 });
-
-  const role = await resolveNotebookRole(notebook, editorUserId, groupRole);
-  if (!role || role === NOTEBOOK_ROLES.VIEWER) {
-    throw accessDenied(SYSTEM_MESSAGES.NOTEBOOK_EDITOR_REQUIRED);
-  }
 
   const page = await NotebookPageModel.findById(pageId);
   if (!page || page.notebook_id !== Number(notebookId)) {
     throw Object.assign(new Error('Page not found in this notebook.'), { httpStatus: 404 });
   }
 
+  // Enforce Granular Creator-Based Page Permissions:
+  // Only page creator (created_by === editorUserId), permitted_editors, or workspace Leader can edit/save
+  if (!canUserEditPage(page, editorUserId, groupRole)) {
+    throw accessDenied('Read-Only Mode: Only the page creator, permitted editors, or a workspace Leader can edit this page.');
+  }
+
+  const resolvedTitle = (title !== undefined || content !== undefined)
+    ? extractAutoTitleFromContent(title, content !== undefined ? content : page.content)
+    : undefined;
+
   return await NotebookPageModel.update(pageId, {
-    title:        title    !== undefined ? sanitizeText(title) : undefined,
+    title:            resolvedTitle,
     content,
     position,
+    folderId,
+    permittedEditors,
     editorUserId
   });
 }
@@ -272,35 +402,78 @@ async function deletePage({ pageId, notebookId, userId, groupRole }) {
   const notebook = await NotebookModel.findById(notebookId);
   if (!notebook) throw Object.assign(new Error(SYSTEM_MESSAGES.NOTEBOOK_NOT_FOUND), { httpStatus: 404 });
 
-  const role = await resolveNotebookRole(notebook, userId, groupRole);
-  if (!role || role === NOTEBOOK_ROLES.VIEWER) {
-    throw accessDenied(SYSTEM_MESSAGES.NOTEBOOK_EDITOR_REQUIRED);
-  }
-
   const page = await NotebookPageModel.findById(pageId);
   if (!page || page.notebook_id !== Number(notebookId)) {
     throw Object.assign(new Error('Page not found.'), { httpStatus: 404 });
+  }
+
+  const role = String(groupRole || '').toLowerCase();
+  const creatorId = page.created_by ?? page.author_user_id;
+  if (Number(creatorId) !== Number(userId) && role !== ROLES.LEADER) {
+    throw accessDenied('Only the page creator or a workspace Leader can delete this page.');
   }
 
   await NotebookPageModel.delete(pageId);
   return { success: true };
 }
 
+/**
+ * Granular Page / Note Share Permissions Update
+ * Only the original creator or a workspace Leader can update permitted_editors.
+ */
+async function updatePagePermissions({ pageId, groupId, actorUserId, actorRole, permittedEditors }) {
+  const cleanEditors = Array.isArray(permittedEditors)
+    ? [...new Set(permittedEditors.map(Number).filter(n => !isNaN(n) && n > 0))]
+    : [];
+  const isLeader = String(actorRole || '').toLowerCase() === ROLES.LEADER;
+
+  // Check in notebook_pages first
+  const page = await NotebookPageModel.findById(pageId);
+  if (page) {
+    const creatorId = page.created_by ?? page.author_user_id;
+    if (Number(creatorId) !== Number(actorUserId) && !isLeader) {
+      throw accessDenied('Only the page creator or a workspace Leader can manage share permissions.');
+    }
+    const updatedPage = await NotebookPageModel.update(pageId, {
+      permittedEditors: cleanEditors,
+      editorUserId: actorUserId
+    });
+    // Also sync legacy notes table if a matching note exists
+    try {
+      const note = await NoteModel.findById(pageId);
+      if (note && (!groupId || Number(note.group_id) === Number(groupId))) {
+        await NoteModel.update(pageId, { permitted_editors: cleanEditors });
+      }
+    } catch (e) {}
+    return updatedPage;
+  }
+
+  // Fallback: check in legacy notes table
+  const note = await NoteModel.findById(pageId);
+  if (!note || (groupId && Number(note.group_id) !== Number(groupId))) {
+    throw Object.assign(new Error('Note or page not found.'), { httpStatus: 404 });
+  }
+  const creatorId = note.created_by ?? note.author_user_id;
+  if (Number(creatorId) !== Number(actorUserId) && !isLeader) {
+    throw accessDenied('Only the note creator or a workspace Leader can manage share permissions.');
+  }
+  return await NoteModel.update(pageId, { permitted_editors: cleanEditors });
+}
+
 // ─── Legacy / Flat Note Services (Dashboard Workspace Notes) ───────────────────
 
-async function createNote({ groupId, title, content, tags, isPinned, authorUserId, authorName }) {
-  const cleanTitle = sanitizeText(title);
-  if (!cleanTitle) {
-    throw Object.assign(new Error('Page title is required.'), { httpStatus: 400 });
-  }
+async function createNote({ groupId, folderId, title, content, tags, isPinned, authorUserId, authorName, permittedEditors }) {
+  const cleanTitle = extractAutoTitleFromContent(title, content);
 
   const note = await NoteModel.create({
     groupId: Number(groupId),
+    folderId: folderId || null,
     title: cleanTitle,
     content: content || '',
     tags: sanitizeText(tags),
     isPinned: Boolean(isPinned),
-    authorUserId
+    authorUserId,
+    permittedEditors: Array.isArray(permittedEditors) ? permittedEditors : []
   });
 
   try {
@@ -319,17 +492,25 @@ async function getGroupNotes(groupId, searchQuery) {
   return await NoteModel.findByGroup(Number(groupId), searchQuery);
 }
 
-async function updateNote({ noteId, groupId, title, content, tags, isPinned, userId, userRole, userName }) {
+async function updateNote({ noteId, groupId, folderId, title, content, tags, isPinned, permittedEditors, userId, userRole, userName }) {
   const note = await NoteModel.findById(noteId);
   if (!note || note.group_id !== Number(groupId)) {
     throw Object.assign(new Error('Note not found in this workspace.'), { httpStatus: 404 });
   }
 
+  if (!canUserEditPage(note, userId, userRole)) {
+    throw accessDenied('Read-Only Mode: Only the note creator, permitted editors, or a workspace Leader can edit this note.');
+  }
+
   const updates = {};
-  if (title !== undefined) updates.title = sanitizeText(title);
+  if (title !== undefined || content !== undefined) {
+    updates.title = extractAutoTitleFromContent(title, content !== undefined ? content : note.content);
+  }
   if (content !== undefined) updates.content = content;
   if (tags !== undefined) updates.tags = sanitizeText(tags);
   if (isPinned !== undefined) updates.is_pinned = isPinned ? 1 : 0;
+  if (folderId !== undefined) updates.folder_id = folderId;
+  if (permittedEditors !== undefined) updates.permitted_editors = permittedEditors;
 
   const updated = await NoteModel.update(noteId, updates);
 
@@ -351,8 +532,9 @@ async function deleteNote({ noteId, groupId, userId, userRole }) {
     throw Object.assign(new Error('Note not found.'), { httpStatus: 404 });
   }
 
+  const role = String(userRole || '').toLowerCase();
   // Only the author or a workspace leader can delete a note
-  if (note.author_user_id !== userId && userRole !== ROLES.LEADER) {
+  if (Number(note.author_user_id) !== Number(userId) && role !== ROLES.LEADER) {
     throw Object.assign(new Error('You do not have permission to delete this note.'), { httpStatus: 403 });
   }
 
@@ -361,15 +543,21 @@ async function deleteNote({ noteId, groupId, userId, userRole }) {
 }
 
 module.exports = {
+  extractAutoTitleFromContent,
+  canUserEditPage,
   resolveNotebookRole,
   getGroupNotebooks,
   createNotebook,
   updateNotebookPermissions,
   deleteNotebook,
+  getGroupFolders,
+  createFolder,
+  deleteFolder,
   getNotebookPages,
   createPage,
   updatePage,
   deletePage,
+  updatePagePermissions,
   // Legacy / Dashboard note exports:
   createNote,
   getGroupNotes,

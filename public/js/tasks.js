@@ -11,9 +11,43 @@
 'use strict';
 
 /**
+ * Resolves current user and task context for role-based actions.
+ * Evaluates currentUser.id, task.assigned_to, and currentUser.role.
+ */
+function resolveTaskRoleContext(task) {
+  // Normalize task.assigned_to
+  const assignedTo = (task.assigned_to !== undefined && task.assigned_to !== null)
+    ? Number(task.assigned_to)
+    : (task.assigned_to_user_id ? Number(task.assigned_to_user_id) : null);
+  task.assigned_to = assignedTo;
+
+  // Resolve currentUser and ensure role property
+  const user = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : { id: null, role: null };
+  const userRole = (user.role || (typeof currentGroupDetails !== 'undefined' && currentGroupDetails?.role) || 'member').toLowerCase();
+  user.role = userRole;
+
+  const currentUserId = user.id ? Number(user.id) : null;
+  const isAssigned = Boolean(currentUserId && assignedTo && currentUserId === assignedTo);
+  const isLeader = user.role === 'leader';
+  const isTeammateTask = Boolean(assignedTo && currentUserId !== assignedTo);
+
+  return {
+    currentUser: user,
+    currentUserId,
+    assignedTo,
+    isAssigned,
+    isLeader,
+    isTeammateTask
+  };
+}
+
+/**
  * Render a streamlined 2-line minimalist Kanban task card
  * LINE 1: Bold Task Title (truncated with ellipsis if too long)
  * LINE 2: ONLY the assigned member's name (subtle gray: font-size: 0.8rem; color: #94a3b8;)
+ * ROLE ACTIONS:
+ *   - Assigned Members (currentUser.id === task.assigned_to): "Start Task"
+ *   - Leaders (currentUser.role === 'leader' and currentUser.id !== task.assigned_to): "Follow Up"
  * Clicking anywhere opens the complete Task Details Modal.
  */
 function renderKanbanCard(task) {
@@ -39,6 +73,40 @@ function renderKanbanCard(task) {
 
   card.appendChild(titleEl);
   card.appendChild(assigneeEl);
+
+  // Role-based action buttons evaluated on currentUser.id, task.assigned_to, and currentUser.role
+  const { currentUserId, assignedTo, isAssigned, isLeader } = resolveTaskRoleContext(task);
+
+  if (task.status === 'TODO') {
+    if (isAssigned) {
+      // FOR ASSIGNED MEMBERS: primary action button "Start Task"
+      const startBtn = document.createElement('button');
+      startBtn.type = 'button';
+      startBtn.className = 'btn-green btn-start-task';
+      startBtn.style.cssText = 'margin-top:8px; padding:4px 10px; font-size:11px; font-weight:600; border-radius:6px; cursor:pointer; width:100%; text-align:center; display:block;';
+      startBtn.textContent = 'Start Task';
+      startBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (typeof updateTaskStatus === 'function') {
+          updateTaskStatus(task.id, 'IN_PROGRESS');
+        }
+      };
+      card.appendChild(startBtn);
+    } else if (isLeader && assignedTo && currentUserId !== assignedTo) {
+      // FOR LEADERS: Do NOT give "Start Task" on tasks assigned to others; render discrete "Follow Up" button
+      const followUpBtn = document.createElement('button');
+      followUpBtn.type = 'button';
+      followUpBtn.className = 'btn-outline btn-follow-up';
+      followUpBtn.style.cssText = 'margin-top:8px; padding:4px 10px; font-size:11px; font-weight:600; border-radius:6px; cursor:pointer; width:100%; text-align:center; display:block; color:var(--primary); border:1px solid var(--border); background:transparent;';
+      followUpBtn.textContent = 'Follow Up';
+      followUpBtn.onclick = (e) => {
+        e.stopPropagation();
+        followUpOnTask(task.id, task.title);
+      };
+      card.appendChild(followUpBtn);
+    }
+  }
+
   return card;
 }
 
@@ -71,9 +139,8 @@ async function openTaskDetailsModal(taskId) {
     return;
   }
 
-  const isLeader = typeof currentGroupDetails !== 'undefined' && currentGroupDetails?.role === 'leader';
-  const currentUserId = typeof currentUser !== 'undefined' && currentUser?.id ? currentUser.id : null;
-  const isAssignee = currentUserId && Number(task.assigned_to_user_id) === Number(currentUserId);
+  const { currentUserId, assignedTo, currentUser: user, isAssigned, isLeader } = resolveTaskRoleContext(task);
+  const isAssignee = isAssigned;
   const isCreator = currentUserId && Number(task.created_by_user_id) === Number(currentUserId);
 
   // Set modal header elements
@@ -107,12 +174,22 @@ async function openTaskDetailsModal(taskId) {
     assistOffers = [];
   }
 
-  // Determine available workflow action buttons
+  // Determine available workflow action buttons (evaluates currentUser.id, task.assigned_to, currentUser.role)
   let actionsHtml = '';
-  if (task.status === 'TODO' && (isAssignee || isLeader)) {
-    actionsHtml += `<button type="button" class="btn-green" style="padding:7px 16px; font-size:12px; font-weight:600;" onclick="updateTaskStatusAndClose(${task.id}, 'IN_PROGRESS')">Start Task</button>`;
-  } else if (task.status === 'IN_PROGRESS' && (isAssignee || isLeader)) {
-    actionsHtml += `<button type="button" class="btn-green" style="padding:7px 16px; font-size:12px; font-weight:600;" onclick="updateTaskStatusAndClose(${task.id}, 'PENDING_APPROVAL')">Submit for Review</button>`;
+  if (task.status === 'TODO') {
+    if (isAssigned) {
+      // FOR ASSIGNED MEMBERS (currentUser.id === task.assigned_to): primary action button "Start Task"
+      actionsHtml += `<button type="button" class="btn-green btn-start-task" style="padding:7px 16px; font-size:12px; font-weight:600;" onclick="updateTaskStatusAndClose(${task.id}, 'IN_PROGRESS')">Start Task</button>`;
+    } else if (isLeader && assignedTo && currentUserId !== assignedTo) {
+      // FOR LEADERS (currentUser.role === 'leader' and currentUser.id !== task.assigned_to): discrete "Follow Up" button
+      actionsHtml += `<button type="button" class="btn-outline btn-follow-up" style="padding:7px 16px; font-size:12px; font-weight:600; color:var(--primary); border:1px solid var(--border);" onclick="followUpOnTask(${task.id}, '${escapeHtml(task.title).replace(/'/g, "\\'")}')">Follow Up</button>`;
+    }
+  } else if (task.status === 'IN_PROGRESS') {
+    if (isAssigned) {
+      actionsHtml += `<button type="button" class="btn-green" style="padding:7px 16px; font-size:12px; font-weight:600;" onclick="updateTaskStatusAndClose(${task.id}, 'PENDING_APPROVAL')">Submit for Review</button>`;
+    } else if (isLeader && assignedTo && currentUserId !== assignedTo) {
+      actionsHtml += `<button type="button" class="btn-outline btn-follow-up" style="padding:7px 16px; font-size:12px; font-weight:600; color:var(--primary); border:1px solid var(--border);" onclick="followUpOnTask(${task.id}, '${escapeHtml(task.title).replace(/'/g, "\\'")}')">Follow Up</button>`;
+    }
   } else if (task.status === 'PENDING_APPROVAL') {
     if (isLeader) {
       actionsHtml += `<button type="button" class="btn-green" style="padding:7px 16px; font-size:12px; font-weight:600;" onclick="closeModal('taskDetailsModal'); openReviewModal(${task.id}, '${escapeHtml(task.title).replace(/'/g, "\\'")}')">Review & Approve</button>`;
@@ -350,14 +427,76 @@ function updateLeaderBacklogBadge(pendingCount, isLeader) {
   }
 }
 
+/**
+ * Send a follow-up ping on a task to the assigned member's Personal Feed drawer.
+ * Route: POST /api/tasks/:taskId/follow-up
+ */
+async function followUpOnTask(taskId, taskTitle) {
+  try {
+    const activeGroupId = (typeof currentGroupId !== 'undefined' && currentGroupId)
+      ? currentGroupId
+      : localStorage.getItem('groupspace_active_group_id');
+
+    const res = await apiFetch(`/api/tasks/${taskId}/follow-up`, {
+      method: 'POST',
+      body: JSON.stringify({
+        groupId: activeGroupId
+      })
+    });
+
+    if (typeof showToast === 'function') {
+      showToast(res.message || `Followed up on task: "${taskTitle || 'Task'}"`, 'success');
+    }
+    if (typeof window.refreshAppFeed === 'function') {
+      window.refreshAppFeed();
+    }
+  } catch (err) {
+    console.error('Failed to send task follow-up:', err);
+    if (typeof showToast === 'function') {
+      showToast(err.message || 'Failed to send follow-up notification.', 'error');
+    }
+  }
+}
+
 // Global exports
 window.renderKanbanCard = renderKanbanCard;
 window.openTaskDetailsModal = openTaskDetailsModal;
 window.updateTaskStatusAndClose = updateTaskStatusAndClose;
 window.deleteTaskAndClose = deleteTaskAndClose;
+window.followUpOnTask = followUpOnTask;
 window.toggleTaskFlagDetails = toggleTaskFlagDetails;
 window.offerTaskHelpDetails = offerTaskHelpDetails;
 window.respondAssistOffer = respondAssistOffer;
 window.toggleTaskFlag = toggleTaskFlag;
 window.offerTaskHelp = offerTaskHelp;
 window.updateLeaderBacklogBadge = updateLeaderBacklogBadge;
+
+// Ensure all task submit buttons have explicit event listeners with e.preventDefault()
+function setupTaskEventListeners() {
+  const taskForm = document.getElementById('createTaskForm');
+  const taskBtn = document.getElementById('createTaskSubmitBtn');
+
+  if (taskForm) {
+    taskForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (typeof handleCreateTask === 'function') {
+        handleCreateTask(e);
+      }
+    });
+  }
+
+  if (taskBtn && !taskForm) {
+    taskBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (typeof handleCreateTask === 'function') {
+        handleCreateTask(e);
+      }
+    });
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupTaskEventListeners);
+} else {
+  setupTaskEventListeners();
+}
