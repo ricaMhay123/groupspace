@@ -8,6 +8,7 @@
 const DiscussionModel = require('./discussion.model');
 const GroupModel = require('../groups/group.model');
 const { ROLES } = require('../../config/constants');
+const { isAdminRole } = require('../../config/constants');
 const { sanitizeText } = require('../../utils/validation.util');
 
 async function createTopic({ groupId, title, category, authorUserId, authorName, attachments = [] }) {
@@ -204,7 +205,7 @@ async function deleteTopic({ topicId, groupId, userId, userRole }) {
     throw err;
   }
 
-  if (topic.author_user_id !== userId && userRole !== ROLES.LEADER) {
+  if (topic.author_user_id !== userId && !isAdminRole(userRole)) {
     const err = new Error('Only the author or a workspace Leader can delete this topic.');
     err.status = 403;
     throw err;
@@ -252,10 +253,10 @@ async function deleteComment({ commentId, userId, userRole, groupId }) {
   // Check role-based permission:
   // LEADER: Can delete ANY comment within their workspace group
   // MEMBER: Can delete ONLY comments authored by themselves (comment.user_id === userId)
-  let isLeader = userRole === ROLES.LEADER;
+  let isLeader = isAdminRole(userRole);
   if (!isLeader) {
     const memberRecord = await GroupModel.findMember(comment.group_id, userId);
-    if (memberRecord && memberRecord.role === ROLES.LEADER) {
+    if (memberRecord && isAdminRole(memberRecord.role)) {
       isLeader = true;
     }
   }

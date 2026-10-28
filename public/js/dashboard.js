@@ -95,9 +95,9 @@ function showDashboardEmptyState() {
         box-shadow: 0 8px 40px rgba(79,70,229,0.10);
         border: 1.5px solid #e2e8f0;
       ">
-        <div style="font-size: 4rem; margin-bottom: 20px; line-height: 1;">🚀</div>
+        <div style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: #4f46e5; margin-bottom: 12px;">GETTING STARTED</div>
         <h2 style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin-bottom: 12px; letter-spacing: -0.5px;">
-          Welcome to GroupSpace!
+          Welcome to GroupSpace
         </h2>
         <p style="color: #64748b; font-size: 1rem; line-height: 1.7; margin-bottom: 32px; max-width: 360px; margin-left: auto; margin-right: auto;">
           You're all set! Create your first workspace to start collaborating with your team on tasks, notes, expenses, and discussions.
@@ -108,7 +108,7 @@ function showDashboardEmptyState() {
             padding: 14px 28px; background: #4f46e5; color: #ffffff;
             border-radius: 12px; font-weight: 700; font-size: 0.95rem;
             text-decoration: none; box-shadow: 0 4px 14px rgba(79,70,229,0.35);
-          ">✨ Create Your First Workspace</a>
+          ">+ Create Your First Workspace</a>
           <a href="workspaces.html" style="
             display: flex; align-items: center; justify-content: center; gap: 8px;
             padding: 13px 28px; background: transparent; color: #4f46e5;
@@ -120,9 +120,9 @@ function showDashboardEmptyState() {
           margin-top: 36px; padding-top: 28px; border-top: 1px solid #f1f5f9;
           display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
         ">
-          <div><div style="display:flex;justify-content:center;margin-bottom:6px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.75"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Kanban Tasks</div></div>
-          <div><div style="display:flex;justify-content:center;margin-bottom:6px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.75"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Discussions</div></div>
-          <div><div style="display:flex;justify-content:center;margin-bottom:6px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.75"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Expenses</div></div>
+          <div><div style="font-size:0.68rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#6366f1;margin-bottom:4px;">01</div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Kanban Tasks</div></div>
+          <div><div style="font-size:0.68rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#6366f1;margin-bottom:4px;">02</div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Discussions</div></div>
+          <div><div style="font-size:0.68rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#6366f1;margin-bottom:4px;">03</div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Expenses</div></div>
         </div>
       </div>
     </div>
@@ -168,8 +168,9 @@ async function switchWorkspace(groupId) {
     document.getElementById('displayJoinCode').textContent = currentGroupDetails.join_code;
     const roleBadge = document.getElementById('userRoleBadge');
     if (roleBadge) {
-      roleBadge.textContent = currentGroupDetails.role;
-      roleBadge.className = `status ${currentGroupDetails.role === 'leader' ? 'online' : 'pending'}`;
+      const r = String(currentGroupDetails.role || '').toLowerCase();
+      roleBadge.textContent = r === 'co_leader' ? 'Co-Leader' : (r === 'leader' ? 'Leader' : 'Member');
+      roleBadge.className = `status ${r === 'leader' || r === 'co_leader' ? 'online' : 'pending'}`;
     }
 
     // Populate dropdowns that depend on group members
@@ -316,7 +317,7 @@ async function loadOverview() {
     if (statMember) statMember.textContent = (currentGroupDetails && currentGroupDetails.members) ? currentGroupDetails.members.length : 1;
 
     const userRole = (currentGroupDetails && currentGroupDetails.role) ? currentGroupDetails.role.toLowerCase() : 'member';
-    const isLeader = userRole === 'leader';
+    const isLeader = userRole === 'leader' || userRole === 'co_leader';
     const currentUserId = currentUser ? currentUser.id : null;
     const members = (currentGroupDetails && currentGroupDetails.members) ? currentGroupDetails.members : [];
     const activities = actRes.data || [];
@@ -451,8 +452,10 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
       </div>
     `;
 
+  const isPrimaryLeader = (currentGroupDetails && currentGroupDetails.role === 'leader');
   const rosterHtml = members.map(m => {
     const isSelf = Number(m.user_id) === Number(currentUserId);
+    const roleLabel = m.role === 'co_leader' ? 'Co-Leader' : (m.role === 'leader' ? 'Leader' : 'Member');
     return `
       <li style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid var(--border); gap:12px;">
         <div style="display:flex; align-items:center; gap:10px; min-width:0;">
@@ -466,15 +469,18 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
         </div>
         <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
           ${isSelf ? `
-            <span class="status online" style="font-size:11px; font-weight:700;">Leader</span>
-          ` : `
+            <span class="status online" style="font-size:11px; font-weight:700;">${roleLabel}</span>
+          ` : isPrimaryLeader ? `
             <select onchange="changeMemberRole(${m.user_id}, this.value)" style="font-size:11px; padding:3px 6px; border-radius:6px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer;">
               <option value="leader" ${m.role === 'leader' ? 'selected' : ''}>Leader</option>
+              <option value="co_leader" ${m.role === 'co_leader' ? 'selected' : ''}>Co-Leader</option>
               <option value="member" ${m.role === 'member' ? 'selected' : ''}>Member</option>
             </select>
             <button type="button" class="btn-outline" style="padding:3px 8px; font-size:11px; color:#dc2626; border-color:#fca5a5; border-radius:6px; cursor:pointer;" onclick="removeMemberFromWorkspace(${m.user_id}, '${escapeHtml(m.full_name).replace(/'/g, "\\'")}')" title="Remove member">
               Remove
             </button>
+          ` : `
+            <span class="status ${m.role === 'leader' || m.role === 'co_leader' ? 'online' : 'pending'}" style="font-size:11px; font-weight:600;">${roleLabel}</span>
           `}
         </div>
       </li>
@@ -615,8 +621,8 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
 }
 
 function renderMemberHomespace(container, myAssignedDeliverables, members, activities, currentUserId, personalNotes) {
-  const leaders = members.filter(m => m.role === 'leader');
-  const fellowMembers = members.filter(m => m.role !== 'leader');
+  const leaders = members.filter(m => m.role === 'leader' || m.role === 'co_leader');
+  const fellowMembers = members.filter(m => m.role !== 'leader' && m.role !== 'co_leader');
 
   const prefApprovals = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_approvals`) !== 'false';
   const prefMentions = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_mentions`) !== 'false';
@@ -661,8 +667,10 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
 
   const leadersHtml = leaders.length === 0
     ? '<p style="color:var(--gray); font-size:12px; margin:0;">No group leader assigned.</p>'
-    : leaders.map(l => `
-      <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 10px; background:rgba(79,70,229,0.06); border:1px solid rgba(79,70,229,0.18); border-radius:8px; margin-bottom:6px;">
+    : leaders.map(l => {
+      const isCoLeader = l.role === 'co_leader';
+      return `
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 10px; background:${isCoLeader ? 'rgba(99,102,241,0.05)' : 'rgba(79,70,229,0.06)'}; border:1px solid ${isCoLeader ? 'rgba(99,102,241,0.18)' : 'rgba(79,70,229,0.18)'}; border-radius:8px; margin-bottom:6px;">
         <div style="display:flex; align-items:center; gap:8px; min-width:0;">
           <div class="chat-avatar" style="width:30px; height:30px; font-size:11px; flex-shrink:0;">${escapeHtml(l.avatar_initials || 'GS')}</div>
           <div style="min-width:0;">
@@ -670,9 +678,10 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
             <div style="color:var(--gray); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(l.email)}</div>
           </div>
         </div>
-        <span style="font-size:11px; font-weight:700; color:var(--primary); background:#eef2ff; padding:2px 8px; border-radius:6px;">Leader</span>
+        <span style="font-size:11px; font-weight:700; color:var(--primary); background:#eef2ff; padding:2px 8px; border-radius:6px;">${isCoLeader ? 'Co-Leader' : 'Leader'}</span>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
   const fellowsHtml = fellowMembers.map(m => {
     const isSelf = Number(m.user_id) === Number(currentUserId);
@@ -686,7 +695,17 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
             </div>
           </div>
         </div>
-        <span class="status ${isSelf ? 'online' : 'pending'}" style="font-size:10px;">${isSelf ? 'You' : 'Member'}</span>
+        <div style="display:flex; align-items:center; gap:6px;">
+          ${isSelf ? `
+            <select onchange="handleMemberSelfRoleDropdown(this)" style="font-size:11px; padding:2px 6px; border-radius:6px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer;" title="Role: Member (Click to request leadership)">
+              <option value="member" selected>Member</option>
+              <option value="leader">Leader</option>
+              <option value="co_leader">Co-Leader</option>
+            </select>
+          ` : `
+            <span class="status pending" style="font-size:10px;">Member</span>
+          `}
+        </div>
       </li>
     `;
   }).join('');
@@ -732,13 +751,20 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
           </div>
           <div style="padding:16px 18px; display:flex; flex-direction:column; gap:16px;">
             <!-- Profile Display -->
-            <div style="display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--muted,#f8fafc); border:1px solid var(--border); border-radius:10px;">
-              <div class="chat-avatar" style="width:42px; height:42px; font-size:15px; flex-shrink:0;">${currentUser ? (currentUser.avatarInitials || 'GS') : 'GS'}</div>
-              <div style="min-width:0; flex:1;">
-                <div style="font-weight:700; font-size:14px; color:var(--text);">${currentUser ? escapeHtml(currentUser.fullName) : 'User'}</div>
-                <div style="color:var(--gray); font-size:12px;">${currentUser ? escapeHtml(currentUser.email) : ''}</div>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; background:var(--muted,#f8fafc); border:1px solid var(--border); border-radius:10px; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+                <div class="chat-avatar" style="width:42px; height:42px; font-size:15px; flex-shrink:0;">${currentUser ? (currentUser.avatarInitials || 'GS') : 'GS'}</div>
+                <div style="min-width:0;">
+                  <div style="font-weight:700; font-size:14px; color:var(--text);">${currentUser ? escapeHtml(currentUser.fullName) : 'User'}</div>
+                  <div style="color:var(--gray); font-size:12px;">${currentUser ? escapeHtml(currentUser.email) : ''}</div>
+                </div>
               </div>
-              <span class="status pending" style="font-size:11px;">Member</span>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="status pending" style="font-size:11px;">Member</span>
+                <button type="button" class="btn-outline" style="padding:4px 10px; font-size:11px; font-weight:600; border-radius:6px; color:var(--primary); border-color:var(--primary); background:transparent; cursor:pointer;" onclick="openRequestLeadershipModal()">
+                  Request Leadership Role
+                </button>
+              </div>
             </div>
 
             <!-- Notification Drawer Toggles -->
@@ -851,11 +877,12 @@ function openWorkspaceSettingsModal() {
   if (!modalBody || !currentGroupDetails) return;
 
   const userRole = (currentGroupDetails.role || 'member').toLowerCase();
-  const isLeader = userRole === 'leader';
+  const isPrimaryLeader = userRole === 'leader';
+  const isCoLeader = userRole === 'co_leader';
   const settings = currentGroupDetails.settings || {};
   const currentUserId = currentUser ? currentUser.id : null;
 
-  if (isLeader) {
+  if (isPrimaryLeader) {
     if (modalTitle) modalTitle.innerHTML = 'Leader Workspace Settings';
     const requireApproval = settings.requireApproval !== false;
     const allowDiscussions = settings.allowMemberDiscussions !== false;
@@ -920,6 +947,45 @@ function openWorkspaceSettingsModal() {
         </div>
       </div>
     `;
+  } else if (isCoLeader) {
+    if (modalTitle) modalTitle.innerHTML = 'Co-Leader Workspace Settings';
+    const requireApproval = settings.requireApproval !== false;
+    const allowDiscussions = settings.allowMemberDiscussions !== false;
+    const restrictExpenses = settings.restrictExpensesToLeaders === true;
+
+    modalBody.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <!-- Workspace Name -->
+        <div style="padding:12px 14px; background:var(--muted,#f8fafc); border:1px solid var(--border); border-radius:10px;">
+          <div style="font-size:12px; font-weight:600; color:var(--text);">Workspace</div>
+          <div style="font-size:14px; font-weight:700; color:var(--primary); margin-top:2px;">${escapeHtml(currentGroupDetails.name)}</div>
+        </div>
+
+        <!-- Reset Invite Code -->
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:var(--muted,#f8fafc); border:1px solid var(--border); border-radius:10px; gap:12px; flex-wrap:wrap;">
+          <div>
+            <div style="font-size:12px; font-weight:600; color:var(--text);">Invite Code</div>
+            <div style="font-size:11px; color:var(--gray);">Share with teammates to join workspace.</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <strong style="color:var(--primary); font-size:14px; letter-spacing:1px; background:#eef2ff; padding:4px 10px; border-radius:6px; border:1px solid #c7d2fe;">${escapeHtml(currentGroupDetails.join_code)}</strong>
+          </div>
+        </div>
+
+        <!-- Constraints Summary -->
+        <div style="border-top:1px solid var(--border); padding-top:14px;">
+          <div style="font-size:12px; font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">
+            Active Permission Constraints
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px; font-size:13px; color:var(--text);">
+            <div>• Leader Approval Required: <strong>${requireApproval ? 'Yes' : 'No'}</strong></div>
+            <div>• Member Discussion Creation: <strong>${allowDiscussions ? 'Allowed' : 'Restricted'}</strong></div>
+            <div>• Expense Ledger: <strong>${restrictExpenses ? 'Leaders & Co-Leaders Only' : 'All Members'}</strong></div>
+          </div>
+          <p style="font-size:11px; color:var(--gray); margin-top:12px;">Primary Leader holds sole authorization to modify settings and delete workspace.</p>
+        </div>
+      </div>
+    `;
   } else {
     if (modalTitle) modalTitle.innerHTML = 'Member Settings & Preferences';
     const prefApprovals = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_approvals`) !== 'false';
@@ -931,13 +997,20 @@ function openWorkspaceSettingsModal() {
     modalBody.innerHTML = `
       <div style="display:flex; flex-direction:column; gap:16px;">
         <!-- Profile Display -->
-        <div style="display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--muted,#f8fafc); border:1px solid var(--border); border-radius:10px;">
-          <div class="chat-avatar" style="width:42px; height:42px; font-size:15px; flex-shrink:0;">${currentUser ? (currentUser.avatarInitials || 'GS') : 'GS'}</div>
-          <div style="min-width:0; flex:1;">
-            <div style="font-weight:700; font-size:14px; color:var(--text);">${currentUser ? escapeHtml(currentUser.fullName) : 'User'}</div>
-            <div style="color:var(--gray); font-size:12px;">${currentUser ? escapeHtml(currentUser.email) : ''}</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; background:var(--muted,#f8fafc); border:1px solid var(--border); border-radius:10px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+            <div class="chat-avatar" style="width:42px; height:42px; font-size:15px; flex-shrink:0;">${currentUser ? (currentUser.avatarInitials || 'GS') : 'GS'}</div>
+            <div style="min-width:0;">
+              <div style="font-weight:700; font-size:14px; color:var(--text);">${currentUser ? escapeHtml(currentUser.fullName) : 'User'}</div>
+              <div style="color:var(--gray); font-size:12px;">${currentUser ? escapeHtml(currentUser.email) : ''}</div>
+            </div>
           </div>
-          <span class="status pending" style="font-size:11px;">Member</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="status pending" style="font-size:11px;">Member</span>
+            <button type="button" class="btn-outline" style="padding:4px 10px; font-size:11px; font-weight:600; border-radius:6px; color:var(--primary); border-color:var(--primary); background:transparent; cursor:pointer;" onclick="closeModal('workspaceSettingsModal'); openRequestLeadershipModal();">
+              Request Leadership Role
+            </button>
+          </div>
         </div>
 
         <!-- Notification Drawer Toggles -->
@@ -1137,7 +1210,66 @@ async function rejectTaskInline(taskId, taskTitle, e) {
   }
 }
 
+function handleMemberSelfRoleDropdown(selectElem) {
+  if (!selectElem) return;
+  const chosen = selectElem.value;
+  selectElem.value = 'member';
+  if (chosen === 'leader' || chosen === 'co_leader') {
+    openRequestLeadershipModal();
+  }
+}
+
+function openRequestLeadershipModal() {
+  const textarea = document.getElementById('leadershipRequestReason');
+  if (textarea) textarea.value = '';
+  openModal('requestLeadershipModal');
+  if (textarea) setTimeout(() => textarea.focus(), 60);
+}
+
+async function submitLeadershipRequest(event) {
+  if (event) {
+    event.preventDefault();
+  }
+  const reasonInput = document.getElementById('leadershipRequestReason');
+  const message = reasonInput ? reasonInput.value.trim() : '';
+  if (!message) {
+    showToast('Please provide a reason for requesting leadership.', 'error');
+    return;
+  }
+  const submitBtn = document.getElementById('submitLeadershipRequestBtn');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+  }
+  try {
+    const res = await apiFetch(`/api/groups/${currentGroupId}/leadership-requests`, {
+      method: 'POST',
+      body: JSON.stringify({ message })
+    });
+    showToast(res.message || 'Leadership request sent to the workspace Leader.', 'success');
+    closeModal('requestLeadershipModal');
+    if (reasonInput) reasonInput.value = '';
+  } catch (err) {
+    showToast(err.message || 'Failed to submit leadership request.', 'error');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit Request';
+    }
+  }
+}
+
+window.handleMemberSelfRoleDropdown = handleMemberSelfRoleDropdown;
+window.openRequestLeadershipModal = openRequestLeadershipModal;
+window.submitLeadershipRequest = submitLeadershipRequest;
+
 async function changeMemberRole(userId, newRole) {
+  const currentUserId = currentUser ? Number(currentUser.id) : null;
+  const userRole = (currentGroupDetails && currentGroupDetails.role) ? currentGroupDetails.role.toLowerCase() : 'member';
+  if (userRole === 'member' || (Number(userId) === currentUserId && newRole !== 'member')) {
+    openRequestLeadershipModal();
+    return;
+  }
   try {
     const res = await apiFetch(`/api/groups/${currentGroupId}/members/${userId}/role`, {
       method: 'PATCH',
@@ -1169,25 +1301,26 @@ async function removeMemberFromWorkspace(userId, memberName) {
 }
 
 function getActivityIcon(type) {
-  if (type.includes('FLAGGED') || type.includes('BLOCKED')) {
-    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>`;
+  const t = String(type || '').toUpperCase();
+  if (t.includes('FLAGGED') || t.includes('BLOCKED')) {
+    return `<span style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#ef4444; background:rgba(239,68,68,0.1); padding:2px 6px; border-radius:4px;">Alert</span>`;
   }
-  if (type.includes('TASK')) {
-    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`;
+  if (t.includes('TASK')) {
+    return `<span style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted, #64748b); background:var(--muted, #f1f5f9); padding:2px 6px; border-radius:4px;">Task</span>`;
   }
-  if (type.includes('EXPENSE')) {
-    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`;
+  if (t.includes('EXPENSE')) {
+    return `<span style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted, #64748b); background:var(--muted, #f1f5f9); padding:2px 6px; border-radius:4px;">Finance</span>`;
   }
-  if (type.includes('NOTE') || type.includes('NOTEBOOK')) {
-    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+  if (t.includes('NOTE') || t.includes('NOTEBOOK')) {
+    return `<span style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted, #64748b); background:var(--muted, #f1f5f9); padding:2px 6px; border-radius:4px;">Note</span>`;
   }
-  if (type.includes('TOPIC') || type.includes('COMMENT') || type.includes('MENTION')) {
-    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+  if (t.includes('TOPIC') || t.includes('COMMENT') || t.includes('MENTION')) {
+    return `<span style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted, #64748b); background:var(--muted, #f1f5f9); padding:2px 6px; border-radius:4px;">Topic</span>`;
   }
-  if (type.includes('WORKSPACE') || type.includes('MEMBER')) {
-    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+  if (t.includes('WORKSPACE') || t.includes('MEMBER')) {
+    return `<span style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted, #64748b); background:var(--muted, #f1f5f9); padding:2px 6px; border-radius:4px;">Team</span>`;
   }
-  return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>`;
+  return `<span style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted, #64748b); background:var(--muted, #f1f5f9); padding:2px 6px; border-radius:4px;">Log</span>`;
 }
 
 // ================= TAB 2: KANBAN TASKS & DUAL-APPROVAL ================= //
@@ -1207,7 +1340,7 @@ async function loadTasks() {
     const counts = { TODO: 0, IN_PROGRESS: 0, PENDING_APPROVAL: 0, DONE: 0 };
     Object.values(cols).forEach(c => c.innerHTML = '');
 
-    const isLeader = currentGroupDetails && currentGroupDetails.role === 'leader';
+    const isLeader = currentGroupDetails && (currentGroupDetails.role === 'leader' || currentGroupDetails.role === 'co_leader');
 
     tasks.forEach(t => {
       counts[t.status] = (counts[t.status] || 0) + 1;
@@ -1383,7 +1516,7 @@ function populateNoteFolderSelect() {
   const select = document.getElementById('noteFolderSelect');
   if (!select) return;
   select.innerHTML = `<option value="">Uncategorized (Root)</option>` +
-    dashboardNotebookFolders.map(f => `<option value="${f.id}">📁 ${escapeHtml(f.name)}</option>`).join('');
+    dashboardNotebookFolders.map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
 }
 
 function renderDashboardFoldersBar() {
@@ -1393,7 +1526,7 @@ function renderDashboardFoldersBar() {
   const allActive = activeDashboardFolderFilter === 'ALL';
   let html = `
     <button type="button" onclick="filterDashboardNotesByFolder('ALL')" style="padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid ${allActive ? '#10b981' : 'var(--border)'}; background:${allActive ? 'rgba(16,185,129,0.15)' : 'var(--card)'}; color:${allActive ? '#10b981' : 'var(--text)'};">
-      📚 All Pages
+      All Pages
     </button>
   `;
 
@@ -1401,7 +1534,7 @@ function renderDashboardFoldersBar() {
     const isActive = String(activeDashboardFolderFilter) === String(f.id);
     html += `
       <div style="display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; border:1px solid ${isActive ? '#38bdf8' : 'var(--border)'}; background:${isActive ? 'rgba(56,189,248,0.15)' : 'var(--card)'}; color:${isActive ? '#38bdf8' : 'var(--text)'};">
-        <span style="cursor:pointer;" onclick="filterDashboardNotesByFolder(${f.id})">📁 ${escapeHtml(f.name)}</span>
+        <span style="cursor:pointer;" onclick="filterDashboardNotesByFolder(${f.id})">${escapeHtml(f.name)}</span>
         <button type="button" title="Delete Folder" onclick="deleteDashboardFolder(${f.id}, event)" style="background:transparent; border:none; color:#ef4444; font-size:11px; cursor:pointer; padding:0 2px; line-height:1;">✕</button>
       </div>
     `;
@@ -1537,14 +1670,15 @@ function openDashboardShareModal(noteId) {
       listEl.innerHTML = members.map(m => {
         const uid = Number(m.user_id || m.id);
         const isCreator = uid === creatorId;
-        const isLeader = String(m.role || '').toLowerCase() === 'leader';
+        const roleLower = String(m.role || '').toLowerCase();
+        const isLeader = roleLower === 'leader' || roleLower === 'co_leader';
         const isAlwaysAllowed = isCreator || isLeader;
         const checked = isAlwaysAllowed || permitted.includes(uid);
         return `
           <label style="display:flex; align-items:center; justify-content:space-between; padding:8px 10px; border:1px solid var(--border); border-radius:8px; cursor:${isAlwaysAllowed ? 'default' : 'pointer'}; background:var(--card);">
             <div>
               <div style="font-size:13px; font-weight:600; color:var(--text);">${escapeHtml(m.full_name || m.email || 'Member')}</div>
-              <div style="font-size:11px; color:var(--gray);">${isCreator ? 'Page Creator (Owner)' : (isLeader ? 'Workspace Leader' : 'Member')}</div>
+              <div style="font-size:11px; color:var(--gray);">${isCreator ? 'Page Creator (Owner)' : (isLeader ? (roleLower === 'co_leader' ? 'Workspace Co-Leader' : 'Workspace Leader') : 'Member')}</div>
             </div>
             <input type="checkbox" class="share-note-member-cb" value="${uid}" ${checked ? 'checked' : ''} ${isAlwaysAllowed ? 'disabled' : ''}>
           </label>
@@ -1585,12 +1719,12 @@ function renderDashboardNotesGrid(notes) {
     : notes.filter(n => String(n.folder_id || '') === String(activeDashboardFolderFilter));
 
   if (!filtered || filtered.length === 0) {
-    container.innerHTML = '<p style="color:var(--gray); padding:30px;">No notebook pages in this view. Click <strong>+ New Page</strong> or <strong>📥 Import Document</strong> to add one!</p>';
+    container.innerHTML = '<p style="color:var(--gray); padding:30px;">No notebook pages in this view. Click <strong>+ New Page</strong> or <strong>Import Document</strong> to add one!</p>';
     return;
   }
 
   const currUid = currentUser ? Number(currentUser.id) : 0;
-  const isLeaderRole = currentGroupDetails && String(currentGroupDetails.role || '').toLowerCase() === 'leader';
+  const isLeaderRole = currentGroupDetails && ['leader', 'co_leader'].includes(String(currentGroupDetails.role || '').toLowerCase());
 
   container.innerHTML = filtered.map(n => {
     const displayTitle = n.title || extractDashboardAutoTitle(n.content || '');
@@ -1607,7 +1741,7 @@ function renderDashboardNotesGrid(notes) {
           <h4 style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
             <span>${escapeHtml(displayTitle)}</span>
             <span style="font-size:11px; padding:2px 8px; background:${canEdit ? 'rgba(82,214,138,0.15)' : 'rgba(148,163,184,0.18)'}; color:${canEdit ? '#52D68A' : '#94a3b8'}; border-radius:12px; font-weight:600; white-space:nowrap;">
-              ${canEdit ? '↗ Edit' : '🔒 Read-Only'}
+              ${canEdit ? 'Edit' : 'Read-Only'}
             </span>
           </h4>
           <p style="white-space:pre-wrap;">${escapeHtml(cleanPreview.slice(0, 220))}${cleanPreview.length > 220 ? '…' : ''}</p>
@@ -1615,10 +1749,10 @@ function renderDashboardNotesGrid(notes) {
         <div onclick="event.stopPropagation();">
           <div style="margin-top:8px; display:flex; align-items:center; justify-content:space-between; gap:6px; flex-wrap:wrap;">
             <select onchange="moveDashboardNoteToFolder(${n.id}, this.value)" style="font-size:11px; padding:2px 6px; border-radius:6px; background:var(--card); color:var(--text); border:1px solid var(--border); cursor:pointer;" title="Move to folder">
-              <option value="">📁 Uncategorized</option>
-              ${dashboardNotebookFolders.map(f => `<option value="${f.id}" ${Number(n.folder_id) === Number(f.id) ? 'selected' : ''}>📁 ${escapeHtml(f.name)}</option>`).join('')}
+              <option value="">Uncategorized</option>
+              ${dashboardNotebookFolders.map(f => `<option value="${f.id}" ${Number(n.folder_id) === Number(f.id) ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}
             </select>
-            ${canManagePerms ? `<button type="button" onclick="openDashboardShareModal(${n.id})" style="background:#0f172a; color:#ffffff; border:1px solid #334155; border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;" title="Share / Page Permissions">🔗 Share / Permissions</button>` : ''}
+            ${canManagePerms ? `<button type="button" onclick="openDashboardShareModal(${n.id})" style="background:#0f172a; color:#ffffff; border:1px solid #334155; border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;" title="Share / Page Permissions">Share / Permissions</button>` : ''}
           </div>
           ${n.tags ? `
             <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
@@ -1626,12 +1760,12 @@ function renderDashboardNotesGrid(notes) {
             </div>
           ` : ''}
           <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px;">
-            <span>✍️ ${escapeHtml(n.author_name || 'Member')}</span>
+            <span>By ${escapeHtml(n.author_name || 'Member')}</span>
             <div style="display:flex; align-items:center; gap:6px;">
-              <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">📄 .txt</button>
-              <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">📕 .pdf</button>
-              <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">📘 .docx</button>
-              ${canManagePerms ? `<span style="cursor:pointer; color:#FF7272; margin-left:4px;" title="Delete Note" onclick="deleteNote(${n.id})">🗑️</span>` : ''}
+              <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.txt</button>
+              <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.pdf</button>
+              <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.docx</button>
+              ${canManagePerms ? `<span style="cursor:pointer; color:#FF7272; margin-left:4px; font-size:11px; font-weight:600;" title="Delete Note" onclick="deleteNote(${n.id})">Delete</span>` : ''}
             </div>
           </div>
         </div>
@@ -1857,9 +1991,9 @@ async function loadExpenses() {
       settlementsEl.innerHTML = settlements.map(s => `
         <div class="settlement-card">
           <div style="display:flex; align-items:center; gap:12px;">
-            <span class="settlement-payer">👤 ${escapeHtml(s.fromName)}</span>
+            <span class="settlement-payer">${escapeHtml(s.fromName)}</span>
             <span class="settlement-arrow">pays →</span>
-            <span class="settlement-receiver">👤 ${escapeHtml(s.toName)}</span>
+            <span class="settlement-receiver">${escapeHtml(s.toName)}</span>
           </div>
           <span class="settlement-amount">₱${s.amount.toFixed(2)}</span>
         </div>
@@ -1882,7 +2016,7 @@ async function loadExpenses() {
         <td>${e.splits ? `${e.splits.length} members` : 'Equal'}</td>
         <td style="color:var(--primary); font-weight:700;">₱${Number(e.amount).toFixed(2)}</td>
         <td>
-          <button style="background:transparent; border:none; color:#FF7272; cursor:pointer;" onclick="deleteExpense(${e.id})">🗑️</button>
+          <button style="background:transparent; border:none; color:#FF7272; font-size:12px; font-weight:600; cursor:pointer;" onclick="deleteExpense(${e.id})">Delete</button>
         </td>
       </tr>
     `).join('');
@@ -1937,10 +2071,10 @@ function isImageAttachment(att) {
 
 function getDocumentBadgeIcon(name) {
   const lower = (name || '').toLowerCase();
-  if (lower.endsWith('.pdf')) return '📕 PDF';
-  if (lower.endsWith('.docx') || lower.endsWith('.doc')) return '📘 DOCX';
-  if (lower.endsWith('.txt')) return '📄 TXT';
-  return '📎 DOC';
+  if (lower.endsWith('.pdf')) return 'PDF';
+  if (lower.endsWith('.docx') || lower.endsWith('.doc')) return 'DOCX';
+  if (lower.endsWith('.txt')) return 'TXT';
+  return 'DOC';
 }
 
 function renderAttachmentsHtml(attachments) {
@@ -2137,7 +2271,7 @@ async function selectTopic(topicId, title) {
       return;
     }
 
-    const isLeader = currentGroupDetails && currentGroupDetails.role === 'leader';
+    const isLeader = currentGroupDetails && (currentGroupDetails.role === 'leader' || currentGroupDetails.role === 'co_leader');
 
     container.innerHTML = comments.map(c => {
       const isAuthor = currentUser && Number(c.user_id) === Number(currentUser.id);
@@ -2332,8 +2466,8 @@ async function loadPersonalItems() {
               <h4>${escapeHtml(n.title)}</h4>
               <p>${escapeHtml(n.content || '')}</p>
               <div class="note-meta">
-                <span>🔒 Private</span>
-                <span style="cursor:pointer; color:#FF7272;" onclick="deletePersonalItem(${n.id})">🗑️</span>
+                <span>Private</span>
+                <span style="cursor:pointer; color:#FF7272; font-size:11px; font-weight:600;" onclick="deletePersonalItem(${n.id})">Delete</span>
               </div>
             </div>
           `).join('')}
@@ -2348,7 +2482,7 @@ async function loadPersonalItems() {
                 <input type="checkbox" ${t.status === 'COMPLETED' ? 'checked' : ''} onchange="togglePersonalTask(${t.id}, this.checked)">
                 <span style="${t.status === 'COMPLETED' ? 'text-decoration:line-through; color:var(--gray);' : ''}">${escapeHtml(t.title)}</span>
               </label>
-              <span style="cursor:pointer; color:#FF7272;" onclick="deletePersonalItem(${t.id})">🗑️</span>
+              <span style="cursor:pointer; color:#FF7272; font-size:11px; font-weight:600;" onclick="deletePersonalItem(${t.id})">Delete</span>
             </li>
           `).join('')}
         </ul>
@@ -2368,7 +2502,7 @@ async function loadPersonalItems() {
                 <td><strong>${escapeHtml(e.title)}</strong></td>
                 <td>${escapeHtml(e.category || 'General')}</td>
                 <td style="color:var(--primary); font-weight:600;">₱${Number(e.amount).toFixed(2)}</td>
-                <td><span style="cursor:pointer; color:#FF7272;" onclick="deletePersonalItem(${e.id})">🗑️</span></td>
+                <td><span style="cursor:pointer; color:#FF7272; font-size:11px; font-weight:600;" onclick="deletePersonalItem(${e.id})">Delete</span></td>
               </tr>
             `).join('')}
           </tbody>

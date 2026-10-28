@@ -43,7 +43,7 @@
 
   <div class="workspace-actions">
     <button onclick="openModal('createModal')" class="primary-btn">+ Create Workspace</button>
-    <button onclick="openModal('joinModal')" class="secondary-btn">🔗 Join with Code</button>
+    <button onclick="openModal('joinModal')" class="secondary-btn">Join with Code</button>
   </div>
 
   <div class="workspace-grid" id="workspaceGrid">
@@ -130,7 +130,7 @@
     try {
       const user = await checkAuth();
       if (!user) return;
-      document.getElementById('userNameBadge').textContent = `👋 ${user.fullName}`;
+      document.getElementById('userNameBadge').textContent = user.fullName;
 
       const res = await apiFetch('/api/groups');
       const container = document.getElementById('workspaceGrid');
@@ -138,12 +138,12 @@
       if (!res.data || res.data.length === 0) {
         container.innerHTML = `
           <div class="workspace-empty-card">
-            <div class="empty-icon">📁</div>
+            <div class="empty-icon">Workspace Directory</div>
             <h2>No Workspaces Yet</h2>
             <p>You are not a member of any workspace yet. Create one or join an existing group with an invitation code!</p>
             <div class="empty-actions">
               <button onclick="openModal('createModal')" class="btn-green">+ Create Workspace</button>
-              <button onclick="openModal('joinModal')" class="btn-outline">🔗 Join with Code</button>
+              <button onclick="openModal('joinModal')" class="btn-outline">Join with Code</button>
             </div>
           </div>
         `;
@@ -152,15 +152,15 @@
 
       container.innerHTML = res.data.map(ws => `
         <div class="workspace-card" onclick="selectWorkspace(${ws.id})">
-          <div class="workspace-icon">${ws.category === 'School Project' ? '🎓' : ws.category === 'Hackathon / Competition' ? '⚡' : '👥'}</div>
+          <div class="workspace-icon">${escapeHtml(ws.category || 'Workspace')}</div>
           <h2>${escapeHtml(ws.name)}</h2>
           <p style="color:var(--gray); font-size:14px; margin-bottom:12px;">${escapeHtml(ws.description || 'No description provided.')}</p>
           
           <div class="workspace-info">
-            <p>👑 <strong>Role:</strong> <span style="color:var(--primary); font-weight:700;">${ws.role}</span></p>
-            <p>👥 <strong>Members:</strong> ${ws.member_count} active collaborators</p>
-            <p>📋 <strong>Pending Tasks:</strong> ${ws.pending_task_count} incomplete</p>
-            <p>🔑 <strong>Invite Code:</strong> <code>${ws.join_code}</code></p>
+            <p><strong>Role:</strong> <span style="color:var(--primary); font-weight:700;">${ws.role === 'co_leader' ? 'Co-Leader' : (ws.role === 'leader' ? 'Leader' : escapeHtml(ws.role))}</span></p>
+            <p><strong>Members:</strong> ${ws.member_count} active collaborators</p>
+            <p><strong>Pending Tasks:</strong> ${ws.pending_task_count} incomplete</p>
+            <p><strong>Invite Code:</strong> <code>${escapeHtml(ws.join_code)}</code></p>
           </div>
 
           <a href="dashboard.html?groupId=${ws.id}" class="btn-green" style="display:block; text-align:center; margin-top:15px;" onclick="event.stopPropagation(); selectWorkspace(${ws.id});">

@@ -344,9 +344,13 @@ header .nav-buttons {
 }
 
 .workspace-icon {
-  font-size: 2rem;
-  margin-bottom: 14px;
-  line-height: 1;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+  margin-bottom: 10px;
+  line-height: 1.2;
 }
 
 .workspace-card h2 {
@@ -392,8 +396,12 @@ header .nav-buttons {
 }
 
 .empty-icon {
-  font-size: 3.5rem;
-  margin-bottom: 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
   line-height: 1;
 }
 
@@ -1366,22 +1374,34 @@ body.dashboard-page {
   box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08);
 }
 
-.feature-card .icon, .step-card .step-number {
-  font-size: 1.75rem;
+.feature-card .feature-kicker,
+.feature-card .icon {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--primary);
+  margin-bottom: 12px;
+  display: inline-block;
+}
+
+.dark .feature-card .feature-kicker,
+.dark .feature-card .icon {
+  color: var(--ring);
+}
+
+.step-card .step-number {
   margin-bottom: 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-}
-
-.step-card .step-number {
-  width: 42px;
-  height: 42px;
+  width: 34px;
+  height: 34px;
   background-color: var(--primary-light);
   color: var(--primary);
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 1.1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
 }
 
 .feature-card h3, .step-card h3 {

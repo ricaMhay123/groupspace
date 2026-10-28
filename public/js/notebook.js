@@ -85,7 +85,8 @@ async function loadNotebookPages(groupId = null) {
       const editorUrl = `/notebook.html?groupId=${activeGroupId2}&noteId=${safeId}`;
       const creatorId = Number(n.created_by || n.author_user_id || 0);
       const currUid = (typeof currentUser !== 'undefined' && currentUser) ? Number(currentUser.id) : 0;
-      const isLeaderRole = (typeof currentGroupDetails !== 'undefined' && currentGroupDetails && String(currentGroupDetails.role || '').toLowerCase() === 'leader');
+      const roleStr = String((typeof currentGroupDetails !== 'undefined' && currentGroupDetails?.role) || '').toLowerCase();
+      const isLeaderRole = roleStr === 'leader' || roleStr === 'co_leader';
       const canManagePerms = isLeaderRole || (currUid && creatorId === currUid);
 
       return `
@@ -93,9 +94,9 @@ async function loadNotebookPages(groupId = null) {
           <div>
             <h4 style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
               <span>${escapeHtml(title)}</span>
-              <span style="font-size:10px; padding:2px 7px; background:rgba(82,214,138,0.12); color:#52D68A; border-radius:10px; font-weight:600; white-space:nowrap;">↗ Edit</span>
+              <span style="font-size:10px; padding:2px 7px; background:rgba(82,214,138,0.12); color:#52D68A; border-radius:10px; font-weight:600; white-space:nowrap;">Edit</span>
             </h4>
-            ${folderName ? `<div style="font-size:11px; color:#38bdf8; margin-bottom:6px; font-weight:600;">📁 ${escapeHtml(folderName)}</div>` : ''}
+            ${folderName ? `<div style="font-size:11px; color:#38bdf8; margin-bottom:6px; font-weight:600;">${escapeHtml(folderName)}</div>` : ''}
             <p style="white-space:pre-wrap;">${escapeHtml((content || '').replace(/^<!--GS_SHAPES_JSON:.*?-->/, '').replace(/<[^>]*>/g, '').trim().slice(0, 200))}${(content || '').length > 200 ? '…' : ''}</p>
           </div>
           <div onclick="event.stopPropagation();">
@@ -105,13 +106,13 @@ async function loadNotebookPages(groupId = null) {
               </div>
             ` : ''}
             <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px;">
-              <span>✍️ ${escapeHtml(author)}</span>
+              <span>By ${escapeHtml(author)}</span>
               <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                ${canManagePerms && typeof openDashboardShareModal === 'function' ? `<button type="button" title="Share / Page Permissions" class="btn-export-badge" onclick="openDashboardShareModal(${safeId})" style="background:#0f172a; border:1px solid #334155; color:#ffffff; border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">🔗 Share</button>` : ''}
-                <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #1e293b); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">📄 .txt</button>
-                <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #1e293b); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">📕 .pdf</button>
-                <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #1e293b); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">📘 .docx</button>
-                <span style="cursor:pointer; color:#FF7272; margin-left:4px;" title="Delete Note" onclick="deleteNote(${safeId})">🗑️</span>
+                ${canManagePerms && typeof openDashboardShareModal === 'function' ? `<button type="button" title="Share / Page Permissions" class="btn-export-badge" onclick="openDashboardShareModal(${safeId})" style="background:#0f172a; border:1px solid #334155; color:#ffffff; border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">Share</button>` : ''}
+                <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #1e293b); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.txt</button>
+                <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #1e293b); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.pdf</button>
+                <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #1e293b); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.docx</button>
+                <span style="cursor:pointer; color:#FF7272; margin-left:4px; font-size:11px; font-weight:600;" title="Delete Note" onclick="deleteNote(${safeId})">Delete</span>
               </div>
             </div>
           </div>

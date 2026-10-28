@@ -255,7 +255,7 @@
       } else if (item.type === 'topic') {
         html += `
           <div class="mention-item ${idx === 0 ? 'active' : ''}" data-idx="${idx}">
-            <div class="mention-item-avatar topic">💬</div>
+            <div class="mention-item-avatar topic">T</div>
             <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
               ${escapeHtml(item.name)}
             </span>

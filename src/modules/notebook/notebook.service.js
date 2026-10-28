@@ -10,6 +10,7 @@
 const { NoteModel, NotebookModel, NotebookFolderModel, NotebookPageModel, NotebookPermissionModel } = require('./notebook.model');
 const GroupModel   = require('../groups/group.model');
 const { ROLES, NOTEBOOK_ROLES, NOTEBOOK_VISIBILITY, SYSTEM_MESSAGES } = require('../../config/constants');
+const { isAdminRole } = require('../../config/constants');
 const { sanitizeText } = require('../../utils/validation.util');
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -58,7 +59,7 @@ function extractAutoTitleFromContent(title, content) {
 function canUserEditPage(item, userId, groupRole) {
   if (!item || !userId) return false;
   const role = String(groupRole || '').toLowerCase();
-  if (role === ROLES.LEADER) return true;
+  if (isAdminRole(role)) return true;
 
   const creatorId = item.created_by ?? item.author_user_id;
   if (creatorId !== null && creatorId !== undefined && Number(creatorId) === Number(userId)) {
@@ -94,7 +95,7 @@ function canUserEditPage(item, userId, groupRole) {
  */
 async function resolveNotebookRole(notebook, userId, groupRole) {
   // Workspace leaders are implicit notebook admins
-  if (groupRole === ROLES.LEADER) return NOTEBOOK_ROLES.ADMIN;
+  if (isAdminRole(groupRole)) return NOTEBOOK_ROLES.ADMIN;
 
   // Creator is always an admin
   if (notebook.created_by_user_id === userId) return NOTEBOOK_ROLES.ADMIN;
@@ -304,7 +305,7 @@ async function deleteFolder({ folderId, groupId, userId, userRole, userName }) {
   }
 
   const role = String(userRole || '').toLowerCase();
-  if (folder.created_by_user_id && Number(folder.created_by_user_id) !== Number(userId) && role !== ROLES.LEADER) {
+  if (folder.created_by_user_id && Number(folder.created_by_user_id) !== Number(userId) && !isAdminRole(role)) {
     throw accessDenied('Only the folder creator or a workspace Leader can delete this folder.');
   }
 
@@ -409,7 +410,7 @@ async function deletePage({ pageId, notebookId, userId, groupRole }) {
 
   const role = String(groupRole || '').toLowerCase();
   const creatorId = page.created_by ?? page.author_user_id;
-  if (Number(creatorId) !== Number(userId) && role !== ROLES.LEADER) {
+  if (Number(creatorId) !== Number(userId) && !isAdminRole(role)) {
     throw accessDenied('Only the page creator or a workspace Leader can delete this page.');
   }
 
@@ -534,7 +535,7 @@ async function deleteNote({ noteId, groupId, userId, userRole }) {
 
   const role = String(userRole || '').toLowerCase();
   // Only the author or a workspace leader can delete a note
-  if (Number(note.author_user_id) !== Number(userId) && role !== ROLES.LEADER) {
+  if (Number(note.author_user_id) !== Number(userId) && !isAdminRole(role)) {
     throw Object.assign(new Error('You do not have permission to delete this note.'), { httpStatus: 403 });
   }
 

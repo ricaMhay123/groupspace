@@ -206,51 +206,78 @@
 /* ── Hero Section ── */
 .hero-section {
   position: relative;
-  padding: 80px 20px 120px;
+  width: 100vw;
+  max-width: 100%;
+  left: 0;
+  right: 0;
+  padding: 96px 20px 120px;
   overflow: hidden;
 }
 
-/* Decorative blobs */
+/* Top ambient background glow blobs spanning 100% full width without clipping or scrollbars */
 .hero-blob {
   pointer-events: none;
   position: absolute;
-  border-radius: 50%;
-  filter: blur(1px);
-  opacity: 0.35;
+  width: 100vw;
+  max-width: 100%;
+  left: 0;
+  right: 0;
+  border-radius: 0;
+  filter: blur(64px);
+  opacity: 0.4;
 }
 
 .hero-blob-1 {
-  width: 520px; height: 520px;
-  top: -120px; right: -120px;
-  background: var(--accent);
+  width: 100vw;
+  max-width: 100%;
+  left: 0;
+  right: 0;
+  height: 460px;
+  top: -120px;
+  background: radial-gradient(ellipse 85% 65% at 50% 0%, var(--accent) 0%, transparent 80%);
   animation: blobFloat1 8s ease-in-out infinite;
 }
 
 .hero-blob-2 {
-  width: 640px; height: 640px;
-  bottom: -200px; left: -180px;
-  background: var(--secondary);
-  opacity: 0.3;
+  width: 100vw;
+  max-width: 100%;
+  left: 0;
+  right: 0;
+  height: 520px;
+  top: 0;
+  background: radial-gradient(ellipse 90% 60% at 50% 20%, var(--secondary) 0%, transparent 85%);
+  opacity: 0.35;
   animation: blobFloat2 10s ease-in-out infinite;
 }
 
-.dark .hero-blob-1 { background: var(--accent); opacity: 0.18; }
-.dark .hero-blob-2 { background: var(--secondary); opacity: 0.12; }
+.dark .hero-blob-1 {
+  background: radial-gradient(ellipse 85% 65% at 50% 0%, var(--accent) 0%, transparent 80%);
+  opacity: 0.22;
+}
+.dark .hero-blob-2 {
+  background: radial-gradient(ellipse 90% 60% at 50% 20%, var(--secondary) 0%, transparent 85%);
+  opacity: 0.16;
+}
 
 @keyframes blobFloat1 {
   0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(30px); }
+  50%       { transform: translateY(24px); }
 }
 @keyframes blobFloat2 {
   0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-25px); }
+  50%       { transform: translateY(-20px); }
 }
 
 /* Dot grid */
 .hero-grid-pattern {
   pointer-events: none;
   position: absolute;
-  inset: 0;
+  width: 100vw;
+  max-width: 100%;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
   opacity: 0.025;
   background-image:
     linear-gradient(to right, var(--foreground) 1px, transparent 1px),
@@ -258,25 +285,39 @@
   background-size: 40px 40px;
 }
 
-/* Layout */
+/* Centered Hero Layout */
 .hero-inner {
   position: relative;
-  max-width: 1200px;
+  max-width: 880px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 64px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 32px;
 }
 
+.hero-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+}
 
 /* Heading */
 .hero-heading {
-  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
   font-weight: 700;
   line-height: 1.08;
   letter-spacing: -0.03em;
   color: var(--foreground);
-  margin-bottom: 24px;
+  margin: 0 auto 24px auto;
+  text-align: center;
 }
 
 .hero-heading-highlight {
@@ -291,7 +332,7 @@
   background: var(--accent);
   border-radius: 999px;
   transform: scaleX(0);
-  transform-origin: left;
+  transform-origin: center;
   transition: transform 0.6s 0.75s cubic-bezier(.16,1,.3,1);
 }
 
@@ -299,19 +340,22 @@
 
 /* Subtext */
 .hero-subtext {
-  font-size: 1rem;
+  font-size: 1.05rem;
   color: var(--muted-foreground);
   line-height: 1.7;
-  max-width: 440px;
-  margin-bottom: 36px;
+  max-width: 600px;
+  margin: 0 auto 36px auto;
+  text-align: center;
 }
 
 /* CTA row */
 .hero-cta-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 32px;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin: 0 auto;
 }
 
 .hero-btn-primary {
@@ -644,14 +688,24 @@
 /* ── Responsive ── */
 @media (min-width: 1024px) {
   .hero-inner {
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
-    gap: 80px;
+    justify-content: center;
+    text-align: center;
+    gap: 32px;
   }
 
-  .hero-text    { flex: 0 0 48%; }
-  .hero-card-wrap { flex: 0 0 48%; }
-  .hero-subtext { font-size: 1.0625rem; }
+  .hero-text {
+    flex: 0 0 auto;
+    max-width: 760px;
+    align-items: center;
+    text-align: center;
+  }
+  .hero-subtext {
+    font-size: 1.0625rem;
+    max-width: 600px;
+    margin: 0 auto 36px auto;
+  }
 }
 
 @media (max-width: 767px) {

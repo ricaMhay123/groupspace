@@ -3,9 +3,16 @@
  */
 
 const ROLES = {
-  LEADER: 'leader', // Workspace admin / leader
-  MEMBER: 'member'  // Standard workspace collaborator
+  LEADER: 'leader',        // Workspace owner / primary leader
+  CO_LEADER: 'co_leader',  // Administrative co-leader (tasks, approvals, expenses)
+  MEMBER: 'member'         // Standard workspace collaborator
 };
+
+/** True for roles with administrative capabilities ('leader' and 'co_leader'). */
+function isAdminRole(role) {
+  const r = String(role || '').toLowerCase();
+  return r === ROLES.LEADER || r === ROLES.CO_LEADER;
+}
 
 // Granular notebook-level permission roles
 const NOTEBOOK_ROLES = {
@@ -84,6 +91,7 @@ const SYSTEM_MESSAGES = {
 };
 
 module.exports = {
+  isAdminRole,
   ROLES,
   NOTEBOOK_ROLES,
   NOTEBOOK_VISIBILITY,

@@ -392,7 +392,25 @@ async function initDb() {
       try { await sql`CREATE INDEX IF NOT EXISTS idx_discussion_mentions_topic ON discussion_mentions (mentioned_topic_id, group_id)`; } catch (e) {}
     } catch (e) { console.error('discussion_mentions init failed:', e.message); }
 
-    // Standardize group_members roles strictly as 'leader' | 'member'
+    // Leadership requests (status: pending_leader_request | approved_leader | approved_co_leader | rejected)
+    try {
+      await sql`
+        CREATE TABLE IF NOT EXISTS leadership_requests (
+          id SERIAL PRIMARY KEY,
+          group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+          user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          message TEXT NOT NULL,
+          status VARCHAR(30) NOT NULL DEFAULT 'pending_leader_request',
+          resolved_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          resolved_at TIMESTAMPTZ
+        )
+      `;
+      await sql`CREATE INDEX IF NOT EXISTS idx_leadership_requests_group_status ON leadership_requests (group_id, status)`;
+    } catch (e) { console.error('leadership_requests init failed:', e.message); }
+
+    // Standardize group_members roles as 'leader' | 'co_leader' | 'member'
+    try { await sql`ALTER TABLE group_members DROP CONSTRAINT IF EXISTS group_members_role_check`; } catch (e) {}
     try { await sql`ALTER TABLE group_members ALTER COLUMN role SET DEFAULT 'member'`; } catch (e) {}
     try { await sql`UPDATE group_members SET role = LOWER(role) WHERE role <> LOWER(role)`; } catch (e) {}
 

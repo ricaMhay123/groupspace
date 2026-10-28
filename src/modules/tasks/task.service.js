@@ -16,6 +16,7 @@ const sql = require('../../config/db.config');
 const {
   TASK_STATUS, TASK_PRIORITY, ROLES, ASSIST_STATUS, SYSTEM_MESSAGES
 } = require('../../config/constants');
+const { isAdminRole } = require('../../config/constants');
 const { sanitizeText } = require('../../utils/validation.util');
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -64,10 +65,10 @@ async function createTask({ groupId, title, description, priority, assignedToUse
     if (!isMember) throw domainError('Assigned user is not a member of this workspace.');
   }
 
-  let isLeader = userRole === ROLES.LEADER;
+  let isLeader = isAdminRole(userRole);
   if (!userRole && createdByUserId) {
     const creatorMember = await GroupModel.findMember(groupId, createdByUserId);
-    if (creatorMember && creatorMember.role === ROLES.LEADER) {
+    if (creatorMember && isAdminRole(creatorMember.role)) {
       isLeader = true;
     }
   }
@@ -128,7 +129,7 @@ async function updateTaskStatus({ taskId, groupId, status, userId, userRole, use
     throw domainError(`Invalid status. Allowed: ${Object.values(TASK_STATUS).join(', ')}`);
   }
 
-  const isLeader   = userRole === ROLES.LEADER;
+  const isLeader   = isAdminRole(userRole);
   const isAssignee = task.assigned_to_user_id === userId;
 
   // Only leader or assignee may move the task
@@ -222,7 +223,7 @@ async function reviewTaskApproval({ taskId, groupId, approved, approvalNotes, le
 async function deleteTask({ taskId, groupId, userId, userRole }) {
   const task = await _resolveTask(taskId, groupId);
 
-  if (task.created_by_user_id !== userId && userRole !== ROLES.LEADER) {
+  if (task.created_by_user_id !== userId && !isAdminRole(userRole)) {
     throw domainError(SYSTEM_MESSAGES.UNAUTHORIZED_ACTION, 403);
   }
 
@@ -241,7 +242,7 @@ async function deleteTask({ taskId, groupId, userId, userRole }) {
  */
 async function flagTask({ taskId, groupId, userId, userRole, reason }) {
   const task = await _resolveTask(taskId, groupId);
-  const isLeader = userRole === ROLES.LEADER;
+  const isLeader = isAdminRole(userRole);
 
   if (!isLeader && task.assigned_to_user_id !== userId) {
     throw domainError(SYSTEM_MESSAGES.TASK_EDIT_DENIED, 403);
@@ -273,7 +274,7 @@ async function flagTask({ taskId, groupId, userId, userRole, reason }) {
  */
 async function unflagTask({ taskId, groupId, userId, userRole }) {
   const task = await _resolveTask(taskId, groupId);
-  const isLeader = userRole === ROLES.LEADER;
+  const isLeader = isAdminRole(userRole);
 
   if (!isLeader && task.assigned_to_user_id !== userId) {
     throw domainError(SYSTEM_MESSAGES.TASK_EDIT_DENIED, 403);
@@ -347,7 +348,7 @@ async function offerAssistance({ taskId, groupId, userId, userFullName, message 
  */
 async function respondToAssist({ taskId, groupId, helperId, responderId, responderRole, responderName, decision }) {
   const task = await _resolveTask(taskId, groupId);
-  const isLeader   = responderRole === ROLES.LEADER;
+  const isLeader   = isAdminRole(responderRole);
   const isAssignee = task.assigned_to_user_id === responderId;
 
   if (!isLeader && !isAssignee) {
@@ -398,7 +399,7 @@ async function getTaskAssistOffers(taskId, groupId) {
 async function followUpOnTask({ taskId, groupId, leaderUserId, leaderFullName, leaderRole, message }) {
   const task = await _resolveTask(taskId, groupId);
 
-  const isLeader = leaderRole === ROLES.LEADER;
+  const isLeader = isAdminRole(leaderRole);
   if (!isLeader) {
     throw domainError('Only workspace leaders can send task follow-ups.', 403);
   }

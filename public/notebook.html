@@ -817,33 +817,36 @@
 </head>
 <body>
 <header class="nb-header">
-  <a href="dashboard.html" id="backBtn" class="nb-back-btn">&#8592; Back to Workspace</a>
+  <div style="display:flex; align-items:center; gap:14px;">
+    <a href="index.html" style="text-decoration:none; font-weight:800; font-size:15px; color:var(--nb-text); display:inline-flex; align-items:center; gap:6px;"><span>👥</span> GroupSpace</a>
+    <a href="dashboard.html" id="backBtn" class="nb-back-btn">&#8592; Back to Workspace</a>
+  </div>
   <div class="nb-header-center">
-    <h1 id="notebookName">&#x1F4DD; Collaborative Notebook</h1>
+    <h1 id="notebookName">Collaborative Notebook</h1>
     <p id="notebookMeta">Auto-titled upon saving from first phrase</p>
   </div>
   <div class="nb-header-actions">
-    <span id="readOnlyBadge" class="nb-readonly-badge">&#x1F512; Read-Only Mode</span>
+    <span id="readOnlyBadge" class="nb-readonly-badge">Read-Only Mode</span>
     <button data-theme-toggle aria-label="Toggle theme" title="Toggle theme" class="btn-nb-theme">
       <svg data-theme-moon xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
       <svg data-theme-sun xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
     </button>
-    <button class="btn-nb btn-nb-outline" id="sharePageBtn" onclick="openSharePermissionsModal()" style="display:none;" title="Manage who can edit this page">&#x1F517; Share / Permissions</button>
+    <button class="btn-nb btn-nb-outline" id="sharePageBtn" onclick="openSharePermissionsModal()" style="display:none;" title="Manage who can edit this page">Share / Permissions</button>
     <button class="btn-nb btn-nb-outline" onclick="newPage()">+ New Page</button>
-    <button class="btn-nb btn-nb-green" id="savePageBtn" onclick="saveCurrentPage()">&#x1F4BE; Save Page</button>
+    <button class="btn-nb btn-nb-green" id="savePageBtn" onclick="saveCurrentPage()">Save Page</button>
   </div>
 </header>
 
 <div class="nb-layout">
   <aside class="nb-sidebar">
     <div class="nb-sidebar-header">
-      <h3>&#x1F4C2; Folders &amp; Pages</h3>
+      <h3>Folders &amp; Pages</h3>
       <button type="button" class="btn-sidebar-action" onclick="createNewFolderPrompt()" title="Create a new folder">+ Folder</button>
     </div>
     <div class="nb-pages-list" id="nbPagesList"><div class="nb-empty-pages">Loading pages...</div></div>
     <div class="nb-sidebar-footer">
       <button class="btn-nb btn-nb-outline" onclick="newPage()">+ New Blank Page</button>
-      <button class="btn-nb btn-nb-outline" onclick="triggerImportDocument(null)">&#x1F4E5; Import Document (.txt / .md)</button>
+      <button class="btn-nb btn-nb-outline" onclick="triggerImportDocument(null)">Import Document (.txt / .md)</button>
     </div>
   </aside>
 
@@ -1091,14 +1094,14 @@ async function loadNotebook() {
       }
       if (notebooks.length > 0) {
         currentNotebookId = notebooks[0].id;
-        document.getElementById('notebookName').textContent = '📝 ' + (notebooks[0].title || 'Workspace Notebook');
+        document.getElementById('notebookName').textContent = (notebooks[0].title || 'Workspace Notebook');
       } else {
         const created = await apiFetch('/api/notebooks', {
           method: 'POST',
           body: JSON.stringify({ groupId: currentGroupId, title: 'Workspace Notebook', visibility: 'shared' })
         });
         currentNotebookId = created.data.id;
-        document.getElementById('notebookName').textContent = '📝 Workspace Notebook';
+        document.getElementById('notebookName').textContent = 'Workspace Notebook';
       }
     }
     await loadPages();
@@ -1188,7 +1191,7 @@ function populateFolderSelectDropdown() {
   if (!sel) return;
   const currentVal = currentFolderId ? String(currentFolderId) : '';
   sel.innerHTML = '<option value="">(Root / No Folder)</option>' +
-    folders.map(f => `<option value="${f.id}" ${String(f.id) === currentVal ? 'selected' : ''}>📁 ${escapeHtml(f.name)}</option>`).join('');
+    folders.map(f => `<option value="${f.id}" ${String(f.id) === currentVal ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('');
 }
 
 function renderPagesList() {
@@ -1206,14 +1209,14 @@ function renderPagesList() {
         <div class="nb-folder-block" data-folder-id="${folder.id}">
           <div class="nb-folder-header" onclick="toggleFolderCollapse(${folder.id})">
             <div class="nb-folder-title">
-              <span>${isCollapsed ? '▶' : '▼'} 📁</span>
+              <span>${isCollapsed ? '+' : '−'}</span>
               <span>${escapeHtml(folder.name)}</span>
               <span style="font-size:10.5px; color:var(--nb-text-muted);">(${folderPages.length})</span>
             </div>
             <div class="nb-folder-actions" onclick="event.stopPropagation();">
               <button type="button" class="btn-folder-icon" title="New page in this folder" onclick="newPageInFolder(${folder.id})">+Page</button>
-              <button type="button" class="btn-folder-icon" title="Import document into this folder" onclick="triggerImportDocument(${folder.id})">📥</button>
-              <button type="button" class="btn-folder-icon danger" title="Delete Folder" onclick="deleteFolderWithConfirm(${folder.id}, '${escapeHtml(folder.name).replace(/'/g, "\\'")}')">🗑️</button>
+              <button type="button" class="btn-folder-icon" title="Import document into this folder" onclick="triggerImportDocument(${folder.id})">Import</button>
+              <button type="button" class="btn-folder-icon danger" title="Delete Folder" onclick="deleteFolderWithConfirm(${folder.id}, '${escapeHtml(folder.name).replace(/'/g, "\\'")}')">Delete</button>
             </div>
           </div>
           <div class="nb-folder-children ${isCollapsed ? 'collapsed' : ''}">
@@ -1229,7 +1232,7 @@ function renderPagesList() {
   // Render Root / Uncategorized Pages
   const rootPages = pages.filter(p => !p.folder_id || !folders.some(f => Number(f.id) === Number(p.folder_id)));
   if (folders.length > 0 && rootPages.length > 0) {
-    html += `<div class="nb-section-label">📄 Uncategorized Pages</div>`;
+    html += `<div class="nb-section-label">Uncategorized Pages</div>`;
   }
   html += rootPages.map(p => renderSidebarPageItem(p)).join('');
 
@@ -1245,12 +1248,12 @@ function renderSidebarPageItem(p) {
       <div class="nb-page-item-info">
         <div class="nb-page-item-title">${escapeHtml(p.title || 'Untitled Page')}</div>
         <div class="nb-page-item-meta">
-          <span>✍️ ${escapeHtml(p.author_name || 'Member')}</span>
-          <span>${canEdit ? '' : '🔒 Read-Only'}</span>
+          <span>By ${escapeHtml(p.author_name || 'Member')}</span>
+          <span>${canEdit ? '' : 'Read-Only'}</span>
         </div>
       </div>
       ${isOwnerOrLeader ? `
-        <button type="button" class="btn-folder-icon" title="Share / Edit Permissions" onclick="event.stopPropagation(); openSharePermissionsModal(${p.id})">🔗</button>
+        <button type="button" class="btn-folder-icon" title="Share / Edit Permissions" onclick="event.stopPropagation(); openSharePermissionsModal(${p.id})">Share</button>
       ` : ''}
     </div>
   `;
@@ -1331,7 +1334,7 @@ function canCurrentUserEditPage(page) {
   if (!page || !page.id) return true; // Brand new unsaved page
   if (!currentUser) return false;
   const role = String(currentUser.role || currentGroupRole || 'member').toLowerCase();
-  if (role === 'leader') return true;
+  if (role === 'leader' || role === 'co_leader') return true;
 
   const creatorId = page.created_by ?? page.author_user_id;
   if (creatorId !== undefined && creatorId !== null && Number(creatorId) === Number(currentUser.id)) {
@@ -1347,7 +1350,7 @@ function canCurrentUserEditPage(page) {
 function canCurrentUserManagePermissions(page) {
   if (!page || !page.id || !currentUser) return false;
   const role = String(currentUser.role || currentGroupRole || 'member').toLowerCase();
-  if (role === 'leader') return true;
+  if (role === 'leader' || role === 'co_leader') return true;
   const creatorId = page.created_by ?? page.author_user_id;
   return creatorId !== undefined && creatorId !== null && Number(creatorId) === Number(currentUser.id);
 }
@@ -1412,7 +1415,7 @@ function openSharePermissionsModal(targetId = null) {
     container.innerHTML = '<div style="font-size:12.5px; color:var(--nb-text-muted); padding:10px 0;">No other members in this workspace yet.</div>';
   } else {
     container.innerHTML = otherMembers.map(m => {
-      const isLeader = String(m.role || '').toLowerCase() === 'leader';
+      const isLeader = ['leader', 'co_leader'].includes(String(m.role || '').toLowerCase());
       const isChecked = isLeader || permitted.includes(Number(m.user_id));
       return `
         <label class="nb-member-perm-row" style="cursor:${isLeader ? 'default' : 'pointer'};">
@@ -1486,8 +1489,8 @@ function openPage(page) {
   }
 
   applyPagePermissionsUI(page);
-  document.getElementById('nbAuthorInfo').textContent = '✍️ ' + (page.author_name || (currentUser && currentUser.fullName) || 'Member');
-  document.getElementById('nbSaveStatus').textContent = canCurrentUserEditPage(page) ? 'Loaded' : '🔒 Read-Only View';
+  document.getElementById('nbAuthorInfo').textContent = 'Author: ' + (page.author_name || (currentUser && currentUser.fullName) || 'Member');
+  document.getElementById('nbSaveStatus').textContent = canCurrentUserEditPage(page) ? 'Loaded' : 'Read-Only View';
   renderPagesList();
   updateWordCount();
 }

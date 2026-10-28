@@ -9,6 +9,7 @@
 
 const taskService = require('./task.service');
 const { HTTP_STATUS, ROLES } = require('../../config/constants');
+const { isAdminRole } = require('../../config/constants');
 
 // ─── Helper ────────────────────────────────────────────────────────────────────
 
@@ -75,7 +76,7 @@ async function create(req, res) {
 
     return res.status(HTTP_STATUS.CREATED).json({
       success: true,
-      message: req.membership.role === ROLES.LEADER
+      message: isAdminRole(req.membership.role)
         ? 'Task created successfully.'
         : 'Task submitted for leader approval.',
       data: task

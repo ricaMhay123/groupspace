@@ -177,7 +177,7 @@
       <div class="hero-grid-pattern" aria-hidden="true"></div>
 
       <div class="hero-inner">
-        <!-- LEFT: text -->
+        <!-- CENTERED HERO TEXT -->
         <div class="hero-text" id="heroText">
           <h1 class="hero-heading" id="heroHeading">
             Organize your team<br />
@@ -213,80 +213,6 @@
             <a href="#features" class="hero-btn-secondary">Explore Features</a>
           </div>
         </div>
-
-        <!-- RIGHT: dashboard card -->
-        <div class="hero-card-wrap" id="heroCard">
-          <!-- Decorative rotated box behind card -->
-          <div class="hero-card-deco"></div>
-
-          <div class="hero-dashboard-card">
-            <!-- Titlebar -->
-            <div class="dashboard-titlebar">
-              <div class="titlebar-dots">
-                <span class="dot dot-red"></span>
-                <span class="dot dot-yellow"></span>
-                <span class="dot dot-green"></span>
-              </div>
-              <span class="titlebar-label">GroupSpace — Dashboard</span>
-              <div style="width: 48px"></div>
-            </div>
-
-            <!-- Dashboard body -->
-            <div class="dashboard-body">
-              <!-- Stats row -->
-              <div class="dash-stats-row">
-                <div class="dash-stat-card" id="stat0">
-                  <p class="stat-label">Workspaces</p>
-                  <p class="stat-value">24</p>
-                  <p class="stat-delta">+3</p>
-                </div>
-                <div class="dash-stat-card" id="stat1">
-                  <p class="stat-label">Members</p>
-                  <p class="stat-value">1 840</p>
-                  <p class="stat-delta">+12%</p>
-                </div>
-                <div class="dash-stat-card" id="stat2">
-                  <p class="stat-label">Tasks Done</p>
-                  <p class="stat-value">96%</p>
-                  <p class="stat-delta">↑</p>
-                </div>
-              </div>
-
-              <!-- Upcoming tasks -->
-              <div class="dash-section">
-                <p class="dash-section-title">Active Workspaces</p>
-                <div class="dash-list">
-                  <div class="dash-list-item" id="item0">
-                    <div class="dash-item-icon">📁</div>
-                    <div class="dash-item-text">
-                      <p class="dash-item-name">CS Capstone Project</p>
-                      <p class="dash-item-sub">Due Dec 15, 2025</p>
-                    </div>
-                    <span class="dash-item-badge">8 members</span>
-                  </div>
-                  <div class="dash-list-item" id="item1">
-                    <div class="dash-item-icon">💬</div>
-                    <div class="dash-item-text">
-                      <p class="dash-item-name">Student Council</p>
-                      <p class="dash-item-sub">Dec 20, 2025</p>
-                    </div>
-                    <span class="dash-item-badge">12 members</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Mini bar chart -->
-              <div class="dash-section">
-                <p class="dash-section-title">Monthly Activity</p>
-                <div class="dash-chart">
-                  <div class="dash-chart-bars" id="chartBars">
-                    <!-- bars injected by JS -->
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
 
@@ -302,40 +228,40 @@
 
       <div class="feature-container">
         <div class="feature-card">
-          <div class="icon">💬</div>
+          <div class="feature-kicker">01 / Discussions</div>
           <h3>Group Discussions</h3>
           <p>
             Create discussion threads, ask questions, and keep everyone updated.
           </p>
         </div>
         <div class="feature-card">
-          <div class="icon">✅</div>
+          <div class="feature-kicker">02 / Tasks</div>
           <h3>Task Management</h3>
           <p>
             Assign tasks, monitor deadlines, and track every member's progress.
           </p>
         </div>
         <div class="feature-card">
-          <div class="icon">📁</div>
+          <div class="feature-kicker">03 / Documents</div>
           <h3>File Sharing</h3>
           <p>
             Upload and organize documents, presentations, images, and reports.
           </p>
         </div>
         <div class="feature-card">
-          <div class="icon">📅</div>
+          <div class="feature-kicker">04 / Schedule</div>
           <h3>Calendar</h3>
           <p>
             Never miss meetings or project deadlines with a shared calendar.
           </p>
         </div>
         <div class="feature-card">
-          <div class="icon">👥</div>
+          <div class="feature-kicker">05 / Team</div>
           <h3>Group Members</h3>
           <p>Manage team members and assign different responsibilities.</p>
         </div>
         <div class="feature-card">
-          <div class="icon">💰</div>
+          <div class="feature-kicker">06 / Finance</div>
           <h3>Expense Tracker</h3>
           <p>Record shared expenses and easily monitor group contributions.</p>
         </div>
@@ -393,7 +319,7 @@
     <!-- ===================== FOOTER ===================== -->
     <footer>
       <div class="footer-content">
-        <h3>👥 GroupSpace</h3>
+        <h3>GroupSpace</h3>
         <p>One Workspace. Better Teamwork.</p>
         <div class="footer-links">
           <a href="#home">Home</a>
@@ -520,16 +446,18 @@
         );
         setTimeout(() => animateIn(document.getElementById("heroCTA"), 0), 620);
 
-        // Hero card
+        // Hero card (optional if removed)
         const card = document.getElementById("heroCard");
-        card.style.opacity = "0";
-        card.style.transform = "translateY(32px) scale(0.97)";
-        card.style.transition =
-          "opacity 0.75s 0.35s cubic-bezier(.16,1,.3,1), transform 0.75s 0.35s cubic-bezier(.16,1,.3,1)";
-        setTimeout(() => {
-          card.style.opacity = "1";
-          card.style.transform = "translateY(0) scale(1)";
-        }, 80);
+        if (card) {
+          card.style.opacity = "0";
+          card.style.transform = "translateY(32px) scale(0.97)";
+          card.style.transition =
+            "opacity 0.75s 0.35s cubic-bezier(.16,1,.3,1), transform 0.75s 0.35s cubic-bezier(.16,1,.3,1)";
+          setTimeout(() => {
+            card.style.opacity = "1";
+            card.style.transform = "translateY(0) scale(1)";
+          }, 80);
+        }
 
         // Stat cards stagger
         [0, 1, 2].forEach((i) => {

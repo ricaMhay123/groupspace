@@ -117,7 +117,7 @@ async function getWorkspaceDetails(groupId, userId) {
 }
 
 async function updateMemberRole({ groupId, targetUserId, newRole, actorUserId }) {
-  if (newRole !== ROLES.LEADER && newRole !== ROLES.MEMBER) {
+  if (![ROLES.LEADER, ROLES.CO_LEADER, ROLES.MEMBER].includes(newRole)) {
     throw new Error('Invalid role specified.');
   }
 
@@ -126,16 +126,103 @@ async function updateMemberRole({ groupId, targetUserId, newRole, actorUserId })
     throw new Error('Target user is not a member of this workspace.');
   }
 
+  // Never demote the last primary leader
+  if (targetMember.role === ROLES.LEADER && newRole !== ROLES.LEADER) {
+    const allMembers = await GroupModel.findMembersByGroup(groupId);
+    if (allMembers.filter(m => m.role === ROLES.LEADER).length <= 1) {
+      throw new Error('A workspace must keep at least one Leader. Promote another Leader first.');
+    }
+  }
+
   await GroupModel.updateMemberRole(groupId, targetUserId, newRole);
 
   await GroupModel.logActivity({
     groupId,
     userId: actorUserId,
     actionType: 'ROLE_UPDATED',
-    description: `A leader changed member role to ${newRole}.`
+    description: `A leader changed member role to ${newRole === ROLES.CO_LEADER ? 'Co-Leader' : newRole}.`
   });
 
   return { success: true, newRole };
+}
+
+/**
+ * A regular member asks the workspace Leader(s) for a leadership role.
+ * Stored with status 'pending_leader_request' and surfaced in the Leader's Personal Feed.
+ */
+async function requestLeadership({ groupId, userId, message }) {
+  const membership = await GroupModel.findMember(groupId, userId);
+  if (!membership) {
+    throw new Error('You are not a member of this workspace.');
+  }
+  if (membership.role !== ROLES.MEMBER) {
+    throw new Error('Only regular members can request a leadership role.');
+  }
+  const cleanMessage = sanitizeText(message);
+  if (!cleanMessage || cleanMessage.length < 5) {
+    throw new Error('Please tell the Leader why you want to become a leader (at least 5 characters).');
+  }
+  const existing = await GroupModel.findPendingLeadershipRequest(groupId, userId);
+  if (existing) {
+    throw new Error('You already have a pending leadership request for this workspace.');
+  }
+  const request = await GroupModel.createLeadershipRequest({ groupId, userId, message: cleanMessage });
+  await GroupModel.logActivity({
+    groupId,
+    userId,
+    actionType: 'LEADERSHIP_REQUESTED',
+    description: 'A member requested a leadership role.'
+  });
+  return request;
+}
+
+/**
+ * Primary Leader approves (as 'leader' or 'co_leader') or rejects a leadership request.
+ */
+async function resolveLeadershipRequest({ groupId, requestId, decision, actorUserId }) {
+  const request = await GroupModel.findLeadershipRequest(groupId, requestId);
+  if (!request) {
+    const err = new Error('Leadership request not found.');
+    err.httpStatus = 404;
+    throw err;
+  }
+  if (request.status !== 'pending_leader_request') {
+    throw new Error('This leadership request has already been resolved.');
+  }
+
+  const normalized = String(decision || '').toLowerCase();
+  let status;
+  let newRole = null;
+  if (normalized === 'leader') { status = 'approved_leader'; newRole = ROLES.LEADER; }
+  else if (normalized === 'co_leader') { status = 'approved_co_leader'; newRole = ROLES.CO_LEADER; }
+  else if (normalized === 'reject') { status = 'rejected'; }
+  else { throw new Error('Invalid decision. Use leader, co_leader, or reject.'); }
+
+  if (newRole) {
+    const member = await GroupModel.findMember(groupId, request.user_id);
+    if (member && member.role === ROLES.MEMBER) {
+      await GroupModel.updateMemberRole(groupId, request.user_id, newRole);
+    }
+  }
+  await GroupModel.resolveLeadershipRequest(requestId, status, actorUserId);
+  await GroupModel.createPersonalFeedNotification({
+    userId: request.user_id,
+    groupId,
+    authorUserId,
+    content: newRole
+      ? `Your leadership request was approved! You are now a ${newRole === ROLES.CO_LEADER ? 'Co-Leader' : 'Leader'}.`
+      : 'Your leadership request was reviewed and not approved at this time.',
+    type: 'leadership_decision'
+  });
+  await GroupModel.logActivity({
+    groupId,
+    userId: actorUserId,
+    actionType: 'LEADERSHIP_REQUEST_RESOLVED',
+    description: newRole
+      ? `A leader approved a leadership request as ${newRole === ROLES.CO_LEADER ? 'Co-Leader' : 'Leader'}.`
+      : 'A leader rejected a leadership request.'
+  });
+  return { requestId: Number(requestId), status, newRole };
 }
 
 async function leaveWorkspace({ groupId, userId, userFullName }) {
@@ -271,6 +358,8 @@ async function deleteWorkspace({ groupId, actorUserId }) {
 }
 
 module.exports = {
+  requestLeadership,
+  resolveLeadershipRequest,
   createWorkspace,
   joinWorkspace,
   getUserWorkspaces,

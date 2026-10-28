@@ -5,6 +5,7 @@
 
 const sql = require('../config/db.config');
 const { ROLES, HTTP_STATUS, SYSTEM_MESSAGES } = require('../config/constants');
+const { isAdminRole } = require('../config/constants');
 
 /**
  * Middleware ensuring user is a member of the group specified in req.params.groupId (or req.body.groupId)
@@ -172,7 +173,8 @@ async function requireGroupMembership(req, res, next) {
 
     req.group = group;
     req.membership = membership;
-    req.isLeader = membership.role === ROLES.LEADER;
+    req.isLeader = isAdminRole(membership.role);
+    req.isPrimaryLeader = String(membership.role || '').toLowerCase() === ROLES.LEADER;
     next();
   } catch (error) {
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
@@ -205,6 +207,24 @@ async function requireGroupLeader(req, res, next) {
     });
   }
   next();
+}
+
+/**
+ * Middleware ensuring user is the PRIMARY workspace Leader (role 'leader').
+ * Used for owner-only actions: role changes, workspace settings, member removal, deletion.
+ */
+async function requireGroupPrimaryLeader(req, res, next) {
+  const check = () => {
+    if (!req.isPrimaryLeader) {
+      return res.status(HTTP_STATUS.FORBIDDEN).json({
+        success: false,
+        message: 'Only the primary workspace Leader can perform this action.'
+      });
+    }
+    next();
+  };
+  if (!req.membership) return requireGroupMembership(req, res, check);
+  return check();
 }
 
 /**
@@ -286,7 +306,7 @@ async function checkTaskCreationPermission(req, res, next) {
     : Number(rawAssignee);
 
   // Leaders have no restriction
-  if (role === ROLES.LEADER) return next();
+  if (isAdminRole(role)) return next();
 
   // Members: a blank assignee defaults to themselves
   if (assignedTo === null) {
@@ -344,7 +364,7 @@ async function checkTaskEditPermission(req, res, next) {
     }
 
     // Leaders can edit, but cannot start tasks assigned to teammates
-    if (role === ROLES.LEADER) {
+    if (isAdminRole(role)) {
       if (req.body && req.body.status === 'IN_PROGRESS' && task.assigned_to_user_id && Number(task.assigned_to_user_id) !== Number(userId)) {
         return res.status(HTTP_STATUS.FORBIDDEN).json({
           success: false,
@@ -376,6 +396,7 @@ async function checkTaskEditPermission(req, res, next) {
 module.exports = {
   requireGroupMembership,
   requireGroupLeader,
+  requireGroupPrimaryLeader,
   requireNotebookEditorAccess,
   checkTaskCreationPermission,
   checkTaskEditPermission

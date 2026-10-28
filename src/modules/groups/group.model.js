@@ -48,7 +48,7 @@ const GroupModel = {
       FROM group_members gm
       JOIN users u ON gm.user_id = u.id
       WHERE gm.group_id = ${groupId}
-      ORDER BY (gm.role = 'leader') DESC, u.full_name ASC
+      ORDER BY (gm.role = 'leader') DESC, (gm.role = 'co_leader') DESC, u.full_name ASC
     `;
   },
 
@@ -135,6 +135,49 @@ const GroupModel = {
       RETURNING *
     `;
     return updated;
+  },
+
+  async createLeadershipRequest({ groupId, userId, message }) {
+    const [row] = await sql`
+      INSERT INTO leadership_requests (group_id, user_id, message, status)
+      VALUES (${groupId}, ${userId}, ${message}, 'pending_leader_request')
+      RETURNING *
+    `;
+    return row;
+  },
+
+  async findPendingLeadershipRequest(groupId, userId) {
+    const [row] = await sql`
+      SELECT * FROM leadership_requests
+      WHERE group_id = ${groupId} AND user_id = ${userId} AND status = 'pending_leader_request'
+    `;
+    return row || null;
+  },
+
+  async findLeadershipRequest(groupId, requestId) {
+    const [row] = await sql`
+      SELECT * FROM leadership_requests WHERE id = ${requestId} AND group_id = ${groupId}
+    `;
+    return row || null;
+  },
+
+  async resolveLeadershipRequest(requestId, status, resolvedByUserId) {
+    return await sql`
+      UPDATE leadership_requests
+      SET status = ${status}, resolved_by_user_id = ${resolvedByUserId}, resolved_at = NOW()
+      WHERE id = ${requestId}
+    `;
+  },
+
+  async createPersonalFeedNotification({ userId, groupId, authorUserId, content, type }) {
+    try {
+      await sql`
+        INSERT INTO personal_feed (user_id, group_id, author_user_id, content, type)
+        VALUES (${userId}, ${groupId}, ${authorUserId}, ${content}, ${type || 'leadership_decision'})
+      `;
+    } catch (e) {
+      // gracefully ignore if personal_feed is unavailable
+    }
   },
 
   async deleteWorkspace(groupId) {

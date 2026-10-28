@@ -28,7 +28,7 @@ function resolveTaskRoleContext(task) {
 
   const currentUserId = user.id ? Number(user.id) : null;
   const isAssigned = Boolean(currentUserId && assignedTo && currentUserId === assignedTo);
-  const isLeader = user.role === 'leader';
+  const isLeader = user.role === 'leader' || user.role === 'co_leader';
   const isTeammateTask = Boolean(assignedTo && currentUserId !== assignedTo);
 
   return {

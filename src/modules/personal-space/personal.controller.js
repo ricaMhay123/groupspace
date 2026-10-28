@@ -108,7 +108,8 @@ async function getPersonalFeed(req, res) {
     `;
 
     const userGroupIds = memberships.map(m => m.group_id);
-    const userLeaderGroupIds = memberships.filter(m => m.role === 'leader').map(m => m.group_id);
+    const userLeaderGroupIds = memberships.filter(m => ['leader', 'co_leader'].includes(m.role)).map(m => m.group_id);
+    const primaryLeaderGroupIds = memberships.filter(m => m.role === 'leader').map(m => m.group_id);
 
     // If active workspace specified in query, scope strictly to it
     const requestedGroupId = req.query.groupId || req.query.group_id ? Number(req.query.groupId || req.query.group_id) : null;
@@ -120,7 +121,7 @@ async function getPersonalFeed(req, res) {
         // User is not a member of the requested workspace
         return res.status(HTTP_STATUS.OK).json({
           success: true,
-          data: { pendingApprovals: [], helpRequests: [], mentions: [] }
+          data: { pendingApprovals: [], helpRequests: [], mentions: [], leadershipRequests: [] }
         });
       }
       targetGroupIds = [requestedGroupId];
@@ -131,8 +132,27 @@ async function getPersonalFeed(req, res) {
     if (targetGroupIds.length === 0) {
       return res.status(HTTP_STATUS.OK).json({
         success: true,
-        data: { pendingApprovals: [], helpRequests: [], mentions: [] }
+        data: { pendingApprovals: [], helpRequests: [], mentions: [], leadershipRequests: [] }
       });
+    }
+
+    const feedLeaderGroupIds = requestedGroupId
+      ? (primaryLeaderGroupIds.includes(requestedGroupId) ? [requestedGroupId] : [])
+      : primaryLeaderGroupIds;
+    let leadershipRequests = [];
+    if (feedLeaderGroupIds.length > 0) {
+      try {
+        leadershipRequests = await sql`
+          SELECT lr.id, lr.group_id, lr.user_id, lr.message, lr.status, lr.created_at,
+                 u.full_name AS requester_name
+          FROM leadership_requests lr
+          JOIN users u ON lr.user_id = u.id
+          WHERE lr.status = 'pending_leader_request'
+            AND lr.group_id = ANY(${feedLeaderGroupIds}::int[])
+          ORDER BY lr.created_at DESC
+          LIMIT 20
+        `;
+      } catch (e) { leadershipRequests = []; }
     }
 
     let pendingApprovals = [];
@@ -221,6 +241,7 @@ async function getPersonalFeed(req, res) {
       success: true,
       data: {
         pendingApprovals,
+        leadershipRequests,
         helpRequests,
         mentions: combinedMentions,
         followUps: followUpItems

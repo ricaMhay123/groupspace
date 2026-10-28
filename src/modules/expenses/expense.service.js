@@ -7,6 +7,7 @@ const GroupModel = require('../groups/group.model');
 const { calculateExpenseSummary, roundToTwo } = require('../../utils/calculation.util');
 const { isValidAmount, sanitizeText } = require('../../utils/validation.util');
 const { ROLES, EXPENSE_SPLIT_TYPE } = require('../../config/constants');
+const { isAdminRole } = require('../../config/constants');
 
 async function addExpense({ groupId, title, amount, category, paidByUserId, splitType = 'EQUAL', participantUserIds = [], customSplits = [], date, notes, actorName }) {
   const cleanTitle = sanitizeText(title);
@@ -89,7 +90,7 @@ async function deleteExpense({ expenseId, groupId, userId, userRole }) {
     throw new Error('Expense not found in this workspace.');
   }
 
-  if (exp.paid_by_user_id !== userId && userRole !== ROLES.LEADER) {
+  if (exp.paid_by_user_id !== userId && !isAdminRole(userRole)) {
     throw new Error('Only the member who paid or a workspace Leader can delete this expense.');
   }
 

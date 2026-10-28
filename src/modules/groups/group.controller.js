@@ -215,7 +215,44 @@ async function deleteWorkspace(req, res) {
   }
 }
 
+async function requestLeadership(req, res) {
+  try {
+    const data = await groupService.requestLeadership({
+      groupId: req.params.id,
+      userId: req.user.id,
+      message: req.body.message
+    });
+    return res.status(HTTP_STATUS.CREATED).json({
+      success: true,
+      message: 'Leadership request sent to the workspace Leader.',
+      data
+    });
+  } catch (error) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: error.message });
+  }
+}
+
+async function resolveLeadershipRequest(req, res) {
+  try {
+    const data = await groupService.resolveLeadershipRequest({
+      groupId: req.params.id,
+      requestId: req.params.requestId,
+      decision: req.body.decision,
+      actorUserId: req.user.id
+    });
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: data.newRole ? 'Leadership request approved.' : 'Leadership request rejected.',
+      data
+    });
+  } catch (error) {
+    return res.status(error.httpStatus || HTTP_STATUS.BAD_REQUEST).json({ success: false, message: error.message });
+  }
+}
+
 module.exports = {
+  requestLeadership,
+  resolveLeadershipRequest,
   create,
   join,
   getMyGroups,
