@@ -134,24 +134,27 @@ function extractAutoTitleClient(rawContent = '') {
     .replace(/<[^>]*>/g, ' ')
     .replace(/&nbsp;/gi, ' ')
     .trim();
-  if (!cleaned) return 'Untitled Page';
+  if (!cleaned) return 'Untitled Note';
   const firstLine = cleaned.split(/\r?\n/).map(l => l.trim()).find(Boolean) || cleaned;
   const sentenceMatch = firstLine.match(/^(.+?[.!?])(?:\s|$)/);
   const candidate = (sentenceMatch ? sentenceMatch[1] : firstLine).trim();
-  return candidate.length > 65 ? candidate.slice(0, 65).trim() : candidate;
+  return (candidate.length > 65 ? candidate.slice(0, 65).trim() : candidate) || 'Untitled Note';
 }
 
 /**
- * 2. RENDER RICH TEXT CONTROLS:
- * High-contrast dark slate (#0f172a) with white text/icons (#ffffff), numeric font sizes (12px-36px),
- * text alignment (Left, Center, Right, Justify), Bold/Italic/Underline, Text Color, and Highlight Color.
+ * 2. RENDER RICH TEXT & DRAWING TOOLBAR (MICROSOFT WORD STYLE):
+ * Includes Home/Insert/Draw/Layout ribbon options, Insert Shape / Flowchart Elements dropdown
+ * (Rectangle, Circle, Diamond (Decision), Oval (Terminal), Callout Box, Straight Line,
+ * Broken/Dashed Line, Arrow Line, Dashed Arrow Line), Stroke Thickness (1px, 2px, 4px, 6px),
+ * Fill/Stroke color pickers, Bold/Italic/Underline, Text Alignment (Left, Center, Right, Justify),
+ * Numeric Font Sizes (12px-36px), Text Color, and Text Highlight.
  */
-function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarContainer') {
+function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarContainer', editorTargetId = null) {
   let container = document.getElementById(targetContainerId);
 
   // If container doesn't exist, create and inject it above the content editor
   if (!container) {
-    const editorEl = document.getElementById('pageContent') || document.getElementById('noteContent');
+    const editorEl = (editorTargetId && document.getElementById(editorTargetId)) || document.getElementById('pageContent') || document.getElementById('noteContent');
     if (!editorEl) return;
     
     container = document.createElement('div');
@@ -160,12 +163,23 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
     editorEl.parentNode.insertBefore(container, editorEl);
   }
 
+  const targetArg = editorTargetId ? `'${editorTargetId}'` : 'null';
+
   container.innerHTML = `
     <div class="notebook-toolbar notebook-rich-toolbar" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:8px 12px; background:#0f172a; color:#ffffff; border:1px solid #334155; border-radius:8px; margin-bottom:10px;">
+      <!-- MS Word Style Ribbon Options: Home / Insert / Draw / Layout -->
+      <div class="nb-word-ribbon-bar" style="display:flex; align-items:center; gap:4px; width:100%; padding-bottom:6px; margin-bottom:2px; border-bottom:1px solid #1e293b;">
+        <button type="button" class="nb-ribbon-btn active" data-ribbon="home" onclick="switchEmbeddedRibbonTab(this, 'home')" style="background:#2563eb; color:#ffffff; border:1px solid #38bdf8; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Home</button>
+        <button type="button" class="nb-ribbon-btn" data-ribbon="insert" onclick="switchEmbeddedRibbonTab(this, 'insert')" style="background:transparent; color:#cbd5e1; border:1px solid transparent; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Insert</button>
+        <button type="button" class="nb-ribbon-btn" data-ribbon="draw" onclick="switchEmbeddedRibbonTab(this, 'draw')" style="background:transparent; color:#cbd5e1; border:1px solid transparent; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Draw</button>
+        <button type="button" class="nb-ribbon-btn" data-ribbon="layout" onclick="switchEmbeddedRibbonTab(this, 'layout')" style="background:transparent; color:#cbd5e1; border:1px solid transparent; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Layout</button>
+        <span style="margin-left:auto; font-size:10.5px; color:#94a3b8; font-weight:600;">Auto-Title on Save</span>
+      </div>
+
       <!-- Font Family Dropdown -->
-      <div style="display:flex; align-items:center; gap:4px;">
+      <div data-ribbon-section="home layout" style="display:flex; align-items:center; gap:4px;">
         <label style="font-size:11px; font-weight:700; color:#ffffff; margin:0;">Font:</label>
-        <select id="nbFontFamily" class="nb-tb-select" style="background:#1e293b !important; color:#ffffff !important; border:1px solid #475569; border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="applyNotebookFont(this.value)">
+        <select id="nbFontFamily_${targetContainerId}" class="nb-tb-select" style="background:#1e293b !important; color:#ffffff !important; border:1px solid #475569; border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="applyNotebookFont(this.value, ${targetArg})">
           <option value="Inter, sans-serif" selected>Inter</option>
           <option value="Arial, sans-serif">Arial</option>
           <option value="Calibri, sans-serif">Calibri</option>
@@ -174,10 +188,10 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
         </select>
       </div>
 
-      <!-- Numeric Pixel Font Sizes -->
-      <div style="display:flex; align-items:center; gap:4px;">
+      <!-- Numeric Pixel Font Sizes (12px to 36px) -->
+      <div data-ribbon-section="home layout" style="display:flex; align-items:center; gap:4px;">
         <label style="font-size:11px; font-weight:700; color:#ffffff; margin:0;">Size:</label>
-        <select id="nbFontSizePx" class="nb-tb-select" style="background:#1e293b !important; color:#ffffff !important; border:1px solid #475569; border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="applyNotebookFontSizePx(this.value)">
+        <select id="nbFontSizePx_${targetContainerId}" class="nb-tb-select" style="background:#1e293b !important; color:#ffffff !important; border:1px solid #475569; border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="applyNotebookFontSizePx(this.value, ${targetArg})">
           <option value="12px">12px</option>
           <option value="14px">14px</option>
           <option value="16px" selected>16px</option>
@@ -191,36 +205,74 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
       </div>
 
       <!-- Text Styling: Bold, Italic, Underline -->
-      <div style="display:flex; align-items:center; gap:4px;">
-        <button type="button" onclick="applyNotebookCommand('bold')" title="Bold" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; font-weight:700; cursor:pointer;"><b>B</b></button>
-        <button type="button" onclick="applyNotebookCommand('italic')" title="Italic" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; font-style:italic; cursor:pointer;"><i>I</i></button>
-        <button type="button" onclick="applyNotebookCommand('underline')" title="Underline" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; text-decoration:underline; cursor:pointer;"><u>U</u></button>
+      <div data-ribbon-section="home" style="display:flex; align-items:center; gap:4px;">
+        <button type="button" onclick="applyNotebookCommand('bold', ${targetArg})" title="Bold" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; font-weight:700; cursor:pointer;"><b>B</b></button>
+        <button type="button" onclick="applyNotebookCommand('italic', ${targetArg})" title="Italic" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; font-style:italic; cursor:pointer;"><i>I</i></button>
+        <button type="button" onclick="applyNotebookCommand('underline', ${targetArg})" title="Underline" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; text-decoration:underline; cursor:pointer;"><u>U</u></button>
       </div>
 
       <!-- Text Color & Highlight Pickers -->
-      <div style="display:flex; align-items:center; gap:6px;">
+      <div data-ribbon-section="home" style="display:flex; align-items:center; gap:6px;">
         <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:#ffffff; cursor:pointer;" title="Text Color (foreColor)">
           <span>A</span>
-          <input type="color" id="nbForeColor" value="#0f172a" onchange="applyNotebookColor('foreColor', this.value)" style="width:20px; height:20px; border:none; background:transparent; cursor:pointer; padding:0;">
+          <input type="color" id="nbForeColor_${targetContainerId}" value="#0f172a" onchange="applyNotebookColor('foreColor', this.value, ${targetArg})" style="width:20px; height:20px; border:none; background:transparent; cursor:pointer; padding:0;">
         </label>
-        <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:#ffffff; cursor:pointer;" title="Highlight Color (hiliteColor)">
-          <span>🖍</span>
-          <input type="color" id="nbHiliteColor" value="#fef08a" onchange="applyNotebookColor('hiliteColor', this.value)" style="width:20px; height:20px; border:none; background:transparent; cursor:pointer; padding:0;">
+        <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:#ffffff; cursor:pointer;" title="Text Highlight (hiliteColor)">
+          <span>Highlight</span>
+          <input type="color" id="nbHiliteColor_${targetContainerId}" value="#fef08a" onchange="applyNotebookColor('hiliteColor', this.value, ${targetArg})" style="width:20px; height:20px; border:none; background:transparent; cursor:pointer; padding:0;">
         </label>
       </div>
 
       <!-- Alignment: Left, Center, Right, Justify -->
-      <div style="display:flex; align-items:center; gap:4px;">
-        <button type="button" onclick="applyNotebookCommand('justifyLeft')" title="Align Left" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">⬅</button>
-        <button type="button" onclick="applyNotebookCommand('justifyCenter')" title="Align Center" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">↔</button>
-        <button type="button" onclick="applyNotebookCommand('justifyRight')" title="Align Right" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">➡</button>
-        <button type="button" onclick="applyNotebookCommand('justifyFull')" title="Justify Full" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">☰</button>
+      <div data-ribbon-section="home layout" style="display:flex; align-items:center; gap:4px;">
+        <button type="button" onclick="applyNotebookCommand('justifyLeft', ${targetArg})" title="Align Left" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">Left</button>
+        <button type="button" onclick="applyNotebookCommand('justifyCenter', ${targetArg})" title="Align Center" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">Center</button>
+        <button type="button" onclick="applyNotebookCommand('justifyRight', ${targetArg})" title="Align Right" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">Right</button>
+        <button type="button" onclick="applyNotebookCommand('justifyFull', ${targetArg})" title="Justify" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">Justify</button>
+      </div>
+
+      <!-- Insert Shape / Flowchart Elements & Connectors/Lines -->
+      <div data-ribbon-section="insert draw" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+        <select id="nbFlowchartShapeSelect_${targetContainerId}" class="nb-tb-select" style="background:#1e293b !important; color:#38bdf8 !important; font-weight:700; border:1px solid #475569; border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="if(this.value){ insertEmbeddedNotebookShape(this.value, ${targetArg}, '${targetContainerId}'); this.value=''; }">
+          <option value="" disabled selected>+ Insert Shape / Flowchart Elements</option>
+          <optgroup label="Shapes">
+            <option value="rectangle">Rectangle</option>
+            <option value="circle">Circle</option>
+            <option value="diamond">Diamond (Decision)</option>
+            <option value="oval">Oval (Terminal)</option>
+            <option value="callout">Callout Box</option>
+          </optgroup>
+          <optgroup label="Connectors &amp; Lines">
+            <option value="straight_line">Straight Line</option>
+            <option value="dashed_line">Broken/Dashed Line</option>
+            <option value="arrow_line">Arrow Line</option>
+            <option value="dashed_arrow_line">Dashed Arrow Line</option>
+          </optgroup>
+        </select>
+
+        <label style="font-size:11px; font-weight:700; color:#ffffff; margin:0;">Stroke:</label>
+        <select id="nbEmbedStrokeWidth_${targetContainerId}" class="nb-tb-select" style="background:#1e293b !important; color:#ffffff !important; border:1px solid #475569; border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" title="Line Stroke Thickness">
+          <option value="1">1px</option>
+          <option value="2" selected>2px</option>
+          <option value="4">4px</option>
+          <option value="6">6px</option>
+        </select>
+
+        <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:#ffffff; cursor:pointer;" title="Shape Fill Color">
+          <span>Fill</span>
+          <input type="color" id="nbEmbedFillColor_${targetContainerId}" value="#dbeafe" style="width:20px; height:20px; border:none; background:transparent; cursor:pointer; padding:0;">
+        </label>
+
+        <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:#ffffff; cursor:pointer;" title="Shape / Line Stroke Color">
+          <span>Stroke</span>
+          <input type="color" id="nbEmbedStrokeColor_${targetContainerId}" value="#2563eb" style="width:20px; height:20px; border:none; background:transparent; cursor:pointer; padding:0;">
+        </label>
       </div>
 
       <!-- Line Height / Spacing Dropdown -->
-      <div style="display:flex; align-items:center; gap:4px;">
+      <div data-ribbon-section="layout" style="display:flex; align-items:center; gap:4px;">
         <label style="font-size:11px; font-weight:700; color:#ffffff; margin:0;">Spacing:</label>
-        <select id="nbLineHeight" class="nb-tb-select" style="background:#1e293b !important; color:#ffffff !important; border:1px solid #475569; border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="applyNotebookLineHeight(this.value)">
+        <select id="nbLineHeight_${targetContainerId}" class="nb-tb-select" style="background:#1e293b !important; color:#ffffff !important; border:1px solid #475569; border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="applyNotebookLineHeight(this.value, ${targetArg})">
           <option value="1.0">1.0</option>
           <option value="1.15">1.15</option>
           <option value="1.5" selected>1.5</option>
@@ -231,13 +283,70 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
   `;
 }
 
-function applyNotebookFont(fontFamily) {
-  const editorEl = document.getElementById('pageContent') || document.getElementById('noteContent');
+function switchEmbeddedRibbonTab(btnEl, tabName) {
+  const toolbar = btnEl ? btnEl.closest('.notebook-toolbar') : null;
+  if (!toolbar) return;
+  toolbar.querySelectorAll('.nb-ribbon-btn').forEach(b => {
+    const isActive = b.getAttribute('data-ribbon') === tabName;
+    b.classList.toggle('active', isActive);
+    b.style.background = isActive ? '#2563eb' : 'transparent';
+    b.style.color = isActive ? '#ffffff' : '#cbd5e1';
+    b.style.borderColor = isActive ? '#38bdf8' : 'transparent';
+  });
+}
+
+function resolveNotebookEditorElement(editorTargetId = null) {
+  if (editorTargetId && document.getElementById(editorTargetId)) {
+    return document.getElementById(editorTargetId);
+  }
+  return document.getElementById('pageContent') || document.getElementById('noteContent') || document.getElementById('personalNotebookCanvas');
+}
+
+function insertEmbeddedNotebookShape(type, editorTargetId = null, toolbarId = 'notebookToolbarContainer') {
+  const editorEl = resolveNotebookEditorElement(editorTargetId);
+  if (!editorEl) return;
+
+  const sw = Number(document.getElementById(`nbEmbedStrokeWidth_${toolbarId}`)?.value || 2);
+  const fill = document.getElementById(`nbEmbedFillColor_${toolbarId}`)?.value || '#dbeafe';
+  const stroke = document.getElementById(`nbEmbedStrokeColor_${toolbarId}`)?.value || '#2563eb';
+  const uid = 'emb_shape_' + Date.now();
+
+  let htmlSnippet = '';
+  if (type === 'rectangle') {
+    htmlSnippet = `<div contenteditable="true" data-shape-type="rectangle" style="display:inline-flex; align-items:center; justify-content:center; min-width:140px; min-height:64px; padding:10px 16px; margin:8px 6px; border:${sw}px solid ${stroke}; background:${fill}; border-radius:6px; color:${stroke}; font-weight:600; text-align:center; vertical-align:middle;">Process</div>`;
+  } else if (type === 'circle') {
+    htmlSnippet = `<div contenteditable="true" data-shape-type="circle" style="display:inline-flex; align-items:center; justify-content:center; width:96px; height:96px; padding:10px; margin:8px 6px; border:${sw}px solid ${stroke}; background:${fill}; border-radius:50%; color:${stroke}; font-weight:600; text-align:center; vertical-align:middle;">Node</div>`;
+  } else if (type === 'diamond') {
+    htmlSnippet = `<div contenteditable="true" data-shape-type="diamond" style="display:inline-flex; align-items:center; justify-content:center; width:140px; height:96px; margin:8px 6px; position:relative; color:${stroke}; font-weight:600; text-align:center; vertical-align:middle;"><svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute; inset:0; pointer-events:none;"><polygon points="50,3 97,50 50,97 3,50" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/></svg><span style="position:relative; z-index:1; padding:4px;">Decision?</span></div>`;
+  } else if (type === 'oval') {
+    htmlSnippet = `<div contenteditable="true" data-shape-type="oval" style="display:inline-flex; align-items:center; justify-content:center; min-width:140px; height:60px; padding:8px 20px; margin:8px 6px; border:${sw}px solid ${stroke}; background:${fill}; border-radius:999px; color:${stroke}; font-weight:600; text-align:center; vertical-align:middle;">Start / End</div>`;
+  } else if (type === 'callout') {
+    htmlSnippet = `<div contenteditable="true" data-shape-type="callout" style="display:inline-flex; align-items:center; justify-content:center; min-width:150px; min-height:64px; padding:10px 14px; margin:8px 6px; border:${sw}px solid ${stroke}; background:${fill}; border-radius:8px; color:${stroke}; font-weight:600; text-align:center; vertical-align:middle;">Callout Box</div>`;
+  } else if (type === 'straight_line') {
+    htmlSnippet = `<div contenteditable="false" data-shape-type="straight_line" style="display:block; width:200px; height:28px; margin:6px 0;"><svg width="100%" height="28" viewBox="0 0 200 28"><line x1="4" y1="14" x2="196" y2="14" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round"/></svg></div>`;
+  } else if (type === 'dashed_line') {
+    htmlSnippet = `<div contenteditable="false" data-shape-type="dashed_line" style="display:block; width:200px; height:28px; margin:6px 0;"><svg width="100%" height="28" viewBox="0 0 200 28"><line x1="4" y1="14" x2="196" y2="14" stroke="${stroke}" stroke-width="${sw}" stroke-dasharray="8,6" stroke-linecap="round"/></svg></div>`;
+  } else if (type === 'arrow_line') {
+    htmlSnippet = `<div contenteditable="false" data-shape-type="arrow_line" style="display:block; width:200px; height:28px; margin:6px 0;"><svg width="100%" height="28" viewBox="0 0 200 28"><defs><marker id="m_${uid}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="${stroke}"/></marker></defs><line x1="4" y1="14" x2="186" y2="14" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" marker-end="url(#m_${uid})"/></svg></div>`;
+  } else if (type === 'dashed_arrow_line') {
+    htmlSnippet = `<div contenteditable="false" data-shape-type="dashed_arrow_line" style="display:block; width:200px; height:28px; margin:6px 0;"><svg width="100%" height="28" viewBox="0 0 200 28"><defs><marker id="dm_${uid}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="${stroke}"/></marker></defs><line x1="4" y1="14" x2="186" y2="14" stroke="${stroke}" stroke-width="${sw}" stroke-dasharray="8,6" stroke-linecap="round" marker-end="url(#dm_${uid})"/></svg></div>`;
+  }
+
+  if (editorEl.isContentEditable) {
+    editorEl.focus();
+    document.execCommand('insertHTML', false, htmlSnippet + '<p><br></p>');
+  } else if ('value' in editorEl) {
+    editorEl.value += `\n[${type.toUpperCase()}]\n`;
+  }
+}
+
+function applyNotebookFont(fontFamily, editorTargetId = null) {
+  const editorEl = resolveNotebookEditorElement(editorTargetId);
   if (editorEl) editorEl.style.fontFamily = fontFamily;
 }
 
-function applyNotebookFontSizePx(sizePx) {
-  const editorEl = document.getElementById('pageContent') || document.getElementById('noteContent');
+function applyNotebookFontSizePx(sizePx, editorTargetId = null) {
+  const editorEl = resolveNotebookEditorElement(editorTargetId);
   if (!editorEl) return;
   if (editorEl.isContentEditable) {
     document.execCommand('fontSize', false, '7');
@@ -252,8 +361,8 @@ function applyNotebookFontSizePx(sizePx) {
   }
 }
 
-function applyNotebookCommand(cmd) {
-  const editorEl = document.getElementById('pageContent') || document.getElementById('noteContent');
+function applyNotebookCommand(cmd, editorTargetId = null) {
+  const editorEl = resolveNotebookEditorElement(editorTargetId);
   if (!editorEl) return;
   if (editorEl.isContentEditable) {
     editorEl.focus();
@@ -269,8 +378,8 @@ function applyNotebookCommand(cmd) {
   }
 }
 
-function applyNotebookColor(cmd, colorVal) {
-  const editorEl = document.getElementById('pageContent') || document.getElementById('noteContent');
+function applyNotebookColor(cmd, colorVal, editorTargetId = null) {
+  const editorEl = resolveNotebookEditorElement(editorTargetId);
   if (!editorEl) return;
   if (editorEl.isContentEditable) {
     editorEl.focus();
@@ -282,8 +391,8 @@ function applyNotebookColor(cmd, colorVal) {
   }
 }
 
-function applyNotebookLineHeight(lineHeight) {
-  const editorEl = document.getElementById('pageContent') || document.getElementById('noteContent');
+function applyNotebookLineHeight(lineHeight, editorTargetId = null) {
+  const editorEl = resolveNotebookEditorElement(editorTargetId);
   if (editorEl) editorEl.style.lineHeight = lineHeight;
 }
 

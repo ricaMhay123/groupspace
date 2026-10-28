@@ -66,6 +66,7 @@ const NotebookModel = {
       LEFT JOIN notebook_permissions np
              ON np.notebook_id = nb.id AND np.user_id = ${userId}
       WHERE nb.group_id = ${groupId}
+        AND COALESCE(nb.is_private, FALSE) = FALSE
         AND (
               nb.visibility = 'shared'
           OR  np.notebook_id IS NOT NULL
@@ -120,6 +121,7 @@ const NotebookFolderModel = {
       FROM notebook_folders f
       LEFT JOIN users u ON f.created_by_user_id = u.id
       WHERE f.group_id = ${groupId}
+        AND COALESCE(f.is_private, FALSE) = FALSE
       ORDER BY f.created_at ASC
     `;
   },
@@ -345,7 +347,9 @@ const NoteModel = {
         FROM notes n
         JOIN users u ON n.author_user_id = u.id
         LEFT JOIN notebook_folders f ON n.folder_id = f.id
-        WHERE n.group_id = ${groupId} AND (n.title ILIKE ${term} OR n.content ILIKE ${term} OR n.tags ILIKE ${term})
+        WHERE n.group_id = ${groupId}
+          AND COALESCE(n.is_private, FALSE) = FALSE
+          AND (n.title ILIKE ${term} OR n.content ILIKE ${term} OR n.tags ILIKE ${term})
         ORDER BY n.is_pinned DESC, n.updated_at DESC
       `;
     }
@@ -362,6 +366,7 @@ const NoteModel = {
       JOIN users u ON n.author_user_id = u.id
       LEFT JOIN notebook_folders f ON n.folder_id = f.id
       WHERE n.group_id = ${groupId}
+        AND COALESCE(n.is_private, FALSE) = FALSE
       ORDER BY n.is_pinned DESC, n.updated_at DESC
     `;
   },

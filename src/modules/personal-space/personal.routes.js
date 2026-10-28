@@ -11,6 +11,9 @@ router.use(authMiddleware);
 
 router.get('/', personalController.getItems);
 router.get('/feed', personalController.getPersonalFeed); // Personal Feed: mentions, approvals, help
+router.get('/folders', personalController.getPersonalFolders);
+router.post('/folders', personalController.createPersonalFolder);
+router.delete('/folders/:folderId', personalController.deletePersonalFolder);
 router.post('/', personalController.create);
 router.patch('/:id', personalController.update);
 router.put('/:id', personalController.update);

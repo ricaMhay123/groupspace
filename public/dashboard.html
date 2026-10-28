@@ -18,11 +18,15 @@
 <body class="dashboard-page">
 
 <div class="dashboard-layout">
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div class="sidebar-drawer-overlay" id="sidebarDrawerOverlay" onclick="toggleMobileSidebar(false)"></div>
+
   <!-- ================= SIDEBAR ================= -->
-  <aside class="dashboard-sidebar">
+  <aside class="dashboard-sidebar" id="dashboardSidebar">
     <div>
-      <div class="dashboard-brand">
+      <div class="dashboard-brand" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
         <a href="index.html" style="text-decoration:none;"><h2>👥 GroupSpace</h2></a>
+        <button type="button" class="mobile-sidebar-close-btn" aria-label="Close navigation menu" onclick="toggleMobileSidebar(false)">✕</button>
       </div>
 
       <!-- Multi-Group Switcher -->
@@ -74,9 +78,12 @@
   <main class="dashboard-main">
     <!-- Header -->
     <div class="dashboard-header">
-      <div>
-        <h1 id="viewTitle">Homespace</h1>
-        <p id="viewSubtitle">Welcome to your team workspace.</p>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button type="button" id="mobileSidebarToggle" class="mobile-hamburger-btn" aria-label="Toggle navigation drawer" title="Menu" onclick="toggleMobileSidebar()">☰</button>
+        <div>
+          <h1 id="viewTitle">Homespace</h1>
+          <p id="viewSubtitle">Welcome to your team workspace.</p>
+        </div>
       </div>
 
       <div class="dashboard-header-actions">
@@ -303,21 +310,63 @@
       <div style="margin-bottom:20px;">
         <span class="hero-tag" style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase;">STRICTLY PRIVATE TO YOU</span>
         <h2>Your Isolated Space</h2>
-        <p style="color:var(--gray);">Items saved here are stored privately for your account and are completely invisible to other workspace members.</p>
+        <p style="color:var(--gray);">Items saved here are stored privately for your account (`is_private = TRUE`, `user_id = current_user.id`) and are completely invisible to other workspace members.</p>
       </div>
 
       <div class="personal-tabs">
-        <button class="personal-tab-btn active" onclick="switchPersonalSubTab('NOTE')">Private Notes</button>
+        <button class="personal-tab-btn active" onclick="switchPersonalSubTab('NOTE')">Private Notebook</button>
         <button class="personal-tab-btn" onclick="switchPersonalSubTab('TASK')">Personal To-Dos</button>
         <button class="personal-tab-btn" onclick="switchPersonalSubTab('EXPENSE')">Personal Budget</button>
       </div>
 
+      <!-- ISOLATED PRIVATE/PERSONAL NOTEBOOK WORKSPACE (Replicated from Shared Notebook) -->
+      <div id="personalNotebookWorkspace">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:14px; flex-wrap:wrap;">
+          <div class="dashboard-search" style="flex:1; min-width:220px;">
+            <input type="text" id="personalNoteSearchInput" placeholder="Search private notebook pages and tags..." oninput="debouncePersonalNotesSearch()">
+          </div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <button type="button" onclick="promptCreatePersonalFolder()" class="btn-outline" style="font-size:13px; padding:8px 14px;">+ Folder</button>
+            <button type="button" onclick="document.getElementById('personalImportFileInput').click()" class="btn-outline" style="font-size:13px; padding:8px 14px;">Import Document</button>
+            <input type="file" id="personalImportFileInput" accept=".txt,.md,.markdown" style="display:none;" onchange="handlePersonalImportDocument(event)">
+            <button type="button" onclick="window.open('notebook.html?personal=1' + (currentGroupId ? '&groupId=' + currentGroupId : ''), '_blank')" class="btn-outline" style="font-size:13px; padding:8px 16px;">Full Editor</button>
+            <button type="button" onclick="openPersonalAddModal()" class="btn-green">+ New Page</button>
+          </div>
+        </div>
+
+        <!-- Personal Folder Filter & Management Bar -->
+        <div id="personalNotebookFoldersBar" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:16px;"></div>
+
+        <!-- Embedded MS Word-Style Rich Text & Flowchart Canvas for Quick Private Note Authoring -->
+        <div class="dashboard-panel" style="margin-bottom:20px;">
+          <div class="panel-header" style="margin-bottom:10px;">
+            <div>
+              <h3 style="margin:0;">Private Notebook Canvas</h3>
+              <span style="font-size:12px; color:var(--gray);">Auto-titles from your first non-empty phrase/sentence upon saving • Strictly private (`is_private = TRUE`)</span>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <select id="personalInlineFolderSelect" class="form-control" style="width:auto; font-size:12px; padding:6px 10px;">
+                <option value="">Uncategorized (Root)</option>
+              </select>
+              <button type="button" class="btn-green" onclick="saveInlinePersonalNotebookPage()">Save Private Page</button>
+            </div>
+          </div>
+          <div id="personalNotebookToolbarContainer"></div>
+          <div style="margin-bottom:10px;">
+            <input type="text" id="personalNotebookTitleInput" class="form-control" placeholder="Page Title (optional — leave blank to auto-title from canvas)..." style="font-weight:700; font-size:15px;">
+          </div>
+          <div id="personalNotebookCanvas" contenteditable="true" spellcheck="true"
+               style="min-height:180px; padding:18px 20px; border:1px solid var(--border); border-radius:10px; background:var(--card-bg, #ffffff); color:var(--text, #0f172a); font-size:16px; line-height:1.65; outline:none;"
+               data-placeholder="Start typing your private note or insert flowchart shapes above (if the title bar is left blank, the first phrase/sentence automatically becomes the page title upon saving)..."></div>
+        </div>
+      </div>
+
       <div class="dashboard-panel">
         <div class="panel-header">
-          <h3 id="personalSubTabTitle">Private Notes</h3>
-          <button onclick="openPersonalAddModal()" class="btn-green">+ Add Item</button>
+          <h3 id="personalSubTabTitle">Private Notebook Pages</h3>
+          <button onclick="openPersonalAddModal()" class="btn-green" id="personalAddBtn">+ New Page</button>
         </div>
-        <div id="personalItemsContainer">
+        <div id="personalItemsContainer" class="notebook-grid">
           <p style="color:var(--gray);">Loading personal space...</p>
         </div>
       </div>
@@ -415,7 +464,7 @@
   </div>
 </div>
 
-<!-- Create Note Modal (Auto-Titled from Content) -->
+<!-- Create Note Modal (Independent Page Title + Hybrid Auto-Titling) -->
 <div class="modal-overlay" id="createNoteModal">
   <div class="modal-card">
     <div class="modal-header">
@@ -425,10 +474,17 @@
     <form id="createNoteForm" onsubmit="handleCreateNote(event)">
       <div class="form-group">
         <label style="display:flex; justify-content:space-between; align-items:center;">
-          <span>Note Canvas *</span>
-          <span style="font-size:11px; color:var(--primary); font-weight:600;">Auto-titled from first phrase/sentence</span>
+          <span>Page Title</span>
+          <span style="font-size:11px; color:var(--gray); font-weight:400;">Optional — leave blank to auto-title</span>
         </label>
-        <textarea id="noteContent" name="pageContent" data-alt-id="pageContent" class="form-control" rows="6" placeholder="Start typing your note... The first line or sentence automatically becomes the page title." required></textarea>
+        <input type="text" id="noteTitle" name="pageTitle" data-alt-id="manualTitleInput" class="form-control" placeholder="Enter custom page title, or leave blank to auto-title from canvas...">
+      </div>
+      <div class="form-group">
+        <label style="display:flex; justify-content:space-between; align-items:center;">
+          <span>Note Canvas</span>
+          <span style="font-size:11px; color:var(--primary); font-weight:600;">Hybrid auto-titles if Page Title is blank</span>
+        </label>
+        <textarea id="noteContent" name="pageContent" data-alt-id="pageContent" class="form-control" rows="6" placeholder="Start typing your note... If Page Title is left blank, the first phrase/sentence automatically becomes the title."></textarea>
       </div>
       <div class="form-group">
         <label>Folder (Optional)</label>
@@ -563,13 +619,23 @@
       <button class="modal-close" onclick="closeModal('personalItemModal')">✕</button>
     </div>
     <form id="personalItemForm" onsubmit="handleSavePersonalItem(event)">
-      <div class="form-group">
-        <label>Title *</label>
-        <input type="text" id="personalItemTitle" class="form-control" placeholder="Title" required>
+      <div class="form-group" id="personalTitleGroup">
+        <label id="personalItemTitleLabel">Page Title (Optional — leave blank to auto-title)</label>
+        <input type="text" id="personalItemTitle" class="form-control" placeholder="Enter custom title, or leave blank to auto-title from canvas...">
       </div>
       <div class="form-group" id="personalContentGroup">
-        <label>Notes / Details</label>
-        <textarea id="personalItemContent" class="form-control" rows="3" placeholder="Private details..."></textarea>
+        <label style="display:flex; justify-content:space-between; align-items:center;">
+          <span>Note Canvas</span>
+          <span style="font-size:11px; color:var(--gray); font-weight:400;">Hybrid auto-titles if title is left blank</span>
+        </label>
+        <div id="personalModalToolbarContainer"></div>
+        <textarea id="personalItemContent" class="form-control" rows="5" placeholder="Start typing your private note... If Title is blank, the first non-empty word/phrase/sentence automatically becomes the title."></textarea>
+      </div>
+      <div class="form-group" id="personalFolderGroup">
+        <label>Private Folder (Optional)</label>
+        <select id="personalItemFolderSelect" class="form-control">
+          <option value="">Uncategorized (Root)</option>
+        </select>
       </div>
       <div class="form-group" id="personalAmountGroup" style="display:none;">
         <label>Amount (₱)</label>

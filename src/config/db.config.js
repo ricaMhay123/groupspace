@@ -332,12 +332,18 @@ async function initDb() {
     try { await sql`ALTER TABLE notes ADD COLUMN IF NOT EXISTS author_user_id INTEGER`; } catch (e) {}
     try { await sql`ALTER TABLE notes ADD COLUMN IF NOT EXISTS folder_id INTEGER REFERENCES notebook_folders(id) ON DELETE CASCADE`; } catch (e) {}
     try { await sql`ALTER TABLE notes ADD COLUMN IF NOT EXISTS permitted_editors JSONB DEFAULT '[]'::jsonb`; } catch (e) {}
+    try { await sql`ALTER TABLE notes ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT FALSE`; } catch (e) {}
+    try { await sql`ALTER TABLE notes ALTER COLUMN group_id DROP NOT NULL`; } catch (e) {}
     try { await sql`ALTER TABLE notes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`; } catch (e) {}
 
-    // notebooks table migrations
+    // notebooks & notebook_folders table migrations
     try { await sql`ALTER TABLE notebooks ADD COLUMN IF NOT EXISTS description TEXT`; } catch (e) {}
     try { await sql`ALTER TABLE notebooks ADD COLUMN IF NOT EXISTS visibility VARCHAR(10) NOT NULL DEFAULT 'shared'`; } catch (e) {}
+    try { await sql`ALTER TABLE notebooks ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT FALSE`; } catch (e) {}
+    try { await sql`ALTER TABLE notebooks ALTER COLUMN group_id DROP NOT NULL`; } catch (e) {}
     try { await sql`ALTER TABLE notebooks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`; } catch (e) {}
+    try { await sql`ALTER TABLE notebook_folders ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT FALSE`; } catch (e) {}
+    try { await sql`ALTER TABLE notebook_folders ALTER COLUMN group_id DROP NOT NULL`; } catch (e) {}
 
     // notebook_pages table migrations
     try { await sql`ALTER TABLE notebook_pages ADD COLUMN IF NOT EXISTS content TEXT`; } catch (e) {}
@@ -345,6 +351,7 @@ async function initDb() {
     try { await sql`ALTER TABLE notebook_pages ADD COLUMN IF NOT EXISTS last_edited_by_user_id INTEGER`; } catch (e) {}
     try { await sql`ALTER TABLE notebook_pages ADD COLUMN IF NOT EXISTS folder_id INTEGER REFERENCES notebook_folders(id) ON DELETE CASCADE`; } catch (e) {}
     try { await sql`ALTER TABLE notebook_pages ADD COLUMN IF NOT EXISTS permitted_editors JSONB DEFAULT '[]'::jsonb`; } catch (e) {}
+    try { await sql`ALTER TABLE notebook_pages ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT FALSE`; } catch (e) {}
     try { await sql`ALTER TABLE notebook_pages ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`; } catch (e) {}
 
     // notebook_permissions table migrations
@@ -367,6 +374,10 @@ async function initDb() {
     try { await sql`ALTER TABLE personal_items ADD COLUMN IF NOT EXISTS amount NUMERIC(10, 2) DEFAULT 0`; } catch (e) {}
     try { await sql`ALTER TABLE personal_items ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'Personal'`; } catch (e) {}
     try { await sql`ALTER TABLE personal_items ADD COLUMN IF NOT EXISTS due_date TIMESTAMPTZ`; } catch (e) {}
+    try { await sql`ALTER TABLE personal_items ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT TRUE`; } catch (e) {}
+    try { await sql`ALTER TABLE personal_items ADD COLUMN IF NOT EXISTS folder_id INTEGER REFERENCES notebook_folders(id) ON DELETE SET NULL`; } catch (e) {}
+    try { await sql`ALTER TABLE personal_items ADD COLUMN IF NOT EXISTS tags TEXT DEFAULT ''`; } catch (e) {}
+    try { await sql`ALTER TABLE personal_items ADD COLUMN IF NOT EXISTS is_pinned INTEGER DEFAULT 0`; } catch (e) {}
 
     // discussion_mentions — every row is pinned to one workspace (group_id)
     try {

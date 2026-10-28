@@ -9,10 +9,24 @@ const sql = require('../../config/db.config');
 async function getItems(req, res) {
   try {
     const groupId = req.query.groupId || req.query.group_id;
-    const items = await personalService.getPersonalItems(req.user.id, req.query.type, groupId);
+    const search = req.query.search || '';
+    const items = await personalService.getPersonalItems(req.user.id, req.query.type, groupId, search);
+    let folders = [];
+    if (!req.query.type || String(req.query.type).toUpperCase() === 'NOTE') {
+      try {
+        folders = await sql`
+          SELECT * FROM notebook_folders
+          WHERE created_by_user_id = ${req.user.id} AND is_private = TRUE
+          ORDER BY created_at ASC
+        `;
+      } catch (e) {
+        folders = [];
+      }
+    }
     return res.status(HTTP_STATUS.OK).json({
       success: true,
-      data: items
+      data: items,
+      folders
     });
   } catch (error) {
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
@@ -24,7 +38,10 @@ async function getItems(req, res) {
 
 async function create(req, res) {
   try {
-    const { type, title, content, amount, category, dueDate, groupId, group_id } = req.body;
+    const {
+      type, title, content, amount, category, dueDate,
+      groupId, group_id, folderId, folder_id, tags, isPinned, is_pinned
+    } = req.body;
     const item = await personalService.addPersonalItem({
       userId: req.user.id,
       groupId: groupId || group_id,
@@ -33,7 +50,10 @@ async function create(req, res) {
       content,
       amount,
       category,
-      dueDate
+      dueDate,
+      folderId: folderId !== undefined ? folderId : folder_id,
+      tags,
+      isPinned: isPinned !== undefined ? isPinned : is_pinned
     });
 
     return res.status(HTTP_STATUS.CREATED).json({
@@ -51,7 +71,10 @@ async function create(req, res) {
 
 async function update(req, res) {
   try {
-    const { title, content, status, amount, category } = req.body;
+    const {
+      title, content, status, amount, category,
+      folderId, folder_id, tags, isPinned, is_pinned
+    } = req.body;
     const item = await personalService.updatePersonalItem({
       id: req.params.id,
       userId: req.user.id,
@@ -59,7 +82,10 @@ async function update(req, res) {
       content,
       status,
       amount,
-      category
+      category,
+      folderId: folderId !== undefined ? folderId : folder_id,
+      tags,
+      isPinned: isPinned !== undefined ? isPinned : is_pinned
     });
 
     return res.status(HTTP_STATUS.OK).json({
@@ -81,6 +107,76 @@ async function remove(req, res) {
     return res.status(HTTP_STATUS.OK).json({
       success: true,
       message: 'Item removed from your personal space.'
+    });
+  } catch (error) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+async function getPersonalFolders(req, res) {
+  try {
+    const folders = await sql`
+      SELECT * FROM notebook_folders
+      WHERE created_by_user_id = ${req.user.id} AND is_private = TRUE
+      ORDER BY created_at ASC
+    `;
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: folders
+    });
+  } catch (error) {
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: []
+    });
+  }
+}
+
+async function createPersonalFolder(req, res) {
+  try {
+    const name = String(req.body.name || '').trim();
+    if (!name) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: 'Folder name is required.'
+      });
+    }
+    const groupId = req.body.groupId ? Number(req.body.groupId) : null;
+    const [folder] = await sql`
+      INSERT INTO notebook_folders (group_id, name, created_by_user_id, is_private)
+      VALUES (${groupId}, ${name}, ${req.user.id}, TRUE)
+      RETURNING *
+    `;
+    return res.status(HTTP_STATUS.CREATED).json({
+      success: true,
+      message: 'Personal folder created.',
+      data: folder
+    });
+  } catch (error) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+async function deletePersonalFolder(req, res) {
+  try {
+    const folderId = Number(req.params.folderId || req.params.id);
+    await sql`
+      DELETE FROM personal_items
+      WHERE folder_id = ${folderId} AND user_id = ${req.user.id}
+    `;
+    await sql`
+      DELETE FROM notebook_folders
+      WHERE id = ${folderId} AND created_by_user_id = ${req.user.id} AND is_private = TRUE
+    `;
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Personal folder and all notes inside it deleted.'
     });
   } catch (error) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -261,5 +357,8 @@ module.exports = {
   create,
   update,
   remove,
+  getPersonalFolders,
+  createPersonalFolder,
+  deletePersonalFolder,
   getPersonalFeed
 };

@@ -398,6 +398,41 @@
     }
 
     /* ── High Contrast Dark Slate Toolbar (#0f172a) with Bright White Text/Icons (#ffffff) ── */
+    .nb-ribbon-tabs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      width: 100%;
+      padding-bottom: 6px;
+      margin-bottom: 4px;
+      border-bottom: 1px solid #1e293b;
+    }
+    .nb-ribbon-tab {
+      background: transparent;
+      color: #cbd5e1 !important;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.3px;
+    }
+    .nb-ribbon-tab:hover {
+      color: #ffffff !important;
+      background: #1e293b;
+    }
+    .nb-ribbon-tab.active {
+      color: #ffffff !important;
+      background: #2563eb;
+      border-color: #38bdf8;
+    }
+    .nb-toolbar-group.ribbon-highlight {
+      background: rgba(56, 189, 248, 0.1);
+      border-radius: 6px;
+      padding: 2px 8px;
+    }
     .nb-toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -558,6 +593,40 @@
       min-height: 620px;
       position: relative !important;
       overflow: visible;
+    }
+
+    /* ── Editable Page Title Bar (Independent Title + Hybrid Auto-Title Fallback) ── */
+    .nb-title-bar {
+      position: relative;
+      z-index: 2;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--nb-border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nb-title-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--nb-canvas-text) !important;
+      font-family: inherit;
+      letter-spacing: -0.3px;
+      padding: 4px 0;
+      transition: border-color 0.15s;
+    }
+    .nb-title-input::placeholder {
+      color: var(--nb-placeholder) !important;
+      font-weight: 600;
+      opacity: 0.75;
+    }
+    .nb-title-input:disabled, .nb-title-input[readonly] {
+      opacity: 0.75;
+      cursor: default;
     }
 
     /* ── Rich Text Canvas Editor ── */
@@ -808,16 +877,107 @@
     .toast.info { background: #1e3a8a; border: 1px solid #3b82f6; color: #bfdbfe; }
     @keyframes toastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
+    .mobile-hamburger-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--nb-border);
+      background: var(--nb-surface);
+      color: var(--nb-text);
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mobile-hamburger-btn:hover {
+      border-color: #3b82f6;
+      color: #3b82f6;
+    }
+    .sidebar-drawer-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(2px);
+      z-index: 1150;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .sidebar-drawer-overlay.open {
+      display: block;
+      opacity: 1;
+    }
+
     @media (max-width: 768px) {
-      .nb-sidebar { display: none; }
+      html, body {
+        overflow-x: hidden;
+        max-width: 100vw;
+      }
+      .mobile-hamburger-btn {
+        display: inline-flex;
+      }
+      .nb-header {
+        padding: 10px 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .nb-header-center {
+        order: 3;
+        width: 100%;
+        text-align: left;
+      }
+      .nb-header-actions {
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .nb-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 280px;
+        max-width: 85vw;
+        z-index: 1200;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        box-shadow: 12px 0 32px rgba(0, 0, 0, 0.35);
+      }
+      .nb-sidebar.open {
+        transform: translateX(0);
+      }
+      .nb-toolbar {
+        padding: 8px 10px;
+        gap: 6px;
+        overflow-x: auto;
+      }
       .nb-canvas-container { padding: 12px; }
-      .nb-canvas { padding: 20px 16px; }
+      .nb-canvas { padding: 20px 16px; min-height: 480px; }
+      .nb-status-bar {
+        padding: 8px 12px;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      button,
+      .btn-nb,
+      .btn-sidebar-action,
+      .btn-toolbar-fmt,
+      .nb-ribbon-tab,
+      .nb-edit-ctrl,
+      select,
+      input[type="text"] {
+        min-height: 44px;
+      }
     }
   </style>
 </head>
 <body>
 <header class="nb-header">
-  <div style="display:flex; align-items:center; gap:14px;">
+  <div style="display:flex; align-items:center; gap:10px;">
+    <button type="button" id="nbMobileSidebarBtn" class="mobile-hamburger-btn" aria-label="Toggle folders and pages drawer" title="Toggle Folders &amp; Pages" onclick="toggleNbMobileSidebar()">☰</button>
     <a href="index.html" style="text-decoration:none; font-weight:800; font-size:15px; color:var(--nb-text); display:inline-flex; align-items:center; gap:6px;"><span>👥</span> GroupSpace</a>
     <a href="dashboard.html" id="backBtn" class="nb-back-btn">&#8592; Back to Workspace</a>
   </div>
@@ -838,10 +998,14 @@
 </header>
 
 <div class="nb-layout">
-  <aside class="nb-sidebar">
+  <div id="nbSidebarOverlay" class="sidebar-drawer-overlay" onclick="toggleNbMobileSidebar(false)"></div>
+  <aside class="nb-sidebar" id="nbSidebar">
     <div class="nb-sidebar-header">
       <h3>Folders &amp; Pages</h3>
-      <button type="button" class="btn-sidebar-action" onclick="createNewFolderPrompt()" title="Create a new folder">+ Folder</button>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <button type="button" class="btn-sidebar-action" onclick="createNewFolderPrompt()" title="Create a new folder">+ Folder</button>
+        <button type="button" class="mobile-hamburger-btn" style="min-width:36px; min-height:36px; padding:4px 8px; font-size:13px;" aria-label="Close folders drawer" onclick="toggleNbMobileSidebar(false)">✕</button>
+      </div>
     </div>
     <div class="nb-pages-list" id="nbPagesList"><div class="nb-empty-pages">Loading pages...</div></div>
     <div class="nb-sidebar-footer">
@@ -853,8 +1017,18 @@
   <div class="nb-editor-area">
     <!-- High Contrast Dark Slate Toolbar (#0f172a) with Bright White Text/Icons (#ffffff) -->
     <div class="nb-toolbar" id="nbMainToolbar">
-      <!-- Text Styling: Bold, Italic, Underline, Text Color, Highlight -->
-      <div class="nb-toolbar-group">
+      <!-- Microsoft Word Style Ribbon Tabs: Home / Insert / Draw / Layout -->
+      <div class="nb-ribbon-tabs" role="tablist" aria-label="Notebook Ribbon Tabs">
+        <button type="button" class="nb-ribbon-tab active" data-ribbon-tab="all" onclick="switchNotebookRibbonTab('all')">All Tools</button>
+        <button type="button" class="nb-ribbon-tab" data-ribbon-tab="home" onclick="switchNotebookRibbonTab('home')">Home</button>
+        <button type="button" class="nb-ribbon-tab" data-ribbon-tab="insert" onclick="switchNotebookRibbonTab('insert')">Insert</button>
+        <button type="button" class="nb-ribbon-tab" data-ribbon-tab="draw" onclick="switchNotebookRibbonTab('draw')">Draw</button>
+        <button type="button" class="nb-ribbon-tab" data-ribbon-tab="layout" onclick="switchNotebookRibbonTab('layout')">Layout</button>
+        <span id="nbPrivacyIndicator" style="margin-left:auto; font-size:11px; color:#94a3b8; font-weight:600;">Microsoft Word Style Rich Text &amp; Flowchart Canvas</span>
+      </div>
+
+      <!-- [HOME] Text Styling: Bold, Italic, Underline, Text Color, Highlight -->
+      <div class="nb-toolbar-group" data-ribbon-group="home">
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Bold (Ctrl+B)" onclick="execFmt('bold')"><b>B</b></button>
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Italic (Ctrl+I)" onclick="execFmt('italic')"><i>I</i></button>
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Underline (Ctrl+U)" onclick="execFmt('underline')"><u>U</u></button>
@@ -863,13 +1037,13 @@
           <input type="color" id="nbTextColor" class="nb-edit-ctrl" value="#0f172a" onchange="applyTextColor(this.value)">
         </div>
         <div class="nb-color-picker-wrap" title="Text Highlight / Background (hiliteColor)">
-          <span>&#x1F58D;</span>
+          <span>Highlight</span>
           <input type="color" id="nbHighlightColor" class="nb-edit-ctrl" value="#fef08a" onchange="applyHighlightColor(this.value)">
         </div>
       </div>
 
-      <!-- Text Alignment: Left, Center, Right, Justify -->
-      <div class="nb-toolbar-group">
+      <!-- [HOME / LAYOUT] Text Alignment: Left, Center, Right, Justify -->
+      <div class="nb-toolbar-group" data-ribbon-group="home layout">
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Left (justifyLeft)" onclick="execFmt('justifyLeft')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
         </button>
@@ -884,8 +1058,8 @@
         </button>
       </div>
 
-      <!-- Font Family & Numeric Font Sizes (12px - 36px) -->
-      <div class="nb-toolbar-group">
+      <!-- [HOME / LAYOUT] Font Family & Numeric Font Sizes (12px - 36px) -->
+      <div class="nb-toolbar-group" data-ribbon-group="home layout">
         <label for="nbFontFamily">Font:</label>
         <select id="nbFontFamily" class="nb-edit-ctrl" onchange="applyFont(this.value)">
           <option value="Inter, sans-serif" selected>Inter</option>
@@ -917,26 +1091,33 @@
         </select>
       </div>
 
-      <!-- Customizable Shapes, Lines, Arrows & Text Box Controls -->
-      <div class="nb-toolbar-group">
-        <select id="nbShapeSelect" class="nb-edit-ctrl" onchange="handleInsertShapeSelect(this)" style="color:#38bdf8 !important; font-weight:700;">
-          <option value="" disabled selected>+ Insert Shape / Line</option>
-          <option value="rectangle">&#x25AD; Rectangle</option>
-          <option value="circle">&#x25EF; Circle</option>
-          <option value="arrow">&#x2794; Arrow</option>
-          <option value="straight_line">&#x2015; Straight Line</option>
-          <option value="dashed_line">&#x2505; Broken/Dashed Line</option>
-          <option value="straight_arrow_line">&#x27F6; Straight Arrow Line</option>
-          <option value="broken_arrow_line">&#x21E2; Broken Arrow Line</option>
-          <option value="callout">&#x1F5E8; Callout Box</option>
+      <!-- [INSERT / DRAW] Insert Shape / Flowchart Elements, Connectors & Lines, Text Boxes, Stroke & Fill -->
+      <div class="nb-toolbar-group" data-ribbon-group="insert draw">
+        <select id="nbShapeSelect" class="nb-edit-ctrl" onchange="handleInsertShapeSelect(this)" style="color:#38bdf8 !important; font-weight:700;" title="Insert Shape / Flowchart Elements">
+          <option value="" disabled selected>+ Insert Shape / Flowchart Elements</option>
+          <optgroup label="Shapes &amp; Flowchart Nodes">
+            <option value="rectangle">Rectangle (Process)</option>
+            <option value="circle">Circle</option>
+            <option value="diamond">Diamond (Decision)</option>
+            <option value="oval">Oval (Terminal)</option>
+            <option value="callout">Callout Box</option>
+          </optgroup>
+          <optgroup label="Connectors &amp; Lines">
+            <option value="straight_line">Straight Line</option>
+            <option value="dashed_line">Broken/Dashed Line</option>
+            <option value="arrow_line">Arrow Line</option>
+            <option value="dashed_arrow_line">Dashed Arrow Line</option>
+            <option value="straight_arrow_line">Straight Arrow Line</option>
+            <option value="broken_arrow_line">Broken Arrow Line</option>
+          </optgroup>
         </select>
 
         <button type="button" id="insertTextBoxBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTextBox()" title="Insert Draggable &amp; Rotatable Text Box">
-          &#x1F524; Insert Text Box
+          + Text Box
         </button>
 
         <label for="nbStrokeWidth">Stroke:</label>
-        <select id="nbStrokeWidth" class="nb-edit-ctrl" onchange="updateSelectedShapeStyle()" title="Stroke Thickness">
+        <select id="nbStrokeWidth" class="nb-edit-ctrl" onchange="updateSelectedShapeStyle()" title="Line Stroke Thickness">
           <option value="1">1px</option>
           <option value="2" selected>2px</option>
           <option value="4">4px</option>
@@ -950,35 +1131,43 @@
         </div>
 
         <div class="nb-color-picker-wrap" title="Stroke / Line Color">
-          <span>Line</span>
+          <span>Stroke</span>
           <input type="color" id="nbShapeStrokeColor" class="nb-edit-ctrl" value="#2563eb" onchange="updateSelectedShapeStyle()">
         </div>
       </div>
 
-      <!-- Folder Assignment & Import/Export System -->
-      <div class="nb-toolbar-group" style="margin-left:auto;">
+      <!-- [LAYOUT / INSERT] Folder Assignment & Import/Export System -->
+      <div class="nb-toolbar-group" data-ribbon-group="insert layout" style="margin-left:auto;">
         <label for="nbPageFolderSelect">Folder:</label>
         <select id="nbPageFolderSelect" class="nb-edit-ctrl" onchange="handleMovePageToFolder(this.value)" title="Move page to folder">
           <option value="">(Root / No Folder)</option>
         </select>
 
         <input type="file" id="nbFileInput" accept=".txt,.md,.markdown" style="display:none;" onchange="handleImportFile(event)">
-        <button type="button" class="btn-export-sm nb-edit-ctrl" onclick="triggerImportDocument(null)" title="Import .txt or .markdown document as new page">&#x1F4E5; Import Document</button>
+        <button type="button" class="btn-export-sm nb-edit-ctrl" onclick="triggerImportDocument(null)" title="Import .txt or .markdown document as new page">Import Document</button>
         <button type="button" class="btn-export-sm" onclick="exportPage('txt')" title="Export Plain Text (.txt)">.txt</button>
         <button type="button" class="btn-export-sm" onclick="exportPage('pdf')" title="Export PDF (.pdf)">.pdf</button>
         <button type="button" class="btn-export-sm" onclick="exportPage('docx')" title="Export Word (.docx)">.docx</button>
       </div>
     </div>
 
-    <!-- Canvas Container (Auto-Title System: no separate mandatory top title box) -->
+    <!-- Canvas Container (Editable Page Title Bar + Hybrid Auto-Title System) -->
     <div class="nb-canvas-container" id="nbCanvasContainer" onclick="handleCanvasContainerClick(event)">
       <div class="nb-canvas" id="nbCanvas">
+        <!-- Dedicated Editable Page Title Input Field -->
+        <div class="nb-title-bar">
+          <input type="text" id="nbPageTitle" name="manualTitleInput" data-alt-id="pageTitle"
+                 class="nb-title-input nb-edit-ctrl"
+                 placeholder="Page Title (leave blank to auto-title from first phrase in canvas)..."
+                 autocomplete="off" />
+        </div>
+
         <!-- Interactive Shapes, Lines & Text Boxes Overlay -->
         <div id="nbShapesLayer" class="nb-shapes-layer"></div>
 
-        <!-- Rich Text Canvas Editor (Auto-titled from first non-empty phrase/sentence) -->
+        <!-- Rich Text Canvas Editor (Hybrid auto-titled from first non-empty phrase/sentence if title input is left blank) -->
         <div id="nbPageContent" class="nb-canvas-editor" contenteditable="true" spellcheck="true"
-             data-placeholder="Start typing your note here (the first phrase/sentence automatically becomes the page title upon saving)..."></div>
+             data-placeholder="Start typing your note here (if the title bar above is left blank, the first phrase/sentence automatically becomes the page title upon saving)..."></div>
       </div>
     </div>
 
@@ -1018,6 +1207,7 @@
 
 let currentUser = null;
 let currentGroupId = null;
+let isPersonalMode = false;
 let currentGroupRole = 'member';
 let currentGroupMembers = [];
 let currentNotebookId = null;
@@ -1037,17 +1227,57 @@ let autoSaveTimer = null;
  */
 let currentShapes = [];
 let activeSelectedShapeId = null;
+let manualTitleInput = null;
+
+function switchNotebookRibbonTab(tab) {
+  document.querySelectorAll('.nb-ribbon-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-ribbon-tab') === tab);
+  });
+  document.querySelectorAll('#nbMainToolbar .nb-toolbar-group').forEach(grp => {
+    const groups = (grp.getAttribute('data-ribbon-group') || '').split(/\s+/);
+    if (tab === 'all') {
+      grp.style.display = 'flex';
+      grp.classList.remove('ribbon-highlight');
+    } else if (groups.includes(tab)) {
+      grp.style.display = 'flex';
+      grp.classList.add('ribbon-highlight');
+    } else {
+      grp.style.display = 'flex';
+      grp.classList.remove('ribbon-highlight');
+    }
+  });
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
+  manualTitleInput = document.getElementById('nbPageTitle');
+  window.manualTitleInput = manualTitleInput;
   currentUser = await checkAuth();
   if (!currentUser) return;
 
   const params = new URLSearchParams(window.location.search);
+  const personalParam = params.get('personal') || params.get('is_private');
+  isPersonalMode = personalParam === '1' || personalParam === 'true' || params.get('groupId') === 'personal' || params.get('mode') === 'personal';
+
   currentGroupId = params.get('groupId') || params.get('workspaceId') || params.get('workspace_id') || localStorage.getItem('groupspace_active_group_id');
+  if (currentGroupId === 'personal') currentGroupId = localStorage.getItem('groupspace_active_group_id') || null;
   currentNotebookId = params.get('notebookId') || null;
   const inboundNoteId = params.get('noteId') || null;
 
-  if (currentGroupId) {
+  if (isPersonalMode) {
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn) {
+      backBtn.href = currentGroupId ? ('dashboard.html?groupId=' + currentGroupId + '&tab=personal') : 'dashboard.html?tab=personal';
+      backBtn.innerHTML = '&#8592; Back to Personal Space';
+    }
+    const nbName = document.getElementById('notebookName');
+    if (nbName) nbName.textContent = 'Personal Notebook (Strictly Private)';
+    const nbMeta = document.getElementById('notebookMeta');
+    if (nbMeta) nbMeta.textContent = 'Isolated Private Space — Hidden from other workspace members • Auto-titled on save';
+    const privInd = document.getElementById('nbPrivacyIndicator');
+    if (privInd) privInd.textContent = 'Private Personal Notebook (is_private = TRUE)';
+    const shareBtn = document.getElementById('sharePageBtn');
+    if (shareBtn) shareBtn.style.display = 'none';
+  } else if (currentGroupId) {
     const backBtn = document.getElementById('backBtn');
     if (backBtn) backBtn.href = 'dashboard.html?groupId=' + currentGroupId;
     await loadWorkspaceContext();
@@ -1068,6 +1298,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function loadWorkspaceContext() {
+  if (isPersonalMode || !currentGroupId) return;
   try {
     const res = await apiFetch('/api/groups/' + currentGroupId);
     if (res && res.data) {
@@ -1081,6 +1312,11 @@ async function loadWorkspaceContext() {
 }
 
 async function loadNotebook() {
+  if (isPersonalMode) {
+    document.getElementById('notebookName').textContent = 'Personal Notebook (Strictly Private)';
+    await loadPages();
+    return;
+  }
   if (!currentGroupId) {
     document.getElementById('nbPagesList').innerHTML = '<div class="nb-empty-pages">No workspace selected.<br><a href="dashboard.html" style="color:var(--nb-primary);">Go to Dashboard</a></div>';
     return;
@@ -1112,9 +1348,52 @@ async function loadNotebook() {
 }
 
 async function loadPages() {
-  if (!currentNotebookId && !currentGroupId) return;
+  if (!isPersonalMode && !currentNotebookId && !currentGroupId) return;
   const list = document.getElementById('nbPagesList');
   try {
+    if (isPersonalMode) {
+      try {
+        const fRes = await apiFetch('/api/personal/folders');
+        if (fRes && Array.isArray(fRes.data)) {
+          folders = fRes.data;
+        }
+      } catch (e) {}
+
+      const pRes = await apiFetch('/api/personal?type=NOTE');
+      const personalNotes = (pRes && Array.isArray(pRes.data)) ? pRes.data : [];
+      pages = personalNotes.map(n => ({
+        id: n.id,
+        title: n.title || 'Untitled Page',
+        content: n.content || '',
+        folder_id: n.folder_id || null,
+        author_user_id: n.user_id,
+        created_by: n.user_id,
+        is_private: true,
+        permitted_editors: [],
+        author_name: (currentUser && currentUser.fullName) || 'You (Private)',
+        is_personal: true
+      }));
+
+      populateFolderSelectDropdown();
+      renderPagesList();
+
+      if (pages.length === 0) {
+        if (folders.length === 0) {
+          list.innerHTML = '<div class="nb-empty-pages">No private pages yet.<br>Click <strong>+ Folder</strong> or <strong>+ New Page</strong> to start.</div>';
+        }
+        clearEditor();
+        return;
+      }
+
+      if (!currentPageId || !pages.find(p => Number(p.id) === Number(currentPageId))) {
+        openPage(pages[0]);
+      } else {
+        const refreshed = pages.find(p => Number(p.id) === Number(currentPageId));
+        if (refreshed) applyPagePermissionsUI(refreshed);
+      }
+      return;
+    }
+
     // Load folders
     if (currentGroupId) {
       try {
@@ -1272,12 +1551,14 @@ async function createNewFolderPrompt() {
   if (!name || !name.trim()) return;
 
   try {
-    const res = await apiFetch('/api/notebooks/folders', {
+    const endpoint = isPersonalMode ? '/api/personal/folders' : '/api/notebooks/folders';
+    const res = await apiFetch(endpoint, {
       method: 'POST',
       body: JSON.stringify({
         groupId: currentGroupId,
         notebookId: currentNotebookId,
-        name: name.trim()
+        name: name.trim(),
+        is_private: isPersonalMode
       })
     });
     if (res && res.data) {
@@ -1302,7 +1583,10 @@ async function deleteFolderWithConfirm(folderId, folderName) {
   if (!confirmed) return;
 
   try {
-    await apiFetch(`/api/notebooks/folders/${folderId}?groupId=${encodeURIComponent(currentGroupId)}`, {
+    const endpoint = isPersonalMode
+      ? `/api/personal/folders/${folderId}`
+      : `/api/notebooks/folders/${folderId}?groupId=${encodeURIComponent(currentGroupId)}`;
+    await apiFetch(endpoint, {
       method: 'DELETE'
     });
     folders = folders.filter(f => Number(f.id) !== Number(folderId));
@@ -1331,6 +1615,7 @@ async function handleMovePageToFolder(folderIdVal) {
 
 /* ── Granular Creator-Based Page Permissions ── */
 function canCurrentUserEditPage(page) {
+  if (isPersonalMode) return true;
   if (!page || !page.id) return true; // Brand new unsaved page
   if (!currentUser) return false;
   const role = String(currentUser.role || currentGroupRole || 'member').toLowerCase();
@@ -1348,6 +1633,7 @@ function canCurrentUserEditPage(page) {
 }
 
 function canCurrentUserManagePermissions(page) {
+  if (isPersonalMode) return false;
   if (!page || !page.id || !currentUser) return false;
   const role = String(currentUser.role || currentGroupRole || 'member').toLowerCase();
   if (role === 'leader' || role === 'co_leader') return true;
@@ -1467,16 +1753,31 @@ async function saveSharePermissions() {
   }
 }
 
-/* ── Page Navigation & Auto-Title System ── */
+/* ── Mobile Drawer Toggle & Page Navigation ── */
+function toggleNbMobileSidebar(forceState) {
+  const sidebar = document.getElementById('nbSidebar') || document.querySelector('.nb-sidebar');
+  const overlay = document.getElementById('nbSidebarOverlay');
+  if (!sidebar) return;
+  const isOpen = typeof forceState === 'boolean' ? forceState : !sidebar.classList.contains('open');
+  sidebar.classList.toggle('open', isOpen);
+  if (overlay) overlay.classList.toggle('open', isOpen);
+}
+
 function openPageById(id) {
   const p = pages.find(pg => Number(pg.id) === Number(id));
   if (p) openPage(p);
 }
 
 function openPage(page) {
+  toggleNbMobileSidebar(false);
   currentPageId = page.id;
   currentFolderId = page.folder_id || null;
   populateFolderSelectDropdown();
+
+  const titleEl = manualTitleInput || document.getElementById('nbPageTitle');
+  if (titleEl) {
+    titleEl.value = page.title || '';
+  }
 
   const editor = document.getElementById('nbPageContent');
   const { shapes, html } = deserializePageContent(page.content || '');
@@ -1500,6 +1801,11 @@ function clearEditor(folderId = null) {
   currentFolderId = folderId || null;
   populateFolderSelectDropdown();
 
+  const titleEl = manualTitleInput || document.getElementById('nbPageTitle');
+  if (titleEl) {
+    titleEl.value = '';
+  }
+
   const editor = document.getElementById('nbPageContent');
   if (editor) editor.innerHTML = '';
   currentShapes = [];
@@ -1508,29 +1814,33 @@ function clearEditor(folderId = null) {
 
   applyPagePermissionsUI({ id: null, created_by: currentUser ? currentUser.id : null });
   document.getElementById('nbAuthorInfo').textContent = '✍️ ' + ((currentUser && currentUser.fullName) || 'You');
-  document.getElementById('nbSaveStatus').textContent = 'New page (auto-titles on save)';
+  document.getElementById('nbSaveStatus').textContent = 'New page (custom title or auto-titles on save)';
 }
 
 function newPage(folderId = null) {
+  toggleNbMobileSidebar(false);
   clearEditor(folderId);
   const editor = document.getElementById('nbPageContent');
   if (editor) editor.focus();
   document.querySelectorAll('.nb-page-item').forEach(el => el.classList.remove('active'));
-  showToast('New page started! Type in the canvas — first phrase becomes the title.', 'info');
+  showToast('New page started! Enter a custom title or let the canvas auto-title on save.', 'info');
 }
 
 /**
- * 1. AUTO-TITLE SYSTEM (MICROSOFT OFFICE STYLE):
- * Automatically extracts the title of the notebook page from the first non-empty
- * word/phrase/sentence typed into the note canvas upon saving.
+ * 1 & 2. INDEPENDENT FILE/PAGE TITLE EDITING & HYBRID AUTO-TITLING (MICROSOFT OFFICE STYLE):
+ * - When a user manually inputs or edits the title field, preserve their exact custom title string:
+ *   title = manualTitleInput.value.trim()
+ * - If the user leaves the title input blank (or clears it), fall back to extracting the page title
+ *   automatically from the first non-empty word, phrase, or sentence typed inside the note content canvas.
+ * - If both the title input field and the canvas are completely empty, set a clean default title ("Untitled Note").
  */
 function extractAutoTitle() {
   const editor = document.getElementById('nbPageContent');
   let rawText = editor ? (editor.innerText || editor.textContent || '').trim() : '';
 
-  // If main canvas is empty, check if any floating text box has text
+  // If main canvas is empty, check if any floating text box or shape has text
   if (!rawText && currentShapes.length > 0) {
-    const tbWithText = currentShapes.find(s => s.type === 'textbox' && s.text && s.text.trim());
+    const tbWithText = currentShapes.find(s => s.text && s.text.trim());
     if (tbWithText) {
       const tmp = document.createElement('div');
       tmp.innerHTML = tbWithText.text;
@@ -1538,10 +1848,10 @@ function extractAutoTitle() {
     }
   }
 
-  if (!rawText) return 'Untitled Page';
+  if (!rawText) return 'Untitled Note';
 
   const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  if (lines.length === 0) return 'Untitled Page';
+  if (lines.length === 0) return 'Untitled Note';
 
   const firstLine = lines[0];
   const sentenceMatch = firstLine.match(/^(.+?[.!?])(\s|$)/);
@@ -1550,7 +1860,16 @@ function extractAutoTitle() {
   if (titleCandidate.length > 55) {
     titleCandidate = titleCandidate.slice(0, 52) + '...';
   }
-  return titleCandidate.trim() || 'Untitled Page';
+  return titleCandidate.trim() || 'Untitled Note';
+}
+
+function resolvePageTitle() {
+  const titleEl = manualTitleInput || document.getElementById('nbPageTitle');
+  const manualTitle = titleEl ? titleEl.value.trim() : '';
+  if (manualTitle) {
+    return manualTitle;
+  }
+  return extractAutoTitle();
 }
 
 function serializePageContent() {
@@ -1582,15 +1901,57 @@ async function saveCurrentPage() {
     return;
   }
 
-  const title = extractAutoTitle();
+  const titleEl = manualTitleInput || document.getElementById('nbPageTitle');
+  const manualTitle = titleEl ? titleEl.value.trim() : '';
+  const title = manualTitle || extractAutoTitle();
+  if (titleEl && !manualTitle) {
+    titleEl.value = title;
+  }
   const serializedContent = serializePageContent();
 
+  // Immediately sync in-memory page object & sidebar/folder tree
+  if (currentPageObj) {
+    currentPageObj.title = title;
+    currentPageObj.content = serializedContent;
+    currentPageObj.folder_id = currentFolderId;
+    renderPagesList();
+  }
+
   const btn = document.getElementById('savePageBtn');
-  const orig = btn ? btn.textContent : '💾 Save Page';
+  const orig = btn ? btn.textContent : 'Save Page';
   if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
   document.getElementById('nbSaveStatus').textContent = 'Saving...';
 
   try {
+    if (isPersonalMode) {
+      if (currentPageId) {
+        await apiFetch('/api/personal/' + currentPageId, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            title,
+            content: serializedContent,
+            folder_id: currentFolderId,
+            is_private: true
+          })
+        });
+      } else {
+        const res = await apiFetch('/api/personal', {
+          method: 'POST',
+          body: JSON.stringify({
+            type: 'NOTE',
+            title,
+            content: serializedContent,
+            folder_id: currentFolderId,
+            is_private: true
+          })
+        });
+        currentPageId = (res.data && res.data.id) ? res.data.id : res.data;
+      }
+      document.getElementById('nbSaveStatus').textContent = 'Saved Private Note ' + new Date().toLocaleTimeString();
+      await loadPages();
+      return;
+    }
+
     const isLegacy = currentPageObj && currentPageObj.is_legacy;
 
     if (currentPageId) {
@@ -1637,14 +1998,30 @@ function scheduleAutoSave() {
   autoSaveTimer = setTimeout(saveCurrentPage, 3500);
 }
 
+function syncActiveTitleToSidebar() {
+  const effectiveTitle = resolvePageTitle();
+  const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+  if (currentPageObj) {
+    currentPageObj.title = effectiveTitle;
+  }
+  document.querySelectorAll('.nb-page-item.active .nb-page-item-title').forEach(el => {
+    el.textContent = effectiveTitle;
+  });
+}
+
 function setupEditorListeners() {
+  const titleEl = manualTitleInput || document.getElementById('nbPageTitle');
+  if (titleEl) {
+    titleEl.addEventListener('input', () => {
+      syncActiveTitleToSidebar();
+      scheduleAutoSave();
+    });
+  }
+
   const editor = document.getElementById('nbPageContent');
   if (editor) {
     editor.addEventListener('input', () => {
-      const activeTitleEl = document.querySelector('.nb-page-item.active .nb-page-item-title');
-      if (activeTitleEl) {
-        activeTitleEl.textContent = extractAutoTitle();
-      }
+      syncActiveTitleToSidebar();
       updateWordCount();
       scheduleAutoSave();
     });
@@ -1744,7 +2121,7 @@ function handleInsertShapeSelect(selectEl) {
 }
 
 function isLineType(type) {
-  return ['line', 'straight_line', 'dashed_line', 'arrow', 'straight_arrow_line', 'broken_arrow_line'].includes(type);
+  return ['line', 'straight_line', 'dashed_line', 'arrow', 'arrow_line', 'straight_arrow_line', 'dashed_arrow_line', 'broken_arrow_line'].includes(type);
 }
 
 function insertShape(type) {
@@ -1761,11 +2138,18 @@ function insertShape(type) {
 
   let w = 160, h = 95;
   if (type === 'circle') { w = 115; h = 115; }
+  else if (type === 'diamond') { w = 150; h = 110; }
+  else if (type === 'oval') { w = 165; h = 75; }
   else if (isLineType(type)) { w = 180; h = 36; }
   else if (type === 'callout') { w = 175; h = 90; }
 
   const x = Math.max(30, Math.min(canvasW - w - 40, 50 + (currentShapes.length * 22) % 240));
   const y = 50 + (currentShapes.length * 26) % 260;
+
+  let defaultText = '';
+  if (type === 'callout') defaultText = 'Callout Note';
+  else if (type === 'diamond') defaultText = 'Decision?';
+  else if (type === 'oval') defaultText = 'Start / End';
 
   const newShape = {
     id,
@@ -1778,7 +2162,7 @@ function insertShape(type) {
     strokeWidth,
     fillColor,
     strokeColor,
-    text: type === 'callout' ? 'Callout Note' : ''
+    text: defaultText
   };
 
   currentShapes.push(newShape);
@@ -1876,9 +2260,24 @@ function createShapeElement(shapeData) {
   const t = shapeData.type;
 
   if (t === 'rectangle') {
-    innerVisual = `<div style="width:100%; height:100%; border:${sw}px solid ${stroke}; background:${fill}; border-radius:6px; box-sizing:border-box;"></div>`;
+    innerVisual = `<div style="width:100%; height:100%; border:${sw}px solid ${stroke}; background:${fill}; border-radius:6px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding:6px;"><div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}" style="text-align:center; font-weight:600; color:${stroke}; width:100%;">${shapeData.text || ''}</div></div>`;
   } else if (t === 'circle') {
-    innerVisual = `<div style="width:100%; height:100%; border:${sw}px solid ${stroke}; background:${fill}; border-radius:50%; box-sizing:border-box;"></div>`;
+    innerVisual = `<div style="width:100%; height:100%; border:${sw}px solid ${stroke}; background:${fill}; border-radius:50%; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding:10px;"><div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}" style="text-align:center; font-weight:600; color:${stroke}; width:100%;">${shapeData.text || ''}</div></div>`;
+  } else if (t === 'diamond') {
+    innerVisual = `
+      <div style="width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center;">
+        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute; inset:0; display:block; overflow:visible;">
+          <polygon points="50,3 97,50 50,97 3,50" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round" />
+        </svg>
+        <div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}" style="position:relative; z-index:2; text-align:center; font-weight:600; font-size:12.5px; color:${stroke}; width:66%; max-height:70%; overflow:hidden;">${shapeData.text || 'Decision?'}</div>
+      </div>
+    `;
+  } else if (t === 'oval') {
+    innerVisual = `
+      <div style="width:100%; height:100%; border:${sw}px solid ${stroke}; background:${fill}; border-radius:999px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding:6px 14px;">
+        <div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}" style="text-align:center; font-weight:600; color:${stroke}; width:100%;">${shapeData.text || 'Terminal'}</div>
+      </div>
+    `;
   } else if (t === 'line' || t === 'straight_line') {
     innerVisual = `
       <svg width="100%" height="100%" viewBox="0 0 100 36" preserveAspectRatio="none" style="display:block; overflow:visible;">
@@ -1891,7 +2290,7 @@ function createShapeElement(shapeData) {
         <line x1="4" y1="18" x2="96" y2="18" stroke="${stroke}" stroke-width="${sw}" stroke-dasharray="8,6" stroke-linecap="round" />
       </svg>
     `;
-  } else if (t === 'arrow' || t === 'straight_arrow_line') {
+  } else if (t === 'arrow' || t === 'arrow_line' || t === 'straight_arrow_line') {
     innerVisual = `
       <svg width="100%" height="100%" viewBox="0 0 100 36" preserveAspectRatio="none" style="display:block; overflow:visible;">
         <defs>
@@ -1902,7 +2301,7 @@ function createShapeElement(shapeData) {
         <line x1="4" y1="18" x2="88" y2="18" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" marker-end="url(#ah_${shapeData.id})" />
       </svg>
     `;
-  } else if (t === 'broken_arrow_line') {
+  } else if (t === 'dashed_arrow_line' || t === 'broken_arrow_line') {
     innerVisual = `
       <svg width="100%" height="100%" viewBox="0 0 100 36" preserveAspectRatio="none" style="display:block; overflow:visible;">
         <defs>
@@ -2196,7 +2595,7 @@ function handleImportFile(event) {
 }
 
 async function exportPage(format) {
-  const title = extractAutoTitle();
+  const title = resolvePageTitle();
   const editor = document.getElementById('nbPageContent');
   const textContent = editor ? (editor.innerText || editor.textContent || '') : '';
   const htmlContent = editor ? editor.innerHTML : '';

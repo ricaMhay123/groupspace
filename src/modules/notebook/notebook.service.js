@@ -16,14 +16,21 @@ const { sanitizeText } = require('../../utils/validation.util');
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 /**
- * Automatically extract the page title from the first non-empty word/phrase/sentence
- * of content if an explicit title is not provided.
+ * Hybrid Auto-Titling System (Microsoft Office Style):
+ * 1. When a user manually inputs or edits the title field, preserve their exact custom title string upon saving.
+ * 2. If the user leaves the title input blank (or clears it), fall back to extracting the page title
+ *    automatically from the first non-empty word, phrase, or sentence typed inside the note content canvas.
+ * 3. If both the title input field and the canvas are completely empty, set a clean default title ("Untitled Note").
  */
 function extractAutoTitleFromContent(title, content) {
-  const cleanExplicit = sanitizeText(title);
-  if (cleanExplicit) return cleanExplicit;
+  if (arguments.length === 1) {
+    content = title;
+    title = '';
+  }
+  const manualTitle = typeof title === 'string' ? title.trim().replace(/[<>]/g, '') : '';
+  if (manualTitle) return manualTitle;
 
-  if (!content) return 'Untitled Page';
+  if (!content) return 'Untitled Note';
   const stripped = String(content)
     .replace(/^<!--GS_SHAPES_JSON:.*?-->/s, '')
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
@@ -38,9 +45,9 @@ function extractAutoTitleFromContent(title, content) {
     .replace(/&quot;/gi, '"')
     .trim();
 
-  if (!stripped) return 'Untitled Page';
+  if (!stripped) return 'Untitled Note';
   const lines = stripped.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  if (lines.length === 0) return 'Untitled Page';
+  if (lines.length === 0) return 'Untitled Note';
 
   const firstLine = lines[0];
   const sentenceMatch = firstLine.match(/^(.+?[.!?])(\s|$)/);
@@ -48,7 +55,7 @@ function extractAutoTitleFromContent(title, content) {
   if (candidate.length > 55) {
     candidate = candidate.slice(0, 52) + '...';
   }
-  return sanitizeText(candidate) || 'Untitled Page';
+  return sanitizeText(candidate) || 'Untitled Note';
 }
 
 /**
@@ -389,7 +396,7 @@ async function updatePage({ pageId, notebookId, folderId, title, content, positi
     ? extractAutoTitleFromContent(title, content !== undefined ? content : page.content)
     : undefined;
 
-  return await NotebookPageModel.update(pageId, {
+  const updatedPage = await NotebookPageModel.update(pageId, {
     title:            resolvedTitle,
     content,
     position,
@@ -397,6 +404,20 @@ async function updatePage({ pageId, notebookId, folderId, title, content, positi
     permittedEditors,
     editorUserId
   });
+
+  // Sync title/folder/content with flat notes table if a linked note exists
+  try {
+    const linkedNote = await NoteModel.findById(pageId);
+    if (linkedNote && Number(linkedNote.group_id) === Number(notebook.group_id)) {
+      const noteUpdates = {};
+      if (resolvedTitle !== undefined) noteUpdates.title = resolvedTitle;
+      if (content !== undefined) noteUpdates.content = content;
+      if (folderId !== undefined) noteUpdates.folder_id = folderId;
+      await NoteModel.update(pageId, noteUpdates);
+    }
+  } catch (e) {}
+
+  return updatedPage;
 }
 
 async function deletePage({ pageId, notebookId, userId, groupRole }) {
@@ -514,6 +535,19 @@ async function updateNote({ noteId, groupId, folderId, title, content, tags, isP
   if (permittedEditors !== undefined) updates.permitted_editors = permittedEditors;
 
   const updated = await NoteModel.update(noteId, updates);
+
+  // Also sync title/content/folder to notebook_pages if a corresponding page row exists
+  try {
+    const linkedPage = await NotebookPageModel.findById(noteId);
+    if (linkedPage) {
+      await NotebookPageModel.update(noteId, {
+        title: updates.title,
+        content: updates.content,
+        folderId: updates.folder_id,
+        editorUserId: userId
+      });
+    }
+  } catch (e) {}
 
   try {
     await GroupModel.logActivity({

@@ -176,6 +176,14 @@ async function switchWorkspace(groupId) {
     // Populate dropdowns that depend on group members
     populateMemberDropdowns(currentGroupDetails.members || []);
 
+    // Check if URL requested a specific tab (e.g. ?tab=personal)
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestedTab = urlParams.get('tab');
+    if (requestedTab && ['overview', 'tasks', 'calendar', 'notebook', 'expenses', 'discussions', 'personal'].includes(requestedTab)) {
+      switchTab(requestedTab);
+      return;
+    }
+
     // Refresh active view
     refreshCurrentView();
   } catch (err) {
@@ -206,9 +214,23 @@ function populateMemberDropdowns(members) {
   }
 }
 
+// ================= MOBILE SIDEBAR DRAWER TOGGLE ================= //
+function toggleMobileSidebar(forceState) {
+  const sidebar = document.getElementById('dashboardSidebar') || document.querySelector('.dashboard-sidebar');
+  const overlay = document.getElementById('sidebarDrawerOverlay');
+  if (!sidebar) return;
+
+  const isOpen = typeof forceState === 'boolean' ? forceState : !sidebar.classList.contains('open');
+  sidebar.classList.toggle('open', isOpen);
+  if (overlay) {
+    overlay.classList.toggle('open', isOpen);
+  }
+}
+
 // ================= TAB NAVIGATION ================= //
 function switchTab(tabName) {
   currentTab = tabName;
+  toggleMobileSidebar(false);
 
   // Update sidebar menu active state
   const menuItems = document.querySelectorAll('#sidebarMenu li');
@@ -1492,11 +1514,11 @@ function extractDashboardAutoTitle(rawContent = '') {
     .replace(/<[^>]*>/g, ' ')
     .replace(/&nbsp;/gi, ' ')
     .trim();
-  if (!cleaned) return 'Untitled Page';
+  if (!cleaned) return 'Untitled Note';
   const firstLine = cleaned.split(/\r?\n/).map(l => l.trim()).find(Boolean) || cleaned;
   const sentenceMatch = firstLine.match(/^(.+?[.!?])(?:\s|$)/);
   const candidate = (sentenceMatch ? sentenceMatch[1] : firstLine).trim();
-  return candidate.length > 65 ? candidate.slice(0, 65).trim() : candidate;
+  return (candidate.length > 65 ? candidate.slice(0, 65).trim() : candidate) || 'Untitled Note';
 }
 
 async function loadDashboardFolders() {
@@ -1863,12 +1885,6 @@ async function handleCreateNote(e) {
   const tags     = tagsEl ? tagsEl.value.trim() : '';
   const isPinned = pinnedEl ? pinnedEl.checked : false;
   const folderId = (folderEl && folderEl.value) ? Number(folderEl.value) : null;
-
-  if (!content.trim() && !manualTitle) {
-    showToast('Please type some content into the note canvas.', 'error');
-    if (contentEl) contentEl.focus();
-    return;
-  }
 
   // Find submit button to toggle loading state and prevent duplicate submissions
   const submitBtn = e && e.target ? e.target.querySelector('button[type="submit"]') : null;
@@ -2420,60 +2436,355 @@ async function handlePostComment(e) {
 }
 
 // ================= TAB 6: ISOLATED PERSONAL SPACE ================= //
+let personalNotebookFolders = [];
+let personalNotebookNotesCache = [];
+let activePersonalFolderFilter = 'ALL';
+let personalSearchDebounceTimer = null;
+
+function ensurePersonalNotebookToolbars() {
+  if (typeof renderNotebookRichTextToolbar === 'function') {
+    if (document.getElementById('personalNotebookToolbarContainer')) {
+      renderNotebookRichTextToolbar('personalNotebookToolbarContainer', 'personalNotebookCanvas');
+    }
+    if (document.getElementById('personalModalToolbarContainer')) {
+      renderNotebookRichTextToolbar('personalModalToolbarContainer', 'personalItemContent');
+    }
+  }
+}
+
 function switchPersonalSubTab(type) {
   personalSubTab = type;
   document.querySelectorAll('.personal-tab-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.textContent.includes(type === 'NOTE' ? 'Notes' : type === 'TASK' ? 'To-Dos' : 'Budget'));
+    const isMatch = (type === 'NOTE' && (btn.textContent.includes('Note') || btn.textContent.includes('Notebook'))) ||
+      (type === 'TASK' && btn.textContent.includes('To-Dos')) ||
+      (type === 'EXPENSE' && btn.textContent.includes('Budget'));
+    btn.classList.toggle('active', isMatch);
   });
 
+  const wsEl = document.getElementById('personalNotebookWorkspace');
+  if (wsEl) {
+    wsEl.style.display = type === 'NOTE' ? 'block' : 'none';
+  }
+
+  const addBtn = document.getElementById('personalAddBtn');
+  if (addBtn) {
+    addBtn.textContent = type === 'NOTE' ? '+ New Page' : (type === 'TASK' ? '+ Add To-Do' : '+ Log Expense');
+  }
+
   const headingMap = {
-    NOTE: 'Private Notes',
+    NOTE: 'Private Notebook Pages',
     TASK: 'Personal To-Dos',
     EXPENSE: 'Personal Budget & Expenses'
   };
-  document.getElementById('personalSubTabTitle').textContent = headingMap[type];
+  const titleEl = document.getElementById('personalSubTabTitle');
+  if (titleEl) titleEl.textContent = headingMap[type];
+
+  if (type === 'NOTE') {
+    ensurePersonalNotebookToolbars();
+  }
   loadPersonalItems();
 }
 
 function openPersonalAddModal() {
   const headingMap = {
-    NOTE: 'Add Private Note',
+    NOTE: 'Create Private Notebook Page (Auto-Titled)',
     TASK: 'Add Personal To-Do',
     EXPENSE: 'Log Personal Expense'
   };
-  document.getElementById('personalModalHeading').textContent = headingMap[personalSubTab];
-  document.getElementById('personalAmountGroup').style.display = personalSubTab === 'EXPENSE' ? 'block' : 'none';
-  document.getElementById('personalItemTitle').placeholder = personalSubTab === 'EXPENSE' ? 'Item name (e.g. Textbook)' : 'Title';
+  const headingEl = document.getElementById('personalModalHeading');
+  if (headingEl) headingEl.textContent = headingMap[personalSubTab];
+
+  const titleGroup = document.getElementById('personalTitleGroup');
+  const titleLabel = document.getElementById('personalItemTitleLabel');
+  const titleInput = document.getElementById('personalItemTitle');
+  const folderGroup = document.getElementById('personalFolderGroup');
+  const amountGroup = document.getElementById('personalAmountGroup');
+
+  if (personalSubTab === 'NOTE') {
+    if (titleGroup) titleGroup.style.display = 'block';
+    if (titleLabel) titleLabel.textContent = 'Page Title (Optional — leave blank to auto-title)';
+    if (titleInput) {
+      titleInput.required = false;
+      titleInput.placeholder = 'Enter custom title, or leave blank to auto-title from canvas...';
+      titleInput.value = '';
+    }
+    if (folderGroup) folderGroup.style.display = 'block';
+    if (amountGroup) amountGroup.style.display = 'none';
+    populatePersonalFolderSelects();
+    ensurePersonalNotebookToolbars();
+  } else {
+    if (titleGroup) titleGroup.style.display = 'block';
+    if (titleLabel) titleLabel.textContent = 'Title *';
+    if (titleInput) {
+      titleInput.required = true;
+      titleInput.placeholder = personalSubTab === 'EXPENSE' ? 'Item name (e.g. Textbook)' : 'Task title';
+    }
+    if (folderGroup) folderGroup.style.display = 'none';
+    if (amountGroup) amountGroup.style.display = personalSubTab === 'EXPENSE' ? 'block' : 'none';
+  }
+
   openModal('personalItemModal');
 }
 
-async function loadPersonalItems() {
+async function loadPersonalFolders() {
   try {
-    const res = await apiFetch(`/api/personal?type=${personalSubTab}`);
+    const res = await apiFetch('/api/personal/folders');
+    personalNotebookFolders = (res && Array.isArray(res.data)) ? res.data : [];
+  } catch (e) {
+    personalNotebookFolders = [];
+  }
+  renderPersonalFoldersBar();
+  populatePersonalFolderSelects();
+}
+
+function renderPersonalFoldersBar() {
+  const bar = document.getElementById('personalNotebookFoldersBar');
+  if (!bar) return;
+
+  let html = `
+    <button type="button" onclick="filterPersonalNotesByFolder('ALL')"
+      style="padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid ${activePersonalFolderFilter === 'ALL' ? '#38bdf8' : 'var(--border)'}; background:${activePersonalFolderFilter === 'ALL' ? '#0f172a' : 'var(--card)'}; color:${activePersonalFolderFilter === 'ALL' ? '#ffffff' : 'var(--text)'};">
+      All Private Pages
+    </button>
+  `;
+
+  personalNotebookFolders.forEach(f => {
+    const isActive = String(activePersonalFolderFilter) === String(f.id);
+    html += `
+      <div style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; border:1px solid ${isActive ? '#38bdf8' : 'var(--border)'}; background:${isActive ? '#0f172a' : 'var(--card)'}; color:${isActive ? '#ffffff' : 'var(--text)'};">
+        <span style="cursor:pointer;" onclick="filterPersonalNotesByFolder(${f.id})">${escapeHtml(f.name)}</span>
+        <span style="cursor:pointer; color:#f87171; font-size:11px; margin-left:4px;" title="Delete Private Folder" onclick="deletePersonalFolder(${f.id}, event)">✕</span>
+      </div>
+    `;
+  });
+
+  bar.innerHTML = html;
+}
+
+function populatePersonalFolderSelects() {
+  const optionsHtml = '<option value="">Uncategorized (Root)</option>' +
+    personalNotebookFolders.map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
+
+  const modalSelect = document.getElementById('personalItemFolderSelect');
+  if (modalSelect) {
+    modalSelect.innerHTML = optionsHtml;
+    if (activePersonalFolderFilter !== 'ALL') modalSelect.value = String(activePersonalFolderFilter);
+  }
+
+  const inlineSelect = document.getElementById('personalInlineFolderSelect');
+  if (inlineSelect) {
+    inlineSelect.innerHTML = optionsHtml;
+    if (activePersonalFolderFilter !== 'ALL') inlineSelect.value = String(activePersonalFolderFilter);
+  }
+}
+
+function filterPersonalNotesByFolder(folderId) {
+  activePersonalFolderFilter = folderId;
+  renderPersonalFoldersBar();
+  renderPersonalNotesGrid(personalNotebookNotesCache);
+}
+
+async function promptCreatePersonalFolder() {
+  const name = window.prompt('Enter new private folder name:');
+  if (!name || !name.trim()) return;
+  try {
+    await apiFetch('/api/personal/folders', {
+      method: 'POST',
+      body: JSON.stringify({ name: name.trim(), is_private: true })
+    });
+    showToast('Private folder created!', 'success');
+    await loadPersonalFolders();
+  } catch (err) {
+    showToast(err.message || 'Failed to create private folder.', 'error');
+  }
+}
+
+async function deletePersonalFolder(folderId, e) {
+  if (e) e.stopPropagation();
+  const confirmed = window.confirm('Are you sure you want to delete this folder and all notes inside it? This action cannot be undone.');
+  if (!confirmed) return;
+
+  try {
+    await apiFetch(`/api/personal/folders/${folderId}`, { method: 'DELETE' });
+    if (String(activePersonalFolderFilter) === String(folderId)) {
+      activePersonalFolderFilter = 'ALL';
+    }
+    showToast('Private folder and its notes deleted.', 'success');
+    await loadPersonalItems();
+  } catch (err) {
+    showToast(err.message || 'Failed to delete private folder.', 'error');
+  }
+}
+
+function debouncePersonalNotesSearch() {
+  clearTimeout(personalSearchDebounceTimer);
+  personalSearchDebounceTimer = setTimeout(() => {
+    const q = document.getElementById('personalNoteSearchInput')?.value.trim() || '';
+    loadPersonalItems(q);
+  }, 300);
+}
+
+async function handlePersonalImportDocument(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    const rawText = String(ev.target.result || '');
+    const autoTitle = extractDashboardAutoTitle(rawText);
+    const folderId = activePersonalFolderFilter !== 'ALL' ? Number(activePersonalFolderFilter) : null;
+    try {
+      const res = await apiFetch('/api/personal', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'NOTE',
+          title: autoTitle,
+          content: rawText,
+          folder_id: folderId,
+          tags: 'imported,private',
+          is_private: true
+        })
+      });
+      showToast(`Imported private note "${autoTitle}"!`, 'success');
+      event.target.value = '';
+      await loadPersonalItems();
+      if (res && res.data && res.data.id) {
+        window.location.href = `/notebook.html?personal=1${currentGroupId ? '&groupId=' + currentGroupId : ''}&noteId=${res.data.id}`;
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to import private document.', 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+async function saveInlinePersonalNotebookPage() {
+  const canvasEl = document.getElementById('personalNotebookCanvas');
+  if (!canvasEl) return;
+  const titleInput = document.getElementById('personalNotebookTitleInput');
+  const manualTitle = titleInput ? titleInput.value.trim() : '';
+  const htmlContent = (canvasEl.innerHTML || '').trim();
+  const textContent = (canvasEl.innerText || canvasEl.textContent || '').trim();
+
+  const resolvedTitle = manualTitle || extractDashboardAutoTitle(textContent || htmlContent);
+  const folderEl = document.getElementById('personalInlineFolderSelect');
+  const folderId = (folderEl && folderEl.value) ? Number(folderEl.value) : null;
+
+  try {
+    const res = await apiFetch('/api/personal', {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'NOTE',
+        title: resolvedTitle,
+        content: htmlContent,
+        folder_id: folderId,
+        is_private: true
+      })
+    });
+    if (titleInput) titleInput.value = '';
+    canvasEl.innerHTML = '';
+    showToast(`Private page "${resolvedTitle}" saved!`, 'success');
+    await loadPersonalItems();
+    const newId = res && res.data ? res.data.id : null;
+    if (newId) {
+      window.location.href = `/notebook.html?personal=1${currentGroupId ? '&groupId=' + currentGroupId : ''}&noteId=${newId}`;
+    }
+  } catch (err) {
+    showToast(err.message || 'Failed to save private page.', 'error');
+  }
+}
+
+async function movePersonalNoteToFolder(noteId, folderIdValue) {
+  const folderId = folderIdValue ? Number(folderIdValue) : null;
+  try {
+    await apiFetch(`/api/personal/${noteId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ folder_id: folderId, is_private: true })
+    });
+    showToast('Moved private page to folder.', 'success');
+    await loadPersonalItems();
+  } catch (err) {
+    showToast(err.message || 'Failed to move private page.', 'error');
+  }
+}
+
+function renderPersonalNotesGrid(items) {
+  const container = document.getElementById('personalItemsContainer');
+  if (!container) return;
+
+  const filtered = activePersonalFolderFilter === 'ALL'
+    ? items
+    : items.filter(n => String(n.folder_id || '') === String(activePersonalFolderFilter));
+
+  if (!filtered || filtered.length === 0) {
+    container.innerHTML = '<p style="color:var(--gray); padding:30px;">Your private notebook has no pages in this view. Type in the canvas above or click <strong>+ New Page</strong>!</p>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(n => {
+    const displayTitle = n.title || extractDashboardAutoTitle(n.content || '');
+    const cleanPreview = (n.content || '').replace(/^<!--GS_SHAPES_JSON:.*?-->/, '').replace(/<[^>]*>/g, '').trim();
+    const fullEditorUrl = `/notebook.html?personal=1${currentGroupId ? '&groupId=' + currentGroupId : ''}&noteId=${n.id}`;
+
+    return `
+      <div class="note-card ${n.is_pinned ? 'pinned' : ''}" style="cursor:pointer;" onclick="window.location.href='${fullEditorUrl}'" title="Click to open in Isolated Personal Full Editor">
+        <div>
+          <h4 style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <span>${escapeHtml(displayTitle)}</span>
+            <span style="font-size:10.5px; padding:2px 8px; background:rgba(56,189,248,0.15); color:#38bdf8; border-radius:12px; font-weight:700; white-space:nowrap;">
+              Strictly Private
+            </span>
+          </h4>
+          <p style="white-space:pre-wrap;">${escapeHtml(cleanPreview.slice(0, 220))}${cleanPreview.length > 220 ? '…' : ''}</p>
+        </div>
+        <div onclick="event.stopPropagation();">
+          <div style="margin-top:8px; display:flex; align-items:center; justify-content:space-between; gap:6px; flex-wrap:wrap;">
+            <select onchange="movePersonalNoteToFolder(${n.id}, this.value)" style="font-size:11px; padding:2px 6px; border-radius:6px; background:var(--card); color:var(--text); border:1px solid var(--border); cursor:pointer;" title="Move to private folder">
+              <option value="">Uncategorized</option>
+              ${personalNotebookFolders.map(f => `<option value="${f.id}" ${Number(n.folder_id) === Number(f.id) ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px;">
+            <span>Only You</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.txt</button>
+              <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.pdf</button>
+              <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.docx</button>
+              <span style="cursor:pointer; color:#FF7272; margin-left:4px; font-size:11px; font-weight:600;" title="Delete Private Note" onclick="deletePersonalItem(${n.id})">Delete</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function loadPersonalItems(searchQuery = '') {
+  try {
+    ensurePersonalNotebookToolbars();
+    if (personalSubTab === 'NOTE') {
+      await loadPersonalFolders();
+    }
+
+    const qParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : '';
+    const res = await apiFetch(`/api/personal?type=${personalSubTab}${qParam}`);
     const items = res.data || [];
     const container = document.getElementById('personalItemsContainer');
+    if (!container) return;
 
-    if (items.length === 0) {
-      container.innerHTML = '<p style="color:var(--gray); padding:30px;">Your private space is empty for this category. Click "+ Add Item" to store private notes or tasks!</p>';
+    if (personalSubTab === 'NOTE') {
+      container.className = 'notebook-grid';
+      personalNotebookNotesCache = items;
+      renderPersonalNotesGrid(items);
       return;
     }
 
-    if (personalSubTab === 'NOTE') {
-      container.innerHTML = `
-        <div class="notebook-grid">
-          ${items.map(n => `
-            <div class="note-card">
-              <h4>${escapeHtml(n.title)}</h4>
-              <p>${escapeHtml(n.content || '')}</p>
-              <div class="note-meta">
-                <span>Private</span>
-                <span style="cursor:pointer; color:#FF7272; font-size:11px; font-weight:600;" onclick="deletePersonalItem(${n.id})">Delete</span>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-    } else if (personalSubTab === 'TASK') {
+    container.className = '';
+    if (items.length === 0) {
+      container.innerHTML = '<p style="color:var(--gray); padding:30px;">Your private space is empty for this category. Click "+ Add" to store private tasks or budget items!</p>';
+      return;
+    }
+
+    if (personalSubTab === 'TASK') {
       container.innerHTML = `
         <ul class="task-list">
           ${items.map(t => `
@@ -2516,24 +2827,37 @@ async function loadPersonalItems() {
 
 async function handleSavePersonalItem(e) {
   e.preventDefault();
-  const title = document.getElementById('personalItemTitle').value.trim();
-  const content = document.getElementById('personalItemContent').value;
-  const amount = parseFloat(document.getElementById('personalItemAmount').value) || 0;
+  const rawTitle = document.getElementById('personalItemTitle')?.value.trim() || '';
+  const content = document.getElementById('personalItemContent')?.value || '';
+  const amount = parseFloat(document.getElementById('personalItemAmount')?.value) || 0;
+  const folderEl = document.getElementById('personalItemFolderSelect');
+  const folderId = (folderEl && folderEl.value) ? Number(folderEl.value) : null;
+
+  // Hybrid Auto-Titling System for Notes: use manual title if provided, else extract from canvas, else "Untitled Note"
+  const title = personalSubTab === 'NOTE'
+    ? (rawTitle || extractDashboardAutoTitle(content))
+    : rawTitle;
 
   try {
-    await apiFetch('/api/personal', {
+    const res = await apiFetch('/api/personal', {
       method: 'POST',
       body: JSON.stringify({
         type: personalSubTab,
         title,
         content,
-        amount
+        amount,
+        folder_id: folderId,
+        is_private: true
       })
     });
     closeModal('personalItemModal');
     document.getElementById('personalItemForm').reset();
-    showToast('Saved to your private space!', 'success');
-    loadPersonalItems();
+    showToast('Saved to your isolated private space!', 'success');
+    await loadPersonalItems();
+
+    if (personalSubTab === 'NOTE' && res && res.data && res.data.id) {
+      window.location.href = `/notebook.html?personal=1${currentGroupId ? '&groupId=' + currentGroupId : ''}&noteId=${res.data.id}`;
+    }
   } catch (err) {
     showToast(err.message, 'error');
   }

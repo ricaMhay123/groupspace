@@ -19,10 +19,9 @@ const { requireGroupMembership, requireNotebookEditorAccess } = require('../../m
 router.use(authMiddleware);
 
 // ─── POST /api/notebooks/export/docx ─────────────────────────────────────────
-// Must be registered BEFORE parameterized routes.
+// Must be registered BEFORE parameterized routes. Supports both shared group notes and isolated personal notes.
 router.post(
   '/export/docx',
-  requireGroupMembership,
   ctrl.exportDocx
 );
 
