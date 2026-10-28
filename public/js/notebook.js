@@ -180,10 +180,10 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
       <div data-ribbon-section="home layout" style="display:flex; align-items:center; gap:4px;">
         <label style="font-size:11px; font-weight:700; color:#ffffff; margin:0;">Font:</label>
         <select id="nbFontFamily_${targetContainerId}" class="nb-tb-select" style="background:#1e293b !important; color:#ffffff !important; border:1px solid #475569; border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="applyNotebookFont(this.value, ${targetArg})">
-          <option value="Inter, sans-serif" selected>Inter</option>
-          <option value="Arial, sans-serif">Arial</option>
+          <option value="Arial, sans-serif" selected>Arial</option>
           <option value="Calibri, sans-serif">Calibri</option>
           <option value="'Times New Roman', Times, serif">Times New Roman</option>
+          <option value="Inter, sans-serif">Inter</option>
           <option value="Georgia, serif">Georgia</option>
         </select>
       </div>
@@ -204,11 +204,15 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
         </select>
       </div>
 
-      <!-- Text Styling: Bold, Italic, Underline -->
+      <!-- Text Styling: Bold, Italic, Underline, Strikethrough, Subscript, Superscript, Clear Formatting -->
       <div data-ribbon-section="home" style="display:flex; align-items:center; gap:4px;">
         <button type="button" onclick="applyNotebookCommand('bold', ${targetArg})" title="Bold" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; font-weight:700; cursor:pointer;"><b>B</b></button>
         <button type="button" onclick="applyNotebookCommand('italic', ${targetArg})" title="Italic" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; font-style:italic; cursor:pointer;"><i>I</i></button>
         <button type="button" onclick="applyNotebookCommand('underline', ${targetArg})" title="Underline" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; text-decoration:underline; cursor:pointer;"><u>U</u></button>
+        <button type="button" onclick="applyNotebookCommand('strikeThrough', ${targetArg})" title="Strikethrough" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; cursor:pointer;"><s>S</s></button>
+        <button type="button" onclick="applyNotebookCommand('subscript', ${targetArg})" title="Subscript (X₂)" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; cursor:pointer;">X<sub>2</sub></button>
+        <button type="button" onclick="applyNotebookCommand('superscript', ${targetArg})" title="Superscript (X²)" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; cursor:pointer;">X<sup>2</sup></button>
+        <button type="button" onclick="applyNotebookCommand('removeFormat', ${targetArg})" title="Clear Formatting" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; cursor:pointer;">Tx</button>
       </div>
 
       <!-- Text Color & Highlight Pickers -->
@@ -223,12 +227,26 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
         </label>
       </div>
 
-      <!-- Alignment: Left, Center, Right, Justify -->
+      <!-- Bullets & Numbering + Alignment: Left, Center, Right, Justify -->
       <div data-ribbon-section="home layout" style="display:flex; align-items:center; gap:4px;">
+        <button type="button" onclick="applyNotebookCommand('insertUnorderedList', ${targetArg})" title="Bullet List" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">• List</button>
+        <button type="button" onclick="applyNotebookCommand('insertOrderedList', ${targetArg})" title="Numbered List" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">1. List</button>
+
         <button type="button" onclick="applyNotebookCommand('justifyLeft', ${targetArg})" title="Align Left" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">Left</button>
         <button type="button" onclick="applyNotebookCommand('justifyCenter', ${targetArg})" title="Align Center" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">Center</button>
         <button type="button" onclick="applyNotebookCommand('justifyRight', ${targetArg})" title="Align Right" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">Right</button>
         <button type="button" onclick="applyNotebookCommand('justifyFull', ${targetArg})" title="Justify" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">Justify</button>
+      </div>
+
+      <!-- Insert HTML Table (Insert Tab) -->
+      <div data-ribbon-section="insert" style="display:flex; align-items:center; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#ffffff; margin:0;">Table:</label>
+        <select class="nb-tb-select" style="background:#1e293b !important; color:#ffffff !important; border:1px solid #475569; border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="if(this.value){ insertEmbeddedTable(this.value, ${targetArg}); this.value=''; }">
+          <option value="" disabled selected>+ Insert Table</option>
+          <option value="2x2">2 × 2 Table</option>
+          <option value="3x3">3 × 3 Table</option>
+          <option value="4x4">4 × 4 Table</option>
+        </select>
       </div>
 
       <!-- Insert Shape / Flowchart Elements & Connectors/Lines -->
@@ -358,6 +376,34 @@ function applyNotebookFontSizePx(sizePx, editorTargetId = null) {
     });
   } else {
     editorEl.style.fontSize = sizePx;
+  }
+}
+
+function insertEmbeddedTable(sizeStr, editorTargetId = null) {
+  const editorEl = resolveNotebookEditorElement(editorTargetId);
+  if (!editorEl) return;
+
+  const parts = sizeStr.split('x');
+  const cols = parseInt(parts[0], 10) || 2;
+  const rows = parseInt(parts[1], 10) || 2;
+
+  let tableHtml = '<table style="border-collapse:collapse; width:100%; margin:12px 0;" border="1"><thead><tr>';
+  for (let c = 1; c <= cols; c++) {
+    tableHtml += `<th contenteditable="true" style="padding:6px 10px; border:1px solid #cbd5e1; background:rgba(15,23,42,0.06);">Header ${c}</th>`;
+  }
+  tableHtml += '</tr></thead><tbody>';
+  for (let r = 1; r <= rows; r++) {
+    tableHtml += '<tr>';
+    for (let c = 1; c <= cols; c++) {
+      tableHtml += `<td contenteditable="true" style="padding:6px 10px; border:1px solid #cbd5e1;">Data ${r},${c}</td>`;
+    }
+    tableHtml += '</tr>';
+  }
+  tableHtml += '</tbody></table><p><br></p>';
+
+  if (editorEl.isContentEditable) {
+    editorEl.focus();
+    document.execCommand('insertHTML', false, tableHtml);
   }
 }
 

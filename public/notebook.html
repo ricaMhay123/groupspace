@@ -593,6 +593,49 @@
       min-height: 620px;
       position: relative !important;
       overflow: visible;
+      transition: max-width 0.2s ease, padding 0.2s ease;
+    }
+    .nb-canvas.orientation-landscape {
+      max-width: 1140px;
+      min-height: 520px;
+    }
+    .nb-canvas.columns-2 .nb-canvas-editor {
+      column-count: 2;
+      column-gap: 36px;
+      column-rule: 1px dashed var(--nb-border);
+    }
+    .nb-table-resizer {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 12px 0;
+    }
+    .nb-table-resizer th, .nb-table-resizer td {
+      border: 1px solid var(--nb-border, #cbd5e1);
+      padding: 8px 12px;
+      min-width: 48px;
+      min-height: 28px;
+    }
+    .nb-table-resizer th {
+      background: rgba(15, 23, 42, 0.06);
+      font-weight: 700;
+    }
+    .dark .nb-table-resizer th {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    /* HTML5 Digital Inking Canvas Overlay */
+    .nb-ink-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 15;
+      touch-action: none;
+    }
+    .nb-ink-canvas.active-ink {
+      pointer-events: auto;
+      cursor: crosshair;
     }
 
     /* ── Editable Page Title Bar (Independent Title + Hybrid Auto-Title Fallback) ── */
@@ -1027,45 +1070,15 @@
         <span id="nbPrivacyIndicator" style="margin-left:auto; font-size:11px; color:#94a3b8; font-weight:600;">Microsoft Word Style Rich Text &amp; Flowchart Canvas</span>
       </div>
 
-      <!-- [HOME] Text Styling: Bold, Italic, Underline, Text Color, Highlight -->
-      <div class="nb-toolbar-group" data-ribbon-group="home">
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Bold (Ctrl+B)" onclick="execFmt('bold')"><b>B</b></button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Italic (Ctrl+I)" onclick="execFmt('italic')"><i>I</i></button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Underline (Ctrl+U)" onclick="execFmt('underline')"><u>U</u></button>
-        <div class="nb-color-picker-wrap" title="Text Color (foreColor)">
-          <span>A</span>
-          <input type="color" id="nbTextColor" class="nb-edit-ctrl" value="#0f172a" onchange="applyTextColor(this.value)">
-        </div>
-        <div class="nb-color-picker-wrap" title="Text Highlight / Background (hiliteColor)">
-          <span>Highlight</span>
-          <input type="color" id="nbHighlightColor" class="nb-edit-ctrl" value="#fef08a" onchange="applyHighlightColor(this.value)">
-        </div>
-      </div>
-
-      <!-- [HOME / LAYOUT] Text Alignment: Left, Center, Right, Justify -->
-      <div class="nb-toolbar-group" data-ribbon-group="home layout">
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Left (justifyLeft)" onclick="execFmt('justifyLeft')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
-        </button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Center (justifyCenter)" onclick="execFmt('justifyCenter')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg>
-        </button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Right (justifyRight)" onclick="execFmt('justifyRight')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>
-        </button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Justify (justifyFull)" onclick="execFmt('justifyFull')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
-        </button>
-      </div>
-
-      <!-- [HOME / LAYOUT] Font Family & Numeric Font Sizes (12px - 36px) -->
+      <!-- [HOME] Font Family & Numeric Font Sizes (12px - 36px) -->
       <div class="nb-toolbar-group" data-ribbon-group="home layout">
         <label for="nbFontFamily">Font:</label>
         <select id="nbFontFamily" class="nb-edit-ctrl" onchange="applyFont(this.value)">
-          <option value="Inter, sans-serif" selected>Inter</option>
-          <option value="Arial, sans-serif">Arial</option>
+          <option value="Arial, sans-serif" selected>Arial</option>
           <option value="Calibri, sans-serif">Calibri</option>
           <option value="'Times New Roman', serif">Times New Roman</option>
+          <option value="Inter, sans-serif">Inter</option>
+          <option value="Georgia, serif">Georgia</option>
           <option value="'Courier New', monospace">Courier New</option>
         </select>
 
@@ -1081,18 +1094,67 @@
           <option value="32px">32px</option>
           <option value="36px">36px</option>
         </select>
+      </div>
+
+      <!-- [HOME] Text Styling: Bold, Italic, Underline, Strikethrough, Subscript, Superscript, Clear Formatting -->
+      <div class="nb-toolbar-group" data-ribbon-group="home">
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Bold (Ctrl+B)" onclick="execFmt('bold')"><b>B</b></button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Italic (Ctrl+I)" onclick="execFmt('italic')"><i>I</i></button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Underline (Ctrl+U)" onclick="execFmt('underline')"><u>U</u></button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Strikethrough" onclick="execFmt('strikeThrough')"><s>S</s></button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Subscript (X₂)" onclick="execFmt('subscript')">X<sub>2</sub></button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Superscript (X²)" onclick="execFmt('superscript')">X<sup>2</sup></button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Clear Formatting" onclick="execFmt('removeFormat')">Tx</button>
+
+        <div class="nb-color-picker-wrap" title="Text Color (foreColor)">
+          <span>A</span>
+          <input type="color" id="nbTextColor" class="nb-edit-ctrl" value="#0f172a" onchange="applyTextColor(this.value)">
+        </div>
+        <div class="nb-color-picker-wrap" title="Text Highlight / Background (hiliteColor)">
+          <span>Highlight</span>
+          <input type="color" id="nbHighlightColor" class="nb-edit-ctrl" value="#fef08a" onchange="applyHighlightColor(this.value)">
+        </div>
+      </div>
+
+      <!-- [HOME / PARAGRAPH] Bullets, Numbering, Text Alignment & Line Spacing -->
+      <div class="nb-toolbar-group" data-ribbon-group="home">
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Bullet List" onclick="execFmt('insertUnorderedList')">• List</button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Numbered List" onclick="execFmt('insertOrderedList')">1. List</button>
+
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Left (justifyLeft)" onclick="execFmt('justifyLeft')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+        </button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Center (justifyCenter)" onclick="execFmt('justifyCenter')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg>
+        </button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Right (justifyRight)" onclick="execFmt('justifyRight')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>
+        </button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Justify (justifyFull)" onclick="execFmt('justifyFull')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+        </button>
 
         <label for="nbLineHeight">Spacing:</label>
         <select id="nbLineHeight" class="nb-edit-ctrl" onchange="applyLineHeight(this.value)">
-          <option value="1.2">1.2</option>
-          <option value="1.5">1.5</option>
-          <option value="1.7" selected>1.7</option>
+          <option value="1.0">1.0</option>
+          <option value="1.15">1.15</option>
+          <option value="1.5" selected>1.5</option>
           <option value="2.0">2.0</option>
         </select>
       </div>
 
-      <!-- [INSERT / DRAW] Insert Shape / Flowchart Elements, Connectors & Lines, Text Boxes, Stroke & Fill -->
-      <div class="nb-toolbar-group" data-ribbon-group="insert draw">
+      <!-- [INSERT] Dynamic Table Generator, Vector Shapes & Text Boxes -->
+      <div class="nb-toolbar-group" data-ribbon-group="insert">
+        <label>Table:</label>
+        <select id="nbInsertTableSelect" class="nb-edit-ctrl" onchange="if(this.value){insertDynamicTable(this.value); this.value='';}" title="Insert Editable HTML Table">
+          <option value="" disabled selected>+ Insert Table</option>
+          <option value="2x2">2 × 2 Table</option>
+          <option value="3x3">3 × 3 Table</option>
+          <option value="4x4">4 × 4 Table</option>
+          <option value="5x3">5 Columns × 3 Rows</option>
+          <option value="custom">Custom Grid...</option>
+        </select>
+
         <select id="nbShapeSelect" class="nb-edit-ctrl" onchange="handleInsertShapeSelect(this)" style="color:#38bdf8 !important; font-weight:700;" title="Insert Shape / Flowchart Elements">
           <option value="" disabled selected>+ Insert Shape / Flowchart Elements</option>
           <optgroup label="Shapes &amp; Flowchart Nodes">
@@ -1117,9 +1179,10 @@
         </button>
 
         <label for="nbStrokeWidth">Stroke:</label>
-        <select id="nbStrokeWidth" class="nb-edit-ctrl" onchange="updateSelectedShapeStyle()" title="Line Stroke Thickness">
+        <select id="nbStrokeWidth" class="nb-edit-ctrl" onchange="updateSelectedShapeStyle()" title="Line Stroke Thickness (1px to 8px)">
           <option value="1">1px</option>
           <option value="2" selected>2px</option>
+          <option value="3">3px</option>
           <option value="4">4px</option>
           <option value="6">6px</option>
           <option value="8">8px</option>
@@ -1134,6 +1197,51 @@
           <span>Stroke</span>
           <input type="color" id="nbShapeStrokeColor" class="nb-edit-ctrl" value="#2563eb" onchange="updateSelectedShapeStyle()">
         </div>
+      </div>
+
+      <!-- [DRAW] Digital Inking Canvas (Pen, Highlighter, Eraser, Thickness & Color) -->
+      <div class="nb-toolbar-group" data-ribbon-group="draw">
+        <label>Ink Tools:</label>
+        <button type="button" id="nbInkPenBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('pen')" title="Pen tool">🖊️ Pen</button>
+        <button type="button" id="nbInkHighlighterBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('highlighter')" title="Highlighter tool">🖍️ Highlighter</button>
+        <button type="button" id="nbInkEraserBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('eraser')" title="Eraser tool">🧹 Eraser</button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="clearInkCanvas()" title="Clear all digital ink">Clear Ink</button>
+
+        <label for="nbInkThickness">Thickness:</label>
+        <select id="nbInkThickness" class="nb-edit-ctrl" onchange="updateInkingSettings()">
+          <option value="2">2px Fine</option>
+          <option value="4" selected>4px Medium</option>
+          <option value="8">8px Thick</option>
+          <option value="16">16px Marker</option>
+          <option value="24">24px Broad</option>
+        </select>
+
+        <div class="nb-color-picker-wrap" title="Ink Color">
+          <span>Color</span>
+          <input type="color" id="nbInkColor" class="nb-edit-ctrl" value="#2563eb" onchange="updateInkingSettings()">
+        </div>
+      </div>
+
+      <!-- [LAYOUT] Page Setup: Margins, Orientation & Column Splits -->
+      <div class="nb-toolbar-group" data-ribbon-group="layout">
+        <label for="nbPageMargins">Margins:</label>
+        <select id="nbPageMargins" class="nb-edit-ctrl" onchange="applyPageMargins(this.value)">
+          <option value="normal" selected>Normal (40px)</option>
+          <option value="narrow">Narrow (18px)</option>
+          <option value="wide">Wide (64px)</option>
+        </select>
+
+        <label for="nbPageOrientation">Orientation:</label>
+        <select id="nbPageOrientation" class="nb-edit-ctrl" onchange="applyPageOrientation(this.value)">
+          <option value="portrait" selected>Portrait</option>
+          <option value="landscape">Landscape</option>
+        </select>
+
+        <label for="nbPageColumns">Columns:</label>
+        <select id="nbPageColumns" class="nb-edit-ctrl" onchange="applyPageColumns(this.value)">
+          <option value="1" selected>Single</option>
+          <option value="2">Two-Column</option>
+        </select>
       </div>
 
       <!-- [LAYOUT / INSERT] Folder Assignment & Import/Export System -->
@@ -1164,6 +1272,9 @@
 
         <!-- Interactive Shapes, Lines & Text Boxes Overlay -->
         <div id="nbShapesLayer" class="nb-shapes-layer"></div>
+
+        <!-- Digital Inking HTML5 Canvas Overlay -->
+        <canvas id="nbInkCanvas" class="nb-ink-canvas"></canvas>
 
         <!-- Rich Text Canvas Editor (Hybrid auto-titled from first non-empty phrase/sentence if title input is left blank) -->
         <div id="nbPageContent" class="nb-canvas-editor" contenteditable="true" spellcheck="true"
@@ -1285,6 +1396,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await loadNotebook();
   setupEditorListeners();
+  initInkCanvas();
   updateWordCount();
 
   if (inboundNoteId && pages.length > 0) {
@@ -2048,6 +2160,9 @@ function execFmt(command, value = null) {
   const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
   if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
 
+  const editor = document.getElementById('nbPageContent');
+  if (editor) editor.focus();
+
   document.execCommand(command, false, value);
   updateWordCount();
   scheduleAutoSave();
@@ -2057,6 +2172,9 @@ function applyTextColor(color) {
   const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
   if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
 
+  const editor = document.getElementById('nbPageContent');
+  if (editor) editor.focus();
+
   try { document.execCommand('styleWithCSS', false, true); } catch (e) {}
   document.execCommand('foreColor', false, color);
   scheduleAutoSave();
@@ -2065,6 +2183,9 @@ function applyTextColor(color) {
 function applyHighlightColor(color) {
   const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
   if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+
+  const editor = document.getElementById('nbPageContent');
+  if (editor) editor.focus();
 
   try { document.execCommand('styleWithCSS', false, true); } catch (e) {}
   if (!document.execCommand('hiliteColor', false, color)) {
@@ -2110,6 +2231,172 @@ function applyLineHeight(lh) {
   const editor = document.getElementById('nbPageContent');
   if (editor) editor.style.lineHeight = lh;
   scheduleAutoSave();
+}
+
+/* ── LAYOUT TAB: PAGE SETUP (MARGINS, ORIENTATION & COLUMNS) ── */
+function applyPageMargins(preset) {
+  const canvas = document.getElementById('nbCanvas');
+  if (!canvas) return;
+  if (preset === 'narrow') {
+    canvas.style.padding = '18px 24px';
+  } else if (preset === 'wide') {
+    canvas.style.padding = '60px 72px';
+  } else {
+    canvas.style.padding = '40px 48px';
+  }
+}
+
+function applyPageOrientation(orientation) {
+  const canvas = document.getElementById('nbCanvas');
+  if (!canvas) return;
+  canvas.classList.toggle('orientation-landscape', orientation === 'landscape');
+}
+
+function applyPageColumns(cols) {
+  const canvas = document.getElementById('nbCanvas');
+  if (!canvas) return;
+  canvas.classList.toggle('columns-2', String(cols) === '2');
+}
+
+/* ── INSERT TAB: DYNAMIC EDITABLE HTML TABLE GENERATOR ── */
+function insertDynamicTable(val) {
+  const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+  if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+
+  let rows = 3, cols = 3;
+  if (val === 'custom') {
+    const promptRows = prompt('Enter number of rows (1-20):', '3');
+    const promptCols = prompt('Enter number of columns (1-10):', '3');
+    rows = Math.max(1, Math.min(20, parseInt(promptRows, 10) || 3));
+    cols = Math.max(1, Math.min(10, parseInt(promptCols, 10) || 3));
+  } else if (val) {
+    const parts = val.split('x');
+    cols = parseInt(parts[0], 10) || 3;
+    rows = parseInt(parts[1], 10) || 3;
+  }
+
+  let tableHtml = '<table class="nb-table-resizer" border="1"><thead><tr>';
+  for (let c = 1; c <= cols; c++) {
+    tableHtml += `<th contenteditable="true">Header ${c}</th>`;
+  }
+  tableHtml += '</tr></thead><tbody>';
+  for (let r = 1; r <= rows; r++) {
+    tableHtml += '<tr>';
+    for (let c = 1; c <= cols; c++) {
+      tableHtml += `<td contenteditable="true">Data ${r},${c}</td>`;
+    }
+    tableHtml += '</tr>';
+  }
+  tableHtml += '</tbody></table><p><br></p>';
+
+  const editor = document.getElementById('nbPageContent');
+  if (editor) {
+    editor.focus();
+    document.execCommand('insertHTML', false, tableHtml);
+    scheduleAutoSave();
+    showToast(`Inserted ${cols} × ${rows} table.`, 'success');
+  }
+}
+
+/* ── DRAW TAB: HTML5 DIGITAL INKING CANVAS OVERLAY ── */
+let currentInkMode = null; // null | 'pen' | 'highlighter' | 'eraser'
+let isDrawingInk = false;
+let inkCanvas = null;
+let inkCtx = null;
+
+function initInkCanvas() {
+  inkCanvas = document.getElementById('nbInkCanvas');
+  if (!inkCanvas) return;
+  inkCtx = inkCanvas.getContext('2d');
+
+  function resizeInkCanvas() {
+    const canvasContainer = document.getElementById('nbCanvas');
+    if (!canvasContainer || !inkCanvas) return;
+    inkCanvas.width = canvasContainer.offsetWidth;
+    inkCanvas.height = canvasContainer.offsetHeight;
+  }
+
+  resizeInkCanvas();
+  window.addEventListener('resize', resizeInkCanvas);
+
+  inkCanvas.addEventListener('pointerdown', startInkStroke);
+  inkCanvas.addEventListener('pointermove', moveInkStroke);
+  inkCanvas.addEventListener('pointerup', endInkStroke);
+  inkCanvas.addEventListener('pointercancel', endInkStroke);
+}
+
+function setInkingMode(mode) {
+  if (!inkCanvas) initInkCanvas();
+  if (currentInkMode === mode) {
+    currentInkMode = null; // Toggle off
+  } else {
+    currentInkMode = mode;
+  }
+
+  // Update button highlights
+  document.getElementById('nbInkPenBtn')?.classList.toggle('active', currentInkMode === 'pen');
+  document.getElementById('nbInkHighlighterBtn')?.classList.toggle('active', currentInkMode === 'highlighter');
+  document.getElementById('nbInkEraserBtn')?.classList.toggle('active', currentInkMode === 'eraser');
+
+  if (inkCanvas) {
+    inkCanvas.classList.toggle('active-ink', currentInkMode !== null);
+  }
+  showToast(currentInkMode ? `Ink tool: ${currentInkMode.toUpperCase()}` : 'Inking mode disabled (Canvas text mode)', 'info');
+}
+
+function updateInkingSettings() {
+  // Triggered when thickness or color changes
+}
+
+function startInkStroke(e) {
+  if (!currentInkMode || !inkCtx) return;
+  isDrawingInk = true;
+  const rect = inkCanvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  inkCtx.beginPath();
+  inkCtx.moveTo(x, y);
+
+  const thickness = parseInt(document.getElementById('nbInkThickness')?.value || '4', 10);
+  const color = document.getElementById('nbInkColor')?.value || '#2563eb';
+
+  if (currentInkMode === 'eraser') {
+    inkCtx.globalCompositeOperation = 'destination-out';
+    inkCtx.lineWidth = thickness * 2.5;
+  } else if (currentInkMode === 'highlighter') {
+    inkCtx.globalCompositeOperation = 'source-over';
+    inkCtx.strokeStyle = color + '66'; // transparent
+    inkCtx.lineWidth = thickness * 2;
+    inkCtx.lineCap = 'square';
+  } else {
+    inkCtx.globalCompositeOperation = 'source-over';
+    inkCtx.strokeStyle = color;
+    inkCtx.lineWidth = thickness;
+    inkCtx.lineCap = 'round';
+  }
+  inkCtx.lineJoin = 'round';
+}
+
+function moveInkStroke(e) {
+  if (!isDrawingInk || !currentInkMode || !inkCtx) return;
+  const rect = inkCanvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  inkCtx.lineTo(x, y);
+  inkCtx.stroke();
+}
+
+function endInkStroke() {
+  if (!isDrawingInk) return;
+  isDrawingInk = false;
+  if (inkCtx) inkCtx.closePath();
+}
+
+function clearInkCanvas() {
+  if (!inkCanvas || !inkCtx) return;
+  inkCtx.clearRect(0, 0, inkCanvas.width, inkCanvas.height);
+  showToast('Digital inking canvas cleared.', 'info');
 }
 
 /* ── 3 & 4. CUSTOMIZABLE LINES, ARROWS, VECTOR SHAPES & TEXT BOXES ── */
