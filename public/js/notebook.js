@@ -102,17 +102,17 @@ async function loadNotebookPages(groupId = null) {
           <div onclick="event.stopPropagation();">
             ${tags ? `
               <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
-                ${tags.split(',').map(t => `<span style="font-size:11px; padding:2px 8px; background:#202522; border-radius:6px; color:var(--primary); font-weight:600;">#${escapeHtml(t.trim())}</span>`).join('')}
+                ${tags.split(',').map(t => `<span style="font-size:11px; padding:2px 8px; background:var(--muted, #f1f5f9); border:1px solid var(--border, #cbd5e1); border-radius:6px; color:var(--primary); font-weight:600;">#${escapeHtml(t.trim())}</span>`).join('')}
               </div>
             ` : ''}
             <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px;">
               <span>By ${escapeHtml(author)}</span>
               <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                ${canManagePerms && typeof openDashboardShareModal === 'function' ? `<button type="button" title="Share / Page Permissions" class="btn-export-badge" onclick="openDashboardShareModal(${safeId})" style="background:#0f172a; border:1px solid #334155; color:#ffffff; border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">Share</button>` : ''}
-                <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #1e293b); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.txt</button>
-                <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #1e293b); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.pdf</button>
-                <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #1e293b); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.docx</button>
-                <span style="cursor:pointer; color:#FF7272; margin-left:4px; font-size:11px; font-weight:600;" title="Delete Note" onclick="deleteNote(${safeId})">Delete</span>
+                ${canManagePerms && typeof openDashboardShareModal === 'function' ? `<button type="button" title="Share / Page Permissions" class="btn-export-badge" onclick="openDashboardShareModal(${safeId})" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #0f172a); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">Share</button>` : ''}
+                <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #0f172a); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.txt</button>
+                <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #0f172a); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.pdf</button>
+                <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #0f172a); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.docx</button>
+                <span style="cursor:pointer; color:#ef4444; margin-left:4px; font-size:11px; font-weight:600;" title="Delete Note" onclick="deleteNote(${safeId}, event)">Delete</span>
               </div>
             </div>
           </div>
@@ -166,20 +166,20 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
   const targetArg = editorTargetId ? `'${editorTargetId}'` : 'null';
 
   container.innerHTML = `
-    <div class="notebook-toolbar notebook-rich-toolbar" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:8px 12px; background:#0f172a; color:#ffffff; border:1px solid #334155; border-radius:8px; margin-bottom:10px;">
+    <div class="notebook-toolbar notebook-rich-toolbar" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:8px 12px; background:var(--toolbar-bg, #f8fafc); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:8px; margin-bottom:10px;">
       <!-- MS Word Style Ribbon Options: Home / Insert / Draw / Layout -->
-      <div class="nb-word-ribbon-bar" style="display:flex; align-items:center; gap:4px; width:100%; padding-bottom:6px; margin-bottom:2px; border-bottom:1px solid #1e293b;">
+      <div class="nb-word-ribbon-bar" style="display:flex; align-items:center; gap:4px; width:100%; padding-bottom:6px; margin-bottom:2px; border-bottom:1px solid var(--toolbar-border, #cbd5e1);">
         <button type="button" class="nb-ribbon-btn active" data-ribbon="home" onclick="switchEmbeddedRibbonTab(this, 'home')" style="background:#2563eb; color:#ffffff; border:1px solid #38bdf8; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Home</button>
-        <button type="button" class="nb-ribbon-btn" data-ribbon="insert" onclick="switchEmbeddedRibbonTab(this, 'insert')" style="background:transparent; color:#cbd5e1; border:1px solid transparent; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Insert</button>
-        <button type="button" class="nb-ribbon-btn" data-ribbon="draw" onclick="switchEmbeddedRibbonTab(this, 'draw')" style="background:transparent; color:#cbd5e1; border:1px solid transparent; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Draw</button>
-        <button type="button" class="nb-ribbon-btn" data-ribbon="layout" onclick="switchEmbeddedRibbonTab(this, 'layout')" style="background:transparent; color:#cbd5e1; border:1px solid transparent; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Layout</button>
-        <span style="margin-left:auto; font-size:10.5px; color:#94a3b8; font-weight:600;">Auto-Title on Save</span>
+        <button type="button" class="nb-ribbon-btn" data-ribbon="insert" onclick="switchEmbeddedRibbonTab(this, 'insert')" style="background:transparent; color:var(--toolbar-text, #0f172a); border:1px solid transparent; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Insert</button>
+        <button type="button" class="nb-ribbon-btn" data-ribbon="draw" onclick="switchEmbeddedRibbonTab(this, 'draw')" style="background:transparent; color:var(--toolbar-text, #0f172a); border:1px solid transparent; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Draw</button>
+        <button type="button" class="nb-ribbon-btn" data-ribbon="layout" onclick="switchEmbeddedRibbonTab(this, 'layout')" style="background:transparent; color:var(--toolbar-text, #0f172a); border:1px solid transparent; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Layout</button>
+        <span style="margin-left:auto; font-size:10.5px; color:var(--gray, #64748b); font-weight:600;">Auto-Title on Save</span>
       </div>
 
       <!-- Font Family Dropdown -->
       <div data-ribbon-section="home layout" style="display:flex; align-items:center; gap:4px;">
-        <label style="font-size:11px; font-weight:700; color:#ffffff; margin:0;">Font:</label>
-        <select id="nbFontFamily_${targetContainerId}" class="nb-tb-select" style="background:#1e293b !important; color:#ffffff !important; border:1px solid #475569; border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="applyNotebookFont(this.value, ${targetArg})">
+        <label style="font-size:11px; font-weight:700; color:var(--toolbar-text, #0f172a); margin:0;">Font:</label>
+        <select id="nbFontFamily_${targetContainerId}" class="nb-tb-select" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="applyNotebookFont(this.value, ${targetArg})">
           <option value="Arial, sans-serif" selected>Arial</option>
           <option value="Calibri, sans-serif">Calibri</option>
           <option value="'Times New Roman', Times, serif">Times New Roman</option>
@@ -190,8 +190,8 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
 
       <!-- Numeric Pixel Font Sizes (12px to 36px) -->
       <div data-ribbon-section="home layout" style="display:flex; align-items:center; gap:4px;">
-        <label style="font-size:11px; font-weight:700; color:#ffffff; margin:0;">Size:</label>
-        <select id="nbFontSizePx_${targetContainerId}" class="nb-tb-select" style="background:#1e293b !important; color:#ffffff !important; border:1px solid #475569; border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="applyNotebookFontSizePx(this.value, ${targetArg})">
+        <label style="font-size:11px; font-weight:700; color:var(--toolbar-text, #0f172a); margin:0;">Size:</label>
+        <select id="nbFontSizePx_${targetContainerId}" class="nb-tb-select" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="applyNotebookFontSizePx(this.value, ${targetArg})">
           <option value="12px">12px</option>
           <option value="14px">14px</option>
           <option value="16px" selected>16px</option>
@@ -206,22 +206,22 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
 
       <!-- Text Styling: Bold, Italic, Underline, Strikethrough, Subscript, Superscript, Clear Formatting -->
       <div data-ribbon-section="home" style="display:flex; align-items:center; gap:4px;">
-        <button type="button" onclick="applyNotebookCommand('bold', ${targetArg})" title="Bold" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; font-weight:700; cursor:pointer;"><b>B</b></button>
-        <button type="button" onclick="applyNotebookCommand('italic', ${targetArg})" title="Italic" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; font-style:italic; cursor:pointer;"><i>I</i></button>
-        <button type="button" onclick="applyNotebookCommand('underline', ${targetArg})" title="Underline" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; text-decoration:underline; cursor:pointer;"><u>U</u></button>
-        <button type="button" onclick="applyNotebookCommand('strikeThrough', ${targetArg})" title="Strikethrough" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; cursor:pointer;"><s>S</s></button>
-        <button type="button" onclick="applyNotebookCommand('subscript', ${targetArg})" title="Subscript (X₂)" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; cursor:pointer;">X<sub>2</sub></button>
-        <button type="button" onclick="applyNotebookCommand('superscript', ${targetArg})" title="Superscript (X²)" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; cursor:pointer;">X<sup>2</sup></button>
-        <button type="button" onclick="applyNotebookCommand('removeFormat', ${targetArg})" title="Clear Formatting" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 8px; font-size:12px; cursor:pointer;">Tx</button>
+        <button type="button" onclick="applyNotebookCommand('bold', ${targetArg})" title="Bold" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:5px; padding:4px 8px; font-size:12px; font-weight:700; cursor:pointer;"><b>B</b></button>
+        <button type="button" onclick="applyNotebookCommand('italic', ${targetArg})" title="Italic" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:5px; padding:4px 8px; font-size:12px; font-style:italic; cursor:pointer;"><i>I</i></button>
+        <button type="button" onclick="applyNotebookCommand('underline', ${targetArg})" title="Underline" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:5px; padding:4px 8px; font-size:12px; text-decoration:underline; cursor:pointer;"><u>U</u></button>
+        <button type="button" onclick="applyNotebookCommand('strikeThrough', ${targetArg})" title="Strikethrough" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:5px; padding:4px 8px; font-size:12px; cursor:pointer;"><s>S</s></button>
+        <button type="button" onclick="applyNotebookCommand('subscript', ${targetArg})" title="Subscript (X₂)" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:5px; padding:4px 8px; font-size:12px; cursor:pointer;">X<sub>2</sub></button>
+        <button type="button" onclick="applyNotebookCommand('superscript', ${targetArg})" title="Superscript (X²)" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:5px; padding:4px 8px; font-size:12px; cursor:pointer;">X<sup>2</sup></button>
+        <button type="button" onclick="applyNotebookCommand('removeFormat', ${targetArg})" title="Clear Formatting" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:5px; padding:4px 8px; font-size:12px; cursor:pointer;">Tx</button>
       </div>
 
       <!-- Text Color & Highlight Pickers -->
       <div data-ribbon-section="home" style="display:flex; align-items:center; gap:6px;">
-        <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:#ffffff; cursor:pointer;" title="Text Color (foreColor)">
+        <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:var(--toolbar-text, #0f172a); cursor:pointer;" title="Text Color (foreColor)">
           <span>A</span>
           <input type="color" id="nbForeColor_${targetContainerId}" value="#0f172a" onchange="applyNotebookColor('foreColor', this.value, ${targetArg})" style="width:20px; height:20px; border:none; background:transparent; cursor:pointer; padding:0;">
         </label>
-        <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:#ffffff; cursor:pointer;" title="Text Highlight (hiliteColor)">
+        <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:var(--toolbar-text, #0f172a); cursor:pointer;" title="Text Highlight (hiliteColor)">
           <span>Highlight</span>
           <input type="color" id="nbHiliteColor_${targetContainerId}" value="#fef08a" onchange="applyNotebookColor('hiliteColor', this.value, ${targetArg})" style="width:20px; height:20px; border:none; background:transparent; cursor:pointer; padding:0;">
         </label>
@@ -229,19 +229,19 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
 
       <!-- Bullets & Numbering + Alignment: Left, Center, Right, Justify -->
       <div data-ribbon-section="home layout" style="display:flex; align-items:center; gap:4px;">
-        <button type="button" onclick="applyNotebookCommand('insertUnorderedList', ${targetArg})" title="Bullet List" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">• List</button>
-        <button type="button" onclick="applyNotebookCommand('insertOrderedList', ${targetArg})" title="Numbered List" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">1. List</button>
+        <button type="button" onclick="applyNotebookCommand('insertUnorderedList', ${targetArg})" title="Bullet List" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">• List</button>
+        <button type="button" onclick="applyNotebookCommand('insertOrderedList', ${targetArg})" title="Numbered List" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">1. List</button>
 
-        <button type="button" onclick="applyNotebookCommand('justifyLeft', ${targetArg})" title="Align Left" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">Left</button>
-        <button type="button" onclick="applyNotebookCommand('justifyCenter', ${targetArg})" title="Align Center" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">Center</button>
-        <button type="button" onclick="applyNotebookCommand('justifyRight', ${targetArg})" title="Align Right" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">Right</button>
-        <button type="button" onclick="applyNotebookCommand('justifyFull', ${targetArg})" title="Justify" style="background:#1e293b; color:#ffffff; border:1px solid #475569; border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">Justify</button>
+        <button type="button" onclick="applyNotebookCommand('justifyLeft', ${targetArg})" title="Align Left" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">Left</button>
+        <button type="button" onclick="applyNotebookCommand('justifyCenter', ${targetArg})" title="Align Center" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">Center</button>
+        <button type="button" onclick="applyNotebookCommand('justifyRight', ${targetArg})" title="Align Right" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">Right</button>
+        <button type="button" onclick="applyNotebookCommand('justifyFull', ${targetArg})" title="Justify" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:5px; padding:4px 7px; font-size:11px; cursor:pointer;">Justify</button>
       </div>
 
       <!-- Insert HTML Table (Insert Tab) -->
       <div data-ribbon-section="insert" style="display:flex; align-items:center; gap:4px;">
-        <label style="font-size:11px; font-weight:700; color:#ffffff; margin:0;">Table:</label>
-        <select class="nb-tb-select" style="background:#1e293b !important; color:#ffffff !important; border:1px solid #475569; border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="if(this.value){ insertEmbeddedTable(this.value, ${targetArg}); this.value=''; }">
+        <label style="font-size:11px; font-weight:700; color:var(--toolbar-text, #0f172a); margin:0;">Table:</label>
+        <select class="nb-tb-select" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="if(this.value){ insertEmbeddedTable(this.value, ${targetArg}); this.value=''; }">
           <option value="" disabled selected>+ Insert Table</option>
           <option value="2x2">2 × 2 Table</option>
           <option value="3x3">3 × 3 Table</option>
@@ -251,7 +251,7 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
 
       <!-- Insert Shape / Flowchart Elements & Connectors/Lines -->
       <div data-ribbon-section="insert draw" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-        <select id="nbFlowchartShapeSelect_${targetContainerId}" class="nb-tb-select" style="background:#1e293b !important; color:#38bdf8 !important; font-weight:700; border:1px solid #475569; border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="if(this.value){ insertEmbeddedNotebookShape(this.value, ${targetArg}, '${targetContainerId}'); this.value=''; }">
+        <select id="nbFlowchartShapeSelect_${targetContainerId}" class="nb-tb-select" style="background:var(--toolbar-surface, #ffffff); color:var(--primary, #2563eb); font-weight:700; border:1px solid var(--toolbar-border, #cbd5e1); border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="if(this.value){ insertEmbeddedNotebookShape(this.value, ${targetArg}, '${targetContainerId}'); this.value=''; }">
           <option value="" disabled selected>+ Insert Shape / Flowchart Elements</option>
           <optgroup label="Shapes">
             <option value="rectangle">Rectangle</option>
@@ -268,20 +268,20 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
           </optgroup>
         </select>
 
-        <label style="font-size:11px; font-weight:700; color:#ffffff; margin:0;">Stroke:</label>
-        <select id="nbEmbedStrokeWidth_${targetContainerId}" class="nb-tb-select" style="background:#1e293b !important; color:#ffffff !important; border:1px solid #475569; border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" title="Line Stroke Thickness">
+        <label style="font-size:11px; font-weight:700; color:var(--toolbar-text, #0f172a); margin:0;">Stroke:</label>
+        <select id="nbEmbedStrokeWidth_${targetContainerId}" class="nb-tb-select" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" title="Line Stroke Thickness">
           <option value="1">1px</option>
           <option value="2" selected>2px</option>
           <option value="4">4px</option>
           <option value="6">6px</option>
         </select>
 
-        <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:#ffffff; cursor:pointer;" title="Shape Fill Color">
+        <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:var(--toolbar-text, #0f172a); cursor:pointer;" title="Shape Fill Color">
           <span>Fill</span>
           <input type="color" id="nbEmbedFillColor_${targetContainerId}" value="#dbeafe" style="width:20px; height:20px; border:none; background:transparent; cursor:pointer; padding:0;">
         </label>
 
-        <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:#ffffff; cursor:pointer;" title="Shape / Line Stroke Color">
+        <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:var(--toolbar-text, #0f172a); cursor:pointer;" title="Shape / Line Stroke Color">
           <span>Stroke</span>
           <input type="color" id="nbEmbedStrokeColor_${targetContainerId}" value="#2563eb" style="width:20px; height:20px; border:none; background:transparent; cursor:pointer; padding:0;">
         </label>
@@ -289,8 +289,8 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
 
       <!-- Line Height / Spacing Dropdown -->
       <div data-ribbon-section="layout" style="display:flex; align-items:center; gap:4px;">
-        <label style="font-size:11px; font-weight:700; color:#ffffff; margin:0;">Spacing:</label>
-        <select id="nbLineHeight_${targetContainerId}" class="nb-tb-select" style="background:#1e293b !important; color:#ffffff !important; border:1px solid #475569; border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="applyNotebookLineHeight(this.value, ${targetArg})">
+        <label style="font-size:11px; font-weight:700; color:var(--toolbar-text, #0f172a); margin:0;">Spacing:</label>
+        <select id="nbLineHeight_${targetContainerId}" class="nb-tb-select" style="background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;" onchange="applyNotebookLineHeight(this.value, ${targetArg})">
           <option value="1.0">1.0</option>
           <option value="1.15">1.15</option>
           <option value="1.5" selected>1.5</option>
@@ -299,17 +299,28 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
       </div>
     </div>
   `;
+
+  // Initialize strict tab isolation to 'home' tab
+  const initialActiveBtn = container.querySelector('.nb-ribbon-btn[data-ribbon="home"]') || container.querySelector('.nb-ribbon-btn');
+  if (initialActiveBtn) {
+    switchEmbeddedRibbonTab(initialActiveBtn, 'home');
+  }
 }
 
 function switchEmbeddedRibbonTab(btnEl, tabName) {
   const toolbar = btnEl ? btnEl.closest('.notebook-toolbar') : null;
   if (!toolbar) return;
+  const activeTab = (tabName || 'home').toLowerCase();
   toolbar.querySelectorAll('.nb-ribbon-btn').forEach(b => {
-    const isActive = b.getAttribute('data-ribbon') === tabName;
+    const isActive = b.getAttribute('data-ribbon') === activeTab;
     b.classList.toggle('active', isActive);
     b.style.background = isActive ? '#2563eb' : 'transparent';
-    b.style.color = isActive ? '#ffffff' : '#cbd5e1';
+    b.style.color = isActive ? '#ffffff' : 'var(--toolbar-text, #0f172a)';
     b.style.borderColor = isActive ? '#38bdf8' : 'transparent';
+  });
+  toolbar.querySelectorAll('[data-ribbon-section]').forEach(sec => {
+    const sections = (sec.getAttribute('data-ribbon-section') || '').split(/\s+/);
+    sec.style.display = sections.includes(activeTab) ? 'flex' : 'none';
   });
 }
 

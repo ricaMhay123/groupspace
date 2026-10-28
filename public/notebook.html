@@ -17,13 +17,13 @@
     :root {
       --nb-bg: #f8fafc;
       --nb-surface: #ffffff;
-      --nb-sidebar-bg: #f1f5f9;
-      --nb-border: #e2e8f0;
-      --nb-border-hover: #cbd5e1;
+      --nb-sidebar-bg: #f8fafc;
+      --nb-border: #cbd5e1;
+      --nb-border-hover: #94a3b8;
       --nb-text: #0f172a;
-      --nb-text-muted: #64748b;
-      --nb-text-subtle: #94a3b8;
-      --nb-hover: #e2e8f0;
+      --nb-text-muted: #475569;
+      --nb-text-subtle: #64748b;
+      --nb-hover: #f1f5f9;
       --nb-active-bg: #e0f2fe;
       --nb-active-border: #0284c7;
       --nb-active-text: #0369a1;
@@ -33,45 +33,55 @@
       --nb-save-hover: #059669;
       --nb-save-text: #ffffff;
       --nb-canvas-bg: #ffffff;
-      --nb-canvas-border: #e2e8f0;
+      --nb-canvas-border: #cbd5e1;
       --nb-canvas-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
       --nb-canvas-title: #0f172a;
-      --nb-canvas-text: #1e293b;
-      --nb-placeholder: #94a3b8;
+      --nb-canvas-text: #0f172a;
+      --nb-placeholder: #64748b;
       --nb-status-bg: #ffffff;
-      --nb-status-border: #e2e8f0;
-      --nb-status-text: #64748b;
+      --nb-status-border: #cbd5e1;
+      --nb-status-text: #475569;
       --nb-status-success: #059669;
+      --nb-tb-bg: #f8fafc;
+      --nb-tb-surface: #ffffff;
+      --nb-tb-text: #0f172a;
+      --nb-tb-border: #cbd5e1;
+      --nb-tb-hover: #e2e8f0;
     }
 
     html.dark {
-      --nb-bg: #090d16;
+      --nb-bg: #0f172a;
       --nb-surface: #0f172a;
-      --nb-sidebar-bg: #0b1120;
-      --nb-border: #1e293b;
-      --nb-border-hover: #334155;
-      --nb-text: #f8fafc;
-      --nb-text-muted: #94a3b8;
-      --nb-text-subtle: #64748b;
+      --nb-sidebar-bg: #0f172a;
+      --nb-border: #334155;
+      --nb-border-hover: #475569;
+      --nb-text: #ffffff;
+      --nb-text-muted: #cbd5e1;
+      --nb-text-subtle: #94a3b8;
       --nb-hover: #1e293b;
       --nb-active-bg: rgba(59, 130, 246, 0.15);
       --nb-active-border: #38bdf8;
-      --nb-active-text: #bae6fd;
+      --nb-active-text: #ffffff;
       --nb-primary: #3b82f6;
       --nb-primary-hover: #2563eb;
       --nb-save-bg: #10b981;
       --nb-save-hover: #059669;
       --nb-save-text: #ffffff;
-      --nb-canvas-bg: #111827;
-      --nb-canvas-border: #1f293d;
+      --nb-canvas-bg: #1e293b;
+      --nb-canvas-border: #334155;
       --nb-canvas-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.5);
-      --nb-canvas-title: #f8fafc;
-      --nb-canvas-text: #f1f5f9;
-      --nb-placeholder: #64748b;
+      --nb-canvas-title: #ffffff;
+      --nb-canvas-text: #ffffff;
+      --nb-placeholder: #94a3b8;
       --nb-status-bg: #0f172a;
-      --nb-status-border: #1e293b;
-      --nb-status-text: #94a3b8;
+      --nb-status-border: #334155;
+      --nb-status-text: #cbd5e1;
       --nb-status-success: #34d399;
+      --nb-tb-bg: #0f172a;
+      --nb-tb-surface: #1e293b;
+      --nb-tb-text: #ffffff;
+      --nb-tb-border: #334155;
+      --nb-tb-hover: #334155;
     }
 
     body {
@@ -397,7 +407,7 @@
       background: var(--nb-bg);
     }
 
-    /* ── High Contrast Dark Slate Toolbar (#0f172a) with Bright White Text/Icons (#ffffff) ── */
+    /* ── Harmonized Light & Dark Mode Toolbar ── */
     .nb-ribbon-tabs {
       display: flex;
       align-items: center;
@@ -405,11 +415,11 @@
       width: 100%;
       padding-bottom: 6px;
       margin-bottom: 4px;
-      border-bottom: 1px solid #1e293b;
+      border-bottom: 1px solid var(--nb-tb-border, #cbd5e1);
     }
     .nb-ribbon-tab {
       background: transparent;
-      color: #cbd5e1 !important;
+      color: var(--nb-text-muted, #475569) !important;
       border: 1px solid transparent;
       border-radius: 6px;
       padding: 4px 12px;
@@ -420,8 +430,8 @@
       letter-spacing: 0.3px;
     }
     .nb-ribbon-tab:hover {
-      color: #ffffff !important;
-      background: #1e293b;
+      color: var(--nb-tb-text, #0f172a) !important;
+      background: var(--nb-tb-hover, #e2e8f0);
     }
     .nb-ribbon-tab.active {
       color: #ffffff !important;
@@ -429,7 +439,7 @@
       border-color: #38bdf8;
     }
     .nb-toolbar-group.ribbon-highlight {
-      background: rgba(56, 189, 248, 0.1);
+      background: rgba(56, 189, 248, 0.12);
       border-radius: 6px;
       padding: 2px 8px;
     }
@@ -439,9 +449,9 @@
       align-items: center;
       gap: 8px;
       padding: 8px 18px;
-      background: #0f172a !important;
-      border-bottom: 1px solid #1e293b !important;
-      color: #ffffff !important;
+      background: var(--nb-tb-bg, #f8fafc) !important;
+      border-bottom: 1px solid var(--nb-tb-border, #cbd5e1) !important;
+      color: var(--nb-tb-text, #0f172a) !important;
       z-index: 50;
     }
     .nb-toolbar-group {
@@ -449,7 +459,7 @@
       align-items: center;
       gap: 5px;
       padding-right: 8px;
-      border-right: 1px solid #334155;
+      border-right: 1px solid var(--nb-tb-border, #cbd5e1);
     }
     .nb-toolbar-group:last-child {
       border-right: none;
@@ -458,15 +468,15 @@
     .nb-toolbar label {
       font-size: 10.5px;
       font-weight: 700;
-      color: #ffffff !important;
+      color: var(--nb-tb-text, #0f172a) !important;
       white-space: nowrap;
       text-transform: uppercase;
       letter-spacing: 0.4px;
     }
     .nb-toolbar select {
-      background: #1e293b !important;
-      color: #ffffff !important;
-      border: 1px solid #475569 !important;
+      background: var(--nb-tb-surface, #ffffff) !important;
+      color: var(--nb-tb-text, #0f172a) !important;
+      border: 1px solid var(--nb-tb-border, #cbd5e1) !important;
       border-radius: 6px;
       padding: 4px 8px;
       font-size: 12px;
@@ -478,28 +488,28 @@
     }
     .nb-toolbar select:focus {
       outline: none;
-      border-color: #38bdf8 !important;
-      box-shadow: 0 0 0 1px #38bdf8;
+      border-color: #2563eb !important;
+      box-shadow: 0 0 0 1px #2563eb;
     }
     .nb-toolbar select:disabled {
       opacity: 0.45;
       cursor: not-allowed;
     }
     .nb-toolbar select option {
-      background: #0f172a !important;
-      color: #ffffff !important;
+      background: var(--nb-tb-surface, #ffffff) !important;
+      color: var(--nb-tb-text, #0f172a) !important;
     }
 
     .nb-color-picker-wrap {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      background: #1e293b;
-      border: 1px solid #475569;
+      background: var(--nb-tb-surface, #ffffff);
+      border: 1px solid var(--nb-tb-border, #cbd5e1);
       border-radius: 6px;
       padding: 2px 6px;
       height: 30px;
-      color: #ffffff !important;
+      color: var(--nb-tb-text, #0f172a) !important;
       font-size: 11px;
       font-weight: 600;
     }
@@ -516,7 +526,7 @@
       cursor: not-allowed;
     }
 
-    /* ── High Contrast Toolbar Buttons ── */
+    /* ── Harmonized Toolbar Buttons ── */
     .btn-toolbar-fmt {
       display: inline-flex;
       align-items: center;
@@ -525,9 +535,9 @@
       height: 30px;
       padding: 0 7px;
       border-radius: 6px;
-      background: #1e293b;
-      color: #ffffff !important;
-      border: 1px solid #475569;
+      background: var(--nb-tb-surface, #ffffff);
+      color: var(--nb-tb-text, #0f172a) !important;
+      border: 1px solid var(--nb-tb-border, #cbd5e1);
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
@@ -551,9 +561,9 @@
       gap: 4px;
       padding: 5px 10px;
       border-radius: 6px;
-      border: 1px solid #475569;
-      background: #1e293b;
-      color: #ffffff !important;
+      border: 1px solid var(--nb-tb-border, #cbd5e1);
+      background: var(--nb-tb-surface, #ffffff);
+      color: var(--nb-tb-text, #0f172a) !important;
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
@@ -602,6 +612,11 @@
     .nb-canvas.columns-2 .nb-canvas-editor {
       column-count: 2;
       column-gap: 36px;
+      column-rule: 1px dashed var(--nb-border);
+    }
+    .nb-canvas.columns-3 .nb-canvas-editor {
+      column-count: 3;
+      column-gap: 28px;
       column-rule: 1px dashed var(--nb-border);
     }
     .nb-table-resizer {
@@ -1062,16 +1077,25 @@
     <div class="nb-toolbar" id="nbMainToolbar">
       <!-- Microsoft Word Style Ribbon Tabs: Home / Insert / Draw / Layout -->
       <div class="nb-ribbon-tabs" role="tablist" aria-label="Notebook Ribbon Tabs">
-        <button type="button" class="nb-ribbon-tab active" data-ribbon-tab="all" onclick="switchNotebookRibbonTab('all')">All Tools</button>
-        <button type="button" class="nb-ribbon-tab" data-ribbon-tab="home" onclick="switchNotebookRibbonTab('home')">Home</button>
+        <button type="button" class="nb-ribbon-tab active" data-ribbon-tab="home" onclick="switchNotebookRibbonTab('home')">Home</button>
         <button type="button" class="nb-ribbon-tab" data-ribbon-tab="insert" onclick="switchNotebookRibbonTab('insert')">Insert</button>
         <button type="button" class="nb-ribbon-tab" data-ribbon-tab="draw" onclick="switchNotebookRibbonTab('draw')">Draw</button>
         <button type="button" class="nb-ribbon-tab" data-ribbon-tab="layout" onclick="switchNotebookRibbonTab('layout')">Layout</button>
         <span id="nbPrivacyIndicator" style="margin-left:auto; font-size:11px; color:#94a3b8; font-weight:600;">Microsoft Word Style Rich Text &amp; Flowchart Canvas</span>
       </div>
 
-      <!-- [HOME] Font Family & Numeric Font Sizes (12px - 36px) -->
-      <div class="nb-toolbar-group" data-ribbon-group="home layout">
+      <!-- ==================== [HOME TAB] ==================== -->
+      <!-- 1. Clipboard Group: Paste, Cut, Copy, Format Painter -->
+      <div class="nb-toolbar-group" data-ribbon-group="home">
+        <label>Clipboard:</label>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Paste (Ctrl+V)" onclick="handleClipboardPaste()">📋 Paste</button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Cut (Ctrl+X)" onclick="execFmt('cut')">✂️ Cut</button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Copy (Ctrl+C)" onclick="execFmt('copy')">📄 Copy</button>
+        <button type="button" id="nbFormatPainterBtn" class="btn-toolbar-fmt nb-edit-ctrl" title="Format Painter (Copy &amp; Apply Styles)" onclick="toggleFormatPainter()">🎨 Painter</button>
+      </div>
+
+      <!-- 2. Font Group: Font Family, Numeric Font Sizes (12px - 36px), Bold, Italic, Underline, Strikethrough, Subscript, Superscript, Colors, Clear Formatting -->
+      <div class="nb-toolbar-group" data-ribbon-group="home">
         <label for="nbFontFamily">Font:</label>
         <select id="nbFontFamily" class="nb-edit-ctrl" onchange="applyFont(this.value)">
           <option value="Arial, sans-serif" selected>Arial</option>
@@ -1094,10 +1118,7 @@
           <option value="32px">32px</option>
           <option value="36px">36px</option>
         </select>
-      </div>
 
-      <!-- [HOME] Text Styling: Bold, Italic, Underline, Strikethrough, Subscript, Superscript, Clear Formatting -->
-      <div class="nb-toolbar-group" data-ribbon-group="home">
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Bold (Ctrl+B)" onclick="execFmt('bold')"><b>B</b></button>
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Italic (Ctrl+I)" onclick="execFmt('italic')"><i>I</i></button>
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Underline (Ctrl+U)" onclick="execFmt('underline')"><u>U</u></button>
@@ -1116,22 +1137,22 @@
         </div>
       </div>
 
-      <!-- [HOME / PARAGRAPH] Bullets, Numbering, Text Alignment & Line Spacing -->
+      <!-- 3. Paragraph & Styles Group: Bullets, Numbering, Alignments, Line Spacing, Pre-styled Headings, Find & Replace -->
       <div class="nb-toolbar-group" data-ribbon-group="home">
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Bullet List" onclick="execFmt('insertUnorderedList')">• List</button>
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Numbered List" onclick="execFmt('insertOrderedList')">1. List</button>
 
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Left (justifyLeft)" onclick="execFmt('justifyLeft')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
         </button>
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Center (justifyCenter)" onclick="execFmt('justifyCenter')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg>
         </button>
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Right (justifyRight)" onclick="execFmt('justifyRight')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>
         </button>
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Justify (justifyFull)" onclick="execFmt('justifyFull')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
         </button>
 
         <label for="nbLineHeight">Spacing:</label>
@@ -1141,11 +1162,22 @@
           <option value="1.5" selected>1.5</option>
           <option value="2.0">2.0</option>
         </select>
+
+        <label for="nbHeadingStyles">Styles:</label>
+        <select id="nbHeadingStyles" class="nb-edit-ctrl" onchange="applyHeadingStyle(this.value)">
+          <option value="p" selected>Normal</option>
+          <option value="h1">Heading 1</option>
+          <option value="h2">Heading 2</option>
+          <option value="title">Title</option>
+        </select>
+
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Find &amp; Replace Text" onclick="openFindReplacePrompt()">🔍 Find &amp; Replace</button>
       </div>
 
-      <!-- [INSERT] Dynamic Table Generator, Vector Shapes & Text Boxes -->
-      <div class="nb-toolbar-group" data-ribbon-group="insert">
-        <label>Table:</label>
+      <!-- ==================== [INSERT TAB] ==================== -->
+      <!-- 1. Tables Group: Dynamic Grid Generator -->
+      <div class="nb-toolbar-group" data-ribbon-group="insert" style="display:none;">
+        <label>Tables:</label>
         <select id="nbInsertTableSelect" class="nb-edit-ctrl" onchange="if(this.value){insertDynamicTable(this.value); this.value='';}" title="Insert Editable HTML Table">
           <option value="" disabled selected>+ Insert Table</option>
           <option value="2x2">2 × 2 Table</option>
@@ -1154,8 +1186,12 @@
           <option value="5x3">5 Columns × 3 Rows</option>
           <option value="custom">Custom Grid...</option>
         </select>
+      </div>
 
-        <select id="nbShapeSelect" class="nb-edit-ctrl" onchange="handleInsertShapeSelect(this)" style="color:#38bdf8 !important; font-weight:700;" title="Insert Shape / Flowchart Elements">
+      <!-- 2. Vector Shapes & Flowcharts Group -->
+      <div class="nb-toolbar-group" data-ribbon-group="insert" style="display:none;">
+        <label>Shapes:</label>
+        <select id="nbShapeSelect" class="nb-edit-ctrl" onchange="handleInsertShapeSelect(this)" style="color:var(--primary, #2563eb) !important; font-weight:700;" title="Insert Shape / Flowchart Elements">
           <option value="" disabled selected>+ Insert Shape / Flowchart Elements</option>
           <optgroup label="Shapes &amp; Flowchart Nodes">
             <option value="rectangle">Rectangle (Process)</option>
@@ -1173,10 +1209,6 @@
             <option value="broken_arrow_line">Broken Arrow Line</option>
           </optgroup>
         </select>
-
-        <button type="button" id="insertTextBoxBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTextBox()" title="Insert Draggable &amp; Rotatable Text Box">
-          + Text Box
-        </button>
 
         <label for="nbStrokeWidth">Stroke:</label>
         <select id="nbStrokeWidth" class="nb-edit-ctrl" onchange="updateSelectedShapeStyle()" title="Line Stroke Thickness (1px to 8px)">
@@ -1199,31 +1231,102 @@
         </div>
       </div>
 
-      <!-- [DRAW] Digital Inking Canvas (Pen, Highlighter, Eraser, Thickness & Color) -->
-      <div class="nb-toolbar-group" data-ribbon-group="draw">
+      <!-- 3. Text Boxes & Symbols Group -->
+      <div class="nb-toolbar-group" data-ribbon-group="insert" style="display:none;">
+        <button type="button" id="insertTextBoxBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTextBox()" title="Insert Draggable &amp; Rotatable Text Box">
+          + Text Box
+        </button>
+
+        <label>WordArt:</label>
+        <select id="nbWordArtSelect" class="nb-edit-ctrl" onchange="if(this.value){insertWordArt(this.value); this.value='';}" title="Insert WordArt Title">
+          <option value="" disabled selected>+ WordArt</option>
+          <option value="gradient">Gradient Modern</option>
+          <option value="neon">Neon Blue Glow</option>
+          <option value="3d">3D Emboss</option>
+          <option value="gold">Metallic Gold</option>
+        </select>
+
+        <label>Equations:</label>
+        <select id="nbEquationSelect" class="nb-edit-ctrl" onchange="if(this.value){insertEquation(this.value); this.value='';}" title="Insert Math Equation">
+          <option value="" disabled selected>+ Equation</option>
+          <option value="E = mc²">E = mc² (Mass-Energy)</option>
+          <option value="a² + b² = c²">a² + b² = c² (Pythagorean)</option>
+          <option value="x = (-b ± √(b² - 4ac)) / (2a)">Quadratic Formula</option>
+          <option value="e^(iπ) + 1 = 0">Euler's Identity</option>
+          <option value="A = πr²">Area of Circle</option>
+        </select>
+
+        <label>Symbols:</label>
+        <select id="nbSymbolSelect" class="nb-edit-ctrl" onchange="if(this.value){insertSymbol(this.value); this.value='';}" title="Insert Special Symbol">
+          <option value="" disabled selected>+ Symbol</option>
+          <option value="©">© Copyright</option>
+          <option value="®">® Registered</option>
+          <option value="™">™ Trademark</option>
+          <option value="°">° Degree</option>
+          <option value="±">± Plus/Minus</option>
+          <option value="≠">≠ Not Equal</option>
+          <option value="≈">≈ Approximately</option>
+          <option value="≤">≤ Less/Equal</option>
+          <option value="≥">≥ Greater/Equal</option>
+          <option value="→">→</option>
+          <option value="←">←</option>
+          <option value="★">★ Star</option>
+          <option value="✓">✓ Check</option>
+          <option value="∑">∑ Sum</option>
+          <option value="π">π Pi</option>
+          <option value="∞">∞ Infinity</option>
+        </select>
+
+        <input type="file" id="nbFileInput" accept=".txt,.md,.markdown" style="display:none;" onchange="handleImportFile(event)">
+        <button type="button" class="btn-export-sm nb-edit-ctrl" onclick="triggerImportDocument(null)" title="Import .txt or .markdown document as new page">Import Document</button>
+      </div>
+
+      <!-- ==================== [DRAW TAB] ==================== -->
+      <!-- 1. Digital Inking Canvas Overlay Tools -->
+      <div class="nb-toolbar-group" data-ribbon-group="draw" style="display:none;">
         <label>Ink Tools:</label>
         <button type="button" id="nbInkPenBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('pen')" title="Pen tool">🖊️ Pen</button>
         <button type="button" id="nbInkHighlighterBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('highlighter')" title="Highlighter tool">🖍️ Highlighter</button>
         <button type="button" id="nbInkEraserBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('eraser')" title="Eraser tool">🧹 Eraser</button>
+        <button type="button" id="nbInkLassoBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('lasso')" title="Lasso select tool">✂️ Lasso Select</button>
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="clearInkCanvas()" title="Clear all digital ink">Clear Ink</button>
+      </div>
 
+      <!-- 2. Configurable Instruments: Adjustable thickness (1px-10px) and metallic/standard colors -->
+      <div class="nb-toolbar-group" data-ribbon-group="draw" style="display:none;">
         <label for="nbInkThickness">Thickness:</label>
-        <select id="nbInkThickness" class="nb-edit-ctrl" onchange="updateInkingSettings()">
+        <select id="nbInkThickness" class="nb-edit-ctrl" onchange="updateInkingSettings()" title="Adjustable pen thickness (1px to 10px)">
+          <option value="1">1px Ultra Fine</option>
           <option value="2">2px Fine</option>
+          <option value="3">3px</option>
           <option value="4" selected>4px Medium</option>
-          <option value="8">8px Thick</option>
-          <option value="16">16px Marker</option>
-          <option value="24">24px Broad</option>
+          <option value="6">6px Thick</option>
+          <option value="8">8px</option>
+          <option value="10">10px Broad</option>
         </select>
 
-        <div class="nb-color-picker-wrap" title="Ink Color">
-          <span>Color</span>
+        <label for="nbInkMetallicPreset">Palette:</label>
+        <select id="nbInkMetallicPreset" class="nb-edit-ctrl" onchange="applyMetallicInkPreset(this.value)" title="Standard &amp; Metallic Presets">
+          <option value="#2563eb" selected>Standard Blue</option>
+          <option value="#0f172a">Slate Black</option>
+          <option value="#ef4444">Crimson Red</option>
+          <option value="#10b981">Emerald Green</option>
+          <option value="#d4af37">Metallic Gold</option>
+          <option value="#c0c0c0">Metallic Silver</option>
+          <option value="#cd7f32">Metallic Bronze</option>
+          <option value="#b76e79">Metallic Rose Gold</option>
+          <option value="#e5e4e2">Metallic Platinum</option>
+        </select>
+
+        <div class="nb-color-picker-wrap" title="Custom Ink Color">
+          <span>Custom</span>
           <input type="color" id="nbInkColor" class="nb-edit-ctrl" value="#2563eb" onchange="updateInkingSettings()">
         </div>
       </div>
 
-      <!-- [LAYOUT] Page Setup: Margins, Orientation & Column Splits -->
-      <div class="nb-toolbar-group" data-ribbon-group="layout">
+      <!-- ==================== [LAYOUT TAB] ==================== -->
+      <!-- 1. Page Setup Group: Margins, Orientation, Paper Size, Column Splits -->
+      <div class="nb-toolbar-group" data-ribbon-group="layout" style="display:none;">
         <label for="nbPageMargins">Margins:</label>
         <select id="nbPageMargins" class="nb-edit-ctrl" onchange="applyPageMargins(this.value)">
           <option value="normal" selected>Normal (40px)</option>
@@ -1237,22 +1340,59 @@
           <option value="landscape">Landscape</option>
         </select>
 
+        <label for="nbPaperSize">Size:</label>
+        <select id="nbPaperSize" class="nb-edit-ctrl" onchange="applyPaperSize(this.value)">
+          <option value="letter" selected>Letter (8.5 × 11")</option>
+          <option value="a4">A4 (210 × 297 mm)</option>
+          <option value="legal">Legal (8.5 × 14")</option>
+        </select>
+
         <label for="nbPageColumns">Columns:</label>
         <select id="nbPageColumns" class="nb-edit-ctrl" onchange="applyPageColumns(this.value)">
           <option value="1" selected>Single</option>
           <option value="2">Two-Column</option>
+          <option value="3">Three-Column</option>
         </select>
       </div>
 
-      <!-- [LAYOUT / INSERT] Folder Assignment & Import/Export System -->
-      <div class="nb-toolbar-group" data-ribbon-group="insert layout" style="margin-left:auto;">
+      <!-- 2. Spacing & Arrange Group: Indent, Paragraph Spacing, Arrange Z-Index, Text Wrap, Align/Rotate -->
+      <div class="nb-toolbar-group" data-ribbon-group="layout" style="display:none;">
+        <label>Indent:</label>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Decrease Indent (outdent)" onclick="execFmt('outdent')">⇤ Outdent</button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Increase Indent (indent)" onclick="execFmt('indent')">⇥ Indent</button>
+
+        <label>Spacing:</label>
+        <select id="nbParaSpacing" class="nb-edit-ctrl" onchange="applyParaSpacingDropdown(this.value)" title="Paragraph Spacing Before/After">
+          <option value="0_6" selected>After: 6pt</option>
+          <option value="0_0">None (0pt)</option>
+          <option value="6_6">Before &amp; After: 6pt</option>
+          <option value="12_12">Before &amp; After: 12pt</option>
+        </select>
+
+        <label>Arrange:</label>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Bring Forward" onclick="bringSelectedShapeForward()">Bring Forward</button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Send Backward" onclick="sendSelectedShapeBackward()">Send Backward</button>
+
+        <label>Wrap:</label>
+        <select id="nbTextWrapSelect" class="nb-edit-ctrl" onchange="applyTextWrap(this.value)" title="Text Wrap Mode">
+          <option value="inline" selected>In Line with Text</option>
+          <option value="square">Square</option>
+          <option value="behind">Behind Text</option>
+          <option value="front">In Front of Text</option>
+        </select>
+
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Rotate 90°" onclick="rotateSelectedShape90()">↻ 90°</button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Flip Horizontal" onclick="flipSelectedShapeH()">⇄ Flip</button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align to Center" onclick="alignSelectedShapeCenter()">⇹ Center</button>
+      </div>
+
+      <!-- ==================== ALWAYS-VISIBLE / FOLDER & EXPORT ==================== -->
+      <div class="nb-toolbar-group" data-ribbon-group="home insert draw layout" style="margin-left:auto;">
         <label for="nbPageFolderSelect">Folder:</label>
         <select id="nbPageFolderSelect" class="nb-edit-ctrl" onchange="handleMovePageToFolder(this.value)" title="Move page to folder">
           <option value="">(Root / No Folder)</option>
         </select>
 
-        <input type="file" id="nbFileInput" accept=".txt,.md,.markdown" style="display:none;" onchange="handleImportFile(event)">
-        <button type="button" class="btn-export-sm nb-edit-ctrl" onclick="triggerImportDocument(null)" title="Import .txt or .markdown document as new page">Import Document</button>
         <button type="button" class="btn-export-sm" onclick="exportPage('txt')" title="Export Plain Text (.txt)">.txt</button>
         <button type="button" class="btn-export-sm" onclick="exportPage('pdf')" title="Export PDF (.pdf)">.pdf</button>
         <button type="button" class="btn-export-sm" onclick="exportPage('docx')" title="Export Word (.docx)">.docx</button>
@@ -1341,19 +1481,17 @@ let activeSelectedShapeId = null;
 let manualTitleInput = null;
 
 function switchNotebookRibbonTab(tab) {
+  const activeTab = (tab || 'home').toLowerCase();
   document.querySelectorAll('.nb-ribbon-tab').forEach(btn => {
-    btn.classList.toggle('active', btn.getAttribute('data-ribbon-tab') === tab);
+    btn.classList.toggle('active', btn.getAttribute('data-ribbon-tab') === activeTab);
   });
   document.querySelectorAll('#nbMainToolbar .nb-toolbar-group').forEach(grp => {
     const groups = (grp.getAttribute('data-ribbon-group') || '').split(/\s+/);
-    if (tab === 'all') {
-      grp.style.display = 'flex';
-      grp.classList.remove('ribbon-highlight');
-    } else if (groups.includes(tab)) {
+    if (groups.includes(activeTab)) {
       grp.style.display = 'flex';
       grp.classList.add('ribbon-highlight');
     } else {
-      grp.style.display = 'flex';
+      grp.style.display = 'none';
       grp.classList.remove('ribbon-highlight');
     }
   });
@@ -1362,6 +1500,7 @@ function switchNotebookRibbonTab(tab) {
 document.addEventListener('DOMContentLoaded', async () => {
   manualTitleInput = document.getElementById('nbPageTitle');
   window.manualTitleInput = manualTitleInput;
+  switchNotebookRibbonTab('home');
   currentUser = await checkAuth();
   if (!currentUser) return;
 
@@ -2137,6 +2276,7 @@ function setupEditorListeners() {
       updateWordCount();
       scheduleAutoSave();
     });
+    editor.addEventListener('mouseup', applyFormatPainterIfActive);
   }
 
   document.addEventListener('keydown', e => {
@@ -2156,6 +2296,193 @@ function updateWordCount() {
 }
 
 /* ── 2. TOOLBAR RICH TEXT FORMATTING & NUMERIC FONT SIZES ── */
+async function handleClipboardPaste() {
+  const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+  if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+  const editor = document.getElementById('nbPageContent');
+  if (editor) editor.focus();
+  try {
+    if (navigator.clipboard && navigator.clipboard.readText) {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        document.execCommand('insertText', false, text);
+        updateWordCount();
+        scheduleAutoSave();
+        showToast('Pasted from clipboard', 'info');
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn('[Clipboard] readText failed, fallback to paste command:', err);
+  }
+  try {
+    document.execCommand('paste');
+  } catch (err) {
+    showToast('Press Ctrl+V to paste', 'info');
+  }
+}
+
+let formatPainterStyles = null;
+function toggleFormatPainter() {
+  const btn = document.getElementById('nbFormatPainterBtn');
+  if (formatPainterStyles) {
+    formatPainterStyles = null;
+    if (btn) btn.classList.remove('active');
+    showToast('Format Painter deactivated', 'info');
+    return;
+  }
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) {
+    showToast('Select text first to copy formatting', 'info');
+    return;
+  }
+  const parent = sel.anchorNode ? (sel.anchorNode.nodeType === 3 ? sel.anchorNode.parentNode : sel.anchorNode) : null;
+  if (!parent) return;
+  const computed = window.getComputedStyle(parent);
+  formatPainterStyles = {
+    fontWeight: computed.fontWeight,
+    fontStyle: computed.fontStyle,
+    textDecoration: computed.textDecoration,
+    color: computed.color,
+    backgroundColor: computed.backgroundColor,
+    fontSize: computed.fontSize,
+    fontFamily: computed.fontFamily
+  };
+  if (btn) btn.classList.add('active');
+  showToast('Format Painter active: select text to apply style', 'info');
+}
+
+function applyFormatPainterIfActive() {
+  if (!formatPainterStyles) return;
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+  const editor = document.getElementById('nbPageContent');
+  if (!editor || !editor.contains(sel.anchorNode)) return;
+
+  const range = sel.getRangeAt(0);
+  const span = document.createElement('span');
+  if (formatPainterStyles.fontWeight) span.style.fontWeight = formatPainterStyles.fontWeight;
+  if (formatPainterStyles.fontStyle) span.style.fontStyle = formatPainterStyles.fontStyle;
+  if (formatPainterStyles.textDecoration) span.style.textDecoration = formatPainterStyles.textDecoration;
+  if (formatPainterStyles.color) span.style.color = formatPainterStyles.color;
+  if (formatPainterStyles.backgroundColor && formatPainterStyles.backgroundColor !== 'rgba(0, 0, 0, 0)' && formatPainterStyles.backgroundColor !== 'transparent') {
+    span.style.backgroundColor = formatPainterStyles.backgroundColor;
+  }
+  if (formatPainterStyles.fontSize) span.style.fontSize = formatPainterStyles.fontSize;
+  if (formatPainterStyles.fontFamily) span.style.fontFamily = formatPainterStyles.fontFamily;
+
+  try {
+    const contents = range.extractContents();
+    span.appendChild(contents);
+    range.insertNode(span);
+    sel.removeAllRanges();
+  } catch (e) {
+    console.warn('Format painter apply error:', e);
+  }
+  formatPainterStyles = null;
+  const btn = document.getElementById('nbFormatPainterBtn');
+  if (btn) btn.classList.remove('active');
+  scheduleAutoSave();
+  showToast('Format applied', 'success');
+}
+
+function applyHeadingStyle(val) {
+  const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+  if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+  const editor = document.getElementById('nbPageContent');
+  if (editor) editor.focus();
+
+  if (val === 'h1' || val === 'h2' || val === 'h3') {
+    document.execCommand('formatBlock', false, '<' + val + '>');
+  } else if (val === 'title') {
+    document.execCommand('formatBlock', false, '<h1>');
+    applyFontSize('32px');
+  } else if (val === 'p') {
+    document.execCommand('formatBlock', false, '<p>');
+    applyFontSize('14px');
+  }
+  scheduleAutoSave();
+}
+
+function openFindReplacePrompt() {
+  const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+  if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+  const editor = document.getElementById('nbPageContent');
+  if (!editor) return;
+
+  const findText = prompt('Find what:');
+  if (!findText) return;
+  const replaceText = prompt(`Replace "${findText}" with:`, '');
+  if (replaceText === null) return;
+
+  const currentHtml = editor.innerHTML;
+  const escaped = findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(escaped, 'g');
+  const count = (currentHtml.match(regex) || []).length;
+  if (count === 0) {
+    showToast(`"${findText}" not found.`, 'info');
+    return;
+  }
+  editor.innerHTML = currentHtml.replace(regex, replaceText);
+  updateWordCount();
+  scheduleAutoSave();
+  showToast(`Replaced ${count} occurrence(s).`, 'success');
+}
+
+function insertWordArt(style) {
+  const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+  if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+  const editor = document.getElementById('nbPageContent');
+  if (!editor) return;
+  editor.focus();
+
+  let text = prompt('Enter WordArt text:', 'WordArt Title');
+  if (!text) return;
+
+  let artHtml = '';
+  if (style === 'gradient') {
+    artHtml = `<span style="font-size:28px; font-weight:900; background:linear-gradient(45deg,#2563eb,#ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; display:inline-block; padding:4px 0;">${escapeHtml(text)}</span>&nbsp;`;
+  } else if (style === 'neon') {
+    artHtml = `<span style="font-size:28px; font-weight:900; color:#06b6d4; text-shadow:0 0 5px #06b6d4, 0 0 10px #06b6d4, 0 0 20px #0891b2; display:inline-block; padding:4px 0;">${escapeHtml(text)}</span>&nbsp;`;
+  } else if (style === '3d') {
+    artHtml = `<span style="font-size:28px; font-weight:900; color:#f59e0b; text-shadow:1px 1px 0 #d97706, 2px 2px 0 #b45309, 3px 3px 0 #92400e; display:inline-block; padding:4px 0;">${escapeHtml(text)}</span>&nbsp;`;
+  } else {
+    artHtml = `<span style="font-size:26px; font-weight:800; color:#2563eb; letter-spacing:1px; display:inline-block;">${escapeHtml(text)}</span>&nbsp;`;
+  }
+  document.execCommand('insertHTML', false, artHtml);
+  updateWordCount();
+  scheduleAutoSave();
+}
+
+function insertEquation(eq) {
+  const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+  if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+  const editor = document.getElementById('nbPageContent');
+  if (!editor) return;
+  editor.focus();
+  const eqHtml = `<span class="nb-equation" style="font-family:'Cambria Math',Times,serif; font-style:italic; background:var(--nb-sidebar-bg, #f1f5f9); padding:2px 8px; border-radius:4px; border:1px solid var(--nb-border, #e2e8f0); display:inline-block; margin:0 2px;">${escapeHtml(eq)}</span>&nbsp;`;
+  document.execCommand('insertHTML', false, eqHtml);
+  updateWordCount();
+  scheduleAutoSave();
+}
+
+function insertSymbol(sym) {
+  const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
+  if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
+  const editor = document.getElementById('nbPageContent');
+  if (!editor) return;
+  editor.focus();
+  document.execCommand('insertText', false, sym);
+  updateWordCount();
+  scheduleAutoSave();
+}
+
+function applyMetallicInkPreset(val) {
+  const colorInput = document.getElementById('nbInkColor');
+  if (colorInput) colorInput.value = val;
+  updateInkingSettings();
+}
+
 function execFmt(command, value = null) {
   const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
   if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
@@ -2256,6 +2583,142 @@ function applyPageColumns(cols) {
   const canvas = document.getElementById('nbCanvas');
   if (!canvas) return;
   canvas.classList.toggle('columns-2', String(cols) === '2');
+  canvas.classList.toggle('columns-3', String(cols) === '3');
+}
+
+function applyPaperSize(size) {
+  const canvas = document.getElementById('nbCanvas');
+  if (!canvas) return;
+  if (size === 'letter') {
+    canvas.style.maxWidth = '850px';
+    canvas.style.minHeight = '1100px';
+  } else if (size === 'a4') {
+    canvas.style.maxWidth = '800px';
+    canvas.style.minHeight = '1130px';
+  } else if (size === 'legal') {
+    canvas.style.maxWidth = '850px';
+    canvas.style.minHeight = '1400px';
+  }
+}
+
+function applyParaSpacingDropdown(val) {
+  const editor = document.getElementById('nbPageContent');
+  if (!editor) return;
+  let mb = '0.75rem';
+  let mt = '0';
+  if (val === '0_0') { mb = '0'; mt = '0'; }
+  else if (val === '0_6') { mb = '6pt'; mt = '0'; }
+  else if (val === '6_6') { mb = '6pt'; mt = '6pt'; }
+  else if (val === '12_12') { mb = '12pt'; mt = '12pt'; }
+
+  const paragraphs = editor.querySelectorAll('p');
+  if (paragraphs.length > 0) {
+    paragraphs.forEach(p => {
+      p.style.marginTop = mt;
+      p.style.marginBottom = mb;
+    });
+  } else {
+    editor.style.setProperty('--para-mt', mt);
+    editor.style.setProperty('--para-mb', mb);
+  }
+  scheduleAutoSave();
+}
+
+function bringSelectedShapeForward() {
+  if (!activeSelectedShapeId) {
+    showToast('Select a shape first', 'info');
+    return;
+  }
+  const el = document.getElementById(activeSelectedShapeId);
+  const shape = currentShapes.find(s => s.id === activeSelectedShapeId);
+  if (!el || !shape) return;
+  const currentZ = parseInt(window.getComputedStyle(el).zIndex, 10) || 10;
+  const newZ = currentZ + 2;
+  el.style.zIndex = newZ;
+  shape.zIndex = newZ;
+  scheduleAutoSave();
+  showToast('Brought shape forward', 'info');
+}
+
+function sendSelectedShapeBackward() {
+  if (!activeSelectedShapeId) {
+    showToast('Select a shape first', 'info');
+    return;
+  }
+  const el = document.getElementById(activeSelectedShapeId);
+  const shape = currentShapes.find(s => s.id === activeSelectedShapeId);
+  if (!el || !shape) return;
+  const currentZ = parseInt(window.getComputedStyle(el).zIndex, 10) || 10;
+  const newZ = Math.max(1, currentZ - 2);
+  el.style.zIndex = newZ;
+  shape.zIndex = newZ;
+  scheduleAutoSave();
+  showToast('Sent shape backward', 'info');
+}
+
+function rotateSelectedShape90() {
+  if (!activeSelectedShapeId) {
+    showToast('Select a shape first', 'info');
+    return;
+  }
+  const el = document.getElementById(activeSelectedShapeId);
+  const shape = currentShapes.find(s => s.id === activeSelectedShapeId);
+  if (!el || !shape) return;
+  shape.rot = ((shape.rot || 0) + 90) % 360;
+  el.style.transform = `rotate(${shape.rot}deg)`;
+  scheduleAutoSave();
+}
+
+function flipSelectedShapeH() {
+  if (!activeSelectedShapeId) {
+    showToast('Select a shape first', 'info');
+    return;
+  }
+  const el = document.getElementById(activeSelectedShapeId);
+  const shape = currentShapes.find(s => s.id === activeSelectedShapeId);
+  if (!el || !shape) return;
+  shape.flipped = !shape.flipped;
+  const rot = shape.rot || 0;
+  el.style.transform = `rotate(${rot}deg) scaleX(${shape.flipped ? -1 : 1})`;
+  scheduleAutoSave();
+}
+
+function alignSelectedShapeCenter() {
+  if (!activeSelectedShapeId) {
+    showToast('Select a shape first', 'info');
+    return;
+  }
+  const el = document.getElementById(activeSelectedShapeId);
+  const shape = currentShapes.find(s => s.id === activeSelectedShapeId);
+  const canvas = document.getElementById('nbCanvas');
+  if (!el || !shape || !canvas) return;
+  const canvasW = canvas.offsetWidth;
+  shape.x = Math.max(0, Math.round((canvasW - (shape.w || 120)) / 2));
+  el.style.left = shape.x + 'px';
+  scheduleAutoSave();
+  showToast('Aligned shape to center', 'info');
+}
+
+function applyTextWrap(mode) {
+  if (!activeSelectedShapeId) {
+    showToast('Select a shape first to set text wrap', 'info');
+    return;
+  }
+  const el = document.getElementById(activeSelectedShapeId);
+  const shape = currentShapes.find(s => s.id === activeSelectedShapeId);
+  if (!el || !shape) return;
+  shape.wrapMode = mode;
+  if (mode === 'behind') {
+    el.style.zIndex = '1';
+  } else if (mode === 'front') {
+    el.style.zIndex = '50';
+  } else if (mode === 'square') {
+    el.style.zIndex = '15';
+  } else {
+    el.style.zIndex = '10';
+  }
+  scheduleAutoSave();
+  showToast(`Text wrap: ${mode}`, 'info');
 }
 
 /* ── INSERT TAB: DYNAMIC EDITABLE HTML TABLE GENERATOR ── */

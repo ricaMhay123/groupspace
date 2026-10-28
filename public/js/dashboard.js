@@ -289,7 +289,8 @@ function switchTab(tabName) {
   refreshCurrentView();
 }
 
-function handlePrimaryAction() {
+function handlePrimaryAction(e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
   if (currentTab === 'tasks' || currentTab === 'overview') openModal('createTaskModal');
   else if (currentTab === 'calendar') openAddEventModal();
   else if (currentTab === 'notebook') openModal('createNoteModal');
@@ -398,7 +399,8 @@ function renderHomespaceScratchpadHtml(personalNotes, inputId) {
   `;
 }
 
-async function saveHomespaceScratchpad(inputId) {
+async function saveHomespaceScratchpad(inputId, e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
   const input = document.getElementById(inputId);
   if (!input) return;
   const noteText = input.value.trim();
@@ -424,7 +426,8 @@ async function saveHomespaceScratchpad(inputId) {
 }
 
 async function deleteHomespaceScratchpadNote(noteId, e) {
-  if (e) e.stopPropagation();
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
   try {
     await apiFetch(`/api/personal/${noteId}`, { method: 'DELETE' });
     showToast('Reminder deleted.', 'success');
@@ -1098,7 +1101,8 @@ function openWorkspaceSettingsModal() {
 }
 
 // ================= WORKSPACE SETTINGS HANDLERS ================= //
-async function saveWorkspaceName(newName) {
+async function saveWorkspaceName(newName, e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
   const cleanName = (newName || '').trim();
   if (!cleanName || cleanName.length < 2) {
     showToast('Workspace name must be at least 2 characters.', 'error');
@@ -1126,7 +1130,8 @@ async function saveWorkspaceName(newName) {
   }
 }
 
-async function resetWorkspaceInviteCode() {
+async function resetWorkspaceInviteCode(e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
   if (!confirm('Are you sure you want to regenerate the invite code? The previous invite code will immediately become invalid.')) {
     return;
   }
@@ -1150,7 +1155,8 @@ async function resetWorkspaceInviteCode() {
   }
 }
 
-async function saveMemberConstraints(apprId, discId, expId) {
+async function saveMemberConstraints(apprId, discId, expId, e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
   const requireApproval = document.getElementById(apprId) ? document.getElementById(apprId).checked : true;
   const allowDiscussions = document.getElementById(discId) ? document.getElementById(discId).checked : true;
   const restrictExpenses = document.getElementById(expId) ? document.getElementById(expId).checked : false;
@@ -1175,7 +1181,8 @@ async function saveMemberConstraints(apprId, discId, expId) {
   }
 }
 
-async function confirmDeleteWorkspace() {
+async function confirmDeleteWorkspace(e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
   if (!currentGroupId || !currentGroupDetails) return;
   const wsName = currentGroupDetails.name || 'this workspace';
   const confirmation = confirm(`Are you sure you want to permanently delete "${wsName}"?\n\nThis will permanently remove all tasks, discussions, documents, expenses, and member records for this workspace. This action cannot be undone.`);
@@ -1203,7 +1210,8 @@ function saveMemberPref(key, value) {
 }
 
 async function approveTaskInline(taskId, e) {
-  if (e) e.stopPropagation();
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
   try {
     const res = await apiFetch(`/api/groups/${currentGroupId}/tasks/${taskId}/approve`, {
       method: 'PUT',
@@ -1217,7 +1225,8 @@ async function approveTaskInline(taskId, e) {
 }
 
 async function rejectTaskInline(taskId, taskTitle, e) {
-  if (e) e.stopPropagation();
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
   const notes = prompt(`Enter rejection reason / revision notes for "${taskTitle}":`, 'Revisions required before approval.');
   if (notes === null) return; // User cancelled
   try {
@@ -1474,7 +1483,8 @@ function openReviewModal(taskId, title) {
   openModal('reviewTaskModal');
 }
 
-async function submitReview(approved) {
+async function submitReview(approved, e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
   if (!reviewTaskId) return;
   const approvalNotes = document.getElementById('reviewNotes').value.trim();
 
@@ -1491,7 +1501,8 @@ async function submitReview(approved) {
   }
 }
 
-async function deleteTask(taskId) {
+async function deleteTask(taskId, e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
   if (!confirm('Are you sure you want to delete this task?')) return;
   try {
     await apiFetch(`/api/groups/${currentGroupId}/tasks/${taskId}`, { method: 'DELETE' });
@@ -1587,7 +1598,8 @@ async function promptCreateDashboardFolder() {
 }
 
 async function deleteDashboardFolder(folderId, e) {
-  if (e) e.stopPropagation();
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
   const confirmed = window.confirm('Are you sure you want to delete this folder and all notes inside it? This action cannot be undone.');
   if (!confirmed) return;
 
@@ -1774,20 +1786,20 @@ function renderDashboardNotesGrid(notes) {
               <option value="">Uncategorized</option>
               ${dashboardNotebookFolders.map(f => `<option value="${f.id}" ${Number(n.folder_id) === Number(f.id) ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}
             </select>
-            ${canManagePerms ? `<button type="button" onclick="openDashboardShareModal(${n.id})" style="background:#0f172a; color:#ffffff; border:1px solid #334155; border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;" title="Share / Page Permissions">Share / Permissions</button>` : ''}
+            ${canManagePerms ? `<button type="button" class="btn-outline" onclick="openDashboardShareModal(${n.id})" style="background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;" title="Share / Page Permissions">Share / Permissions</button>` : ''}
           </div>
           ${n.tags ? `
             <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
-              ${n.tags.split(',').filter(t => t.trim()).map(t => `<span style="font-size:11px; padding:2px 8px; background:#202522; border-radius:6px; color:var(--primary); font-weight:600;">#${escapeHtml(t.trim())}</span>`).join('')}
+              ${n.tags.split(',').filter(t => t.trim()).map(t => `<span style="font-size:11px; padding:2px 8px; background:var(--muted, #f1f5f9); border:1px solid var(--border); border-radius:6px; color:var(--primary); font-weight:600;">#${escapeHtml(t.trim())}</span>`).join('')}
             </div>
           ` : ''}
           <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px;">
             <span>By ${escapeHtml(n.author_name || 'Member')}</span>
             <div style="display:flex; align-items:center; gap:6px;">
-              <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.txt</button>
-              <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.pdf</button>
-              <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.docx</button>
-              ${canManagePerms ? `<span style="cursor:pointer; color:#FF7272; margin-left:4px; font-size:11px; font-weight:600;" title="Delete Note" onclick="deleteNote(${n.id})">Delete</span>` : ''}
+              <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.txt</button>
+              <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.pdf</button>
+              <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.docx</button>
+              ${canManagePerms ? `<span style="cursor:pointer; color:#ef4444; margin-left:4px; font-size:11px; font-weight:600;" title="Delete Note" onclick="deleteNote(${n.id}, event)">Delete</span>` : ''}
             </div>
           </div>
         </div>
@@ -1923,7 +1935,9 @@ async function handleCreateNote(e) {
   }
 }
 
-async function deleteNote(noteId) {
+async function deleteNote(noteId, e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
   if (!confirm('Are you sure you want to delete this notebook page?')) return;
   try {
     await apiFetch(`/api/groups/${currentGroupId}/notes/${noteId}`, { method: 'DELETE' });
@@ -1990,7 +2004,7 @@ async function loadExpenses() {
         netEl.style.color = '#FF7272';
       } else {
         netEl.textContent = '₱0.00 (Settled)';
-        netEl.style.color = 'white';
+        netEl.style.color = 'var(--text)';
       }
     } else {
       netEl.textContent = '₱0.00';
@@ -2027,12 +2041,12 @@ async function loadExpenses() {
       <tr>
         <td>${escapeHtml(e.date || '')}</td>
         <td><strong>${escapeHtml(e.title)}</strong></td>
-        <td><span style="padding:3px 8px; background:#202522; border-radius:6px; font-size:12px;">${escapeHtml(e.category)}</span></td>
+        <td><span style="padding:3px 8px; background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:6px; font-size:12px;">${escapeHtml(e.category)}</span></td>
         <td>${escapeHtml(e.payer_name)}</td>
         <td>${e.splits ? `${e.splits.length} members` : 'Equal'}</td>
         <td style="color:var(--primary); font-weight:700;">₱${Number(e.amount).toFixed(2)}</td>
         <td>
-          <button style="background:transparent; border:none; color:#FF7272; font-size:12px; font-weight:600; cursor:pointer;" onclick="deleteExpense(${e.id})">Delete</button>
+          <button type="button" style="background:transparent; border:none; color:#ef4444; font-size:12px; font-weight:600; cursor:pointer;" onclick="deleteExpense(${e.id}, event)">Delete</button>
         </td>
       </tr>
     `).join('');
@@ -2064,7 +2078,8 @@ async function handleCreateExpense(e) {
   }
 }
 
-async function deleteExpense(expenseId) {
+async function deleteExpense(expenseId, e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
   if (!confirm('Are you sure you want to delete this expense?')) return;
   try {
     await apiFetch(`/api/groups/${currentGroupId}/expenses/${expenseId}`, { method: 'DELETE' });
@@ -2294,22 +2309,22 @@ async function selectTopic(topicId, title) {
       const canDelete = isLeader || isAuthor;
 
       return `
-        <div class="chat-message" id="comment-item-${c.id}" style="position:relative; display:flex; gap:12px; padding:12px; border-radius:10px; margin-bottom:12px; background:#f8fafc; border:1px solid #f1f5f9; transition:background 0.2s ease;">
-          <div class="chat-avatar" style="width:36px; height:36px; border-radius:50%; background:#4f46e5; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px; flex-shrink:0;">
+        <div class="chat-message" id="comment-item-${c.id}" style="position:relative; display:flex; gap:12px; padding:12px; border-radius:10px; margin-bottom:12px; background:var(--muted, #f8fafc); border:1px solid var(--border); transition:background 0.2s ease;">
+          <div class="chat-avatar" style="width:36px; height:36px; border-radius:50%; background:var(--primary, #4f46e5); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px; flex-shrink:0;">
             ${escapeHtml(c.user_initials || 'GS')}
           </div>
           <div class="chat-content" style="flex:1; min-width:0;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-              <h4 style="margin:0 0 4px 0; font-size:13px; font-weight:600; color:#1e293b;">${escapeHtml(c.user_name)}</h4>
+              <h4 style="margin:0 0 4px 0; font-size:13px; font-weight:600; color:var(--text);">${escapeHtml(c.user_name)}</h4>
               ${canDelete ? `
-                <button type="button" class="comment-delete-discrete" onclick="confirmDeleteComment(${c.id})" title="Delete comment" style="background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer; padding:2px 6px; border-radius:4px; opacity:0.6; transition:all 0.15s ease; display:inline-flex; align-items:center; justify-content:center;" onmouseover="this.style.opacity='1'; this.style.color='#ef4444';" onmouseout="this.style.opacity='0.6'; this.style.color='#94a3b8';">
+                <button type="button" class="comment-delete-discrete" onclick="confirmDeleteComment(${c.id}, event)" title="Delete comment" style="background:none; border:none; color:var(--gray); font-size:13px; cursor:pointer; padding:2px 6px; border-radius:4px; opacity:0.7; transition:all 0.15s ease; display:inline-flex; align-items:center; justify-content:center;" onmouseover="this.style.opacity='1'; this.style.color='#ef4444';" onmouseout="this.style.opacity='0.7'; this.style.color='var(--gray)';">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                 </button>
               ` : ''}
             </div>
-            ${c.content ? `<p style="margin:0 0 4px 0; font-size:13px; color:#334155; line-height:1.5; word-break:break-word;">${typeof window.highlightMentions === 'function' ? window.highlightMentions(c.content) : escapeHtml(c.content)}</p>` : ''}
+            ${c.content ? `<p style="margin:0 0 4px 0; font-size:13px; color:var(--text); line-height:1.5; word-break:break-word;">${typeof window.highlightMentions === 'function' ? window.highlightMentions(c.content) : escapeHtml(c.content)}</p>` : ''}
             ${renderAttachmentsHtml(c.attachments)}
-            <div style="font-size:11px; color:#94a3b8; margin-top:4px;">${formatDate(c.created_at)}</div>
+            <div style="font-size:11px; color:var(--gray); margin-top:4px;">${formatDate(c.created_at)}</div>
           </div>
         </div>
       `;
@@ -2321,7 +2336,8 @@ async function selectTopic(topicId, title) {
   }
 }
 
-async function confirmDeleteComment(commentId) {
+async function confirmDeleteComment(commentId, e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
   if (!confirm('Are you sure you want to delete this comment?')) {
     return;
   }
@@ -2543,7 +2559,7 @@ function renderPersonalFoldersBar() {
 
   let html = `
     <button type="button" onclick="filterPersonalNotesByFolder('ALL')"
-      style="padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid ${activePersonalFolderFilter === 'ALL' ? '#38bdf8' : 'var(--border)'}; background:${activePersonalFolderFilter === 'ALL' ? '#0f172a' : 'var(--card)'}; color:${activePersonalFolderFilter === 'ALL' ? '#ffffff' : 'var(--text)'};">
+      style="padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid ${activePersonalFolderFilter === 'ALL' ? '#38bdf8' : 'var(--border)'}; background:${activePersonalFolderFilter === 'ALL' ? 'rgba(56,189,248,0.15)' : 'var(--card)'}; color:${activePersonalFolderFilter === 'ALL' ? '#0284c7' : 'var(--text)'};">
       All Private Pages
     </button>
   `;
@@ -2551,9 +2567,9 @@ function renderPersonalFoldersBar() {
   personalNotebookFolders.forEach(f => {
     const isActive = String(activePersonalFolderFilter) === String(f.id);
     html += `
-      <div style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; border:1px solid ${isActive ? '#38bdf8' : 'var(--border)'}; background:${isActive ? '#0f172a' : 'var(--card)'}; color:${isActive ? '#ffffff' : 'var(--text)'};">
+      <div style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; border:1px solid ${isActive ? '#38bdf8' : 'var(--border)'}; background:${isActive ? 'rgba(56,189,248,0.15)' : 'var(--card)'}; color:${isActive ? '#0284c7' : 'var(--text)'};">
         <span style="cursor:pointer;" onclick="filterPersonalNotesByFolder(${f.id})">${escapeHtml(f.name)}</span>
-        <span style="cursor:pointer; color:#f87171; font-size:11px; margin-left:4px;" title="Delete Private Folder" onclick="deletePersonalFolder(${f.id}, event)">✕</span>
+        <span style="cursor:pointer; color:#ef4444; font-size:11px; margin-left:4px;" title="Delete Private Folder" onclick="deletePersonalFolder(${f.id}, event)">✕</span>
       </div>
     `;
   });
@@ -2600,7 +2616,8 @@ async function promptCreatePersonalFolder() {
 }
 
 async function deletePersonalFolder(folderId, e) {
-  if (e) e.stopPropagation();
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
   const confirmed = window.confirm('Are you sure you want to delete this folder and all notes inside it? This action cannot be undone.');
   if (!confirmed) return;
 
@@ -2657,7 +2674,8 @@ async function handlePersonalImportDocument(event) {
   reader.readAsText(file);
 }
 
-async function saveInlinePersonalNotebookPage() {
+async function saveInlinePersonalNotebookPage(e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
   const canvasEl = document.getElementById('personalNotebookCanvas');
   if (!canvasEl) return;
   const titleInput = document.getElementById('personalNotebookTitleInput');
@@ -2746,10 +2764,10 @@ function renderPersonalNotesGrid(items) {
           <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px;">
             <span>Only You</span>
             <div style="display:flex; align-items:center; gap:6px;">
-              <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.txt</button>
-              <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.pdf</button>
-              <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:#1B231E; border:1px solid #2B342F; color:#E1E7E3; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.docx</button>
-              <span style="cursor:pointer; color:#FF7272; margin-left:4px; font-size:11px; font-weight:600;" title="Delete Private Note" onclick="deletePersonalItem(${n.id})">Delete</span>
+              <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.txt</button>
+              <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.pdf</button>
+              <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.docx</button>
+              <span style="cursor:pointer; color:#ef4444; margin-left:4px; font-size:11px; font-weight:600;" title="Delete Private Note" onclick="deletePersonalItem(${n.id}, event)">Delete</span>
             </div>
           </div>
         </div>
@@ -2875,7 +2893,9 @@ async function togglePersonalTask(id, checked) {
   }
 }
 
-async function deletePersonalItem(id) {
+async function deletePersonalItem(id, e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
   if (!confirm('Remove item from your personal space?')) return;
   try {
     await apiFetch(`/api/personal/${id}`, { method: 'DELETE' });

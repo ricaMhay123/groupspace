@@ -271,7 +271,8 @@ async function offerAssist(req, res) {
  */
 async function respondAssist(req, res) {
   try {
-    const { decision } = req.body;
+    const rawDecision = req.body.decision || req.body.status || '';
+    const decision = rawDecision === 'accepted' ? 'accept' : rawDecision === 'declined' ? 'decline' : rawDecision;
 
     if (!['accept', 'decline'].includes(decision)) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({

@@ -5,127 +5,148 @@
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --card: #FFFFFF;
-  --ring: #3d7eff;
-  --input: #E6E1E9;
-  --muted: #F0EEF2;
-  --accent: #e5e8ff;
-  --border: #E6E1E9;
+  /* Light (Normal) Mode — Clean high-contrast dark text (#0f172a) on light containers (#ffffff / #f8fafc) with subtle slate borders (#cbd5e1) */
+  --background: #f8fafc;
+  --card: #ffffff;
+  --foreground: #0f172a;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --border: #cbd5e1;
+  --input: #ffffff;
+  --muted: #f8fafc;
+  --muted-foreground: #475569;
+  --gray: #64748b;
+  --ring: #2563eb;
+  --accent: #e0e7ff;
+  --accent-foreground: #1d4ed8;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --sidebar: #f8fafc;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #0f172a;
+  --sidebar-accent: #e2e8f0;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #cbd5e1;
+  --sidebar-ring: #2563eb;
+  --destructive: #e11d48;
+  --destructive-foreground: #ffffff;
   --radius: 1.25rem;
   --chart-1: #0248d4;
   --chart-2: #8B5CF6;
   --chart-3: #D946EF;
   --chart-4: #F43F5E;
   --chart-5: #F97316;
-  --popover: #FFFFFF;
-  --primary: #03035e;
-  --sidebar: #e2ebfd;
   --spacing: 0.25rem;
   --font-mono: 'JetBrains Mono', monospace;
   --font-sans: 'Bricolage Grotesque', ui-sans-serif, sans-serif, system-ui;
-  --secondary: #e2ebfd;
-  --background: #FDFCFE;
   --font-serif: Georgia, serif;
-  --foreground: #0A050D;
-  --destructive: #E11D48;
   --shadow-blur: 10px;
-  --shadow-color: 0, 0, 0;
-  --sidebar-ring: #232986;
+  --shadow-color: 15, 23, 42;
   --shadow-spread: 0px;
   --letter-spacing: -0.01em;
-  --shadow-opacity: 0.1;
-  --sidebar-accent: #1a1d42;
-  --sidebar-border: #1b1a42;
-  --card-foreground: #0A050D;
+  --shadow-opacity: 0.08;
   --shadow-offset-x: 0px;
   --shadow-offset-y: 4px;
-  --sidebar-primary: #FDFCFE;
-  --muted-foreground: #635D69;
-  --accent-foreground: #0248d4;
-  --popover-foreground: #0A050D;
-  --primary-foreground: #FFFFFF;
-  --sidebar-foreground: #02173b;
-  --secondary-foreground: #0248d4;
-  --destructive-foreground: #FFFFFF;
-  --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-primary-foreground: #11172c;
+
+  /* Toolbar & Control Variables (Light Mode) */
+  --toolbar-bg: #f8fafc;
+  --toolbar-surface: #ffffff;
+  --toolbar-text: #0f172a;
+  --toolbar-border: #cbd5e1;
+  --toolbar-hover: #e2e8f0;
 
   /* Legacy aliases — keeps existing components working */
-  --primary-hover: #0248d4;
-  --primary-light: #e5e8ff;
+  --primary-hover: #1d4ed8;
+  --primary-light: #e0e7ff;
   --success: #10b981;
   --success-light: #d1fae5;
+  --warning: #f59e0b;
   --danger: var(--destructive);
   --bg: var(--background);
   --bg-white: var(--card);
-  --text: var(--foreground);
-  --text-muted: var(--muted-foreground);
-  --card-hover-shadow: 0 10px 40px rgba(2, 72, 212, 0.12);
+  --text: #0f172a;
+  --text-dark: #0f172a;
+  --text-muted: #475569;
+  --card-hover-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
   --radius-sm: 0.5rem;
   --transition: all 0.2s ease;
   --primary-blue: var(--primary);
-  --primary-hover-blue: #0248d4;
-  --border-subtle: var(--border);
-  --text-dark: var(--foreground);
+  --primary-hover-blue: #1d4ed8;
+  --border-subtle: #cbd5e1;
   --bg-main: var(--background);
 }
 
 .dark {
-  /* ── New dark palette (HSL converted to hsl()) ── */
-  --card:             hsl(228, 28%, 6%);
-  --ring:             hsl(221, 87%, 58%);
-  --input:            hsl(228, 14%, 16%);
-  --muted:            hsl(228, 20%, 12%);
-  --accent:           hsl(221, 70%, 45%);
-  --border:           hsl(228, 14%, 16%);
+  /* Dark Mode — Sleek slate backgrounds (#0f172a) with crisp white icons/text (#ffffff) */
+  --background:       #0f172a;
+  --card:             #1e293b;
+  --foreground:       #ffffff;
+  --card-foreground:  #ffffff;
+  --popover:          #0f172a;
+  --popover-foreground: #ffffff;
+  --border:           #334155;
+  --input:            #0f172a;
+  --muted:            #0f172a;
+  --muted-foreground: #cbd5e1;
+  --gray:             #94a3b8;
+  --ring:             #38bdf8;
+  --accent:           #1e293b;
+  --accent-foreground: #ffffff;
+  --primary:          #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary:        #1e293b;
+  --secondary-foreground: #ffffff;
+  --sidebar:          #0f172a;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary:  #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent:   #1e293b;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border:   #334155;
+  --sidebar-ring:     #38bdf8;
+  --destructive:      #ef4444;
+  --destructive-foreground: #ffffff;
   --radius:           1rem;
   --chart-1:          hsl(221, 87%, 58%);
   --chart-2:          hsl(221, 70%, 45%);
   --chart-3:          hsl(215, 12%, 62%);
   --chart-4:          hsl(228, 20%, 18%);
   --chart-5:          hsl(0, 0%, 100%);
-  --popover:          hsl(228, 28%, 6%);
-  --primary:          hsl(221, 87%, 53%);
-  --sidebar:          hsl(228, 28%, 6%);
   --spacing:          0.25rem;
   --font-mono:        'JetBrains Mono', monospace;
   --font-sans:        'Bricolage Grotesque', ui-sans-serif, sans-serif, system-ui;
-  --secondary:        hsl(228, 20%, 12%);
-  --background:       hsl(228, 33%, 3%);
   --font-serif:       Georgia, serif;
-  --foreground:       hsl(210, 20%, 96%);
-  --destructive:      hsl(0, 62%, 45%);
   --shadow-blur:      20px;
   --shadow-color:     0, 0, 0;
-  --sidebar-ring:     hsl(221, 87%, 58%);
   --shadow-spread:    0px;
   --letter-spacing:   -0.01em;
   --shadow-opacity:   0.5;
-  --sidebar-accent:   hsl(228, 20%, 12%);
-  --sidebar-border:   hsl(228, 14%, 16%);
-  --card-foreground:  hsl(210, 20%, 96%);
   --shadow-offset-x:  0px;
   --shadow-offset-y:  10px;
-  --sidebar-primary:  hsl(221, 87%, 53%);
-  --muted-foreground: hsl(215, 12%, 62%);
-  --accent-foreground:           hsl(0, 0%, 100%);
-  --popover-foreground:          hsl(210, 20%, 96%);
-  --primary-foreground:          hsl(0, 0%, 100%);
-  --sidebar-foreground:          hsl(210, 20%, 96%);
-  --secondary-foreground:        hsl(210, 20%, 96%);
-  --destructive-foreground:      hsl(0, 0%, 100%);
-  --sidebar-accent-foreground:   hsl(210, 20%, 96%);
-  --sidebar-primary-foreground:  hsl(0, 0%, 100%);
+
+  /* Toolbar & Control Variables (Dark Mode) */
+  --toolbar-bg: #0f172a;
+  --toolbar-surface: #1e293b;
+  --toolbar-text: #ffffff;
+  --toolbar-border: #334155;
+  --toolbar-hover: #334155;
 
   /* Legacy aliases for dark mode */
   --bg:               var(--background);
   --bg-white:         var(--card);
-  --text:             var(--foreground);
-  --text-muted:       var(--muted-foreground);
+  --text:             #ffffff;
+  --text-dark:        #ffffff;
+  --text-muted:       #cbd5e1;
   --danger:           var(--destructive);
-  --primary-hover:    hsl(221, 87%, 63%);
-  --primary-light:    hsl(221, 87%, 15%);
-  --card-hover-shadow: 0 10px 40px rgba(58, 117, 230, 0.2);
+  --primary-hover:    #60a5fa;
+  --primary-light:    rgba(59, 130, 246, 0.18);
+  --border-subtle:    #334155;
+  --bg-main:          var(--background);
+  --card-hover-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
 }
 
 @theme inline {
@@ -1698,28 +1719,82 @@ h1, h2, h3, h4, h5, h6 {
 .dark .workspace-empty-card p { color: var(--muted-foreground) !important; }
 .dark .workspace-info code   { background: var(--muted) !important; color: var(--ring) !important; }
 
-/* Secondary button */
+/* Secondary button & Follow-Up Button Harmony */
+.secondary-btn, .btn-outline {
+  background: var(--card, #ffffff);
+  color: var(--foreground, #0f172a);
+  border: 1px solid var(--border, #cbd5e1);
+  transition: all 0.2s ease;
+}
+.secondary-btn:hover, .btn-outline:hover {
+  border-color: var(--primary, #2563eb);
+  color: var(--primary, #2563eb);
+  background: var(--muted, #f8fafc);
+}
 .dark .secondary-btn, .dark .btn-outline { background: var(--card) !important; color: var(--foreground) !important; border-color: var(--border) !important; }
 .dark .secondary-btn:hover, .dark .btn-outline:hover { border-color: var(--ring) !important; color: var(--ring) !important; background: var(--muted) !important; }
 
-/* ── Notebook Toolbar Dropdowns High Contrast ── */
+/* Follow-Up Button & "Follow-Up Sent ✓" Feedback State */
+.btn-follow-up {
+  background: var(--card, #ffffff);
+  color: var(--primary, #2563eb);
+  border: 1px solid var(--border, #cbd5e1);
+  transition: all 0.2s ease;
+}
+.btn-follow-up:hover:not(:disabled) {
+  background: var(--muted, #f8fafc);
+  border-color: var(--primary, #2563eb);
+  color: var(--primary, #2563eb);
+}
+.btn-follow-up.follow-up-sent {
+  background: rgba(16, 185, 129, 0.14) !important;
+  border-color: #10b981 !important;
+  color: #059669 !important;
+}
+.dark .btn-follow-up.follow-up-sent {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: #34d399 !important;
+  color: #34d399 !important;
+}
+
+/* ── Light & Dark Mode Harmony for Toolbars, Dropdowns, Inputs & Modals ── */
 .notebook-toolbar,
 .notebook-rich-toolbar,
 .nb-toolbar {
-  background: #0f172a;
+  background: var(--toolbar-bg, #f8fafc);
+  color: var(--toolbar-text, #0f172a);
+  border-color: var(--toolbar-border, #cbd5e1);
+}
+
+.dark .notebook-toolbar,
+.dark .notebook-rich-toolbar,
+.dark .nb-toolbar {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
 }
 
 .notebook-toolbar select,
 .notebook-rich-toolbar select,
 .nb-toolbar select,
 .nb-tb-select {
+  background: var(--toolbar-surface, #ffffff) !important;
+  background-color: var(--toolbar-surface, #ffffff) !important;
+  color: var(--toolbar-text, #0f172a) !important;
+  border: 1px solid var(--toolbar-border, #cbd5e1) !important;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.dark .notebook-toolbar select,
+.dark .notebook-rich-toolbar select,
+.dark .nb-toolbar select,
+.dark .nb-tb-select {
   background: #0f172a !important;
   background-color: #0f172a !important;
   color: #ffffff !important;
   border: 1px solid #334155 !important;
-  border-radius: 6px;
-  padding: 4px 8px;
-  cursor: pointer;
 }
 
 .notebook-toolbar select option,
@@ -1730,8 +1805,34 @@ select#nbFontFamily option,
 select#nbFontSize option,
 select#nbLineHeight option,
 select#nbParaMargin option {
+  background: var(--toolbar-surface, #ffffff) !important;
+  background-color: var(--toolbar-surface, #ffffff) !important;
+  color: var(--toolbar-text, #0f172a) !important;
+}
+
+.dark .notebook-toolbar select option,
+.dark .notebook-rich-toolbar select option,
+.dark .nb-toolbar select option,
+.dark .nb-tb-select option,
+.dark select#nbFontFamily option,
+.dark select#nbFontSize option,
+.dark select#nbLineHeight option,
+.dark select#nbParaMargin option {
   background: #0f172a !important;
   background-color: #0f172a !important;
+  color: #ffffff !important;
+}
+
+/* Personal Feed Drawer Dark Mode Harmony */
+.dark #feedDrawer {
+  background: #0f172a !important;
+  border-left: 1px solid #334155 !important;
+  color: #ffffff !important;
+}
+.dark #feedDrawer .feed-drawer-header,
+.dark #feedDrawer .feed-item {
+  background: #1e293b !important;
+  border-color: #334155 !important;
   color: #ffffff !important;
 }
 

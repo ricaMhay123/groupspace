@@ -64,13 +64,17 @@ router.post('/:id/follow-up', requireGroupLeader, ctrl.followUpTask);
 
 // ─── Flagging (Blocked / Help Needed) ────────────────────────────────────────
 
-// POST /:taskId/flag and /:id/flag — flag as blocked (assignee or leader)
+// POST/PATCH /:taskId/flag and /:id/flag — flag as blocked (assignee or leader)
 router.post('/:taskId/flag', ctrl.flagTask);
 router.post('/:id/flag', ctrl.flagTask);
+router.patch('/:taskId/flag', ctrl.flagTask);
+router.patch('/:id/flag', ctrl.flagTask);
 
-// DELETE /:taskId/flag and /:id/flag — clear flag (assignee or leader)
+// DELETE/PATCH /:taskId/flag and /:taskId/unflag — clear flag (assignee or leader)
 router.delete('/:taskId/flag', ctrl.unflagTask);
 router.delete('/:id/flag', ctrl.unflagTask);
+router.patch('/:taskId/unflag', ctrl.unflagTask);
+router.patch('/:id/unflag', ctrl.unflagTask);
 
 // ─── Peer-Assist Workflow ─────────────────────────────────────────────────────
 

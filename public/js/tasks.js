@@ -86,7 +86,8 @@ function renderKanbanCard(task) {
       startBtn.style.cssText = 'margin-top:8px; padding:4px 10px; font-size:11px; font-weight:600; border-radius:6px; cursor:pointer; width:100%; text-align:center; display:block;';
       startBtn.textContent = 'Start Task';
       startBtn.onclick = (e) => {
-        e.stopPropagation();
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
         if (typeof updateTaskStatus === 'function') {
           updateTaskStatus(task.id, 'IN_PROGRESS');
         }
@@ -97,14 +98,29 @@ function renderKanbanCard(task) {
       const followUpBtn = document.createElement('button');
       followUpBtn.type = 'button';
       followUpBtn.className = 'btn-outline btn-follow-up';
+      followUpBtn.setAttribute('data-task-id', task.id);
       followUpBtn.style.cssText = 'margin-top:8px; padding:4px 10px; font-size:11px; font-weight:600; border-radius:6px; cursor:pointer; width:100%; text-align:center; display:block; color:var(--primary); border:1px solid var(--border); background:transparent;';
       followUpBtn.textContent = 'Follow Up';
       followUpBtn.onclick = (e) => {
-        e.stopPropagation();
-        followUpOnTask(task.id, task.title);
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+        followUpOnTask(task.id, task.title, followUpBtn, e);
       };
       card.appendChild(followUpBtn);
     }
+  } else if (task.status === 'IN_PROGRESS' && isLeader && assignedTo && currentUserId !== assignedTo) {
+    const followUpBtn = document.createElement('button');
+    followUpBtn.type = 'button';
+    followUpBtn.className = 'btn-outline btn-follow-up';
+    followUpBtn.setAttribute('data-task-id', task.id);
+    followUpBtn.style.cssText = 'margin-top:8px; padding:4px 10px; font-size:11px; font-weight:600; border-radius:6px; cursor:pointer; width:100%; text-align:center; display:block; color:var(--primary); border:1px solid var(--border); background:transparent;';
+    followUpBtn.textContent = 'Follow Up';
+    followUpBtn.onclick = (e) => {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+      followUpOnTask(task.id, task.title, followUpBtn, e);
+    };
+    card.appendChild(followUpBtn);
   }
 
   return card;
@@ -179,27 +195,27 @@ async function openTaskDetailsModal(taskId) {
   if (task.status === 'TODO') {
     if (isAssigned) {
       // FOR ASSIGNED MEMBERS (currentUser.id === task.assigned_to): primary action button "Start Task"
-      actionsHtml += `<button type="button" class="btn-green btn-start-task" style="padding:7px 16px; font-size:12px; font-weight:600;" onclick="updateTaskStatusAndClose(${task.id}, 'IN_PROGRESS')">Start Task</button>`;
+      actionsHtml += `<button type="button" class="btn-green btn-start-task" style="padding:7px 16px; font-size:12px; font-weight:600;" onclick="event.preventDefault(); updateTaskStatusAndClose(${task.id}, 'IN_PROGRESS', event)">Start Task</button>`;
     } else if (isLeader && assignedTo && currentUserId !== assignedTo) {
       // FOR LEADERS (currentUser.role === 'leader' and currentUser.id !== task.assigned_to): discrete "Follow Up" button
-      actionsHtml += `<button type="button" class="btn-outline btn-follow-up" style="padding:7px 16px; font-size:12px; font-weight:600; color:var(--primary); border:1px solid var(--border);" onclick="followUpOnTask(${task.id}, '${escapeHtml(task.title).replace(/'/g, "\\'")}')">Follow Up</button>`;
+      actionsHtml += `<button type="button" class="btn-outline btn-follow-up" data-task-id="${task.id}" style="padding:7px 16px; font-size:12px; font-weight:600; color:var(--primary); border:1px solid var(--border);" onclick="event.preventDefault(); followUpOnTask(${task.id}, '${escapeHtml(task.title).replace(/'/g, "\\'")}', this, event)">Follow Up</button>`;
     }
   } else if (task.status === 'IN_PROGRESS') {
     if (isAssigned) {
-      actionsHtml += `<button type="button" class="btn-green" style="padding:7px 16px; font-size:12px; font-weight:600;" onclick="updateTaskStatusAndClose(${task.id}, 'PENDING_APPROVAL')">Submit for Review</button>`;
+      actionsHtml += `<button type="button" class="btn-green" style="padding:7px 16px; font-size:12px; font-weight:600;" onclick="event.preventDefault(); updateTaskStatusAndClose(${task.id}, 'PENDING_APPROVAL', event)">Submit for Review</button>`;
     } else if (isLeader && assignedTo && currentUserId !== assignedTo) {
-      actionsHtml += `<button type="button" class="btn-outline btn-follow-up" style="padding:7px 16px; font-size:12px; font-weight:600; color:var(--primary); border:1px solid var(--border);" onclick="followUpOnTask(${task.id}, '${escapeHtml(task.title).replace(/'/g, "\\'")}')">Follow Up</button>`;
+      actionsHtml += `<button type="button" class="btn-outline btn-follow-up" data-task-id="${task.id}" style="padding:7px 16px; font-size:12px; font-weight:600; color:var(--primary); border:1px solid var(--border);" onclick="event.preventDefault(); followUpOnTask(${task.id}, '${escapeHtml(task.title).replace(/'/g, "\\'")}', this, event)">Follow Up</button>`;
     }
   } else if (task.status === 'PENDING_APPROVAL') {
     if (isLeader) {
-      actionsHtml += `<button type="button" class="btn-green" style="padding:7px 16px; font-size:12px; font-weight:600;" onclick="closeModal('taskDetailsModal'); openReviewModal(${task.id}, '${escapeHtml(task.title).replace(/'/g, "\\'")}')">Review & Approve</button>`;
+      actionsHtml += `<button type="button" class="btn-green" style="padding:7px 16px; font-size:12px; font-weight:600;" onclick="event.preventDefault(); closeModal('taskDetailsModal'); openReviewModal(${task.id}, '${escapeHtml(task.title).replace(/'/g, "\\'")}')">Review & Approve</button>`;
     } else {
       actionsHtml += `<span style="font-size:12px; color:var(--warning); font-weight:600;">Awaiting Leader Review</span>`;
     }
   }
 
   if (isCreator || isLeader) {
-    actionsHtml += `<button type="button" class="btn-outline" style="padding:7px 14px; font-size:12px; color:#ef4444; border-color:rgba(239,68,68,0.4);" onclick="deleteTaskAndClose(${task.id})">Delete Task</button>`;
+    actionsHtml += `<button type="button" class="btn-outline" style="padding:7px 14px; font-size:12px; color:#ef4444; border-color:rgba(239,68,68,0.4);" onclick="event.preventDefault(); deleteTaskAndClose(${task.id}, event)">Delete Task</button>`;
   }
 
   bodyEl.innerHTML = `
@@ -226,11 +242,11 @@ async function openTaskDetailsModal(taskId) {
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
         <div style="font-size:11px; font-weight:700; color:var(--gray); text-transform:uppercase; letter-spacing:0.5px;">Blockers & Assistance</div>
         ${(isAssignee || isLeader) ? `
-          <button type="button" class="btn-outline" style="padding:3px 10px; font-size:11px; border-radius:6px; color:${task.is_flagged ? '#10b981' : '#ef4444'}; border-color:${task.is_flagged ? '#10b981' : 'rgba(239,68,68,0.4)'}; cursor:pointer;" onclick="toggleTaskFlagDetails(${task.id}, ${Boolean(task.is_flagged)})">
+          <button type="button" class="btn-outline" style="padding:3px 10px; font-size:11px; border-radius:6px; color:${task.is_flagged ? '#10b981' : '#ef4444'}; border-color:${task.is_flagged ? '#10b981' : 'rgba(239,68,68,0.4)'}; cursor:pointer;" onclick="event.preventDefault(); toggleTaskFlagDetails(${task.id}, ${Boolean(task.is_flagged)}, event)">
             ${task.is_flagged ? 'Clear Help Flag' : 'Flag for Help'}
           </button>
         ` : (task.is_flagged ? `
-          <button type="button" class="btn-outline" style="padding:3px 10px; font-size:11px; border-radius:6px; color:var(--primary); border-color:var(--primary); cursor:pointer;" onclick="offerTaskHelpDetails(${task.id})">
+          <button type="button" class="btn-outline" style="padding:3px 10px; font-size:11px; border-radius:6px; color:var(--primary); border-color:var(--primary); cursor:pointer;" onclick="event.preventDefault(); offerTaskHelpDetails(${task.id}, event)">
             Offer Help
           </button>
         ` : '')}
@@ -270,8 +286,8 @@ async function openTaskDetailsModal(taskId) {
             </div>
             ${(isAssignee || isLeader) && o.status === 'offered' ? `
               <div style="display:flex; gap:6px;">
-                <button type="button" class="btn-green" style="padding:2px 8px; font-size:10px;" onclick="respondAssistOffer(${task.id}, ${o.user_id}, 'accepted')">Accept</button>
-                <button type="button" class="btn-outline" style="padding:2px 8px; font-size:10px;" onclick="respondAssistOffer(${task.id}, ${o.user_id}, 'declined')">Decline</button>
+                <button type="button" class="btn-green" style="padding:2px 8px; font-size:10px;" onclick="event.preventDefault(); respondAssistOffer(${task.id}, ${o.user_id}, 'accepted', event)">Accept</button>
+                <button type="button" class="btn-outline" style="padding:2px 8px; font-size:10px;" onclick="event.preventDefault(); respondAssistOffer(${task.id}, ${o.user_id}, 'declined', event)">Decline</button>
               </div>
             ` : ''}
           </div>
@@ -284,7 +300,7 @@ async function openTaskDetailsModal(taskId) {
       <div style="display:flex; gap:8px; align-items:center;">
         ${actionsHtml}
       </div>
-      <button type="button" class="btn-outline" style="padding:7px 16px; font-size:12px;" onclick="closeModal('taskDetailsModal')">Close</button>
+      <button type="button" class="btn-outline" style="padding:7px 16px; font-size:12px;" onclick="event.preventDefault(); closeModal('taskDetailsModal')">Close</button>
     </div>
   `;
 
@@ -296,42 +312,48 @@ async function openTaskDetailsModal(taskId) {
 /**
  * Task Details Modal workflow helpers
  */
-async function updateTaskStatusAndClose(taskId, status) {
+async function updateTaskStatusAndClose(taskId, status, event = null) {
+  if (event && typeof event.preventDefault === 'function') event.preventDefault();
   if (typeof closeModal === 'function') closeModal('taskDetailsModal');
   if (typeof updateTaskStatus === 'function') {
     await updateTaskStatus(taskId, status);
   }
 }
 
-async function deleteTaskAndClose(taskId) {
+async function deleteTaskAndClose(taskId, event = null) {
+  if (event && typeof event.preventDefault === 'function') event.preventDefault();
   if (typeof closeModal === 'function') closeModal('taskDetailsModal');
   if (typeof deleteTask === 'function') {
-    await deleteTask(taskId);
+    await deleteTask(taskId, event);
   }
 }
 
-async function toggleTaskFlagDetails(taskId, currentlyFlagged) {
+async function toggleTaskFlagDetails(taskId, currentlyFlagged, event = null) {
+  if (event && typeof event.preventDefault === 'function') event.preventDefault();
   await toggleTaskFlag(taskId, currentlyFlagged);
   if (typeof openTaskDetailsModal === 'function') {
     openTaskDetailsModal(taskId);
   }
 }
 
-async function offerTaskHelpDetails(taskId) {
+async function offerTaskHelpDetails(taskId, event = null) {
+  if (event && typeof event.preventDefault === 'function') event.preventDefault();
   await offerTaskHelp(taskId);
   if (typeof openTaskDetailsModal === 'function') {
     openTaskDetailsModal(taskId);
   }
 }
 
-async function respondAssistOffer(taskId, helperId, status) {
+async function respondAssistOffer(taskId, helperId, status, event = null) {
+  if (event && typeof event.preventDefault === 'function') event.preventDefault();
   try {
     const activeGroupId = typeof currentGroupId !== 'undefined' ? currentGroupId : null;
     if (!activeGroupId) return;
 
+    const decision = status === 'accepted' ? 'accept' : status === 'declined' ? 'decline' : status;
     await apiFetch(`/api/groups/${activeGroupId}/tasks/${taskId}/assist/${helperId}`, {
       method: 'PATCH',
-      body: JSON.stringify({ status })
+      body: JSON.stringify({ status, decision })
     });
     if (typeof showToast === 'function') showToast(`Help offer ${status}.`, 'success');
     openTaskDetailsModal(taskId);
@@ -429,23 +451,79 @@ function updateLeaderBacklogBadge(pendingCount, isLeader) {
 
 /**
  * Send a follow-up ping on a task to the assigned member's Personal Feed drawer.
+ * Provides immediate visual feedback ("Follow-Up Sent ✓" for 2 seconds before reverting)
+ * and dispatches the notification without refreshing or breaking the DOM.
  * Route: POST /api/tasks/:taskId/follow-up
  */
-async function followUpOnTask(taskId, taskTitle) {
+async function followUpOnTask(taskId, taskTitle, btnEl = null, event = null) {
+  if (event && typeof event.preventDefault === 'function') {
+    event.preventDefault();
+    if (typeof event.stopPropagation === 'function') {
+      event.stopPropagation();
+    }
+  }
+
+  // Collect all matching Follow Up buttons for this task in the DOM
+  const targetButtons = new Set();
+  if (btnEl && btnEl.nodeType === 1) {
+    targetButtons.add(btnEl);
+  }
+  if (typeof document !== 'undefined') {
+    document.querySelectorAll(`.btn-follow-up[data-task-id="${taskId}"]`).forEach(el => targetButtons.add(el));
+    if (targetButtons.size === 0 && document.activeElement && document.activeElement.classList?.contains('btn-follow-up')) {
+      targetButtons.add(document.activeElement);
+    }
+  }
+
+  // Provide immediate visual feedback: temporarily change label/badge to "Follow-Up Sent ✓" for 2 seconds
+  targetButtons.forEach((btn) => {
+    if (btn._followUpTimer) {
+      clearTimeout(btn._followUpTimer);
+    }
+    const originalText = btn.getAttribute('data-original-label') || 'Follow Up';
+    btn.setAttribute('data-original-label', originalText);
+    btn.textContent = 'Follow-Up Sent ✓';
+    btn.classList.add('follow-up-sent');
+    btn.disabled = true;
+
+    btn._followUpTimer = setTimeout(() => {
+      if (btn && btn.isConnected !== false) {
+        btn.textContent = originalText;
+        btn.classList.remove('follow-up-sent');
+        btn.disabled = false;
+      }
+      btn._followUpTimer = null;
+    }, 2000);
+  });
+
   try {
     const activeGroupId = (typeof currentGroupId !== 'undefined' && currentGroupId)
       ? currentGroupId
       : localStorage.getItem('groupspace_active_group_id');
 
-    const res = await apiFetch(`/api/tasks/${taskId}/follow-up`, {
-      method: 'POST',
-      body: JSON.stringify({
-        groupId: activeGroupId
-      })
-    });
+    let res;
+    try {
+      res = await apiFetch(`/api/tasks/${taskId}/follow-up`, {
+        method: 'POST',
+        body: JSON.stringify({
+          groupId: activeGroupId
+        })
+      });
+    } catch (primaryErr) {
+      if (activeGroupId) {
+        res = await apiFetch(`/api/groups/${activeGroupId}/tasks/${taskId}/follow-up`, {
+          method: 'POST',
+          body: JSON.stringify({
+            groupId: activeGroupId
+          })
+        });
+      } else {
+        throw primaryErr;
+      }
+    }
 
     if (typeof showToast === 'function') {
-      showToast(res.message || `Followed up on task: "${taskTitle || 'Task'}"`, 'success');
+      showToast((res && res.message) || `Followed up on task: "${taskTitle || 'Task'}"`, 'success');
     }
     if (typeof window.refreshAppFeed === 'function') {
       window.refreshAppFeed();

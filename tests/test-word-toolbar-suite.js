@@ -59,3 +59,4 @@ assert(notebookHtml.includes('color: #ffffff') || notebookHtml.includes('color:#
 console.log('[PASS] High contrast toolbar styling (#0f172a dark slate / #ffffff white) verified.');
 
 console.log('\nALL MS WORD TOOLBAR SUITE TESTS PASSED SUCCESSFULLY!');
+
