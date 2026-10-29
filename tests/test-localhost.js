@@ -140,7 +140,8 @@ async function runLocalhostTests() {
       { script: 'tests/test-mobile-responsive.js', name: 'Mobile Responsive & Navigation Drawer' },
       { script: 'tests/test-notebook-word-personal.js', name: 'Personal Notebook & Privacy Isolation' },
       { script: 'tests/test-coleader-requests.js', name: 'Co-Leader Role & Member Leadership Workflow' },
-      { script: 'tests/test-expense-net-split.js', name: 'Expense Ledger & Net Split Plan' }
+      { script: 'tests/test-expense-net-split.js', name: 'Expense Ledger & Net Split Plan' },
+      { script: 'tests/test-personal-space-rearchitecture.js', name: 'Personal Space Library & Quick Capture' }
     ];
 
     for (const suite of testSuites) {

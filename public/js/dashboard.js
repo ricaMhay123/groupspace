@@ -2562,11 +2562,16 @@ function switchPersonalSubTab(type) {
 
   const addBtn = document.getElementById('personalAddBtn');
   if (addBtn) {
-    addBtn.textContent = type === 'NOTE' ? '+ New Page' : (type === 'TASK' ? '+ Add To-Do' : '+ Log Expense');
+    if (type === 'NOTE') {
+      addBtn.style.display = 'none';
+    } else {
+      addBtn.style.display = 'inline-flex';
+      addBtn.textContent = type === 'TASK' ? '+ Add To-Do' : '+ Log Expense';
+    }
   }
 
   const headingMap = {
-    NOTE: 'Private Notebook Pages',
+    NOTE: 'Private Notebook Library',
     TASK: 'Personal To-Dos',
     EXPENSE: 'Personal Budget & Expenses'
   };
@@ -2575,6 +2580,8 @@ function switchPersonalSubTab(type) {
 
   if (type === 'NOTE') {
     ensurePersonalNotebookToolbars();
+  } else {
+    togglePersonalQuickCapture(false);
   }
   loadPersonalItems();
 }
@@ -2752,6 +2759,34 @@ async function handlePersonalImportDocument(event) {
   reader.readAsText(file);
 }
 
+function togglePersonalQuickCapture(forceState) {
+  const drawer = document.getElementById('personalQuickCaptureDrawer');
+  const btn = document.getElementById('togglePersonalQuickCaptureBtn');
+  if (!drawer) return;
+
+  const shouldOpen = (typeof forceState === 'boolean') ? forceState : (drawer.style.display === 'none' || !drawer.style.display);
+  if (shouldOpen) {
+    drawer.style.display = 'block';
+    if (btn) {
+      btn.innerHTML = '✕ Close Drawer';
+      btn.classList.remove('btn-green');
+      btn.classList.add('btn-outline');
+    }
+    ensurePersonalNotebookToolbars();
+    const titleInput = document.getElementById('personalNotebookTitleInput');
+    if (titleInput) {
+      setTimeout(() => titleInput.focus(), 100);
+    }
+  } else {
+    drawer.style.display = 'none';
+    if (btn) {
+      btn.innerHTML = '+ New Note';
+      btn.classList.remove('btn-outline');
+      btn.classList.add('btn-green');
+    }
+  }
+}
+
 async function saveInlinePersonalNotebookPage(e) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
   const canvasEl = document.getElementById('personalNotebookCanvas');
@@ -2778,12 +2813,9 @@ async function saveInlinePersonalNotebookPage(e) {
     });
     if (titleInput) titleInput.value = '';
     canvasEl.innerHTML = '';
-    showToast(`Private page "${resolvedTitle}" saved!`, 'success');
+    togglePersonalQuickCapture(false);
+    showToast(`Private note "${resolvedTitle}" saved to library!`, 'success');
     await loadPersonalItems();
-    const newId = res && res.data ? res.data.id : null;
-    if (newId) {
-      window.location.href = `/notebook.html?personal=1${currentGroupId ? '&groupId=' + currentGroupId : ''}&noteId=${newId}`;
-    }
   } catch (err) {
     showToast(err.message || 'Failed to save private page.', 'error');
   }
@@ -2812,7 +2844,7 @@ function renderPersonalNotesGrid(items) {
     : items.filter(n => String(n.folder_id || '') === String(activePersonalFolderFilter));
 
   if (!filtered || filtered.length === 0) {
-    container.innerHTML = '<p style="color:var(--gray); padding:30px;">Your private notebook has no pages in this view. Type in the canvas above or click <strong>+ New Page</strong>!</p>';
+    container.innerHTML = '<p style="color:var(--muted-foreground); padding:36px; text-align:center;">Your private library has no notes in this folder. Click <strong>+ New Note</strong> to start drafting!</p>';
     return;
   }
 
@@ -2820,34 +2852,38 @@ function renderPersonalNotesGrid(items) {
     const displayTitle = n.title || extractDashboardAutoTitle(n.content || '');
     const cleanPreview = (n.content || '').replace(/^<!--GS_SHAPES_JSON:.*?-->/, '').replace(/<[^>]*>/g, '').trim();
     const fullEditorUrl = `/notebook.html?personal=1${currentGroupId ? '&groupId=' + currentGroupId : ''}&noteId=${n.id}`;
+    const folderObj = personalNotebookFolders.find(f => Number(f.id) === Number(n.folder_id));
+    const folderName = folderObj ? folderObj.name : 'Uncategorized';
 
     return `
       <div class="note-card ${n.is_pinned ? 'pinned' : ''}" style="cursor:pointer;" onclick="window.location.href='${fullEditorUrl}'" title="Click to open in Isolated Personal Full Editor">
         <div>
-          <h4 style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-            <span>${escapeHtml(displayTitle)}</span>
-            <span style="font-size:10.5px; padding:2px 8px; background:rgba(56,189,248,0.15); color:#38bdf8; border-radius:12px; font-weight:700; white-space:nowrap;">
-              Strictly Private
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;">
+            <span class="note-card-folder-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              ${escapeHtml(folderName)}
             </span>
-          </h4>
-          <p style="white-space:pre-wrap;">${escapeHtml(cleanPreview.slice(0, 220))}${cleanPreview.length > 220 ? '…' : ''}</p>
-        </div>
-        <div onclick="event.stopPropagation();">
-          <div style="margin-top:8px; display:flex; align-items:center; justify-content:space-between; gap:6px; flex-wrap:wrap;">
-            <select onchange="movePersonalNoteToFolder(${n.id}, this.value)" style="font-size:11px; padding:2px 6px; border-radius:6px; background:var(--card); color:var(--text); border:1px solid var(--border); cursor:pointer;" title="Move to private folder">
+            <select onchange="movePersonalNoteToFolder(${n.id}, this.value)" onclick="event.stopPropagation();" style="font-size:11px; padding:2px 6px; border-radius:6px; background:var(--card); color:var(--text); border:1px solid var(--border); cursor:pointer;" title="Move to private folder">
+              <option value="">Move...</option>
               <option value="">Uncategorized</option>
               ${personalNotebookFolders.map(f => `<option value="${f.id}" ${Number(n.folder_id) === Number(f.id) ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}
             </select>
           </div>
-          <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px;">
-            <span>Only You</span>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.txt</button>
-              <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.pdf</button>
-              <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.docx</button>
-              <span style="cursor:pointer; color:#ef4444; margin-left:4px; font-size:11px; font-weight:600;" title="Delete Private Note" onclick="deletePersonalItem(${n.id}, event)">Delete</span>
-            </div>
+          <h4 style="margin:0 0 8px 0; font-size:1.05rem; font-weight:700; color:var(--foreground);">
+            ${escapeHtml(displayTitle)}
+          </h4>
+          <p style="white-space:pre-wrap; color:var(--muted-foreground); font-size:0.88rem; line-height:1.5;">${escapeHtml(cleanPreview.slice(0, 180))}${cleanPreview.length > 180 ? '…' : ''}</p>
+        </div>
+        <div onclick="event.stopPropagation();" class="note-card-actions-bar">
+          <div class="note-export-group">
+            <span style="font-size:0.72rem; color:var(--muted-foreground); margin-right:4px;">Export:</span>
+            <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id}, '${escapeHtml(displayTitle).replace(/'/g, "\\'")}', '${escapeHtml(n.content || '').replace(/'/g, "\\'")}')">TXT</button>
+            <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id}, '${escapeHtml(displayTitle).replace(/'/g, "\\'")}', '${escapeHtml(n.content || '').replace(/'/g, "\\'")}')">PDF</button>
+            <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id}, '${escapeHtml(displayTitle).replace(/'/g, "\\'")}', '${escapeHtml(n.content || '').replace(/'/g, "\\'")}')">DOCX</button>
           </div>
+          <button type="button" class="btn-note-delete" title="Delete Private Note" onclick="deletePersonalItem(${n.id}, event)">
+            Delete
+          </button>
         </div>
       </div>
     `;

@@ -311,9 +311,8 @@
     <!-- TAB 6: PERSONAL SPACE -->
     <section id="tab-personal" class="tab-view" style="display:none;">
       <div style="margin-bottom:20px;">
-        <span class="hero-tag" style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase;">STRICTLY PRIVATE TO YOU</span>
         <h2>Your Isolated Space</h2>
-        <p style="color:var(--gray);">Items saved here are stored privately for your account (`is_private = TRUE`, `user_id = current_user.id`) and are completely invisible to other workspace members.</p>
+        <p style="color:var(--muted-foreground); margin-top:4px;">Your personal sanctuary. Everything saved here is strictly confidential and visible only to your account.</p>
       </div>
 
       <div class="personal-tabs" role="tablist" aria-label="Personal Space Sub-Tabs">
@@ -331,7 +330,7 @@
         </button>
       </div>
 
-      <!-- ISOLATED PRIVATE/PERSONAL NOTEBOOK WORKSPACE (Replicated from Shared Notebook) -->
+      <!-- ISOLATED PRIVATE/PERSONAL NOTEBOOK WORKSPACE -->
       <div id="personalNotebookWorkspace">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:14px; flex-wrap:wrap;">
           <div class="dashboard-search" style="flex:1; min-width:220px;">
@@ -342,41 +341,42 @@
             <button type="button" onclick="document.getElementById('personalImportFileInput').click()" class="btn-outline" style="font-size:13px; padding:8px 14px;">Import Document</button>
             <input type="file" id="personalImportFileInput" accept=".txt,.md,.markdown" style="display:none;" onchange="handlePersonalImportDocument(event)">
             <button type="button" onclick="window.open('notebook.html?personal=1' + (currentGroupId ? '&groupId=' + currentGroupId : ''), '_blank')" class="btn-outline" style="font-size:13px; padding:8px 16px;">Full Editor</button>
-            <button type="button" onclick="openPersonalAddModal()" class="btn-green">+ New Page</button>
+            <button type="button" id="togglePersonalQuickCaptureBtn" onclick="togglePersonalQuickCapture()" class="btn-green">+ New Note</button>
           </div>
         </div>
 
         <!-- Personal Folder Filter & Management Bar -->
         <div id="personalNotebookFoldersBar" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:16px;"></div>
 
-        <!-- Embedded MS Word-Style Rich Text & Flowchart Canvas for Quick Private Note Authoring -->
-        <div class="dashboard-panel" style="margin-bottom:20px;">
-          <div class="panel-header" style="margin-bottom:10px;">
+        <!-- Collapsible Quick Capture Drawer (Hidden by default; expands on + New Note) -->
+        <div id="personalQuickCaptureDrawer" class="personal-quick-capture-drawer" style="display:none;">
+          <div class="personal-quick-capture-header">
             <div>
-              <h3 style="margin:0;">Private Notebook Canvas</h3>
-              <span style="font-size:12px; color:var(--gray);">Auto-titles from your first non-empty phrase/sentence upon saving • Strictly private (`is_private = TRUE`)</span>
+              <h3 class="personal-quick-capture-title">Quick Note Capture</h3>
+              <div class="personal-quick-capture-sub">Draft a private note or diagram. Automatically saved to your private notebook.</div>
             </div>
-            <div style="display:flex; gap:8px; align-items:center;">
+            <div class="personal-quick-capture-actions">
               <select id="personalInlineFolderSelect" class="form-control" style="width:auto; font-size:12px; padding:6px 10px;">
                 <option value="">Uncategorized (Root)</option>
               </select>
-              <button type="button" class="btn-green" onclick="saveInlinePersonalNotebookPage()">Save Private Page</button>
+              <button type="button" class="btn-outline" onclick="togglePersonalQuickCapture(false)" style="font-size:12px; padding:6px 12px;">Cancel</button>
+              <button type="button" class="btn-green" onclick="saveInlinePersonalNotebookPage()">Save Note</button>
             </div>
           </div>
           <div id="personalNotebookToolbarContainer"></div>
           <div style="margin-bottom:10px;">
-            <input type="text" id="personalNotebookTitleInput" class="form-control" placeholder="Page Title (optional — leave blank to auto-title from canvas)..." style="font-weight:700; font-size:15px;">
+            <input type="text" id="personalNotebookTitleInput" class="form-control" placeholder="Page Title (optional — auto-titles from first line)..." style="font-weight:700; font-size:15px;">
           </div>
           <div id="personalNotebookCanvas" contenteditable="true" spellcheck="true"
-               style="min-height:180px; padding:18px 20px; border:1px solid var(--border); border-radius:10px; background:var(--card-bg, #ffffff); color:var(--text, #0f172a); font-size:16px; line-height:1.65; outline:none;"
-               data-placeholder="Start typing your private note or insert flowchart shapes above (if the title bar is left blank, the first phrase/sentence automatically becomes the page title upon saving)..."></div>
+               style="min-height:180px; padding:18px 20px; border:1px solid var(--border); border-radius:10px; background:var(--card); color:var(--foreground); font-size:16px; line-height:1.65; outline:none;"
+               data-placeholder="Start typing your private note or insert flowchart shapes above..."></div>
         </div>
       </div>
 
       <div class="dashboard-panel">
         <div class="panel-header">
-          <h3 id="personalSubTabTitle">Private Notebook Pages</h3>
-          <button onclick="openPersonalAddModal()" class="btn-green" id="personalAddBtn">+ New Page</button>
+          <h3 id="personalSubTabTitle">Private Notebook Library</h3>
+          <button onclick="openPersonalAddModal()" class="btn-green" id="personalAddBtn" style="display:none;">+ Add Item</button>
         </div>
         <div id="personalItemsContainer" class="notebook-grid">
           <p style="color:var(--gray);">Loading personal space...</p>
