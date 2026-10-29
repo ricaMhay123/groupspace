@@ -313,10 +313,19 @@
         <p style="color:var(--gray);">Items saved here are stored privately for your account (`is_private = TRUE`, `user_id = current_user.id`) and are completely invisible to other workspace members.</p>
       </div>
 
-      <div class="personal-tabs">
-        <button class="personal-tab-btn active" onclick="switchPersonalSubTab('NOTE')">Private Notebook</button>
-        <button class="personal-tab-btn" onclick="switchPersonalSubTab('TASK')">Personal To-Dos</button>
-        <button class="personal-tab-btn" onclick="switchPersonalSubTab('EXPENSE')">Personal Budget</button>
+      <div class="personal-tabs" role="tablist" aria-label="Personal Space Sub-Tabs">
+        <button type="button" class="personal-tab personal-tab-btn active" onclick="switchPersonalSubTab('NOTE')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          <span>Private Notebook</span>
+        </button>
+        <button type="button" class="personal-tab personal-tab-btn" onclick="switchPersonalSubTab('TASK')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+          <span>Personal To-Dos</span>
+        </button>
+        <button type="button" class="personal-tab personal-tab-btn" onclick="switchPersonalSubTab('EXPENSE')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          <span>Personal Budget</span>
+        </button>
       </div>
 
       <!-- ISOLATED PRIVATE/PERSONAL NOTEBOOK WORKSPACE (Replicated from Shared Notebook) -->

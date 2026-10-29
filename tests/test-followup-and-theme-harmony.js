@@ -39,5 +39,12 @@ assert(notebookHtml.includes('--nb-tb-bg: #0f172a;') && notebookHtml.includes('-
 assert(notebookJs.includes('var(--toolbar-bg, #f8fafc)') && notebookJs.includes('var(--toolbar-text, #0f172a)'), 'notebook.js embedded toolbar must use theme-harmonized CSS variables');
 console.log('✓ 3. Light Mode (#0f172a on #ffffff/#f8fafc with #cbd5e1 border) & Dark Mode (#ffffff on #0f172a) UI harmony verified');
 
-console.log('ALL PHASE 1 TESTS PASSED SUCCESSFULLY!');
+// 4. Verify Personal Space Sub-Tabs button styling and harmony
+const dashboardHtml = fs.readFileSync(path.join(__dirname, '../public/dashboard.html'), 'utf8');
+assert(dashboardHtml.includes('class="personal-tab personal-tab-btn'), 'dashboard.html must have properly classed personal tab buttons');
+assert(styleCss.includes('.personal-tab,') && styleCss.includes('.personal-tab-btn'), 'style.css must define .personal-tab-btn alongside .personal-tab');
+assert(styleCss.includes('.dark .personal-tab-btn'), 'style.css must define dark mode rules for .personal-tab-btn');
+console.log('✓ 4. Personal space sub-tabs modern button styling & theme harmony verified');
+
+console.log('ALL PHASE 1 & BUTTON HARMONY TESTS PASSED SUCCESSFULLY!');
 

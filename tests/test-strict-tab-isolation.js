@@ -66,3 +66,4 @@ assert(notebookJs.includes("sec.style.display = sections.includes(activeTab) ? '
 console.log('[PASS] Embedded notebook.js ribbon toolbar strict tab isolation verified.');
 
 console.log('\nALL STRICT TAB ISOLATION TESTS PASSED!');
+

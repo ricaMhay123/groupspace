@@ -2470,7 +2470,7 @@ function ensurePersonalNotebookToolbars() {
 
 function switchPersonalSubTab(type) {
   personalSubTab = type;
-  document.querySelectorAll('.personal-tab-btn').forEach(btn => {
+  document.querySelectorAll('.personal-tab-btn, .personal-tab').forEach(btn => {
     const isMatch = (type === 'NOTE' && (btn.textContent.includes('Note') || btn.textContent.includes('Notebook'))) ||
       (type === 'TASK' && btn.textContent.includes('To-Dos')) ||
       (type === 'EXPENSE' && btn.textContent.includes('Budget'));
