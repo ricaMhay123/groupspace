@@ -508,13 +508,13 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
   }).join('');
 
   const activityFeedHtml = activities.length === 0
-    ? '<p style="color:var(--gray); font-size:13px; padding:15px; text-align:center;">No recent workspace events yet.</p>'
+    ? '<div style="text-align:center; padding:24px 16px; color:var(--gray);"><p style="margin:0; font-size:12px;">No recent workspace events yet.</p></div>'
     : activities.slice(0, 5).map(a => `
       <div class="activity-item">
         <div class="activity-icon">${getActivityIcon(a.action_type)}</div>
-        <div style="flex:1;">
-          <h4>${escapeHtml(a.description)}</h4>
-          <p>${formatDate(a.created_at)}</p>
+        <div style="flex:1; min-width:0;">
+          <div class="activity-desc">${escapeHtml(a.description)}</div>
+          <div class="activity-date">${formatDate(a.created_at)}</div>
         </div>
       </div>
     `).join('');
@@ -657,13 +657,13 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
   }).join('');
 
   const activityFeedHtml = activities.length === 0
-    ? '<p style="color:var(--gray); font-size:13px; padding:15px; text-align:center;">No recent workspace events yet.</p>'
+    ? '<div style="text-align:center; padding:24px 16px; color:var(--gray);"><p style="margin:0; font-size:12px;">No recent workspace events yet.</p></div>'
     : activities.slice(0, 5).map(a => `
       <div class="activity-item">
         <div class="activity-icon">${getActivityIcon(a.action_type)}</div>
-        <div style="flex:1;">
-          <h4>${escapeHtml(a.description)}</h4>
-          <p>${formatDate(a.created_at)}</p>
+        <div style="flex:1; min-width:0;">
+          <div class="activity-desc">${escapeHtml(a.description)}</div>
+          <div class="activity-date">${formatDate(a.created_at)}</div>
         </div>
       </div>
     `).join('');
@@ -1170,24 +1170,24 @@ async function removeMemberFromWorkspace(userId, memberName) {
 function getActivityIcon(type) {
   const t = String(type || '').toUpperCase();
   if (t.includes('FLAGGED') || t.includes('BLOCKED')) {
-    return `<span style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#ef4444; background:rgba(239,68,68,0.1); padding:2px 6px; border-radius:4px;">Alert</span>`;
+    return `<span class="badge-act" style="font-size:11px; font-weight:600; color:#ef4444; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); padding:2px 7px; border-radius:6px; display:inline-block; line-height:1.2;">Alert</span>`;
   }
   if (t.includes('TASK')) {
-    return `<span style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted, #64748b); background:var(--muted, #f1f5f9); padding:2px 6px; border-radius:4px;">Task</span>`;
+    return `<span class="badge-act" style="font-size:11px; font-weight:600; color:var(--primary); background:rgba(79,70,229,0.08); border:1px solid rgba(79,70,229,0.18); padding:2px 7px; border-radius:6px; display:inline-block; line-height:1.2;">Task</span>`;
   }
   if (t.includes('EXPENSE')) {
-    return `<span style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted, #64748b); background:var(--muted, #f1f5f9); padding:2px 6px; border-radius:4px;">Finance</span>`;
+    return `<span class="badge-act" style="font-size:11px; font-weight:600; color:#059669; background:rgba(5,150,105,0.08); border:1px solid rgba(5,150,105,0.18); padding:2px 7px; border-radius:6px; display:inline-block; line-height:1.2;">Finance</span>`;
   }
   if (t.includes('NOTE') || t.includes('NOTEBOOK')) {
-    return `<span style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted, #64748b); background:var(--muted, #f1f5f9); padding:2px 6px; border-radius:4px;">Note</span>`;
+    return `<span class="badge-act" style="font-size:11px; font-weight:600; color:#0284c7; background:rgba(2,132,199,0.08); border:1px solid rgba(2,132,199,0.18); padding:2px 7px; border-radius:6px; display:inline-block; line-height:1.2;">Note</span>`;
   }
   if (t.includes('TOPIC') || t.includes('COMMENT') || t.includes('MENTION')) {
-    return `<span style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted, #64748b); background:var(--muted, #f1f5f9); padding:2px 6px; border-radius:4px;">Topic</span>`;
+    return `<span class="badge-act" style="font-size:11px; font-weight:600; color:#7c3aed; background:rgba(124,58,237,0.08); border:1px solid rgba(124,58,237,0.18); padding:2px 7px; border-radius:6px; display:inline-block; line-height:1.2;">Topic</span>`;
   }
   if (t.includes('WORKSPACE') || t.includes('MEMBER')) {
-    return `<span style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted, #64748b); background:var(--muted, #f1f5f9); padding:2px 6px; border-radius:4px;">Team</span>`;
+    return `<span class="badge-act" style="font-size:11px; font-weight:600; color:var(--text); background:rgba(148,163,184,0.12); border:1px solid var(--border); padding:2px 7px; border-radius:6px; display:inline-block; line-height:1.2;">Team</span>`;
   }
-  return `<span style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted, #64748b); background:var(--muted, #f1f5f9); padding:2px 6px; border-radius:4px;">Log</span>`;
+  return `<span class="badge-act" style="font-size:11px; font-weight:600; color:var(--muted-foreground, #64748b); background:rgba(148,163,184,0.12); border:1px solid var(--border); padding:2px 7px; border-radius:6px; display:inline-block; line-height:1.2;">Event</span>`;
 }
 
 // ================= TAB 2: KANBAN TASKS & DUAL-APPROVAL ================= //

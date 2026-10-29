@@ -83,6 +83,29 @@ function runTests() {
     'Dashboard loading state uses semantic tokens'
   );
 
+  // Test 9: Activity feed typography is smaller, simpler, and matches Roster container
+  assert(
+    cssContent.includes('.activity-item h4') &&
+    cssContent.includes('font-size: 13px !important') &&
+    cssContent.includes('font-weight: 500 !important'),
+    'Activity feed items are refined with 13px font-size and normal 500 weight (no loud headings)'
+  );
+
+  // Test 10: Activity icon badge satisfies 11px legibility floor
+  const actIconMatch = jsContent.match(/function getActivityIcon[\s\S]*?^}/m);
+  const actIconCode = actIconMatch ? actIconMatch[0] : '';
+  assert(
+    !actIconCode.includes('font-size:10px') && !actIconCode.includes('font-size: 10px'),
+    'Activity badges satisfy 11px minimum legibility floor'
+  );
+
+  // Test 11: Activity feed uses clean list layout with custom scrollbar
+  assert(
+    cssContent.includes('.activity-feed::-webkit-scrollbar') &&
+    cssContent.includes('.activity-item:last-child'),
+    'Activity feed includes sleek scrollbars and divider termination'
+  );
+
   console.log(`\nResults: ${passed} passed, ${failed} failed`);
   if (failed > 0) {
     process.exit(1);
@@ -90,3 +113,4 @@ function runTests() {
 }
 
 runTests();
+

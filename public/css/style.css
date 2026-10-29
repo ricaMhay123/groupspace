@@ -998,40 +998,72 @@ body.dashboard-page {
 .activity-feed {
   max-height: 340px;
   overflow-y: auto;
+  padding: 0;
+  margin: 0;
+}
+
+.activity-feed::-webkit-scrollbar {
+  width: 5px;
+}
+
+.activity-feed::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.activity-feed::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .activity-item {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid #f1f5f9;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
 }
 
-.activity-item:last-child { border-bottom: none; }
+.activity-item:last-child {
+  border-bottom: none;
+}
 
-.activity-item .act-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: var(--primary-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.85rem;
+.activity-item .act-icon,
+.activity-item .activity-icon {
   flex-shrink: 0;
+  margin-top: 1px;
 }
 
-.activity-item .act-text {
-  font-size: 0.88rem;
-  color: var(--text);
-  line-height: 1.4;
+.activity-item h4,
+.activity-item .act-text,
+.activity-item .activity-desc {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--text) !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
+  word-break: break-word;
 }
 
-.activity-item .act-time {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-top: 2px;
+.activity-item p,
+.activity-item .act-time,
+.activity-item .activity-date {
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  color: var(--gray) !important;
+  line-height: 1.3 !important;
+  margin: 2px 0 0 0 !important;
+}
+
+.dark .activity-item h4,
+.dark .activity-item .act-text,
+.dark .activity-item .activity-desc {
+  color: var(--foreground) !important;
+}
+
+.dark .activity-item p,
+.dark .activity-item .act-time,
+.dark .activity-item .activity-date {
+  color: var(--muted-foreground) !important;
 }
 
 /* ─── Task / Member Lists ─── */
