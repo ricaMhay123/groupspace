@@ -60,7 +60,7 @@
       <div class="profile-card" style="margin-bottom:12px; padding:12px; background:#f8fafc; border-radius:14px; border:1px solid var(--border);">
         <div class="profile-avatar" id="userAvatar">GS</div>
         <div style="min-width:0;">
-          <h4 id="userFullName" style="font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#0f172a !important;">User</h4>
+          <h3 id="userFullName" style="font-size:14px; margin:0; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#0f172a !important;">User</h3>
           <span class="status online">Online</span>
         </div>
       </div>
@@ -103,22 +103,23 @@
 
     <!-- TAB 1: HOMESPACE -->
     <section id="tab-overview" class="tab-view active">
+      <h2 class="sr-only">Workspace Summary</h2>
       <div class="dashboard-cards">
         <div class="dashboard-card">
-          <h4>Active Tasks</h4>
-          <h2 id="statActiveTasks">0</h2>
+          <h3 class="stat-label">Active Tasks</h3>
+          <div class="stat-number" id="statActiveTasks">0</div>
         </div>
         <div class="dashboard-card">
-          <h4>Awaiting Approval</h4>
-          <h2 id="statPendingApproval" style="color:var(--warning);">0</h2>
+          <h3 class="stat-label">Awaiting Approval</h3>
+          <div class="stat-number" id="statPendingApproval" style="color:var(--warning);">0</div>
         </div>
         <div class="dashboard-card">
-          <h4>Total Workspace Spend</h4>
-          <h2 id="statTotalSpent">₱0.00</h2>
+          <h3 class="stat-label">Total Workspace Spend</h3>
+          <div class="stat-number" id="statTotalSpent">₱0.00</div>
         </div>
         <div class="dashboard-card">
-          <h4>Team Members</h4>
-          <h2 id="statMemberCount">0</h2>
+          <h3 class="stat-label">Team Members</h3>
+          <div class="stat-number" id="statMemberCount">0</div>
         </div>
       </div>
 
@@ -212,16 +213,16 @@
     <section id="tab-expenses" class="tab-view" style="display:none;">
       <div class="expense-summary-grid">
         <div class="summary-stat-box">
-          <h4>Total Workspace Expenditure</h4>
-          <h2 id="expTotalSpent">₱0.00</h2>
+          <h3 class="stat-label">Total Workspace Expenditure</h3>
+          <div class="stat-number" id="expTotalSpent">₱0.00</div>
         </div>
         <div class="summary-stat-box">
-          <h4>Your Net Balance</h4>
-          <h2 id="expYourNet">₱0.00</h2>
+          <h3 class="stat-label">Your Net Balance</h3>
+          <div class="stat-number" id="expYourNet">₱0.00</div>
         </div>
         <div class="summary-stat-box">
-          <h4>Active Settlements</h4>
-          <h2 id="expSettlementCount">0</h2>
+          <h3 class="stat-label">Active Settlements</h3>
+          <div class="stat-number" id="expSettlementCount">0</div>
         </div>
       </div>
 
@@ -467,7 +468,7 @@
       <textarea id="reviewNotes" class="form-control" rows="2" placeholder="e.g. Looks great, verified tests pass!"></textarea>
     </div>
     <div class="form-actions" style="margin-top:20px; display:flex; gap:12px;">
-      <button type="button" class="btn-outline" onclick="submitReview(false)" style="color:#FF7272; border-color:#FF5252;">Request Revisions</button>
+      <button type="button" class="btn-outline" onclick="submitReview(false)" style="color:#dc2626; border-color:#dc2626;">Request Revisions</button>
       <button type="button" class="btn-green" onclick="submitReview(true)">Approve as Done</button>
     </div>
   </div>
@@ -669,7 +670,7 @@
   #feedDrawer h4 { font-size:13px; text-transform:uppercase; letter-spacing:.5px; margin:16px 0 8px; color:var(--gray); }
   #feedDrawer .feed-item { display:block; padding:10px 12px; border:1px solid var(--border); border-radius:10px; margin-bottom:8px; font-size:13px; text-decoration:none; color:inherit; }
   #feedDrawer .feed-item small { display:block; color:var(--gray); margin-top:3px; }
-  #deleteAccountModal .modal-card { border-top:5px solid #dc2626; }
+  #deleteAccountModal .modal-card { border: 1.5px solid rgba(220, 38, 38, 0.45); }
   #deleteAccountModal .da-error { color:#dc2626; font-size:13px; margin-top:6px; min-height:18px; }
   .btn-danger-solid { background:#dc2626; color:#fff; border:none; border-radius:10px; padding:10px 18px; font-weight:600; cursor:pointer; }
   .btn-danger-solid:disabled { opacity:.6; cursor:not-allowed; }
