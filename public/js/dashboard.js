@@ -364,31 +364,31 @@ async function loadOverview() {
 function renderHomespaceScratchpadHtml(personalNotes, inputId) {
   const notes = Array.isArray(personalNotes) ? personalNotes.slice(0, 8) : [];
   return `
-    <div class="dashboard-panel" style="border-top:3px solid var(--secondary, #10b981);">
+    <div class="dashboard-panel">
       <div class="panel-header">
         <div style="display:flex; align-items:center; gap:8px;">
           <h3 style="margin:0;">Quick Scratchpad</h3>
         </div>
-        <button onclick="switchTab('personal')" class="btn-outline" style="padding:4px 10px; font-size:12px;">Open Space</button>
+        <button onclick="switchTab('personal')" class="btn-outline" style="padding:6px 12px; font-size:12px; font-weight:600; border-radius:8px;">Open Space</button>
       </div>
       <div style="padding:14px 16px;">
         <div style="display:flex; gap:8px; margin-bottom:12px;">
-          <input type="text" id="${inputId}" class="form-control" placeholder="Quick personal reminder or note..." style="font-size:12px; padding:7px 10px; flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();saveHomespaceScratchpad('${inputId}');}">
-          <button type="button" class="btn-green" style="padding:7px 14px; font-size:12px; font-weight:600; white-space:nowrap;" onclick="saveHomespaceScratchpad('${inputId}')">Save</button>
+          <input type="text" id="${inputId}" class="form-control" placeholder="Quick personal reminder or note..." style="font-size:13px; padding:8px 12px; min-height:38px; flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();saveHomespaceScratchpad('${inputId}');}">
+          <button type="button" class="btn-green" style="padding:8px 16px; font-size:12px; font-weight:600; min-height:38px; white-space:nowrap;" onclick="saveHomespaceScratchpad('${inputId}')">Save</button>
         </div>
         <div style="display:flex; flex-direction:column; gap:8px; max-height:230px; overflow-y:auto;">
           ${notes.length === 0 ? `
-            <div style="text-align:center; padding:18px 10px; color:var(--gray);">
+            <div style="text-align:center; padding:18px 10px; color:var(--muted-foreground);">
               <p style="margin:0; font-size:12px;">Private reminders and personal notes saved here.</p>
             </div>
           ` : notes.map(n => `
             <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:8px 10px; background:var(--muted, #f8fafc); border:1px solid var(--border); border-radius:8px;">
               <div style="flex:1; min-width:0;">
-                <div style="font-size:12px; font-weight:600; color:var(--text); word-break:break-word;">${escapeHtml(n.title || n.content || 'Personal Note')}</div>
-                ${n.content && n.content !== n.title ? `<div style="font-size:11px; color:var(--gray); margin-top:2px; word-break:break-word;">${escapeHtml(n.content)}</div>` : ''}
-                <div style="font-size:10px; color:var(--gray); margin-top:2px;">Private · ${formatDate(n.created_at)}</div>
+                <div style="font-size:13px; font-weight:600; color:var(--foreground); word-break:break-word;">${escapeHtml(n.title || n.content || 'Personal Note')}</div>
+                ${n.content && n.content !== n.title ? `<div style="font-size:12px; color:var(--muted-foreground); margin-top:2px; word-break:break-word;">${escapeHtml(n.content)}</div>` : ''}
+                <div style="font-size:11px; color:var(--muted-foreground); margin-top:2px;">Private · ${formatDate(n.created_at)}</div>
               </div>
-              <button type="button" class="btn-outline" style="padding:2px 6px; font-size:11px; color:var(--gray); border-color:var(--border); border-radius:4px; cursor:pointer;" onclick="deleteHomespaceScratchpadNote(${n.id}, event)" title="Delete reminder">
+              <button type="button" class="btn-outline" style="padding:2px 8px; font-size:11px; color:var(--muted-foreground); border-color:var(--border); border-radius:4px; cursor:pointer;" onclick="deleteHomespaceScratchpadNote(${n.id}, event)" title="Delete reminder">
                 ✕
               </button>
             </div>
@@ -438,11 +438,6 @@ async function deleteHomespaceScratchpadNote(noteId, e) {
 }
 
 function renderLeaderHomespace(container, pendingTasks, members, activities, currentUserId, personalNotes) {
-  const settings = (currentGroupDetails && currentGroupDetails.settings) ? currentGroupDetails.settings : {};
-  const requireApproval = settings.requireApproval !== false; // default true
-  const allowDiscussions = settings.allowMemberDiscussions !== false; // default true
-  const restrictExpenses = settings.restrictExpensesToLeaders === true; // default false
-
   const pendingHtml = pendingTasks.length === 0
     ? `
       <div style="text-align:center; padding:28px 20px; color:var(--gray);">
@@ -456,7 +451,7 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
           <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 14px; border:1px solid rgba(245,158,11,0.25); background:rgba(245,158,11,0.04); border-radius:10px; flex-wrap:wrap;">
             <div style="flex:1; min-width:200px;">
               <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-                <span class="tag tag-${(t.priority || 'medium').toLowerCase()}" style="font-size:10px; padding:2px 6px;">${escapeHtml(t.priority || 'MEDIUM')}</span>
+                <span class="tag tag-${(t.priority || 'medium').toLowerCase()}" style="font-size:11px; font-weight:700; padding:2px 8px;">${escapeHtml(t.priority || 'MEDIUM')}</span>
                 <strong style="font-size:14px; color:var(--text);">${escapeHtml(t.title)}</strong>
               </div>
               <div style="font-size:12px; color:var(--gray); display:flex; gap:12px; flex-wrap:wrap;">
@@ -484,7 +479,7 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
     return `
       <li style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid var(--border); gap:12px;">
         <div style="display:flex; align-items:center; gap:10px; min-width:0;">
-          <div class="chat-avatar" style="width:34px; height:34px; font-size:12px; flex-shrink:0;">${escapeHtml(m.avatar_initials || 'GS')}</div>
+          <div class="chat-avatar" style="width:32px; height:32px; font-size:12px; flex-shrink:0;">${escapeHtml(m.avatar_initials || 'GS')}</div>
           <div style="min-width:0;">
             <div style="font-weight:600; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
               ${escapeHtml(m.full_name)} ${isSelf ? '<span style="font-size:11px; color:var(--gray); font-weight:normal;">(You)</span>' : ''}
@@ -526,10 +521,10 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
 
   container.innerHTML = `
     <div class="dashboard-grid">
-      <!-- Col 1: Pending Approvals, Leader Settings & Activity -->
+      <!-- Col 1: Pending Approvals & Quick Scratchpad -->
       <div style="display:flex; flex-direction:column; gap:20px;">
         <!-- Pending Task Approvals -->
-        <div class="dashboard-panel" style="border-top:3px solid #f59e0b;">
+        <div class="dashboard-panel">
           <div class="panel-header">
             <div style="display:flex; align-items:center; gap:8px;">
               <h3 style="margin:0;">Pending Task Approvals</h3>
@@ -542,72 +537,24 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
           </div>
         </div>
 
-        <!-- Leader Workspace Settings Module -->
-        <div class="dashboard-panel" style="border-top:3px solid var(--primary);">
+        <!-- Minimalist Quick Scratchpad / Personal Notes -->
+        ${renderHomespaceScratchpadHtml(personalNotes, 'leaderHomespaceScratchpad')}
+      </div>
+
+      <!-- Col 2: Workspace Roster & Roles & Recent Activity Feed -->
+      <div style="display:flex; flex-direction:column; gap:20px;">
+        <!-- Workspace Roster & Roles -->
+        <div class="dashboard-panel">
           <div class="panel-header">
             <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0;">Workspace Settings & Controls</h3>
+              <h3 style="margin:0;">Workspace Roster & Roles</h3>
               <span class="status online" style="font-size:11px; font-weight:700;">LEADER</span>
             </div>
-            <span style="font-size:12px; color:var(--gray);">Active Workspace</span>
+            <span style="font-size:12px; color:var(--gray);">${members.length} members</span>
           </div>
-          <div style="padding:16px 18px; display:flex; flex-direction:column; gap:16px;">
-            <!-- Workspace Name Change -->
-            <div>
-              <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px; color:var(--text);">Workspace Name</label>
-              <div style="display:flex; gap:8px;">
-                <input type="text" id="leaderWsNameInput" class="form-control" value="${escapeHtml(currentGroupDetails.name)}" style="font-size:13px; padding:8px 12px; flex:1;">
-                <button type="button" class="btn-green" style="padding:8px 14px; font-size:12px; font-weight:600; white-space:nowrap;" onclick="saveWorkspaceName(document.getElementById('leaderWsNameInput').value)">Save Name</button>
-              </div>
-            </div>
-
-            <!-- Reset Invite Code -->
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:var(--muted,#f8fafc); border:1px solid var(--border); border-radius:10px; gap:12px; flex-wrap:wrap;">
-              <div>
-                <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:2px;">Workspace Invite Code</div>
-                <div style="font-size:11px; color:var(--gray);">Share this code with teammates to grant instant access.</div>
-              </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <strong style="color:var(--primary); font-size:14px; letter-spacing:1px; background:#eef2ff; padding:4px 10px; border-radius:6px; border:1px solid #c7d2fe;" id="leaderJoinCodeDisplay">${escapeHtml(currentGroupDetails.join_code)}</strong>
-                <button type="button" class="btn-outline" style="padding:6px 12px; font-size:12px; font-weight:600; border-radius:6px;" onclick="resetWorkspaceInviteCode()">Reset Code</button>
-              </div>
-            </div>
-
-            <!-- Member Permission Constraints -->
-            <div style="border-top:1px solid var(--border); padding-top:14px;">
-              <div style="font-size:12px; font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">
-                Member Permission Constraints
-              </div>
-              <div style="display:flex; flex-direction:column; gap:10px;">
-                <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); cursor:pointer;">
-                  <input type="checkbox" id="leaderConstraintApproval" ${requireApproval ? 'checked' : ''} style="width:16px; height:16px; cursor:pointer;">
-                  <span>Require leader approval before member tasks are marked Done</span>
-                </label>
-                <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); cursor:pointer;">
-                  <input type="checkbox" id="leaderConstraintDiscussions" ${allowDiscussions ? 'checked' : ''} style="width:16px; height:16px; cursor:pointer;">
-                  <span>Allow members to create new discussion topics</span>
-                </label>
-                <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); cursor:pointer;">
-                  <input type="checkbox" id="leaderConstraintExpenses" ${restrictExpenses ? 'checked' : ''} style="width:16px; height:16px; cursor:pointer;">
-                  <span>Restrict expense ledger entries to workspace leaders only</span>
-                </label>
-              </div>
-              <button type="button" class="btn-green" style="margin-top:12px; font-size:12px; padding:6px 14px; font-weight:600;" onclick="saveMemberConstraints('leaderConstraintApproval', 'leaderConstraintDiscussions', 'leaderConstraintExpenses')">
-                Save Permission Constraints
-              </button>
-            </div>
-
-            <!-- Discrete Danger Zone Footer -->
-            <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-              <div>
-                <span style="font-size:12px; font-weight:600; color:var(--gray);">Danger Zone</span>
-                <p style="margin:2px 0 0; font-size:11px; color:var(--gray);">Permanently delete this workspace and all its data.</p>
-              </div>
-              <button type="button" class="btn-outline open-delete-workspace-btn" style="padding:4px 12px; font-size:11px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:6px; background:transparent; cursor:pointer;" onclick="confirmDeleteWorkspace()">
-                Delete Workspace
-              </button>
-            </div>
-          </div>
+          <ul class="task-list" style="margin:0; padding:4px 0; list-style:none;">
+            ${rosterHtml}
+          </ul>
         </div>
 
         <!-- Live Activity Feed -->
@@ -621,26 +568,6 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
           </div>
         </div>
       </div>
-
-      <!-- Col 2: Workspace Roster & Roles & Quick Scratchpad -->
-      <div style="display:flex; flex-direction:column; gap:20px;">
-        <!-- Workspace Roster & Roles -->
-        <div class="dashboard-panel" style="border-top:3px solid var(--primary);">
-          <div class="panel-header">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0;">Workspace Roster & Roles</h3>
-              <span class="status online" style="font-size:11px; font-weight:700;">LEADER</span>
-            </div>
-            <span style="font-size:12px; color:var(--gray);">${members.length} members</span>
-          </div>
-          <ul class="task-list" style="margin:0; padding:4px 0; list-style:none;">
-            ${rosterHtml}
-          </ul>
-        </div>
-
-        <!-- Minimalist Quick Scratchpad / Personal Notes -->
-        ${renderHomespaceScratchpadHtml(personalNotes, 'leaderHomespaceScratchpad')}
-      </div>
     </div>
   `;
 }
@@ -648,12 +575,6 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
 function renderMemberHomespace(container, myAssignedDeliverables, members, activities, currentUserId, personalNotes) {
   const leaders = members.filter(m => m.role === 'leader' || m.role === 'co_leader');
   const fellowMembers = members.filter(m => m.role !== 'leader' && m.role !== 'co_leader');
-
-  const prefApprovals = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_approvals`) !== 'false';
-  const prefMentions = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_mentions`) !== 'false';
-  const prefHelp = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_help`) !== 'false';
-  const prefLanding = localStorage.getItem(`groupspace_pref_${currentUserId}_landing_view`) || 'overview';
-  const prefCompact = localStorage.getItem(`groupspace_pref_${currentUserId}_compact_view`) === 'true';
 
   const deliverablesHtml = myAssignedDeliverables.length === 0
     ? `
@@ -671,7 +592,7 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
             <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 14px; border:1px solid ${isPending ? 'rgba(245,158,11,0.25)' : 'var(--border)'}; background:${isPending ? 'rgba(245,158,11,0.04)' : 'var(--card)'}; border-radius:10px; flex-wrap:wrap;">
               <div style="flex:1; min-width:200px;">
                 <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-                  <span class="tag tag-${(t.priority || 'medium').toLowerCase()}" style="font-size:10px; padding:2px 6px;">${escapeHtml(t.priority || 'MEDIUM')}</span>
+                  <span class="tag tag-${(t.priority || 'medium').toLowerCase()}" style="font-size:11px; font-weight:700; padding:2px 8px;">${escapeHtml(t.priority || 'MEDIUM')}</span>
                   <strong style="font-size:14px; color:var(--text);">${escapeHtml(t.title)}</strong>
                 </div>
                 <div style="font-size:12px; color:var(--gray); display:flex; gap:12px; flex-wrap:wrap;">
@@ -697,7 +618,7 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
       return `
       <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 10px; background:${isCoLeader ? 'rgba(99,102,241,0.05)' : 'rgba(79,70,229,0.06)'}; border:1px solid ${isCoLeader ? 'rgba(99,102,241,0.18)' : 'rgba(79,70,229,0.18)'}; border-radius:8px; margin-bottom:6px;">
         <div style="display:flex; align-items:center; gap:8px; min-width:0;">
-          <div class="chat-avatar" style="width:30px; height:30px; font-size:11px; flex-shrink:0;">${escapeHtml(l.avatar_initials || 'GS')}</div>
+          <div class="chat-avatar" style="width:32px; height:32px; font-size:12px; flex-shrink:0;">${escapeHtml(l.avatar_initials || 'GS')}</div>
           <div style="min-width:0;">
             <div style="font-weight:700; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(l.full_name)}</div>
             <div style="color:var(--gray); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(l.email)}</div>
@@ -713,7 +634,7 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
     return `
       <li style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px solid var(--border); gap:8px;">
         <div style="display:flex; align-items:center; gap:8px; min-width:0;">
-          <div class="chat-avatar" style="width:28px; height:28px; font-size:11px; flex-shrink:0;">${escapeHtml(m.avatar_initials || 'GS')}</div>
+          <div class="chat-avatar" style="width:32px; height:32px; font-size:12px; flex-shrink:0;">${escapeHtml(m.avatar_initials || 'GS')}</div>
           <div style="min-width:0;">
             <div style="font-weight:600; font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
               ${escapeHtml(m.full_name)} ${isSelf ? '<span style="font-size:11px; color:var(--gray); font-weight:normal;">(You)</span>' : ''}
@@ -728,7 +649,7 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
               <option value="co_leader">Co-Leader</option>
             </select>
           ` : `
-            <span class="status pending" style="font-size:10px;">Member</span>
+            <span class="status pending" style="font-size:11px;">Member</span>
           `}
         </div>
       </li>
@@ -749,10 +670,10 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
 
   container.innerHTML = `
     <div class="dashboard-grid">
-      <!-- Col 1: My Assigned Deliverables, Member Settings & Activity Feed -->
+      <!-- Col 1: My Assigned Deliverables & Quick Scratchpad -->
       <div style="display:flex; flex-direction:column; gap:20px;">
         <!-- My Assigned Deliverables -->
-        <div class="dashboard-panel" style="border-top:3px solid var(--primary);">
+        <div class="dashboard-panel">
           <div class="panel-header">
             <div style="display:flex; align-items:center; gap:8px;">
               <h3 style="margin:0;">My Assigned Deliverables</h3>
@@ -765,107 +686,14 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
           </div>
         </div>
 
-        <!-- Member Settings & Workspace Preferences -->
-        <div class="dashboard-panel" style="border-top:3px solid var(--primary);">
-          <div class="panel-header">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0;">Personal Profile & Preferences</h3>
-              <span class="status pending" style="font-size:11px;">MEMBER</span>
-            </div>
-            <span style="font-size:12px; color:var(--gray);">Account & View Controls</span>
-          </div>
-          <div style="padding:16px 18px; display:flex; flex-direction:column; gap:16px;">
-            <!-- Profile Display -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; background:var(--muted,#f8fafc); border:1px solid var(--border); border-radius:10px; flex-wrap:wrap;">
-              <div style="display:flex; align-items:center; gap:12px; min-width:0;">
-                <div class="chat-avatar" style="width:42px; height:42px; font-size:15px; flex-shrink:0;">${currentUser ? (currentUser.avatarInitials || 'GS') : 'GS'}</div>
-                <div style="min-width:0;">
-                  <div style="font-weight:700; font-size:14px; color:var(--text);">${currentUser ? escapeHtml(currentUser.fullName) : 'User'}</div>
-                  <div style="color:var(--gray); font-size:12px;">${currentUser ? escapeHtml(currentUser.email) : ''}</div>
-                </div>
-              </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span class="status pending" style="font-size:11px;">Member</span>
-                <button type="button" class="btn-outline" style="padding:4px 10px; font-size:11px; font-weight:600; border-radius:6px; color:var(--primary); border-color:var(--primary); background:transparent; cursor:pointer;" onclick="openRequestLeadershipModal()">
-                  Request Leadership Role
-                </button>
-              </div>
-            </div>
-
-            <!-- Notification Drawer Toggles -->
-            <div>
-              <div style="font-size:12px; font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">
-                Notification Drawer Alerts
-              </div>
-              <div style="display:flex; flex-direction:column; gap:8px;">
-                <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); cursor:pointer;">
-                  <input type="checkbox" ${prefApprovals ? 'checked' : ''} onchange="saveMemberPref('notif_approvals', this.checked)">
-                  <span>Task review & approval updates</span>
-                </label>
-                <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); cursor:pointer;">
-                  <input type="checkbox" ${prefMentions ? 'checked' : ''} onchange="saveMemberPref('notif_mentions', this.checked)">
-                  <span>@Mention notifications & topic replies</span>
-                </label>
-                <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); cursor:pointer;">
-                  <input type="checkbox" ${prefHelp ? 'checked' : ''} onchange="saveMemberPref('notif_help', this.checked)">
-                  <span>Peer-assist & help request alerts</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Personal Preferences -->
-            <div style="border-top:1px solid var(--border); padding-top:14px;">
-              <div style="font-size:12px; font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">
-                Workspace Preferences
-              </div>
-              <div style="display:flex; flex-direction:column; gap:10px;">
-                <div>
-                  <label style="display:block; font-size:12px; color:var(--gray); margin-bottom:4px;">Default Landing Tab</label>
-                  <select class="form-control" style="font-size:12px; padding:6px 10px;" onchange="saveMemberPref('landing_view', this.value)">
-                    <option value="overview" ${prefLanding === 'overview' ? 'selected' : ''}>Homespace</option>
-                    <option value="tasks" ${prefLanding === 'tasks' ? 'selected' : ''}>Tasks</option>
-                    <option value="calendar" ${prefLanding === 'calendar' ? 'selected' : ''}>Calendar</option>
-                    <option value="notebook" ${prefLanding === 'notebook' ? 'selected' : ''}>Notebook</option>
-                    <option value="expenses" ${prefLanding === 'expenses' ? 'selected' : ''}>Expenses</option>
-                    <option value="discussions" ${prefLanding === 'discussions' ? 'selected' : ''}>Discussions</option>
-                  </select>
-                </div>
-                <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); cursor:pointer;">
-                  <input type="checkbox" ${prefCompact ? 'checked' : ''} onchange="saveMemberPref('compact_view', this.checked)">
-                  <span>Enable compact view for Kanban cards</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Discrete Danger Zone Footer -->
-            <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-              <div>
-                <span style="font-size:12px; font-weight:600; color:var(--gray);">Danger Zone</span>
-                <p style="margin:2px 0 0; font-size:11px; color:var(--gray);">Permanently delete your account with double password verification.</p>
-              </div>
-              <button type="button" class="btn-outline open-delete-account-modal" style="padding:4px 12px; font-size:11px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:6px; background:transparent; cursor:pointer;" onclick="openDeleteAccountModal()">
-                Delete Account
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Recent Activity Feed -->
-        <div class="dashboard-panel">
-          <div class="panel-header">
-            <h3>Recent Activity Feed</h3>
-            <span style="font-size:12px; color:var(--gray);">Live workspace events</span>
-          </div>
-          <div class="activity-feed">
-            ${activityFeedHtml}
-          </div>
-        </div>
+        <!-- Minimalist Quick Scratchpad / Personal Notes -->
+        ${renderHomespaceScratchpadHtml(personalNotes, 'memberHomespaceScratchpad')}
       </div>
 
-      <!-- Col 2: Workspace Teammates & Quick Scratchpad -->
+      <!-- Col 2: Workspace Teammates & Recent Activity Feed -->
       <div style="display:flex; flex-direction:column; gap:20px;">
         <!-- Workspace Teammates (Highlighting Leader) -->
-        <div class="dashboard-panel" style="border-top:3px solid var(--primary);">
+        <div class="dashboard-panel">
           <div class="panel-header">
             <div style="display:flex; align-items:center; gap:8px;">
               <h3 style="margin:0;">Workspace Teammates</h3>
@@ -888,8 +716,16 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
           </div>
         </div>
 
-        <!-- Minimalist Quick Scratchpad / Personal Notes -->
-        ${renderHomespaceScratchpadHtml(personalNotes, 'memberHomespaceScratchpad')}
+        <!-- Recent Activity Feed -->
+        <div class="dashboard-panel">
+          <div class="panel-header">
+            <h3>Recent Activity Feed</h3>
+            <span style="font-size:12px; color:var(--gray);">Live workspace events</span>
+          </div>
+          <div class="activity-feed">
+            ${activityFeedHtml}
+          </div>
+        </div>
       </div>
     </div>
   `;

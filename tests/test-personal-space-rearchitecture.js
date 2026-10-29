@@ -90,3 +90,4 @@ console.log(`📊 RESULTS: Passed: ${passed} | Failed: ${failed}`);
 console.log('================================================================\n');
 
 if (failed > 0) process.exit(1);
+

@@ -882,10 +882,10 @@ body.dashboard-page {
 }
 
 .dashboard-card {
-  background: #ffffff;
+  background: var(--card, #ffffff);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 18px;
+  border-radius: 14px;
+  padding: 18px 20px;
   transition: var(--transition);
 }
 
@@ -901,10 +901,10 @@ body.dashboard-page {
 .summary-stat-box h4,
 .summary-stat-box .stat-label {
   font-size: 0.75rem !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
   color: var(--text-muted) !important;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
   margin: 0 0 6px 0;
 }
 
@@ -912,9 +912,11 @@ body.dashboard-page {
 .dashboard-card .stat-number,
 .summary-stat-box h2,
 .summary-stat-box .stat-number {
-  font-size: 1.25rem !important;
-  font-weight: 700 !important;
+  font-size: 1.65rem !important;
+  font-weight: 800 !important;
   color: var(--text) !important;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
   margin: 0;
 }
 
@@ -953,11 +955,16 @@ body.dashboard-page {
   box-shadow: 0 2px 4px rgba(220,38,38,0.3);
 }
 
-/* ─── Dashboard Grid (2-col) ─── */
+/* ─── Dashboard Grid (Balanced 2-col Command Center) ─── */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
   gap: 20px;
+}
+
+.dashboard-grid .dashboard-panel {
+  margin-bottom: 0;
 }
 
 @media (max-width: 900px) {
@@ -966,11 +973,12 @@ body.dashboard-page {
 
 /* ─── Panels ─── */
 .dashboard-panel {
-  background: #ffffff;
+  background: var(--card, #ffffff);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 20px;
   margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
 }
 
 .panel-header {
