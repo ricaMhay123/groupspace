@@ -144,7 +144,8 @@ async function runLocalhostTests() {
       { script: 'tests/test-expense-net-split.js', name: 'Expense Ledger & Net Split Plan' },
       { script: 'tests/test-personal-space-rearchitecture.js', name: 'Personal Space Library & Quick Capture' },
       { script: 'tests/test-homespace-rearchitecture.js', name: 'Homespace Command Center & Layout Polish' },
-      { script: 'tests/test-login-page.js', name: 'Centered Login Gateway & Touch Targets' }
+      { script: 'tests/test-login-page.js', name: 'Centered Login Gateway & Touch Targets' },
+      { script: 'tests/test-calendar-redesign.js', name: 'Team Calendar Overhaul & View Selector' }
     ];
 
     for (const suite of testSuites) {

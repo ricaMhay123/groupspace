@@ -2496,3 +2496,370 @@ body {
     right: 0;
   }
 }
+
+
+/* =========================================================
+   TEAM CALENDAR & FULLCALENDAR DESIGN SYSTEM SKINNING
+   ========================================================= */
+
+.cal-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.cal-main-heading {
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.cal-sub-heading {
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+  margin: 4px 0 0;
+}
+
+/* Category Filter Ribbon */
+.cal-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+  scrollbar-width: thin;
+}
+
+.cal-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.cal-filter-chip:hover {
+  background: var(--secondary);
+  color: var(--foreground);
+  border-color: var(--ring);
+}
+
+.cal-filter-chip.active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+}
+
+.cal-filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.cal-filter-chip.active .cal-filter-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: var(--primary-foreground);
+}
+
+.cal-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Calendar Card Container */
+.cal-card {
+  background: var(--card);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.dark .cal-card {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Bespoke Calendar Toolbar */
+.cal-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.cal-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cal-nav-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cal-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.cal-nav-btn:hover {
+  background: var(--secondary);
+  border-color: var(--ring);
+}
+
+.cal-today-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.cal-today-btn:hover {
+  background: var(--secondary);
+  border-color: var(--ring);
+}
+
+.cal-title {
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* Bespoke Segmented Pill Selector */
+.cal-view-selector {
+  display: inline-flex;
+  align-items: center;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 3px;
+}
+
+.cal-view-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cal-view-pill:hover {
+  color: var(--foreground);
+}
+
+.cal-view-pill.active {
+  background: var(--card);
+  color: var(--primary);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.dark .cal-view-pill.active {
+  background: #334155;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* FullCalendar Theme Overrides */
+.fc {
+  font-family: var(--font-sans) !important;
+  --fc-border-color: var(--border) !important;
+  --fc-page-bg-color: transparent !important;
+  --fc-neutral-bg-color: var(--secondary) !important;
+  --fc-today-bg-color: rgba(37, 99, 235, 0.05) !important;
+  --fc-list-event-hover-bg-color: var(--secondary) !important;
+}
+
+.dark .fc {
+  --fc-border-color: var(--border) !important;
+  --fc-neutral-bg-color: #1e293b !important;
+  --fc-today-bg-color: rgba(59, 130, 246, 0.12) !important;
+}
+
+.fc-theme-standard .fc-scrollgrid {
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+.fc-theme-standard td,
+.fc-theme-standard th {
+  border: 1px solid var(--border) !important;
+}
+
+.fc-col-header-cell {
+  background: var(--secondary) !important;
+  padding: 10px 0 !important;
+}
+
+.fc-col-header-cell-cushion {
+  color: var(--muted-foreground) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  text-decoration: none !important;
+}
+
+.fc-daygrid-day-number {
+  color: var(--foreground) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 8px !important;
+  text-decoration: none !important;
+}
+
+.fc-day-other .fc-daygrid-day-number {
+  color: var(--gray) !important;
+  opacity: 0.6;
+}
+
+/* Today Cell Active Highlight */
+.fc .fc-day-today {
+  background: var(--fc-today-bg-color) !important;
+}
+
+.fc .fc-day-today .fc-daygrid-day-number {
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border-radius: 9999px !important;
+  width: 26px !important;
+  height: 26px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 4px !important;
+  font-weight: 700 !important;
+}
+
+/* Event Pills */
+.fc-event {
+  border-radius: 6px !important;
+  padding: 2px 6px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  border: none !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+  transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+  cursor: pointer !important;
+}
+
+.fc-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12) !important;
+}
+
+.fc-daygrid-event-dot {
+  border-color: currentColor !important;
+}
+
+/* List View (Agenda) */
+.fc-list {
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+.fc-list-day-cushion {
+  background: var(--secondary) !important;
+  color: var(--foreground) !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+
+.fc-list-event td {
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
+}
+
+.fc-list-event-title,
+.fc-list-event-time {
+  color: var(--foreground) !important;
+  font-size: 13px !important;
+}
+
+.fc-list-empty {
+  background: var(--card) !important;
+  color: var(--muted-foreground) !important;
+  padding: 40px !important;
+  font-size: 14px !important;
+}
+
+/* Time Grid (Week View) */
+.fc-timegrid-slot-label-cushion,
+.fc-timegrid-axis-cushion {
+  color: var(--muted-foreground) !important;
+  font-size: 11px !important;
+}
+
+.fc-timegrid-slot {
+  border-color: var(--border) !important;
+}
+
+.fc-timegrid-now-indicator-line {
+  border-color: var(--destructive) !important;
+}
+
+.fc-timegrid-now-indicator-arrow {
+  border-color: var(--destructive) !important;
+}

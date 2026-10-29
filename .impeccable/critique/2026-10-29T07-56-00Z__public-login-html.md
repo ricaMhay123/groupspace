@@ -30,3 +30,4 @@ slug: public-login-html
 ### Design Specificity Verdict
 
 **LLM Assessment**: The current login page suffers from an identity conflict. By borrowing the marketing split layout from the landing page—including an inert macOS mockup card with synthetic workspace statistics—it treats returning team members like prospective buyers rather than people trying to get work done. Moving to a centered, balanced layout eliminates 100% of the visual distraction, restores proper document semantics (`<h1>` preserved across all devices), and creates a calm, trustworthy gateway.
+
