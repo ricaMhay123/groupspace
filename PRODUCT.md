@@ -35,3 +35,4 @@ Accessed on desktop and mobile web viewports. Used during live team syncs, class
 2. **Strict Privacy Boundaries**: Full collaboration in shared spaces; complete isolation in personal spaces.
 3. **Harmonious & Accessible Craft**: High-contrast typography, natural elevation, and predictable interactive states.
 4. **Lightweight Reliability**: Zero heavy frameworks; fast, snappy, and lightweight DOM operations.
+

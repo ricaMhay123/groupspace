@@ -14,4 +14,13 @@ const server = app.listen(PORT, () => {
   console.log(`=========================================`);
 });
 
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use by another process.`);
+    console.error(`👉 Tip: Stop the conflicting process or set PORT=<new_port> in .env (e.g. PORT=3001)`);
+  } else {
+    console.error(`❌ Server error:`, err);
+  }
+});
+
 module.exports = server;

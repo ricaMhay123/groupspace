@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node tests/test-flow.js"
+    "test": "node tests/test-localhost.js",
+    "test:local": "node tests/test-localhost.js",
+    "test:localhost": "node tests/test-localhost.js",
+    "prepush": "node tests/test-localhost.js"
   },
   "keywords": [
     "collaboration",

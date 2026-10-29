@@ -1,17 +1,24 @@
 require('dotenv').config();
 const { neon } = require('@neondatabase/serverless');
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL is not set in environment variables');
-}
+let sql;
 
-// Connect to Neon PostgreSQL using serverless HTTP queries
-const sql = neon(process.env.DATABASE_URL);
+if (process.env.DATABASE_URL) {
+  // Connect to Neon PostgreSQL using serverless HTTP queries
+  sql = neon(process.env.DATABASE_URL);
+} else {
+  console.warn('⚠️ [GroupSpace] DATABASE_URL is not set. Initializing fallback mock database for local offline testing.');
+  sql = async () => [];
+}
 
 /**
  * Initializes required tables in Neon PostgreSQL if they do not already exist.
  */
 async function initDb() {
+  if (!process.env.DATABASE_URL) {
+    console.warn('⚠️ [GroupSpace] Skipping initDb: No DATABASE_URL provided (offline/mock local testing mode).');
+    return;
+  }
   try {
     await sql`
       CREATE TABLE IF NOT EXISTS users (
