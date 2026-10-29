@@ -116,7 +116,8 @@ async function runLocalhostTests() {
       { path: '/notebook.html', label: 'Collaborative Notebook', expected: 'nbMainToolbar' },
       { path: '/css/style.css', label: 'Main CSS Stylesheet', expected: ':root' },
       { path: '/js/dashboard.js', label: 'Dashboard Controller Script', expected: 'switchTab' },
-      { path: '/js/notebook.js', label: 'Notebook Client Module', expected: 'loadNotebookPages' }
+      { path: '/js/notebook.js', label: 'Notebook Client Module', expected: 'loadNotebookPages' },
+      { path: '/login.html', label: 'Authentication Gateway (login.html)', expected: 'login-center-wrap' }
     ];
 
     for (const item of staticFiles) {
@@ -142,7 +143,8 @@ async function runLocalhostTests() {
       { script: 'tests/test-coleader-requests.js', name: 'Co-Leader Role & Member Leadership Workflow' },
       { script: 'tests/test-expense-net-split.js', name: 'Expense Ledger & Net Split Plan' },
       { script: 'tests/test-personal-space-rearchitecture.js', name: 'Personal Space Library & Quick Capture' },
-      { script: 'tests/test-homespace-rearchitecture.js', name: 'Homespace Command Center & Layout Polish' }
+      { script: 'tests/test-homespace-rearchitecture.js', name: 'Homespace Command Center & Layout Polish' },
+      { script: 'tests/test-login-page.js', name: 'Centered Login Gateway & Touch Targets' }
     ];
 
     for (const suite of testSuites) {
