@@ -98,9 +98,40 @@ async function deleteExpense({ expenseId, groupId, userId, userRole }) {
   return { success: true };
 }
 
+async function recordSettlement({ groupId, fromUserId, toUserId, amount, notes, actorName }) {
+  if (!fromUserId || !toUserId) {
+    throw new Error('Both payer and recipient are required for a settlement.');
+  }
+  if (!isValidAmount(amount)) {
+    throw new Error('Please enter a valid positive settlement amount.');
+  }
+
+  const members = await GroupModel.findMembersByGroup(groupId);
+  const fromMember = members.find(m => Number(m.user_id) === fromUserId);
+  const toMember = members.find(m => Number(m.user_id) === toUserId);
+
+  const fromName = fromMember ? fromMember.full_name : `Member #${fromUserId}`;
+  const toName = toMember ? toMember.full_name : `Member #${toUserId}`;
+  const numAmount = roundToTwo(amount);
+
+  return await addExpense({
+    groupId,
+    title: `Settlement: ${fromName} → ${toName}`,
+    amount: numAmount,
+    category: 'Settlement',
+    paidByUserId: fromUserId,
+    splitType: EXPENSE_SPLIT_TYPE.EXACT,
+    customSplits: [{ userId: toUserId, amount: numAmount }],
+    date: new Date().toISOString().split('T')[0],
+    notes: notes || 'Settlement payment recorded in GroupSpace',
+    actorName: actorName || fromName
+  });
+}
+
 module.exports = {
   addExpense,
   getGroupExpenses,
   getExpenseSummary,
-  deleteExpense
+  deleteExpense,
+  recordSettlement
 };

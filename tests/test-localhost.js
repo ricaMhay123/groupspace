@@ -139,7 +139,8 @@ async function runLocalhostTests() {
       { script: 'tests/test-word-toolbar-suite.js', name: 'MS Word Style Rich Text & Flowchart Suite' },
       { script: 'tests/test-mobile-responsive.js', name: 'Mobile Responsive & Navigation Drawer' },
       { script: 'tests/test-notebook-word-personal.js', name: 'Personal Notebook & Privacy Isolation' },
-      { script: 'tests/test-coleader-requests.js', name: 'Co-Leader Role & Member Leadership Workflow' }
+      { script: 'tests/test-coleader-requests.js', name: 'Co-Leader Role & Member Leadership Workflow' },
+      { script: 'tests/test-expense-net-split.js', name: 'Expense Ledger & Net Split Plan' }
     ];
 
     for (const suite of testSuites) {

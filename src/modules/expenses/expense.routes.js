@@ -14,6 +14,7 @@ router.use(requireGroupMembership);
 router.get('/', expenseController.getExpenses);
 router.get('/summary', expenseController.getSummary);
 router.post('/', expenseController.create);
+router.post('/settle', expenseController.settleDebt);
 router.delete('/:expenseId', expenseController.remove);
 
 module.exports = router;

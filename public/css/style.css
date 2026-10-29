@@ -1208,7 +1208,236 @@ body.dashboard-page {
   font-weight: 600;
 }
 
-/* ─── Expenses ─── */
+/* ─── Expenses: Summary Cards & Net Split ─── */
+.expense-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.summary-stat-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.summary-stat-box:hover {
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.summary-stat-box .stat-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-foreground);
+  margin: 0 0 8px 0;
+}
+
+.summary-stat-box .stat-number {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+/* Settlement Plan List & Cards */
+#settlementList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settlement-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: all 0.15s ease;
+  gap: 12px;
+}
+
+.settlement-card:hover {
+  border-color: #94a3b8;
+  background: var(--muted);
+}
+
+.settlement-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.settlement-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.dark .settlement-avatar {
+  background: #334155;
+  color: #f8fafc;
+}
+
+.settlement-user-chip {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--foreground);
+}
+
+.settlement-user-chip.is-you {
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.dark .settlement-user-chip.is-you {
+  color: #38bdf8;
+}
+
+.settlement-arrow-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+  padding: 0 4px;
+}
+
+.settlement-details-col {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.settlement-badge {
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.settlement-badge.badge-incoming {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.dark .settlement-badge.badge-incoming {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.settlement-badge.badge-outgoing {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.dark .settlement-badge.badge-outgoing {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.settlement-amount {
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+}
+
+.btn-settle-action {
+  padding: 6px 14px;
+  background: var(--foreground);
+  color: var(--background);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-settle-action:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.dark .btn-settle-action {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.dark .settlement-card {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+.dark .settlement-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ─── Expenses Table ─── */
+.expense-cat-badge {
+  padding: 3px 10px;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.btn-table-action-delete {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #dc2626;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 38px;
+  padding: 6px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-table-action-delete:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.dark .btn-table-action-delete:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
 .expense-table {
   width: 100%;
   border-collapse: collapse;
@@ -1219,7 +1448,7 @@ body.dashboard-page {
   padding: 12px 16px;
   text-align: left;
   font-size: 0.88rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border);
 }
 
 .expense-table th {
@@ -1228,11 +1457,11 @@ body.dashboard-page {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-muted);
-  background: #f8fafc;
+  background: var(--muted);
 }
 
 .expense-table tr:hover td {
-  background: #f8fafc;
+  background: var(--muted);
 }
 
 /* ─── Discussions ─── */

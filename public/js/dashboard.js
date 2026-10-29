@@ -1998,16 +1998,17 @@ async function loadExpenses() {
     if (myBalance) {
       if (myBalance.net > 0) {
         netEl.textContent = `+₱${myBalance.net.toFixed(2)} (Owed to you)`;
-        netEl.style.color = 'var(--primary)';
+        netEl.style.color = '#047857';
       } else if (myBalance.net < 0) {
         netEl.textContent = `-₱${Math.abs(myBalance.net).toFixed(2)} (You owe)`;
-        netEl.style.color = '#FF7272';
+        netEl.style.color = '#dc2626';
       } else {
         netEl.textContent = '₱0.00 (Settled)';
-        netEl.style.color = 'var(--text)';
+        netEl.style.color = 'var(--foreground)';
       }
     } else {
       netEl.textContent = '₱0.00';
+      netEl.style.color = 'var(--foreground)';
     }
 
     // Settlements plan
@@ -2018,16 +2019,48 @@ async function loadExpenses() {
     if (settlements.length === 0) {
       settlementsEl.innerHTML = '<p style="color:var(--gray); padding:10px 0;">All balances settled! Nobody owes anything right now.</p>';
     } else {
-      settlementsEl.innerHTML = settlements.map(s => `
-        <div class="settlement-card">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <span class="settlement-payer">${escapeHtml(s.fromName)}</span>
-            <span class="settlement-arrow">pays →</span>
-            <span class="settlement-receiver">${escapeHtml(s.toName)}</span>
+      settlementsEl.innerHTML = settlements.map(s => {
+        const isFromMe = currentUser && Number(s.fromUserId) === Number(currentUser.id);
+        const isToMe = currentUser && Number(s.toUserId) === Number(currentUser.id);
+        const fromInitial = (s.fromName || 'U').charAt(0).toUpperCase();
+        const toInitial = (s.toName || 'U').charAt(0).toUpperCase();
+
+        const fromLabel = isFromMe ? 'You' : escapeHtml(s.fromName);
+        const toLabel = isToMe ? 'You' : escapeHtml(s.toName);
+
+        let badgeHtml = '';
+        if (isToMe) {
+          badgeHtml = '<span class="settlement-badge badge-incoming">You receive</span>';
+        } else if (isFromMe) {
+          badgeHtml = '<span class="settlement-badge badge-outgoing">You owe</span>';
+        }
+
+        const canSettle = isFromMe || isToMe || (typeof currentGroupRole === 'string' && ['ADMIN', 'LEADER', 'CO_LEADER', 'COLEADER'].includes(currentGroupRole.toUpperCase()));
+        const actionButtonHtml = canSettle
+          ? `<button type="button" class="btn-settle-action" onclick="recordDirectSettlement(${s.fromUserId}, '${escapeHtml(s.fromName).replace(/'/g, "\\'")}', ${s.toUserId}, '${escapeHtml(s.toName).replace(/'/g, "\\'")}', ${s.amount}, event)">
+               Mark Settled ✓
+             </button>`
+          : '';
+
+        return `
+          <div class="settlement-card">
+            <div class="settlement-main">
+              <span class="settlement-avatar" title="${escapeHtml(s.fromName)}">${fromInitial}</span>
+              <span class="settlement-user-chip ${isFromMe ? 'is-you' : ''}">${fromLabel}</span>
+              <span class="settlement-arrow-icon" aria-label="pays">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </span>
+              <span class="settlement-avatar" title="${escapeHtml(s.toName)}">${toInitial}</span>
+              <span class="settlement-user-chip ${isToMe ? 'is-you' : ''}">${toLabel}</span>
+              ${badgeHtml}
+            </div>
+            <div class="settlement-details-col">
+              <span class="settlement-amount">₱${s.amount.toFixed(2)}</span>
+              ${actionButtonHtml}
+            </div>
           </div>
-          <span class="settlement-amount">₱${s.amount.toFixed(2)}</span>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     // Ledger table
@@ -2041,12 +2074,15 @@ async function loadExpenses() {
       <tr>
         <td>${escapeHtml(e.date || '')}</td>
         <td><strong>${escapeHtml(e.title)}</strong></td>
-        <td><span style="padding:3px 8px; background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:6px; font-size:12px;">${escapeHtml(e.category)}</span></td>
+        <td><span class="expense-cat-badge">${escapeHtml(e.category)}</span></td>
         <td>${escapeHtml(e.payer_name)}</td>
         <td>${e.splits ? `${e.splits.length} members` : 'Equal'}</td>
-        <td style="color:var(--primary); font-weight:700;">₱${Number(e.amount).toFixed(2)}</td>
+        <td style="color:var(--foreground); font-weight:700; font-variant-numeric:tabular-nums;">₱${Number(e.amount).toFixed(2)}</td>
         <td>
-          <button type="button" style="background:transparent; border:none; color:#ef4444; font-size:12px; font-weight:600; cursor:pointer;" onclick="deleteExpense(${e.id}, event)">Delete</button>
+          <button type="button" class="btn-table-action-delete" onclick="deleteExpense(${e.id}, event)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            Delete
+          </button>
         </td>
       </tr>
     `).join('');
@@ -2087,6 +2123,48 @@ async function deleteExpense(expenseId, e) {
     loadExpenses();
   } catch (err) {
     showToast(err.message, 'error');
+  }
+}
+
+async function recordDirectSettlement(fromUserId, fromName, toUserId, toName, amount, event) {
+  if (event && typeof event.preventDefault === 'function') event.preventDefault();
+  const btn = event ? event.currentTarget : null;
+  const originalText = btn ? btn.innerHTML : '';
+
+  const confirmMsg = `Record settlement payment of ₱${Number(amount).toFixed(2)} from ${fromName} to ${toName}?`;
+  if (!confirm(confirmMsg)) return;
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = 'Settling...';
+  }
+
+  try {
+    await apiFetch(`/api/groups/${currentGroupId}/expenses/settle`, {
+      method: 'POST',
+      body: JSON.stringify({
+        fromUserId,
+        toUserId,
+        amount
+      })
+    });
+
+    if (btn) {
+      btn.innerHTML = 'Settled ✓';
+      btn.style.background = '#047857';
+      btn.style.color = '#ffffff';
+    }
+
+    showToast(`Settlement of ₱${Number(amount).toFixed(2)} recorded!`, 'success');
+    setTimeout(() => {
+      loadExpenses();
+    }, 600);
+  } catch (err) {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+    showToast(err.message || 'Failed to record settlement', 'error');
   }
 }
 

@@ -86,9 +86,35 @@ async function remove(req, res) {
   }
 }
 
+async function settleDebt(req, res) {
+  try {
+    const { fromUserId, toUserId, amount, notes } = req.body;
+    const result = await expenseService.recordSettlement({
+      groupId: req.params.groupId,
+      fromUserId: Number(fromUserId),
+      toUserId: Number(toUserId),
+      amount: Number(amount),
+      notes,
+      actorName: req.user.full_name
+    });
+
+    return res.status(HTTP_STATUS.CREATED).json({
+      success: true,
+      message: 'Settlement payment recorded successfully.',
+      data: result
+    });
+  } catch (error) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 module.exports = {
   getExpenses,
   getSummary,
   create,
-  remove
+  remove,
+  settleDebt
 };
