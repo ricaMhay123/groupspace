@@ -187,7 +187,8 @@ async function runLocalhostTests() {
       { script: 'tests/test-dm-attachments-pins-presence.js', name: 'DM Attachments, Pinned Messages & Accurate Online Presence' },
       { script: 'tests/test-workspace-mentions-notebook-tagging.js', name: 'Workspace Mentions (@) & Notebook/Folder (#) Tagging' },
       { script: 'tests/test-task-scope-approvals-assignee-flags.js', name: 'Task Creation Scope, Leader Approvals & Assignee-Only Flags' },
-      { script: 'tests/test-duplicate-task-prevention.js', name: 'Dependency Installation & Duplicate Task Prevention' }
+      { script: 'tests/test-duplicate-task-prevention.js', name: 'Dependency Installation & Duplicate Task Prevention' },
+      { script: 'tests/test-task-modal-followup-cooldown.js', name: 'Task Modal Follow-Up Encapsulation & 24h Cooldown' }
     ];
 
     for (const suite of testSuites) {

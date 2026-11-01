@@ -102,6 +102,7 @@ const TaskModel = {
         is_flagged          = ${fields.is_flagged          !== undefined ? fields.is_flagged          : current.is_flagged},
         flagged_reason      = ${fields.flagged_reason      !== undefined ? fields.flagged_reason      : current.flagged_reason},
         flagged_at          = ${fields.flagged_at          !== undefined ? fields.flagged_at          : current.flagged_at},
+        last_followed_up_at = ${fields.last_followed_up_at !== undefined ? fields.last_followed_up_at : current.last_followed_up_at},
         updated_at          = NOW()
       WHERE id = ${id}
     `;

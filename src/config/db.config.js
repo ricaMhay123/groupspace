@@ -88,6 +88,7 @@ async function initDb() {
         is_flagged BOOLEAN NOT NULL DEFAULT FALSE,
         flagged_reason TEXT,
         flagged_at TIMESTAMPTZ,
+        last_followed_up_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       );
@@ -462,6 +463,9 @@ async function initDb() {
     try { await sql`ALTER TABLE direct_messages ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT FALSE`; } catch (e) {}
     try { await sql`ALTER TABLE direct_messages ADD COLUMN IF NOT EXISTS pinned_at TIMESTAMPTZ`; } catch (e) {}
     try { await sql`CREATE INDEX IF NOT EXISTS idx_direct_messages_pinned ON direct_messages (group_id, is_pinned)`; } catch (e) {}
+
+    // Task follow-up timestamp cooldown tracking
+    try { await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS last_followed_up_at TIMESTAMPTZ`; } catch (e) {}
 
     // Relax any legacy NOT NULL constraints
     try { await sql`ALTER TABLE groups ALTER COLUMN group_name DROP NOT NULL`; } catch (e) {}

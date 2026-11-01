@@ -14,7 +14,7 @@ const { TaskModel, TaskAssistantModel } = require('./task.model');
 const GroupModel   = require('../groups/group.model');
 const sql = require('../../config/db.config');
 const {
-  TASK_STATUS, TASK_PRIORITY, ROLES, ASSIST_STATUS, SYSTEM_MESSAGES
+  TASK_STATUS, TASK_PRIORITY, ROLES, ASSIST_STATUS, SYSTEM_MESSAGES, HTTP_STATUS
 } = require('../../config/constants');
 const { isAdminRole } = require('../../config/constants');
 const { sanitizeText } = require('../../utils/validation.util');
@@ -415,7 +415,20 @@ async function followUpOnTask({ taskId, groupId, leaderUserId, leaderFullName, l
     throw domainError('You cannot send a follow-up on your own assigned task.', 400);
   }
 
+  // 24-hour anti-spam rate limiting cooldown check
+  if (task.last_followed_up_at) {
+    const lastFollowedUpTime = new Date(task.last_followed_up_at).getTime();
+    const twentyFourHoursMs = 24 * 60 * 60 * 1000;
+    if (Date.now() - lastFollowedUpTime < twentyFourHoursMs) {
+      throw domainError('Follow-up already sent today. Please wait 24 hours before sending another ping.', HTTP_STATUS.TOO_MANY_REQUESTS);
+    }
+  }
+
   const content = message || `Leader followed up on task: ${task.title}`;
+
+  // Update last_followed_up_at timestamp
+  const nowIso = new Date().toISOString();
+  await TaskModel.update(task.id, { last_followed_up_at: nowIso });
 
   // Insert notification entry into personal_feed targeting assigned member
   const [feedEntry] = await sql`

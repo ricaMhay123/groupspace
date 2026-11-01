@@ -103,34 +103,7 @@ function renderKanbanCard(task) {
         }
       };
       card.appendChild(startBtn);
-    } else if (isLeader && assignedTo && currentUserId !== assignedTo) {
-      // FOR LEADERS: Do NOT give "Start Task" on tasks assigned to others; render discrete "Follow Up" button
-      const followUpBtn = document.createElement('button');
-      followUpBtn.type = 'button';
-      followUpBtn.className = 'btn-outline btn-follow-up';
-      followUpBtn.setAttribute('data-task-id', task.id);
-      followUpBtn.style.cssText = 'margin-top:8px; padding:4px 10px; font-size:11px; font-weight:600; border-radius:6px; cursor:pointer; width:100%; text-align:center; display:block; color:var(--primary); border:1px solid var(--border); background:transparent;';
-      followUpBtn.textContent = 'Follow Up';
-      followUpBtn.onclick = (e) => {
-        if (e && typeof e.preventDefault === 'function') e.preventDefault();
-        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-        followUpOnTask(task.id, task.title, followUpBtn, e);
-      };
-      card.appendChild(followUpBtn);
     }
-  } else if (task.status === 'IN_PROGRESS' && isLeader && assignedTo && currentUserId !== assignedTo) {
-    const followUpBtn = document.createElement('button');
-    followUpBtn.type = 'button';
-    followUpBtn.className = 'btn-outline btn-follow-up';
-    followUpBtn.setAttribute('data-task-id', task.id);
-    followUpBtn.style.cssText = 'margin-top:8px; padding:4px 10px; font-size:11px; font-weight:600; border-radius:6px; cursor:pointer; width:100%; text-align:center; display:block; color:var(--primary); border:1px solid var(--border); background:transparent;';
-    followUpBtn.textContent = 'Follow Up';
-    followUpBtn.onclick = (e) => {
-      if (e && typeof e.preventDefault === 'function') e.preventDefault();
-      if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-      followUpOnTask(task.id, task.title, followUpBtn, e);
-    };
-    card.appendChild(followUpBtn);
   } else if (task.status === 'PENDING_APPROVAL') {
     if (isLeader) {
       const reviewBtn = document.createElement('button');
@@ -146,21 +119,6 @@ function renderKanbanCard(task) {
         }
       };
       card.appendChild(reviewBtn);
-
-      if (assignedTo && currentUserId !== assignedTo) {
-        const followUpBtn = document.createElement('button');
-        followUpBtn.type = 'button';
-        followUpBtn.className = 'btn-outline btn-follow-up';
-        followUpBtn.setAttribute('data-task-id', task.id);
-        followUpBtn.style.cssText = 'margin-top:4px; padding:4px 10px; font-size:11px; font-weight:600; border-radius:6px; cursor:pointer; width:100%; text-align:center; display:block; color:var(--primary); border:1px solid var(--border); background:transparent;';
-        followUpBtn.textContent = 'Follow Up';
-        followUpBtn.onclick = (e) => {
-          if (e && typeof e.preventDefault === 'function') e.preventDefault();
-          if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-          followUpOnTask(task.id, task.title, followUpBtn, e);
-        };
-        card.appendChild(followUpBtn);
-      }
     } else {
       const statusNote = document.createElement('div');
       statusNote.style.cssText = 'margin-top:8px; font-size:11px; color:var(--warning, #f59e0b); font-weight:600; text-align:center;';
@@ -237,30 +195,45 @@ async function openTaskDetailsModal(taskId) {
   }
 
   // Determine available workflow action buttons (evaluates currentUser.id, task.assigned_to, currentUser.role)
+  // 24-hour follow-up cooldown check
+  const isFollowUpCooldown = Boolean(
+    task.last_followed_up_at &&
+    (Date.now() - new Date(task.last_followed_up_at).getTime() < 24 * 60 * 60 * 1000)
+  );
+
+  function getFollowUpButtonHtml() {
+    if (!isLeader || !assignedTo || currentUserId === assignedTo) {
+      return '';
+    }
+    if (isFollowUpCooldown) {
+      return `<button type="button" class="btn-outline btn-follow-up" data-task-id="${task.id}" disabled style="padding:7px 16px; font-size:12px; font-weight:600; color:var(--gray); border:1px solid var(--border); opacity:0.65; cursor:not-allowed;" title="Follow-up already sent in the last 24 hours">Followed Up Today ✓</button>`;
+    }
+    return `<button type="button" class="btn-outline btn-follow-up" data-task-id="${task.id}" style="padding:7px 16px; font-size:12px; font-weight:600; color:var(--primary); border:1px solid var(--border);" onclick="event.preventDefault(); followUpOnTask(${task.id}, '${escapeHtml(task.title).replace(/'/g, "\\'")}', this, event)">Follow Up</button>`;
+  }
+
   let actionsHtml = '';
   if (task.status === 'TODO') {
     if (isAssigned) {
       // FOR ASSIGNED MEMBERS (currentUser.id === task.assigned_to): primary action button "Start Task"
       actionsHtml += `<button type="button" class="btn-green btn-start-task" style="padding:7px 16px; font-size:12px; font-weight:600;" onclick="event.preventDefault(); updateTaskStatusAndClose(${task.id}, 'IN_PROGRESS', event)">Start Task</button>`;
-    } else if (isLeader && assignedTo && currentUserId !== assignedTo) {
-      // FOR LEADERS (currentUser.role === 'leader' and currentUser.id !== task.assigned_to): discrete "Follow Up" button
-      actionsHtml += `<button type="button" class="btn-outline btn-follow-up" data-task-id="${task.id}" style="padding:7px 16px; font-size:12px; font-weight:600; color:var(--primary); border:1px solid var(--border);" onclick="event.preventDefault(); followUpOnTask(${task.id}, '${escapeHtml(task.title).replace(/'/g, "\\'")}', this, event)">Follow Up</button>`;
+    } else {
+      actionsHtml += getFollowUpButtonHtml();
     }
   } else if (task.status === 'IN_PROGRESS') {
     if (isAssigned) {
       actionsHtml += `<button type="button" class="btn-green" style="padding:7px 16px; font-size:12px; font-weight:600;" onclick="event.preventDefault(); updateTaskStatusAndClose(${task.id}, 'PENDING_APPROVAL', event)">Submit for Review</button>`;
-    } else if (isLeader && assignedTo && currentUserId !== assignedTo) {
-      actionsHtml += `<button type="button" class="btn-outline btn-follow-up" data-task-id="${task.id}" style="padding:7px 16px; font-size:12px; font-weight:600; color:var(--primary); border:1px solid var(--border);" onclick="event.preventDefault(); followUpOnTask(${task.id}, '${escapeHtml(task.title).replace(/'/g, "\\'")}', this, event)">Follow Up</button>`;
+    } else {
+      actionsHtml += getFollowUpButtonHtml();
     }
   } else if (task.status === 'PENDING_APPROVAL') {
     if (isLeader) {
       actionsHtml += `<button type="button" class="btn-green" style="padding:7px 16px; font-size:12px; font-weight:600;" onclick="event.preventDefault(); closeModal('taskDetailsModal'); openReviewModal(${task.id}, '${escapeHtml(task.title).replace(/'/g, "\\'")}')">Review & Approve</button>`;
-      if (assignedTo && currentUserId !== assignedTo) {
-        actionsHtml += `<button type="button" class="btn-outline btn-follow-up" data-task-id="${task.id}" style="padding:7px 16px; font-size:12px; font-weight:600; color:var(--primary); border:1px solid var(--border);" onclick="event.preventDefault(); followUpOnTask(${task.id}, '${escapeHtml(task.title).replace(/'/g, "\\'")}', this, event)">Follow Up</button>`;
-      }
+      actionsHtml += getFollowUpButtonHtml();
     } else {
       actionsHtml += `<span style="font-size:12px; color:var(--warning); font-weight:600;">⏳ Awaiting Leader Review</span>`;
     }
+  } else if (task.status !== 'DONE') {
+    actionsHtml += getFollowUpButtonHtml();
   }
 
   if (isCreator || isLeader) {
@@ -546,9 +519,11 @@ async function followUpOnTask(taskId, taskTitle, btnEl = null, event = null) {
 
     btn._followUpTimer = setTimeout(() => {
       if (btn && btn.isConnected !== false) {
-        btn.textContent = originalText;
+        btn.textContent = 'Followed Up Today ✓';
         btn.classList.remove('follow-up-sent');
-        btn.disabled = false;
+        btn.disabled = true;
+        btn.style.opacity = '0.65';
+        btn.style.cursor = 'not-allowed';
       }
       btn._followUpTimer = null;
     }, 2000);
@@ -580,6 +555,15 @@ async function followUpOnTask(taskId, taskTitle, btnEl = null, event = null) {
       }
     }
 
+    // Update in-memory task to record 24h cooldown timestamp
+    const nowIso = new Date().toISOString();
+    if (Array.isArray(window.currentTasks)) {
+      const currentTask = window.currentTasks.find(t => Number(t.id) === Number(taskId));
+      if (currentTask) {
+        currentTask.last_followed_up_at = nowIso;
+      }
+    }
+
     if (typeof showToast === 'function') {
       showToast((res && res.message) || `Followed up on task: "${taskTitle || 'Task'}"`, 'success');
     }
@@ -588,6 +572,17 @@ async function followUpOnTask(taskId, taskTitle, btnEl = null, event = null) {
     }
   } catch (err) {
     console.error('Failed to send task follow-up:', err);
+    // If rate-limited with 429, immediately set button state to "Followed Up Today ✓"
+    if (err && (err.httpStatus === 429 || (err.message && err.message.includes('already sent today')))) {
+      targetButtons.forEach((btn) => {
+        if (btn._followUpTimer) clearTimeout(btn._followUpTimer);
+        btn.textContent = 'Followed Up Today ✓';
+        btn.classList.remove('follow-up-sent');
+        btn.disabled = true;
+        btn.style.opacity = '0.65';
+        btn.style.cursor = 'not-allowed';
+      });
+    }
     if (typeof showToast === 'function') {
       showToast(err.message || 'Failed to send follow-up notification.', 'error');
     }
