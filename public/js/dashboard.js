@@ -2795,6 +2795,7 @@ async function loadDiscussions() {
 
 async function selectTopic(topicId, title) {
   activeTopicId = topicId;
+  window.activeTopicId = topicId;
   const titleEl = document.getElementById('activeTopicTitle');
   if (titleEl) titleEl.textContent = title;
   const formEl = document.getElementById('postCommentForm');
@@ -3168,7 +3169,7 @@ async function handlePostComment(e) {
   if (typeof window.handlePostComment === 'function' && window.handlePostComment !== handlePostComment) {
     return window.handlePostComment(e);
   }
-  if (!activeTopicId) return;
+  if (!activeTopicId || window.__isSubmittingDiscussionComment) return;
 
   const input = document.getElementById('newCommentInput');
   const content = input ? input.value.trim() : '';
@@ -3178,6 +3179,7 @@ async function handlePostComment(e) {
     return;
   }
 
+  window.__isSubmittingDiscussionComment = true;
   const postBtn = document.getElementById('postDiscussionBtn');
   if (postBtn) postBtn.disabled = true;
 
@@ -3197,6 +3199,7 @@ async function handlePostComment(e) {
   } catch (err) {
     showToast(err.message || 'Failed to post reply', 'error');
   } finally {
+    window.__isSubmittingDiscussionComment = false;
     if (postBtn) postBtn.disabled = false;
   }
 }

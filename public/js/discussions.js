@@ -14,6 +14,7 @@
   let dropdownEl = null;
   let activeInputEl = null;
   let lastRootSuggestions = [];
+  const knownMemberNames = new Set();
 
   // Helper to accurately resolve the active workspace groupId across DOM, window, and storage
   function getActiveGroupId() {
@@ -173,17 +174,58 @@
         // Prevent input from losing focus when clicking dropdown items
         e.preventDefault();
         e.stopPropagation();
+        handleDropdownItemEvent(e);
       });
 
       dropdownEl.addEventListener('pointerdown', (e) => {
+        // Stop propagation so document outside-click listener doesn't close before selection,
+        // but do NOT call preventDefault() on pointerdown unless handling selection, as pointerdown.preventDefault() cancels mousedown/click in Chromium
+        e.stopPropagation();
+      });
+
+      dropdownEl.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
+        handleDropdownItemEvent(e);
       });
 
       // Floating overlay: always mounted on <body> so it is never clipped and can sit at the caret
       document.body.appendChild(dropdownEl);
     }
     return dropdownEl;
+  }
+
+  function handleDropdownItemEvent(e) {
+    const backBtn = e.target && e.target.closest ? e.target.closest('#mentionBackBtn') : null;
+    if (backBtn) {
+      if (lastRootSuggestions && lastRootSuggestions.length > 0 && activeTrigger) {
+        renderDropdown(lastRootSuggestions, activeTrigger);
+      }
+      return;
+    }
+    const subEl = e.target && e.target.closest ? e.target.closest('.mention-sub-item') : null;
+    if (subEl && activeTrigger) {
+      const subType = subEl.getAttribute('data-sub-type');
+      const subName = subEl.getAttribute('data-sub-name');
+      const input = activeInputEl || document.getElementById('newCommentInput') || document.querySelector('.inline-reply-input') || document.getElementById('topicTitle');
+      if (input && subName) {
+        const text = input.value;
+        const replacement = subType === 'folder_select' ? `#[Folder: ${subName}] ` : `#[Page: ${subName}] `;
+        input.value = text.slice(0, activeTrigger.startPos) + replacement + text.slice(activeTrigger.endPos);
+        const newCursor = activeTrigger.startPos + replacement.length;
+        input.setSelectionRange(newCursor, newCursor);
+        input.focus();
+        hideDropdown();
+      }
+      return;
+    }
+    const itemEl = e.target && e.target.closest ? e.target.closest('.mention-item') : null;
+    if (itemEl && activeTrigger) {
+      const idx = Number(itemEl.getAttribute('data-idx'));
+      if (!isNaN(idx)) {
+        applySuggestion(idx);
+      }
+    }
   }
 
   /** Measure caret viewport coordinates inside a textarea / input via a hidden mirror element. */
@@ -292,6 +334,22 @@
     if (/\n/.test(query) || query.length > 25) {
       return null;
     }
+    // If a bracketed tag #[Page: ...] or #[Folder: ...] was already closed, or #123 task tag completed, do not re-trigger
+    if (triggerType === '#' && (query.includes(']') || /^\d+\s/.test(query))) {
+      return null;
+    }
+    // If an @mention was already completed (matches a known member name followed by a space), do not re-trigger
+    if (triggerType === '@') {
+      const qLower = query.toLowerCase();
+      for (const mName of knownMemberNames) {
+        if (mName && qLower.startsWith(mName + ' ')) {
+          return null;
+        }
+      }
+      if (/\s$/.test(query)) {
+        return null;
+      }
+    }
 
     return {
       type: triggerType,
@@ -344,6 +402,9 @@
             }));
         }
 
+        members.forEach(m => {
+          if (m && m.name) knownMemberNames.add(String(m.name).trim().toLowerCase());
+        });
         return members;
       } else if (trigger.type === '#') {
         // Query Category 1 (#NB Pages: folder_id IS NULL), Category 2 (#NB Folders), topics, tasks, and notebooks
@@ -529,6 +590,13 @@
     dd.querySelectorAll('.mention-item').forEach(el => {
       el.addEventListener('mousedown', (e) => {
         e.preventDefault();
+        e.stopPropagation();
+        const idx = Number(el.getAttribute('data-idx'));
+        applySuggestion(idx);
+      });
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         const idx = Number(el.getAttribute('data-idx'));
         applySuggestion(idx);
       });
@@ -585,7 +653,7 @@
         const subType = subEl.getAttribute('data-sub-type');
         const subName = subEl.getAttribute('data-sub-name');
         if (!activeTrigger) return;
-        const input = activeInputEl || document.getElementById('newCommentInput') || document.getElementById('topicTitle');
+        const input = activeInputEl || document.getElementById('newCommentInput') || document.querySelector('.inline-reply-input') || document.getElementById('topicTitle');
         if (!input) return;
         const text = input.value;
         const replacement = subType === 'folder_select' ? `#[Folder: ${subName}] ` : `#[Page: ${subName}] `;
@@ -710,6 +778,7 @@
     const text = input.value;
     let replacement = '';
     if (item.type === 'user') {
+      if (item.name) knownMemberNames.add(String(item.name).trim().toLowerCase());
       replacement = `@${item.name} `;
     } else if (item.type === 'topic') {
       replacement = `#[${item.name}] `;
@@ -928,9 +997,24 @@
       return `<span class="mention-pill user-mention-pill">@${name.trim()}</span>`;
     });
 
-    // 9. Replace inline user mentions: @FirstName or @FirstName LastName (supports multiple in a row)
-    escaped = escaped.replace(/@([A-Za-z0-9_.-]+(?:\s[A-Za-z0-9_.-]+)?)(?=[.,!?:;]?(\s|$))/g, (match, name) => {
-      return `<span class="mention-pill user-mention-pill">@${name.trim()}</span>`;
+    // 8b. Replace known workspace member full names (including 3-4 word names) first
+    const groupDetails = window.currentGroupDetails || (typeof currentGroupDetails !== 'undefined' ? currentGroupDetails : null);
+    if (groupDetails && Array.isArray(groupDetails.members)) {
+      groupDetails.members.forEach(m => {
+        const nm = (m.full_name || m.name || '').trim();
+        if (nm) knownMemberNames.add(nm.toLowerCase());
+      });
+    }
+    const sortedNames = Array.from(knownMemberNames).filter(Boolean).sort((a, b) => b.length - a.length);
+    sortedNames.forEach(lowerName => {
+      const escRegex = lowerName.replace(/[.*+?^${}()|[\]\\]/g, c => '\\' + c);
+      const re = new RegExp('@(' + escRegex + ')(?=[.,!?:;]?(\\s|$))', 'gi');
+      escaped = escaped.replace(re, (m, matchedName) => `<span class="mention-pill user-mention-pill">@${matchedName.trim()}</span>`);
+    });
+
+    // 9. Replace remaining inline user mentions (1-2 word names not yet wrapped)
+    escaped = escaped.replace(/(^|[\s(>])@([A-Za-z0-9_.-]+(?:\s[A-Za-z0-9_.-]+)?)(?=[.,!?:;]?(\s|$))/g, (match, prefix, name) => {
+      return `${prefix}<span class="mention-pill user-mention-pill">@${name.trim()}</span>`;
     });
 
     return escaped;
@@ -1252,10 +1336,13 @@
         return;
       }
 
-      const topicId = typeof activeTopicId !== 'undefined' ? activeTopicId : null;
+      const topicId = (typeof window.activeTopicId !== 'undefined' && window.activeTopicId)
+        ? window.activeTopicId
+        : (typeof activeTopicId !== 'undefined' ? activeTopicId : null);
       const activeGid = getActiveGroupId();
 
-      if (!topicId || !activeGid) return;
+      if (!topicId || !activeGid || window.__isSubmittingDiscussionComment) return;
+      window.__isSubmittingDiscussionComment = true;
 
       if (postDiscussionBtn) postDiscussionBtn.disabled = true;
 
@@ -1279,6 +1366,7 @@
           showToast(err.message || 'Failed to post reply.', 'error');
         }
       } finally {
+        window.__isSubmittingDiscussionComment = false;
         if (postDiscussionBtn) postDiscussionBtn.disabled = false;
       }
     }

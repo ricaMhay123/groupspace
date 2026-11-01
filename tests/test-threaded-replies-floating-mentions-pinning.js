@@ -61,8 +61,9 @@ assert(
 );
 assert(
   discussionsJs.includes("e.key === 'Escape'") &&
-  discussionsJs.includes('hideDropdown()'),
-  'discussions.js must immediately close/hide dropdown on item selection or Escape key'
+  discussionsJs.includes('hideDropdown()') &&
+  discussionsJs.includes('function handleDropdownItemEvent'),
+  'discussions.js must immediately select item on click/mousedown and close/hide dropdown on item selection or Escape key'
 );
 assert(
   discussionsJs.includes('expandFolderAccordionInline') &&
