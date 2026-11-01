@@ -1081,6 +1081,7 @@
         <button type="button" class="nb-ribbon-tab" data-ribbon-tab="insert" onclick="switchNotebookRibbonTab('insert')">Insert</button>
         <button type="button" class="nb-ribbon-tab" data-ribbon-tab="draw" onclick="switchNotebookRibbonTab('draw')">Draw</button>
         <button type="button" class="nb-ribbon-tab" data-ribbon-tab="layout" onclick="switchNotebookRibbonTab('layout')">Layout</button>
+        <button type="button" class="nb-ribbon-tab contextual-tab" id="nbTabTableDesign" data-ribbon-tab="table-design" style="display:none;" onclick="switchNotebookRibbonTab('table-design')">Table Design</button>
         <span id="nbPrivacyIndicator" style="margin-left:auto; font-size:11px; color:#94a3b8; font-weight:600;">Microsoft Word Style Rich Text &amp; Flowchart Canvas</span>
       </div>
 
@@ -1277,8 +1278,8 @@
           <option value="∞">∞ Infinity</option>
         </select>
 
-        <input type="file" id="nbFileInput" accept=".txt,.md,.markdown" style="display:none;" onchange="handleImportFile(event)">
-        <button type="button" class="btn-export-sm nb-edit-ctrl" onclick="triggerImportDocument(null)" title="Import .txt or .markdown document as new page">Import Document</button>
+        <input type="file" id="nbFileInput" accept=".docx,.pdf,.txt,.md,.markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,text/plain,text/markdown" style="display:none;" onchange="handleImportFile(event)">
+        <button type="button" class="btn-export-sm nb-edit-ctrl" onclick="triggerImportDocument(null)" title="Import .docx, .pdf, .txt, or .md document as new page">Import Document</button>
       </div>
 
       <!-- ==================== [DRAW TAB] ==================== -->
@@ -1386,8 +1387,49 @@
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align to Center" onclick="alignSelectedShapeCenter()">⇹ Center</button>
       </div>
 
+      <!-- ==================== [TABLE DESIGN TAB (CONTEXTUAL)] ==================== -->
+      <!-- 1. Table Style Presets & Formatting -->
+      <div class="nb-toolbar-group" data-ribbon-group="table-design" style="display:none;">
+        <label for="nbTablePresetSelect">Preset:</label>
+        <select id="nbTablePresetSelect" class="nb-edit-ctrl" onchange="applyTablePreset(this.value)" title="Table Style Preset">
+          <option value="default-grid" selected>Default Grid</option>
+          <option value="striped">Striped Rows</option>
+          <option value="header-accent">Header Accent</option>
+          <option value="borderless">Borderless</option>
+        </select>
+
+        <label for="nbTableCellPaddingSelect">Padding:</label>
+        <select id="nbTableCellPaddingSelect" class="nb-edit-ctrl" onchange="applyTableCellPadding(this.value)" title="Cell Padding">
+          <option value="compact">Compact (6px)</option>
+          <option value="standard" selected>Standard (10px)</option>
+          <option value="relaxed">Relaxed (16px)</option>
+        </select>
+
+        <div class="nb-color-picker-wrap" title="Table Border Color">
+          <span>Border</span>
+          <input type="color" id="nbTableBorderColor" class="nb-edit-ctrl" value="#cbd5e1" onchange="applyTableBorderColor(this.value)">
+        </div>
+
+        <div class="nb-color-picker-wrap" title="Cell Shading Color">
+          <span>Shading</span>
+          <input type="color" id="nbTableCellShading" class="nb-edit-ctrl" value="#ffffff" onchange="applyTableCellShading(this.value)">
+        </div>
+      </div>
+
+      <!-- 2. Table Rows & Columns Operations -->
+      <div class="nb-toolbar-group" data-ribbon-group="table-design" style="display:none;">
+        <label>Rows &amp; Cols:</label>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTableRow('above')" title="Insert Row Above">+ Row Above</button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTableRow('below')" title="Insert Row Below">+ Row Below</button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTableColumn('left')" title="Insert Column Left">+ Col Left</button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTableColumn('right')" title="Insert Column Right">+ Col Right</button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="deleteCurrentTableRow()" title="Delete Current Row" style="color:var(--danger, #ef4444);">Delete Row</button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="deleteCurrentTableColumn()" title="Delete Current Column" style="color:var(--danger, #ef4444);">Delete Col</button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="deleteActiveTable()" title="Delete Table" style="color:var(--danger, #ef4444); font-weight:700;">Delete Table</button>
+      </div>
+
       <!-- ==================== ALWAYS-VISIBLE / FOLDER & EXPORT ==================== -->
-      <div class="nb-toolbar-group" data-ribbon-group="home insert draw layout" style="margin-left:auto;">
+      <div class="nb-toolbar-group" data-ribbon-group="home insert draw layout table-design" style="margin-left:auto;">
         <label for="nbPageFolderSelect">Folder:</label>
         <select id="nbPageFolderSelect" class="nb-edit-ctrl" onchange="handleMovePageToFolder(this.value)" title="Move page to folder">
           <option value="">(Root / No Folder)</option>
@@ -1453,6 +1495,8 @@
 
 <script src="/js/api.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 'use strict';
 
@@ -2277,7 +2321,11 @@ function setupEditorListeners() {
       scheduleAutoSave();
     });
     editor.addEventListener('mouseup', applyFormatPainterIfActive);
+    editor.addEventListener('click', updateActiveTableContext);
+    editor.addEventListener('keyup', updateActiveTableContext);
   }
+
+  document.addEventListener('selectionchange', updateActiveTableContext);
 
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
@@ -2721,7 +2769,201 @@ function applyTextWrap(mode) {
   showToast(`Text wrap: ${mode}`, 'info');
 }
 
-/* ── INSERT TAB: DYNAMIC EDITABLE HTML TABLE GENERATOR ── */
+/* ── INSERT TAB: DYNAMIC EDITABLE HTML TABLE GENERATOR & TABLE DESIGN CONTROLS ── */
+let activeTableElement = null;
+let activeTableCell = null;
+
+function updateActiveTableContext() {
+  const sel = window.getSelection();
+  const tabBtn = document.getElementById('nbTabTableDesign');
+  if (!sel || sel.rangeCount === 0) return;
+  const node = sel.anchorNode;
+  if (!node) return;
+  const cell = (node.nodeType === 3 ? node.parentNode : node).closest('td, th');
+  const table = cell ? cell.closest('table') : (node.closest ? node.closest('table') : null);
+
+  if (table) {
+    activeTableElement = table;
+    activeTableCell = cell;
+    if (tabBtn) {
+      tabBtn.style.display = 'inline-flex';
+    }
+  } else {
+    const editor = document.getElementById('nbPageContent');
+    if (editor && editor.contains(node)) {
+      if (tabBtn) {
+        tabBtn.style.display = 'none';
+        if (tabBtn.classList.contains('active')) {
+          switchNotebookRibbonTab('home');
+        }
+      }
+      activeTableElement = null;
+      activeTableCell = null;
+    }
+  }
+}
+
+function applyTablePreset(preset) {
+  if (!activeTableElement) {
+    const editor = document.getElementById('nbPageContent');
+    if (editor) activeTableElement = editor.querySelector('table');
+  }
+  if (!activeTableElement) {
+    showToast('Click inside a table first to apply preset', 'info');
+    return;
+  }
+  activeTableElement.classList.remove(
+    'table-preset-default-grid',
+    'table-preset-striped',
+    'table-preset-header-accent',
+    'table-preset-borderless'
+  );
+  const validPresets = ['default-grid', 'striped', 'header-accent', 'borderless'];
+  const chosen = validPresets.includes(preset) ? preset : 'default-grid';
+  activeTableElement.classList.add(`table-preset-${chosen}`);
+  
+  if (chosen === 'borderless') {
+    activeTableElement.setAttribute('border', '0');
+  } else {
+    activeTableElement.setAttribute('border', '1');
+  }
+
+  scheduleAutoSave();
+  showToast(`Applied "${chosen}" table style`, 'success');
+}
+
+function applyTableCellPadding(size) {
+  if (!activeTableElement) {
+    const editor = document.getElementById('nbPageContent');
+    if (editor) activeTableElement = editor.querySelector('table');
+  }
+  if (!activeTableElement) {
+    showToast('Click inside a table first', 'info');
+    return;
+  }
+  activeTableElement.classList.remove('table-pad-compact', 'table-pad-standard', 'table-pad-relaxed');
+  if (size === 'compact' || size === 'relaxed') {
+    activeTableElement.classList.add(`table-pad-${size}`);
+  } else {
+    activeTableElement.classList.add('table-pad-standard');
+  }
+  scheduleAutoSave();
+}
+
+function applyTableBorderColor(color) {
+  if (!activeTableElement) return;
+  activeTableElement.style.borderColor = color;
+  const cells = activeTableElement.querySelectorAll('th, td');
+  cells.forEach(c => { c.style.borderColor = color; });
+  scheduleAutoSave();
+}
+
+function applyTableCellShading(color) {
+  if (activeTableCell) {
+    activeTableCell.style.backgroundColor = color;
+  } else if (activeTableElement) {
+    activeTableElement.style.backgroundColor = color;
+  }
+  scheduleAutoSave();
+}
+
+function insertTableRow(pos) {
+  if (!activeTableElement) return;
+  const cell = activeTableCell || activeTableElement.querySelector('td, th');
+  const row = cell ? cell.closest('tr') : null;
+  const colCount = activeTableElement.rows[0] ? activeTableElement.rows[0].cells.length : 3;
+
+  const newRow = document.createElement('tr');
+  for (let i = 0; i < colCount; i++) {
+    const td = document.createElement('td');
+    td.setAttribute('contenteditable', 'true');
+    td.innerHTML = '<br>';
+    newRow.appendChild(td);
+  }
+
+  if (row) {
+    if (pos === 'above') {
+      row.parentNode.insertBefore(newRow, row);
+    } else {
+      row.parentNode.insertBefore(newRow, row.nextSibling);
+    }
+  } else {
+    const tbody = activeTableElement.querySelector('tbody') || activeTableElement;
+    tbody.appendChild(newRow);
+  }
+  scheduleAutoSave();
+  showToast('Row added', 'info');
+}
+
+function insertTableColumn(pos) {
+  if (!activeTableElement) return;
+  const cell = activeTableCell || activeTableElement.querySelector('td, th');
+  const colIndex = cell ? cell.cellIndex : (activeTableElement.rows[0] ? activeTableElement.rows[0].cells.length - 1 : 0);
+
+  Array.from(activeTableElement.rows).forEach(r => {
+    const isHeader = r.parentElement && r.parentElement.tagName === 'THEAD';
+    const newCell = document.createElement(isHeader ? 'th' : 'td');
+    newCell.setAttribute('contenteditable', 'true');
+    newCell.innerHTML = isHeader ? 'Header' : '<br>';
+
+    if (r.cells[colIndex]) {
+      if (pos === 'left') {
+        r.insertBefore(newCell, r.cells[colIndex]);
+      } else {
+        r.insertBefore(newCell, r.cells[colIndex].nextSibling);
+      }
+    } else {
+      r.appendChild(newCell);
+    }
+  });
+  scheduleAutoSave();
+  showToast('Column added', 'info');
+}
+
+function deleteCurrentTableRow() {
+  if (!activeTableCell || !activeTableElement) {
+    showToast('Click inside a table row to delete', 'info');
+    return;
+  }
+  const row = activeTableCell.closest('tr');
+  if (row) {
+    row.remove();
+    scheduleAutoSave();
+    showToast('Row deleted', 'info');
+    if (activeTableElement.rows.length === 0) {
+      deleteActiveTable();
+    }
+  }
+}
+
+function deleteCurrentTableColumn() {
+  if (!activeTableCell || !activeTableElement) {
+    showToast('Click inside a table column to delete', 'info');
+    return;
+  }
+  const colIndex = activeTableCell.cellIndex;
+  Array.from(activeTableElement.rows).forEach(r => {
+    if (r.cells[colIndex]) r.cells[colIndex].remove();
+  });
+  scheduleAutoSave();
+  showToast('Column deleted', 'info');
+  if (activeTableElement.rows[0] && activeTableElement.rows[0].cells.length === 0) {
+    deleteActiveTable();
+  }
+}
+
+function deleteActiveTable() {
+  if (!activeTableElement) return;
+  activeTableElement.remove();
+  activeTableElement = null;
+  activeTableCell = null;
+  const tabBtn = document.getElementById('nbTabTableDesign');
+  if (tabBtn) tabBtn.style.display = 'none';
+  switchNotebookRibbonTab('home');
+  scheduleAutoSave();
+  showToast('Table deleted', 'info');
+}
+
 function insertDynamicTable(val) {
   const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
   if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
@@ -2738,7 +2980,7 @@ function insertDynamicTable(val) {
     rows = parseInt(parts[1], 10) || 3;
   }
 
-  let tableHtml = '<table class="nb-table-resizer" border="1"><thead><tr>';
+  let tableHtml = '<table class="nb-table-resizer table-preset-default-grid" border="1"><thead><tr>';
   for (let c = 1; c <= cols; c++) {
     tableHtml += `<th contenteditable="true">Header ${c}</th>`;
   }
@@ -2757,6 +2999,18 @@ function insertDynamicTable(val) {
     editor.focus();
     document.execCommand('insertHTML', false, tableHtml);
     scheduleAutoSave();
+    const insertedTable = editor.querySelector('table:last-of-type') || editor.querySelector('table');
+    if (insertedTable) {
+      activeTableElement = insertedTable;
+      const firstCell = insertedTable.querySelector('th, td');
+      if (firstCell) {
+        activeTableCell = firstCell;
+        firstCell.focus();
+      }
+      const tabBtn = document.getElementById('nbTabTableDesign');
+      if (tabBtn) tabBtn.style.display = 'inline-flex';
+      switchNotebookRibbonTab('table-design');
+    }
     showToast(`Inserted ${cols} × ${rows} table.`, 'success');
   }
 }
@@ -3308,13 +3562,97 @@ function triggerImportDocument(folderId = null) {
   if (input) input.click();
 }
 
-function handleImportFile(event) {
+async function parseUploadedDocument(file) {
+  if (!file) throw new Error('No file provided.');
+  const nameParts = file.name.split('.');
+  const ext = (nameParts.length > 1 ? nameParts.pop() : '').toLowerCase();
+
+  // 1. Microsoft Word Document (.docx)
+  if (ext === 'docx') {
+    if (typeof mammoth === 'undefined' || !mammoth.convertToHtml) {
+      throw new Error('Mammoth.js library is not loaded. Cannot parse .docx document.');
+    }
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.convertToHtml({ arrayBuffer });
+    return {
+      html: result.value || '<p>(Empty Document)</p>',
+      messages: result.messages || []
+    };
+  }
+
+  // 2. Adobe PDF Document (.pdf)
+  if (ext === 'pdf') {
+    if (typeof pdfjsLib === 'undefined' || !pdfjsLib.getDocument) {
+      throw new Error('PDF.js library is not loaded. Cannot parse .pdf document.');
+    }
+    if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    const arrayBuffer = await file.arrayBuffer();
+    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+    const pdfDoc = await loadingTask.promise;
+    let fullHtml = '';
+
+    for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+      const page = await pdfDoc.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      let pageText = '';
+      let currentLine = '';
+      for (const item of textContent.items) {
+        if (item.hasEOL) {
+          currentLine += item.str;
+          if (currentLine.trim()) {
+            pageText += `<p>${escapeHtml(currentLine.trim())}</p>`;
+          }
+          currentLine = '';
+        } else {
+          currentLine += (currentLine ? ' ' : '') + item.str;
+        }
+      }
+      if (currentLine.trim()) {
+        pageText += `<p>${escapeHtml(currentLine.trim())}</p>`;
+      }
+      if (!pageText && textContent.items.length > 0) {
+        pageText = `<p>${escapeHtml(textContent.items.map(it => it.str).join(' ').trim())}</p>`;
+      }
+      fullHtml += pageText || '<p><br></p>';
+    }
+
+    return {
+      html: fullHtml || '<p>(Empty PDF Document)</p>'
+    };
+  }
+
+  // 3. Fallback for .txt, .md, .markdown
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const raw = String(e.target.result || '');
+      const paragraphs = raw.split(/\r?\n\r?\n/).map(para => {
+        const trimmed = para.trim();
+        if (!trimmed) return '';
+        if (trimmed.startsWith('### ')) return `<h3>${escapeHtml(trimmed.slice(4))}</h3>`;
+        if (trimmed.startsWith('## ')) return `<h2>${escapeHtml(trimmed.slice(3))}</h2>`;
+        if (trimmed.startsWith('# ')) return `<h1>${escapeHtml(trimmed.slice(2))}</h1>`;
+        return `<p>${escapeHtml(trimmed).replace(/\r?\n/g, '<br>')}</p>`;
+      }).filter(Boolean).join('');
+      resolve({
+        html: paragraphs || `<p>${escapeHtml(raw)}</p>`,
+        rawText: raw
+      });
+    };
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
+}
+
+async function handleImportFile(event) {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    const raw = e.target.result || '';
+  try {
+    showToast(`Importing "${file.name}"...`, 'info');
+    const parsed = await parseUploadedDocument(file);
     const editor = document.getElementById('nbPageContent');
     if (!editor) return;
 
@@ -3322,26 +3660,19 @@ function handleImportFile(event) {
     clearEditor(pendingImportFolderId);
     pendingImportFolderId = null;
 
-    // Convert Markdown headings/lists or plain text paragraphs into clean HTML
-    const paragraphs = raw.split(/\r?\n\r?\n/).map(para => {
-      const trimmed = para.trim();
-      if (!trimmed) return '';
-      if (trimmed.startsWith('### ')) return `<h3>${escapeHtml(trimmed.slice(4))}</h3>`;
-      if (trimmed.startsWith('## ')) return `<h2>${escapeHtml(trimmed.slice(3))}</h2>`;
-      if (trimmed.startsWith('# ')) return `<h1>${escapeHtml(trimmed.slice(2))}</h1>`;
-      return `<p>${escapeHtml(trimmed).replace(/\r?\n/g, '<br>')}</p>`;
-    }).filter(Boolean).join('');
-
-    editor.innerHTML = paragraphs || `<p>${escapeHtml(raw)}</p>`;
+    editor.innerHTML = parsed.html || '<p>(Empty Document)</p>';
     currentShapes = [];
     renderAllShapes();
     updateWordCount();
 
     showToast(`Imported "${file.name}" as a new page!`, 'success');
     await saveCurrentPage();
-  };
-  reader.readAsText(file);
-  event.target.value = '';
+  } catch (err) {
+    console.error('[ImportFile] Error importing document:', err);
+    showToast(err.message || 'Failed to import document.', 'error');
+  } finally {
+    event.target.value = '';
+  }
 }
 
 async function exportPage(format) {

@@ -147,7 +147,8 @@ async function runLocalhostTests() {
       { script: 'tests/test-login-page.js', name: 'Centered Login Gateway & Touch Targets' },
       { script: 'tests/test-calendar-redesign.js', name: 'Team Calendar Overhaul & View Selector' },
       { script: 'tests/test-homespace-settings-drawer.js', name: 'Homespace Settings & Controls Accordion Drawer' },
-      { script: 'tests/test-discussions-attachments.js', name: 'Discussions Attachment Lightbox & Download Badges' }
+      { script: 'tests/test-discussions-attachments.js', name: 'Discussions Attachment Lightbox & Download Badges' },
+      { script: 'tests/test-notebook-document-imports.js', name: 'Notebook Document Imports & Table Styles' }
     ];
 
     for (const suite of testSuites) {

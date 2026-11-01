@@ -89,3 +89,4 @@
 - [ ] Create test verifying Lightbox modal elements and keyboard navigation handlers.
 - [ ] Create test verifying document badge chips have `download` and `target="_blank"` attributes.
 - [ ] Run full test suite and confirm 100% pass rate.
+

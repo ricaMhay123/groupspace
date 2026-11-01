@@ -1751,35 +1751,123 @@ function openCreateNoteModal() {
   openModal('createNoteModal');
 }
 
+async function parseUploadedDocument(file) {
+  if (!file) throw new Error('No file selected.');
+  const nameParts = file.name.split('.');
+  const ext = (nameParts.length > 1 ? nameParts.pop() : '').toLowerCase();
+
+  // 1. Microsoft Word Document (.docx)
+  if (ext === 'docx') {
+    if (typeof mammoth === 'undefined' || !mammoth.convertToHtml) {
+      throw new Error('Mammoth.js library is not loaded. Cannot parse .docx document.');
+    }
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.convertToHtml({ arrayBuffer });
+    return {
+      html: result.value || '<p>(Empty Document)</p>',
+      messages: result.messages || []
+    };
+  }
+
+  // 2. Adobe PDF Document (.pdf)
+  if (ext === 'pdf') {
+    if (typeof pdfjsLib === 'undefined' || !pdfjsLib.getDocument) {
+      throw new Error('PDF.js library is not loaded. Cannot parse .pdf document.');
+    }
+    if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    const arrayBuffer = await file.arrayBuffer();
+    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+    const pdfDoc = await loadingTask.promise;
+    let fullHtml = '';
+
+    for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+      const page = await pdfDoc.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      let pageText = '';
+      let currentLine = '';
+      for (const item of textContent.items) {
+        if (item.hasEOL) {
+          currentLine += item.str;
+          if (currentLine.trim()) {
+            pageText += `<p>${escapeHtml(currentLine.trim())}</p>`;
+          }
+          currentLine = '';
+        } else {
+          currentLine += (currentLine ? ' ' : '') + item.str;
+        }
+      }
+      if (currentLine.trim()) {
+        pageText += `<p>${escapeHtml(currentLine.trim())}</p>`;
+      }
+      if (!pageText && textContent.items.length > 0) {
+        pageText = `<p>${escapeHtml(textContent.items.map(it => it.str).join(' ').trim())}</p>`;
+      }
+      fullHtml += pageText || '<p><br></p>';
+    }
+
+    return {
+      html: fullHtml || '<p>(Empty PDF Document)</p>'
+    };
+  }
+
+  // 3. Fallback for .txt, .md, .markdown
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const raw = String(e.target.result || '');
+      const paragraphs = raw.split(/\r?\n\r?\n/).map(para => {
+        const trimmed = para.trim();
+        if (!trimmed) return '';
+        if (trimmed.startsWith('### ')) return `<h3>${escapeHtml(trimmed.slice(4))}</h3>`;
+        if (trimmed.startsWith('## ')) return `<h2>${escapeHtml(trimmed.slice(3))}</h2>`;
+        if (trimmed.startsWith('# ')) return `<h1>${escapeHtml(trimmed.slice(2))}</h1>`;
+        return `<p>${escapeHtml(trimmed).replace(/\r?\n/g, '<br>')}</p>`;
+      }).filter(Boolean).join('');
+      resolve({
+        html: paragraphs || `<p>${escapeHtml(raw)}</p>`,
+        rawText: raw
+      });
+    };
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
+}
+
 async function handleDashboardImportDocument(event) {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async (ev) => {
-    const rawText = String(ev.target.result || '');
-    const autoTitle = extractDashboardAutoTitle(rawText);
+
+  try {
+    showToast(`Parsing "${file.name}"...`, 'info');
+    const parsed = await parseUploadedDocument(file);
+    const content = parsed.html || '<p>(Empty Document)</p>';
+    const baseTitle = file.name.replace(/\.[^/.]+$/, '').trim() || 'Imported Document';
+    const autoTitle = extractDashboardAutoTitle(content) || baseTitle;
     const folderId = activeDashboardFolderFilter !== 'ALL' ? Number(activeDashboardFolderFilter) : null;
-    try {
-      const res = await apiFetch(`/api/groups/${currentGroupId}/notes`, {
-        method: 'POST',
-        body: JSON.stringify({
-          title: autoTitle,
-          content: rawText,
-          folderId,
-          tags: 'imported'
-        })
-      });
-      showToast(`Imported "${autoTitle}"!`, 'success');
-      event.target.value = '';
-      await loadNotebook();
-      if (res && res.data && res.data.id) {
-        window.location.href = `/notebook.html?groupId=${currentGroupId}&noteId=${res.data.id}`;
-      }
-    } catch (err) {
-      showToast(err.message || 'Failed to import document.', 'error');
+
+    const res = await apiFetch(`/api/groups/${currentGroupId}/notes`, {
+      method: 'POST',
+      body: JSON.stringify({
+        title: autoTitle,
+        content: content,
+        folderId,
+        tags: 'imported'
+      })
+    });
+    showToast(`Imported "${autoTitle}"!`, 'success');
+    event.target.value = '';
+    await loadNotebook();
+    if (res && res.data && res.data.id) {
+      window.location.href = `/notebook.html?groupId=${currentGroupId}&noteId=${res.data.id}`;
     }
-  };
-  reader.readAsText(file);
+  } catch (err) {
+    console.error('[DashboardImport] Error:', err);
+    showToast(err.message || 'Failed to import document.', 'error');
+  } finally {
+    event.target.value = '';
+  }
 }
 
 async function moveDashboardNoteToFolder(noteId, folderIdValue) {
@@ -3000,34 +3088,38 @@ function debouncePersonalNotesSearch() {
 async function handlePersonalImportDocument(event) {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async (ev) => {
-    const rawText = String(ev.target.result || '');
-    const autoTitle = extractDashboardAutoTitle(rawText);
+
+  try {
+    showToast(`Parsing "${file.name}"...`, 'info');
+    const parsed = await parseUploadedDocument(file);
+    const content = parsed.html || '<p>(Empty Document)</p>';
+    const baseTitle = file.name.replace(/\.[^/.]+$/, '').trim() || 'Private Note';
+    const autoTitle = extractDashboardAutoTitle(content) || baseTitle;
     const folderId = activePersonalFolderFilter !== 'ALL' ? Number(activePersonalFolderFilter) : null;
-    try {
-      const res = await apiFetch('/api/personal', {
-        method: 'POST',
-        body: JSON.stringify({
-          type: 'NOTE',
-          title: autoTitle,
-          content: rawText,
-          folder_id: folderId,
-          tags: 'imported,private',
-          is_private: true
-        })
-      });
-      showToast(`Imported private note "${autoTitle}"!`, 'success');
-      event.target.value = '';
-      await loadPersonalItems();
-      if (res && res.data && res.data.id) {
-        window.location.href = `/notebook.html?personal=1${currentGroupId ? '&groupId=' + currentGroupId : ''}&noteId=${res.data.id}`;
-      }
-    } catch (err) {
-      showToast(err.message || 'Failed to import private document.', 'error');
+
+    const res = await apiFetch('/api/personal', {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'NOTE',
+        title: autoTitle,
+        content: content,
+        folder_id: folderId,
+        tags: 'imported,private',
+        is_private: true
+      })
+    });
+    showToast(`Imported private note "${autoTitle}"!`, 'success');
+    event.target.value = '';
+    await loadPersonalItems();
+    if (res && res.data && res.data.id) {
+      window.location.href = `/notebook.html?personal=1${currentGroupId ? '&groupId=' + currentGroupId : ''}&noteId=${res.data.id}`;
     }
-  };
-  reader.readAsText(file);
+  } catch (err) {
+    console.error('[PersonalImport] Error:', err);
+    showToast(err.message || 'Failed to import private document.', 'error');
+  } finally {
+    event.target.value = '';
+  }
 }
 
 function togglePersonalQuickCapture(forceState) {

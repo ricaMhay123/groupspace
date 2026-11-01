@@ -124,3 +124,4 @@ if (failed > 0) {
 } else {
   console.log('🎉 All Discussions Attachment System & Lightbox tests passed!\n');
 }
+

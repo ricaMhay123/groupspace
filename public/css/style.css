@@ -3525,3 +3525,161 @@ body {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
+
+
+/* ==========================================================================
+   Table Styling System & Contextual Ribbon Tab (Phase 3)
+   ========================================================================== */
+
+/* Contextual Table Design Tab in Ribbon */
+.nb-ribbon-tab.contextual-tab {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  border: 1px dashed #3b82f6;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  animation: contextualTabGlow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s ease;
+}
+
+.nb-ribbon-tab.contextual-tab:hover {
+  background: rgba(37, 99, 235, 0.18);
+  border-color: #2563eb;
+}
+
+.nb-ribbon-tab.contextual-tab.active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-style: solid;
+  border-color: #1d4ed8 !important;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+}
+
+html.dark .nb-ribbon-tab.contextual-tab {
+  background: rgba(59, 130, 246, 0.18);
+  color: #60a5fa;
+  border-color: #3b82f6;
+}
+
+html.dark .nb-ribbon-tab.contextual-tab.active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #60a5fa !important;
+}
+
+@keyframes contextualTabGlow {
+  0% { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Base table resizer styles */
+.nb-table-resizer {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 14px;
+  background: var(--nb-canvas-bg, #ffffff);
+  color: var(--nb-canvas-text, #0f172a);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.nb-table-resizer th,
+.nb-table-resizer td {
+  padding: 10px 14px;
+  text-align: left;
+  vertical-align: top;
+  border: 1px solid var(--nb-border, #cbd5e1);
+  transition: padding 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+/* Preset 1: Default Grid */
+.table-preset-default-grid {
+  border: 1px solid var(--nb-border, #cbd5e1);
+}
+.table-preset-default-grid th {
+  background: #f1f5f9;
+  font-weight: 700;
+  color: var(--nb-text, #0f172a);
+  border: 1px solid var(--nb-border, #cbd5e1);
+}
+html.dark .table-preset-default-grid th {
+  background: #1e293b;
+  color: #ffffff;
+  border-color: #334155;
+}
+.table-preset-default-grid td {
+  border: 1px solid var(--nb-border, #cbd5e1);
+}
+html.dark .table-preset-default-grid td {
+  border-color: #334155;
+}
+
+/* Preset 2: Striped Rows */
+.table-preset-striped {
+  border: 1px solid var(--nb-border, #cbd5e1);
+}
+.table-preset-striped th {
+  background: #e2e8f0;
+  font-weight: 700;
+  color: var(--nb-text, #0f172a);
+  border: 1px solid var(--nb-border, #cbd5e1);
+}
+html.dark .table-preset-striped th {
+  background: #334155;
+  color: #ffffff;
+  border-color: #475569;
+}
+.table-preset-striped tbody tr:nth-child(even) td {
+  background: #f8fafc;
+}
+html.dark .table-preset-striped tbody tr:nth-child(even) td {
+  background: rgba(30, 41, 59, 0.7);
+}
+.table-preset-striped tbody tr:nth-child(odd) td {
+  background: transparent;
+}
+
+/* Preset 3: Header Accent */
+.table-preset-header-accent {
+  border: 1px solid #3b82f6;
+}
+.table-preset-header-accent th {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  border: 1px solid #1d4ed8 !important;
+}
+html.dark .table-preset-header-accent th {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+  border: 1px solid #2563eb !important;
+}
+.table-preset-header-accent td {
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+/* Preset 4: Borderless */
+.table-preset-borderless,
+.table-preset-borderless th,
+.table-preset-borderless td {
+  border: 1px solid transparent !important;
+}
+.table-preset-borderless th {
+  background: transparent;
+  font-weight: 700;
+  border-bottom: 2px solid var(--nb-border, #cbd5e1) !important;
+}
+html.dark .table-preset-borderless th {
+  border-bottom: 2px solid #334155 !important;
+}
+.table-preset-borderless td {
+  background: transparent;
+}
+
+/* Dynamic Cell Padding Presets */
+.table-pad-compact th, .table-pad-compact td { padding: 6px 8px !important; }
+.table-pad-standard th, .table-pad-standard td { padding: 10px 14px !important; }
+.table-pad-relaxed th, .table-pad-relaxed td { padding: 16px 20px !important; }
