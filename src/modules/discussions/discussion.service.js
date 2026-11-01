@@ -11,6 +11,49 @@ const { ROLES } = require('../../config/constants');
 const { isAdminRole } = require('../../config/constants');
 const { sanitizeText } = require('../../utils/validation.util');
 
+/**
+ * Normalizes attachment list to guarantee { file_name, file_url, file_type } structure.
+ */
+function normalizeAttachments(attachments) {
+  if (!attachments) return [];
+  let parsed = attachments;
+  if (typeof attachments === 'string') {
+    try {
+      parsed = JSON.parse(attachments);
+    } catch (e) {
+      return [];
+    }
+  }
+  if (!Array.isArray(parsed)) return [];
+  return parsed
+    .map(att => {
+      if (!att || typeof att !== 'object') return null;
+      const fileName = String(att.file_name || att.name || 'attachment').trim();
+      const fileUrl = String(att.file_url || att.url || '').trim();
+      let fileType = String(att.file_type || att.type || '').trim().toLowerCase();
+
+      if (!fileType && fileName) {
+        const lowerName = fileName.toLowerCase();
+        if (/\.(png|jpe?g|gif|webp|svg)$/.test(lowerName)) {
+          fileType = 'image/' + (lowerName.endsWith('jpg') ? 'jpeg' : lowerName.split('.').pop());
+        } else if (lowerName.endsWith('.pdf')) {
+          fileType = 'application/pdf';
+        } else if (lowerName.endsWith('.docx') || lowerName.endsWith('.doc')) {
+          fileType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        } else if (lowerName.endsWith('.txt')) {
+          fileType = 'text/plain';
+        }
+      }
+
+      return {
+        file_name: fileName,
+        file_url: fileUrl,
+        file_type: fileType
+      };
+    })
+    .filter(att => att && att.file_url);
+}
+
 async function createTopic({ groupId, title, category, authorUserId, authorName, attachments = [] }) {
   if (!groupId) {
     throw new Error('Workspace ID is required to create a topic.');
@@ -21,12 +64,13 @@ async function createTopic({ groupId, title, category, authorUserId, authorName,
     throw new Error('Topic title is required.');
   }
 
+  const normalizedAttachments = normalizeAttachments(attachments);
   const topicId = await DiscussionModel.createTopic({
     groupId: Number(groupId),
     title: cleanTitle,
     category: sanitizeText(category) || 'General',
     authorUserId,
-    attachments: Array.isArray(attachments) ? attachments : []
+    attachments: normalizedAttachments
   });
 
   await GroupModel.logActivity({
@@ -36,12 +80,20 @@ async function createTopic({ groupId, title, category, authorUserId, authorName,
     description: `${authorName || 'A member'} created discussion topic: "${cleanTitle}".`
   });
 
-  return await DiscussionModel.findByIdInGroup(topicId, Number(groupId));
+  const createdTopic = await DiscussionModel.findByIdInGroup(topicId, Number(groupId));
+  if (createdTopic) {
+    createdTopic.attachments = normalizeAttachments(createdTopic.attachments);
+  }
+  return createdTopic;
 }
 
 async function getGroupTopics(groupId) {
   if (!groupId) return [];
-  return await DiscussionModel.findByGroup(Number(groupId));
+  const topics = await DiscussionModel.findByGroup(Number(groupId));
+  return topics.map(t => ({
+    ...t,
+    attachments: normalizeAttachments(t.attachments)
+  }));
 }
 
 async function getTopicDetails(topicId, groupId) {
@@ -52,9 +104,15 @@ async function getTopicDetails(topicId, groupId) {
     throw err;
   }
 
-  const comments = await DiscussionModel.getComments(Number(topicId), Number(groupId));
+  const rawComments = await DiscussionModel.getComments(Number(topicId), Number(groupId));
+  const comments = rawComments.map(c => ({
+    ...c,
+    attachments: normalizeAttachments(c.attachments)
+  }));
+
   return {
     ...topic,
+    attachments: normalizeAttachments(topic.attachments),
     comments
   };
 }
@@ -74,11 +132,12 @@ async function postComment({ topicId, groupId, content, userId, userName, attach
   }
 
   // 2. Insert comment with attachments
+  const normalizedAttachments = normalizeAttachments(attachments);
   const commentId = await DiscussionModel.addComment({
     discussionId: Number(topicId),
     userId,
     content: cleanContent || '',
-    attachments: Array.isArray(attachments) ? attachments : []
+    attachments: normalizedAttachments
   });
 
   // 3. Process workspace-scoped @mentions (supports multiple members in one comment)
@@ -274,6 +333,7 @@ async function deleteComment({ commentId, userId, userRole, groupId }) {
 }
 
 module.exports = {
+  normalizeAttachments,
   createTopic,
   getGroupTopics,
   getTopicDetails,

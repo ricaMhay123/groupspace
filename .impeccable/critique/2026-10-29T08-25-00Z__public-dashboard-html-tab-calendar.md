@@ -76,3 +76,4 @@ The calendar has strong foundational mechanics (FullCalendar v6 + event store sy
 - **Maya (Product Manager reviewing weekly deadlines)**: Wants to switch between a high-level monthly roadmap and a detailed weekly schedule. The raw FullCalendar buttons feel clunky and don't indicate clearly which mode is currently active.
 - **Kenji (Night-owl Developer in Dark Mode)**: Opens the Calendar at 11 PM and gets blinded by an un-themed `#ffffff` box with black text and pale yellow highlights.
 - **Sarah (Team Member checking meeting details)**: Clicks on a meeting on the calendar to see who is attending or what room it's in, and is shocked by a browser alert asking if she wants to delete it.
+

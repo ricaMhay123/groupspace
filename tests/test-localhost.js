@@ -145,7 +145,9 @@ async function runLocalhostTests() {
       { script: 'tests/test-personal-space-rearchitecture.js', name: 'Personal Space Library & Quick Capture' },
       { script: 'tests/test-homespace-rearchitecture.js', name: 'Homespace Command Center & Layout Polish' },
       { script: 'tests/test-login-page.js', name: 'Centered Login Gateway & Touch Targets' },
-      { script: 'tests/test-calendar-redesign.js', name: 'Team Calendar Overhaul & View Selector' }
+      { script: 'tests/test-calendar-redesign.js', name: 'Team Calendar Overhaul & View Selector' },
+      { script: 'tests/test-homespace-settings-drawer.js', name: 'Homespace Settings & Controls Accordion Drawer' },
+      { script: 'tests/test-discussions-attachments.js', name: 'Discussions Attachment Lightbox & Download Badges' }
     ];
 
     for (const suite of testSuites) {

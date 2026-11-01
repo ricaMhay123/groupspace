@@ -17,9 +17,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   currentUser = await checkAuth();
   if (!currentUser) return;
 
-  // Setup user UI
-  document.getElementById('userFullName').textContent = currentUser.fullName;
-  document.getElementById('userAvatar').textContent = currentUser.avatarInitials || 'GS';
+  // Setup user UI if present
+  const uFullNameEl = document.getElementById('userFullName');
+  if (uFullNameEl) uFullNameEl.textContent = currentUser.fullName;
+  const uAvatarEl = document.getElementById('userAvatar');
+  if (uAvatarEl) uAvatarEl.textContent = currentUser.avatarInitials || 'GS';
 
   // Load workspaces list
   await loadWorkspacesDropdown();
@@ -164,8 +166,12 @@ async function switchWorkspace(groupId) {
     currentGroupDetails = res.data;
 
     // Update Header
-    document.getElementById('joinCodeBadge').style.display = 'flex';
-    document.getElementById('displayJoinCode').textContent = currentGroupDetails.join_code;
+    const jcBadge = document.getElementById('joinCodeBadge');
+    if (jcBadge) {
+      jcBadge.style.display = 'flex';
+      const djc = document.getElementById('displayJoinCode');
+      if (djc) djc.textContent = currentGroupDetails.join_code;
+    }
     const roleBadge = document.getElementById('userRoleBadge');
     if (roleBadge) {
       const r = String(currentGroupDetails.role || '').toLowerCase();
@@ -355,6 +361,9 @@ async function loadOverview() {
       );
       renderMemberHomespace(container, myAssignedDeliverables, members, activities, currentUserId, personalNotes);
     }
+
+    // Render Expandable Workspace Settings & Controls Drawer
+    renderHomespaceSettingsDrawer();
   } catch (err) {
     showToast(err.message, 'error');
   }
@@ -731,6 +740,282 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
   `;
 }
 
+// ================= HOMESPACE EXPANDABLE SETTINGS & CONTROLS DRAWER ================= //
+let isInviteCodeRevealed = false;
+let isHomespaceDrawerOpen = false;
+
+function toggleInviteCodeVisibility() {
+  isInviteCodeRevealed = !isInviteCodeRevealed;
+  const display = document.getElementById('hsInviteCodeDisplay');
+  const btnText = document.getElementById('hsToggleCodeText');
+  const eyeIcon = document.getElementById('hsEyeIcon');
+  if (!display || !currentGroupDetails) return;
+
+  if (isInviteCodeRevealed) {
+    display.textContent = currentGroupDetails.join_code;
+    display.classList.add('revealed');
+    if (btnText) btnText.textContent = 'Hide Code';
+    if (eyeIcon) {
+      eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    }
+  } else {
+    display.textContent = 'GS-••••••';
+    display.classList.remove('revealed');
+    if (btnText) btnText.textContent = 'Show Code';
+    if (eyeIcon) {
+      eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    }
+  }
+}
+
+function copyHomespaceInviteCode() {
+  if (!currentGroupDetails || !currentGroupDetails.join_code) {
+    showToast('No invite code available for this workspace.', 'error');
+    return;
+  }
+  navigator.clipboard.writeText(currentGroupDetails.join_code);
+  showToast(`Invite code ${currentGroupDetails.join_code} copied to clipboard!`, 'success');
+}
+
+function toggleHomespaceSettingsDrawer(forceOpen = null) {
+  const accordion = document.getElementById('homespaceSettingsAccordion');
+  const chevron = document.getElementById('hsAccordionChevron');
+  const statusPill = document.getElementById('hsDrawerStatusPill');
+  const header = document.getElementById('hsSettingsHeader');
+  if (!accordion) return;
+
+  if (typeof forceOpen === 'boolean') {
+    isHomespaceDrawerOpen = forceOpen;
+  } else {
+    isHomespaceDrawerOpen = !isHomespaceDrawerOpen;
+  }
+
+  accordion.classList.toggle('open', isHomespaceDrawerOpen);
+  if (header) header.setAttribute('aria-expanded', isHomespaceDrawerOpen ? 'true' : 'false');
+  if (chevron) chevron.classList.toggle('rotated', isHomespaceDrawerOpen);
+  if (statusPill) statusPill.textContent = isHomespaceDrawerOpen ? 'Click to collapse' : 'Click to expand';
+}
+
+function focusHomespaceSettingsDrawer() {
+  if (currentTab !== 'overview') {
+    switchTab('overview');
+  }
+  toggleHomespaceSettingsDrawer(true);
+  setTimeout(() => {
+    const el = document.getElementById('homespaceSettingsAccordion');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, 100);
+}
+
+function renderHomespaceSettingsDrawer() {
+  const container = document.getElementById('homespaceSettingsDrawerContainer');
+  if (!container || !currentGroupDetails) return;
+
+  const userRole = (currentGroupDetails.role || 'member').toLowerCase();
+  const isPrimaryLeader = userRole === 'leader';
+  const isCoLeader = userRole === 'co_leader';
+  const settings = currentGroupDetails.settings || {};
+  const currentUserId = currentUser ? currentUser.id : null;
+  const requireApproval = settings.requireApproval !== false;
+  const allowDiscussions = settings.allowMemberDiscussions !== false;
+  const restrictExpenses = settings.restrictExpensesToLeaders === true;
+
+  const roleLabel = isPrimaryLeader ? 'Leader' : (isCoLeader ? 'Co-Leader' : 'Member');
+  const roleBadgeClass = (isPrimaryLeader || isCoLeader) ? 'online' : 'pending';
+
+  container.innerHTML = `
+    <div class="homespace-settings-accordion ${isHomespaceDrawerOpen ? 'open' : ''}" id="homespaceSettingsAccordion">
+      <!-- Accordion Header Trigger -->
+      <div class="hs-accordion-header" id="hsSettingsHeader" onclick="toggleHomespaceSettingsDrawer()" role="button" tabindex="0" aria-expanded="${isHomespaceDrawerOpen ? 'true' : 'false'}" aria-controls="hsSettingsContent">
+        <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+          <div class="hs-accordion-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </div>
+          <div style="min-width:0;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h3 class="hs-accordion-title">Workspace Settings & Controls</h3>
+              <span class="hs-accordion-tag">Homespace Panel</span>
+            </div>
+            <p class="hs-accordion-subtitle">User profile, theme toggle, masked invite code & workspace preferences</p>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+          <span class="hs-accordion-pill" id="hsDrawerStatusPill">${isHomespaceDrawerOpen ? 'Click to collapse' : 'Click to expand'}</span>
+          <div class="hs-accordion-chevron ${isHomespaceDrawerOpen ? 'rotated' : ''}" id="hsAccordionChevron">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accordion Expandable Content -->
+      <div class="hs-accordion-content hs-accordion-animator" id="hsSettingsContent">
+        <div class="hs-accordion-animator-inner">
+        <div class="hs-drawer-grid">
+          <!-- Column 1: User Profile & Personal Quick Controls -->
+          <div class="hs-drawer-card">
+            <div class="hs-card-header">
+              <h4>User Profile & Controls</h4>
+              <span class="status ${roleBadgeClass}" style="font-size:11px; font-weight:700;">${roleLabel}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px; padding:12px; background:var(--secondary); border:1px solid var(--border); border-radius:12px; margin-bottom:16px;">
+              <div class="chat-avatar" id="hsUserAvatar" style="width:44px; height:44px; font-size:16px; flex-shrink:0;">
+                ${currentUser ? escapeHtml(currentUser.avatarInitials || 'GS') : 'GS'}
+              </div>
+              <div style="min-width:0; flex:1;">
+                <div id="hsUserFullName" style="font-size:14px; font-weight:700; color:var(--foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                  ${currentUser ? escapeHtml(currentUser.fullName) : 'User'}
+                </div>
+                <div style="font-size:12px; color:var(--muted-foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                  ${currentUser ? escapeHtml(currentUser.email) : ''}
+                </div>
+                <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
+                  <span class="status online" style="font-size:11px; padding:1px 6px;">Online</span>
+                  <span style="font-size:11px; color:var(--muted-foreground);">• Logged in</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Action Buttons: Dark Mode & Sign Out -->
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button type="button" class="btn-outline hs-control-btn" data-theme-toggle aria-label="Toggle theme" title="Toggle theme" onclick="window.gsToggleTheme && window.gsToggleTheme()">
+                <svg data-theme-moon width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
+                <svg data-theme-sun width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <span data-theme-moon>Dark Mode</span>
+                <span data-theme-sun style="display:none">Light Mode</span>
+              </button>
+              <button type="button" class="btn-outline hs-control-btn" style="color:var(--destructive); border-color:var(--border);" onclick="logoutUser()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Sign Out
+              </button>
+            </div>
+          </div>
+
+          <!-- Column 2: Workspace Details & Discrete Invite Code -->
+          <div class="hs-drawer-card">
+            <div class="hs-card-header">
+              <h4>Workspace & Discrete Invite</h4>
+              <span style="font-size:12px; color:var(--muted-foreground);">Access Control</span>
+            </div>
+
+            <!-- Workspace Name Field -->
+            <div style="margin-bottom:14px;">
+              <label style="display:block; font-size:12px; font-weight:600; color:var(--foreground); margin-bottom:4px;">Active Workspace</label>
+              ${isPrimaryLeader ? `
+                <div style="display:flex; gap:8px;">
+                  <input type="text" id="hsDrawerWsNameInput" class="form-control" value="${escapeHtml(currentGroupDetails.name)}" style="font-size:13px; padding:7px 12px; flex:1;">
+                  <button type="button" class="btn-green" style="padding:7px 14px; font-size:12px; font-weight:600;" onclick="saveWorkspaceName(document.getElementById('hsDrawerWsNameInput').value)">Save</button>
+                </div>
+              ` : `
+                <div style="padding:8px 12px; background:var(--secondary); border:1px solid var(--border); border-radius:8px; font-size:13px; font-weight:600; color:var(--foreground);">
+                  ${escapeHtml(currentGroupDetails.name)}
+                </div>
+              `}
+            </div>
+
+            <!-- Discrete Masked Invite Code Display -->
+            <div>
+              <label style="display:block; font-size:12px; font-weight:600; color:var(--foreground); margin-bottom:4px;">Workspace Invite Code</label>
+              <p style="font-size:11px; color:var(--muted-foreground); margin:0 0 8px 0;">Masked for privacy during screen sharing. Use button to reveal or copy.</p>
+              
+              <div class="hs-invite-code-container">
+                <div class="hs-invite-code-box">
+                  <span class="hs-invite-code-label">CODE:</span>
+                  <strong id="hsInviteCodeDisplay" class="hs-invite-code-value">${isInviteCodeRevealed ? escapeHtml(currentGroupDetails.join_code) : 'GS-••••••'}</strong>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <button type="button" id="hsToggleCodeBtn" class="btn-outline hs-code-action-btn" onclick="toggleInviteCodeVisibility()" aria-label="Toggle invite code mask">
+                    <svg id="hsEyeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      ${isInviteCodeRevealed ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>' : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'}
+                    </svg>
+                    <span id="hsToggleCodeText">${isInviteCodeRevealed ? 'Hide Code' : 'Show Code'}</span>
+                  </button>
+                  <button type="button" class="btn-outline hs-code-action-btn" onclick="copyHomespaceInviteCode()" aria-label="Copy invite code to clipboard">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    Copy
+                  </button>
+                  ${isPrimaryLeader ? `
+                    <button type="button" class="btn-outline hs-code-action-btn" onclick="resetWorkspaceInviteCode()" aria-label="Reset workspace invite code">
+                      Reset
+                    </button>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        ${isPrimaryLeader ? `
+          <!-- Permission Constraints Section for Primary Leader -->
+          <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+            <div style="font-size:12px; font-weight:700; color:var(--foreground); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:10px;">
+              Member Permission Constraints
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--foreground); cursor:pointer;">
+                <input type="checkbox" id="hsConstraintApproval" ${requireApproval ? 'checked' : ''} style="width:16px; height:16px; cursor:pointer;">
+                <span>Require leader approval before member tasks are marked Done</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--foreground); cursor:pointer;">
+                <input type="checkbox" id="hsConstraintDiscussions" ${allowDiscussions ? 'checked' : ''} style="width:16px; height:16px; cursor:pointer;">
+                <span>Allow members to create new discussion topics</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--foreground); cursor:pointer;">
+                <input type="checkbox" id="hsConstraintExpenses" ${restrictExpenses ? 'checked' : ''} style="width:16px; height:16px; cursor:pointer;">
+                <span>Restrict expense ledger entries to workspace leaders only</span>
+              </label>
+            </div>
+            <button type="button" class="btn-green" style="margin-top:12px; font-size:12px; padding:6px 14px; font-weight:600;" onclick="saveMemberConstraints('hsConstraintApproval', 'hsConstraintDiscussions', 'hsConstraintExpenses')">
+              Save Permission Constraints
+            </button>
+          </div>
+        ` : ''}
+
+        <!-- Discrete Danger Zone Footer -->
+        <div class="hs-danger-zone-footer">
+          <div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="status pending" style="background:rgba(239,68,68,0.12); color:#ef4444; font-size:11px; font-weight:700;">DANGER ZONE</span>
+              <strong style="font-size:12px; color:var(--foreground);">Account & Workspace Safeguards</strong>
+            </div>
+            <p style="margin:4px 0 0; font-size:12px; color:var(--muted-foreground);">
+              Permanently delete your account. Requires 2x password verification to prevent accidental deletion.
+            </p>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <button type="button" id="hsDeleteAccountBtn" class="btn-outline open-delete-account-modal" style="padding:6px 14px; font-size:12px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:8px; cursor:pointer;" onclick="openDeleteAccountModal()">
+              Delete Account
+            </button>
+            ${isPrimaryLeader ? `
+              <button type="button" class="btn-outline open-delete-workspace-btn" style="padding:6px 14px; font-size:12px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:8px; cursor:pointer;" onclick="confirmDeleteWorkspace()">
+                Delete Workspace
+              </button>
+            ` : ''}
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Attach keydown listener for keyboard accessibility (Space/Enter to toggle)
+  const header = document.getElementById('hsSettingsHeader');
+  if (header) {
+    header.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleHomespaceSettingsDrawer();
+      }
+    });
+  }
+}
+
 // ================= WORKSPACE SETTINGS MODAL ================= //
 function openWorkspaceSettingsModal() {
   const modalBody = document.getElementById('workspaceSettingsModalBody');
@@ -984,6 +1269,10 @@ async function resetWorkspaceInviteCode(e) {
       if (leaderDisplay) leaderDisplay.textContent = newCode;
       const modalDisplay = document.getElementById('modalJoinCodeDisplay');
       if (modalDisplay) modalDisplay.textContent = newCode;
+      const hsDisplay = document.getElementById('hsInviteCodeDisplay');
+      if (hsDisplay) {
+        hsDisplay.textContent = isInviteCodeRevealed ? newCode : 'GS-••••••';
+      }
     }
     showToast(res.message || 'Invite code regenerated successfully.', 'success');
   } catch (err) {
@@ -2019,47 +2308,173 @@ function getDocumentBadgeIcon(name) {
   if (lower.endsWith('.pdf')) return 'PDF';
   if (lower.endsWith('.docx') || lower.endsWith('.doc')) return 'DOCX';
   if (lower.endsWith('.txt')) return 'TXT';
-  return 'DOC';
+  return 'FILE';
 }
 
-function renderAttachmentsHtml(attachments) {
+function getDocumentBadgeType(name) {
+  const lower = (name || '').toLowerCase();
+  if (lower.endsWith('.pdf')) return 'doc-pdf';
+  if (lower.endsWith('.docx') || lower.endsWith('.doc')) return 'doc-word';
+  if (lower.endsWith('.txt')) return 'doc-txt';
+  return 'doc-generic';
+}
+
+// ================= ATTACHMENT LIGHTBOX CONTROLLER ================= //
+let currentLightboxImages = [];
+let currentLightboxIndex = 0;
+
+function openAttachmentLightbox(url, fileName, index = 0, threadImages = []) {
+  if (Array.isArray(threadImages) && threadImages.length > 0) {
+    currentLightboxImages = threadImages;
+    currentLightboxIndex = (index >= 0 && index < threadImages.length) ? index : 0;
+  } else {
+    currentLightboxImages = [{ file_url: url, file_name: fileName || 'image' }];
+    currentLightboxIndex = 0;
+  }
+
+  updateLightboxView();
+
+  const modal = document.getElementById('attachmentLightboxModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+  }
+
+  document.removeEventListener('keydown', handleLightboxKeydown);
+  document.addEventListener('keydown', handleLightboxKeydown);
+}
+
+function updateLightboxView() {
+  const current = currentLightboxImages[currentLightboxIndex];
+  if (!current) return;
+
+  const imgEl = document.getElementById('lightboxImg');
+  const nameEl = document.getElementById('lightboxFileName');
+  const counterEl = document.getElementById('lightboxCounter');
+  const downloadBtn = document.getElementById('lightboxDownloadBtn');
+  const prevBtn = document.getElementById('lightboxPrevBtn');
+  const nextBtn = document.getElementById('lightboxNextBtn');
+
+  if (imgEl) {
+    imgEl.src = current.file_url;
+    imgEl.alt = current.file_name || 'Attachment preview';
+  }
+  if (nameEl) nameEl.textContent = current.file_name || 'attachment';
+  if (downloadBtn) {
+    downloadBtn.href = current.file_url;
+    downloadBtn.setAttribute('download', current.file_name || 'attachment');
+  }
+
+  const total = currentLightboxImages.length;
+  if (counterEl) {
+    counterEl.textContent = total > 1 ? `${currentLightboxIndex + 1} of ${total}` : '1 image';
+  }
+
+  if (prevBtn) prevBtn.style.display = total > 1 ? 'flex' : 'none';
+  if (nextBtn) nextBtn.style.display = total > 1 ? 'flex' : 'none';
+}
+
+function prevLightboxImage(e) {
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+  if (currentLightboxImages.length <= 1) return;
+  currentLightboxIndex = (currentLightboxIndex - 1 + currentLightboxImages.length) % currentLightboxImages.length;
+  updateLightboxView();
+}
+
+function nextLightboxImage(e) {
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+  if (currentLightboxImages.length <= 1) return;
+  currentLightboxIndex = (currentLightboxIndex + 1) % currentLightboxImages.length;
+  updateLightboxView();
+}
+
+function closeAttachmentLightbox() {
+  const modal = document.getElementById('attachmentLightboxModal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+  document.removeEventListener('keydown', handleLightboxKeydown);
+}
+
+function handleLightboxBackdropClick(e) {
+  if (e.target && (e.target.id === 'attachmentLightboxModal' || e.target.id === 'lightboxStage')) {
+    closeAttachmentLightbox();
+  }
+}
+
+function handleLightboxKeydown(e) {
+  const modal = document.getElementById('attachmentLightboxModal');
+  if (!modal || modal.style.display === 'none') return;
+
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    closeAttachmentLightbox();
+  } else if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    prevLightboxImage();
+  } else if (e.key === 'ArrowRight') {
+    e.preventDefault();
+    nextLightboxImage();
+  }
+}
+
+function renderAttachmentsHtml(attachments, allThreadImages = []) {
   let list = attachments;
   if (typeof list === 'string') {
     try { list = JSON.parse(list); } catch (e) { list = []; }
   }
   if (!Array.isArray(list) || list.length === 0) return '';
 
+  const threadList = Array.isArray(allThreadImages) && allThreadImages.length > 0 
+    ? allThreadImages 
+    : (window.__activeThreadImages || []);
+
   const images = list.filter(isImageAttachment);
   const docs = list.filter(att => !isImageAttachment(att));
 
-  let html = '<div class="discussion-attachments-block" style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">';
+  let html = '<div class="discussion-attachments-block" style="margin-top:8px; display:flex; flex-direction:column; gap:8px;">';
 
   if (images.length > 0) {
     html += '<div class="discussion-images-grid" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">';
     images.forEach(img => {
       const fileName = escapeHtml(img.file_name || 'image');
       const fileUrl = escapeHtml(img.file_url || '');
+      
+      const globalIdx = threadList.findIndex(x => x.file_url === img.file_url);
+      const clickIdx = globalIdx >= 0 ? globalIdx : 0;
+
       html += `
-        <a href="${fileUrl}" target="_blank" download="${fileName}" class="attachment-image-thumb" title="${fileName}" style="display:inline-block; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0; max-width:130px; text-decoration:none; background:#f8fafc; transition:transform 0.15s ease, box-shadow 0.15s ease;">
+        <button type="button" class="attachment-image-thumb" onclick="openAttachmentLightbox(this.dataset.url, this.dataset.name, ${clickIdx}, window.__activeThreadImages)" data-url="${fileUrl}" data-name="${fileName}" title="Click to enlarge ${fileName}" aria-label="View ${fileName} in Lightbox">
           <img src="${fileUrl}" alt="${fileName}" style="width:130px; height:80px; object-fit:cover; display:block;" />
-          <div style="font-size:10px; color:#64748b; padding:3px 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; background:#ffffff; border-top:1px solid #f1f5f9;">${fileName}</div>
-        </a>
+          <div class="attachment-thumb-caption">
+            <span class="attachment-thumb-name">${fileName}</span>
+            <span class="attachment-thumb-action">🔍 View</span>
+          </div>
+        </button>
       `;
     });
     html += '</div>';
   }
 
   if (docs.length > 0) {
-    html += '<div class="discussion-docs-list" style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">';
+    html += '<div class="discussion-docs-list" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">';
     docs.forEach(doc => {
       const fileName = escapeHtml(doc.file_name || 'document');
       const fileUrl = escapeHtml(doc.file_url || '');
       const badgeIcon = getDocumentBadgeIcon(doc.file_name);
+      const badgeType = getDocumentBadgeType(doc.file_name);
       html += `
-        <a href="${fileUrl}" target="_blank" download="${fileName}" class="attachment-doc-badge" title="Download ${fileName}" style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:16px; font-size:11px; font-weight:600; color:#334155; text-decoration:none; transition:all 0.15s ease;">
-          <span>${badgeIcon}</span>
-          <span style="max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${fileName}</span>
-          <span style="font-size:10px; color:#64748b;">⬇</span>
+        <a href="${fileUrl}" target="_blank" download="${fileName}" class="attachment-doc-badge" title="Download ${fileName}" aria-label="Download ${fileName}">
+          <span class="attachment-badge-pill ${badgeType}">${badgeIcon}</span>
+          <span class="attachment-doc-name">${fileName}</span>
+          <span class="attachment-doc-action">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </span>
         </a>
       `;
     });
@@ -2198,9 +2613,29 @@ async function selectTopic(topicId, title) {
 
   try {
     const res = await apiFetch(`/api/groups/${currentGroupId}/discussions/${topicId}`);
-    const topic = res.data.topic || {};
+    const topic = res.data.topic || res.data || {};
     const comments = res.data.comments || [];
     const container = document.getElementById('commentsContainer');
+
+    // Collect all image attachments in this entire thread for seamless lightbox cycling
+    const topicAtts = Array.isArray(topic.attachments) ? topic.attachments : [];
+    const threadImages = [];
+    topicAtts.filter(isImageAttachment).forEach(img => {
+      threadImages.push({
+        file_url: img.file_url,
+        file_name: img.file_name || 'image'
+      });
+    });
+    comments.forEach(c => {
+      const cAtts = Array.isArray(c.attachments) ? c.attachments : [];
+      cAtts.filter(isImageAttachment).forEach(img => {
+        threadImages.push({
+          file_url: img.file_url,
+          file_name: img.file_name || 'image'
+        });
+      });
+    });
+    window.__activeThreadImages = threadImages;
 
     const metaEl = document.getElementById('activeTopicMeta');
     if (metaEl) {
@@ -2208,7 +2643,7 @@ async function selectTopic(topicId, title) {
     }
     const topicAttEl = document.getElementById('activeTopicAttachments');
     if (topicAttEl) {
-      topicAttEl.innerHTML = renderAttachmentsHtml(topic.attachments);
+      topicAttEl.innerHTML = renderAttachmentsHtml(topic.attachments, threadImages);
     }
 
     if (comments.length === 0) {
@@ -2237,7 +2672,7 @@ async function selectTopic(topicId, title) {
               ` : ''}
             </div>
             ${c.content ? `<p style="margin:0 0 4px 0; font-size:13px; color:var(--text); line-height:1.5; word-break:break-word;">${typeof window.highlightMentions === 'function' ? window.highlightMentions(c.content) : escapeHtml(c.content)}</p>` : ''}
-            ${renderAttachmentsHtml(c.attachments)}
+            ${renderAttachmentsHtml(c.attachments, threadImages)}
             <div style="font-size:11px; color:var(--gray); margin-top:4px;">${formatDate(c.created_at)}</div>
           </div>
         </div>

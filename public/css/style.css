@@ -2863,3 +2863,665 @@ body {
 .fc-timegrid-now-indicator-arrow {
   border-color: var(--destructive) !important;
 }
+
+
+/* =========================================================
+   HOMESPACE SETTINGS & CONTROLS ACCORDION DRAWER
+   ========================================================= */
+
+.homespace-settings-drawer-wrapper {
+  margin-top: 24px;
+}
+
+.homespace-settings-accordion {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+  overflow: hidden;
+}
+
+.homespace-settings-accordion:hover {
+  border-color: #94a3b8;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.dark .homespace-settings-accordion {
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.dark .homespace-settings-accordion:hover {
+  border-color: #475569;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+/* Accordion Header Trigger */
+.hs-accordion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  cursor: pointer;
+  background: var(--card);
+  user-select: none;
+  min-height: 56px;
+  transition: background 0.2s ease;
+  gap: 14px;
+}
+
+.hs-accordion-header:hover {
+  background: var(--secondary);
+}
+
+.hs-accordion-header:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+.hs-accordion-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.hs-accordion-title {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.hs-accordion-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--accent);
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+
+.hs-accordion-subtitle {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin: 2px 0 0;
+  line-height: 1.4;
+}
+
+.hs-accordion-pill {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.hs-accordion-chevron {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease;
+}
+
+.hs-accordion-chevron.rotated {
+  transform: rotate(180deg);
+  color: var(--primary);
+}
+
+/* Accordion Smooth Grid Animation & Spacing Polish */
+.hs-accordion-animator {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.homespace-settings-accordion.open .hs-accordion-animator {
+  grid-template-rows: 1fr;
+}
+
+.hs-accordion-animator-inner {
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-6px);
+  padding: 0 20px;
+  border-top: 1px solid transparent;
+  pointer-events: none;
+  transition: opacity 0.24s ease, transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), padding 0.32s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+.homespace-settings-accordion.open .hs-accordion-animator-inner {
+  opacity: 1;
+  transform: translateY(0);
+  padding: 20px;
+  border-top-color: var(--border);
+  pointer-events: auto;
+}
+
+/* Backward-compatibility fallback */
+.hs-accordion-content {
+  overflow: hidden;
+}
+
+/* Drawer Internal Grid */
+.hs-drawer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 840px) {
+  .hs-drawer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hs-drawer-card {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.hs-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.hs-card-header h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0;
+}
+
+/* Control Buttons (Dark Mode & Sign Out) */
+.hs-control-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  flex: 1;
+  white-space: nowrap;
+}
+
+/* Discrete Masked Invite Code Display */
+.hs-invite-code-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hs-invite-code-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hs-invite-code-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--muted-foreground);
+}
+
+.hs-invite-code-value {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--foreground);
+  background: var(--card);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  user-select: all;
+  transition: color 0.2s ease, letter-spacing 0.2s ease;
+}
+
+.hs-invite-code-value.revealed {
+  color: var(--primary);
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.dark .hs-invite-code-value.revealed {
+  background: rgba(37, 99, 235, 0.15);
+  border-color: rgba(37, 99, 235, 0.4);
+}
+
+.hs-code-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Subtle Danger Zone Footer */
+.hs-danger-zone-footer {
+  margin-top: 20px;
+  padding: 16px 18px;
+  background: rgba(239, 68, 68, 0.03);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.dark .hs-danger-zone-footer {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+
+/* =========================================================
+   DISCUSSIONS ATTACHMENT SYSTEM & KEYBOARD LIGHTBOX
+   ========================================================= */
+
+/* Inline Image Thumbnail Cards */
+.attachment-image-thumb {
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--card);
+  cursor: pointer;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, border-color 0.18s ease;
+  max-width: 130px;
+  text-align: left;
+  display: inline-block;
+  user-select: none;
+}
+
+.attachment-image-thumb:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  border-color: var(--primary);
+}
+
+.attachment-image-thumb:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.dark .attachment-image-thumb {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+.dark .attachment-image-thumb:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  border-color: #60a5fa;
+}
+
+.attachment-thumb-caption {
+  padding: 4px 8px;
+  font-size: 11px;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+}
+
+.attachment-thumb-name {
+  max-width: 75px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.attachment-thumb-action {
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* Document Download Badge Chips */
+.attachment-doc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  text-decoration: none;
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 36px;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  user-select: none;
+}
+
+.attachment-doc-badge:hover {
+  background: var(--card);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+}
+
+.attachment-doc-badge:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.dark .attachment-doc-badge {
+  background: #1e293b;
+  border-color: var(--border);
+  color: #f1f5f9;
+}
+
+.dark .attachment-doc-badge:hover {
+  background: #334155;
+  border-color: #60a5fa;
+  color: #93c5fd;
+}
+
+.attachment-badge-pill {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.doc-pdf {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.doc-word {
+  background: #e0e7ff;
+  color: #2563eb;
+}
+
+.doc-txt {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.doc-generic {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.dark .doc-pdf {
+  background: rgba(220, 38, 38, 0.25);
+  color: #fca5a5;
+}
+
+.dark .doc-word {
+  background: rgba(37, 99, 235, 0.25);
+  color: #93c5fd;
+}
+
+.dark .doc-txt {
+  background: rgba(148, 163, 184, 0.2);
+  color: #cbd5e1;
+}
+
+.dark .doc-generic {
+  background: rgba(217, 119, 6, 0.25);
+  color: #fcd34d;
+}
+
+.attachment-doc-name {
+  max-width: 170px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attachment-doc-action {
+  color: var(--muted-foreground);
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.attachment-doc-badge:hover .attachment-doc-action {
+  color: var(--primary);
+  transform: translateY(1px);
+}
+
+/* Lightbox Modal & Backdrop Overlay */
+.lightbox-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: lightboxFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes lightboxFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.lightbox-modal-container {
+  max-width: 92vw;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  align-items: center;
+}
+
+.lightbox-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 10px 16px;
+  color: #ffffff;
+  box-sizing: border-box;
+}
+
+.lightbox-header-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.lightbox-filename {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 320px;
+}
+
+.lightbox-counter {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.lightbox-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.lightbox-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 8px;
+  background: var(--primary);
+  color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.lightbox-download-btn:hover {
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+.lightbox-download-btn:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 2px;
+}
+
+.lightbox-close-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+
+.lightbox-close-btn:hover {
+  background: rgba(239, 68, 68, 0.85);
+  border-color: #ef4444;
+}
+
+.lightbox-close-btn:focus-visible {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+}
+
+.lightbox-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  gap: 16px;
+  width: 100%;
+}
+
+.lightbox-image-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+}
+
+.lightbox-image {
+  max-width: 80vw;
+  max-height: 72vh;
+  object-fit: contain;
+  display: block;
+  border-radius: 8px;
+  user-select: none;
+}
+
+.lightbox-nav-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.lightbox-nav-btn:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  transform: scale(1.08);
+}
+
+.lightbox-nav-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
