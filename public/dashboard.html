@@ -70,6 +70,10 @@
       </div>
 
       <div class="dashboard-header-actions">
+        <button id="dmDrawerBtn" type="button" aria-label="Direct messages" title="Direct messages" class="header-bell-btn header-dm-btn" style="display:inline-flex; align-items:center; justify-content:center; gap:4px;" onclick="toggleDmDrawer()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          <span id="dmUnreadBadge" class="feed-badge" style="display:none;">0</span>
+        </button>
         <button id="notificationFeedBtn" type="button" aria-label="Notification feed" title="Notification feed" class="header-bell-btn" style="display:inline-flex; align-items:center; justify-content:center; gap:4px;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
           <span id="feedBadge" class="feed-badge" style="display:none;">0</span>
@@ -665,6 +669,64 @@
     <button type="button" id="feedCloseBtn" class="modal-close" aria-label="Close feed">✕</button>
   </div>
   <div class="feed-body" id="feedBody"><p style="color:var(--gray);">Loading...</p></div>
+</aside>
+
+<!-- Direct Messaging Slide-Out Drawer (1-on-1 Persistent PMs) -->
+<div id="dmDrawerOverlay" onclick="toggleDmDrawer(false)"></div>
+<aside id="dmDrawer" class="dm-drawer" aria-hidden="true">
+  <!-- VIEW 1: Teammates Directory & Conversations -->
+  <div id="dmListView" class="dm-drawer-view active" style="display:flex; flex-direction:column; height:100%;">
+    <div class="dm-drawer-head">
+      <div>
+        <h3 style="margin:0; font-size:16px; font-weight:700; display:inline-flex; align-items:center; gap:8px;">
+          Direct Messages
+        </h3>
+        <div id="dmWorkspacePill" style="font-size:11px; color:var(--muted-foreground); margin-top:2px;">Workspace Teammates</div>
+      </div>
+      <button type="button" class="modal-close" onclick="toggleDmDrawer(false)" aria-label="Close direct messages">✕</button>
+    </div>
+    
+    <div class="dm-search-bar" style="padding:10px 14px; border-bottom:1px solid var(--border);">
+      <input type="text" id="dmSearchInput" class="form-control" placeholder="Search teammates..." oninput="filterDmTeammates(this.value)" style="font-size:13px; padding:7px 12px; border-radius:8px;">
+    </div>
+
+    <div class="dm-drawer-body" id="dmTeammatesList" style="flex:1; overflow-y:auto; padding:8px 10px;">
+      <p style="color:var(--gray); text-align:center; padding:24px 0; font-size:13px;">Loading teammates...</p>
+    </div>
+  </div>
+
+  <!-- VIEW 2: Active 1-on-1 Chat Thread -->
+  <div id="dmThreadView" class="dm-drawer-view" style="display:none; flex-direction:column; height:100%;">
+    <div class="dm-drawer-head dm-thread-head">
+      <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+        <button type="button" id="dmBackBtn" class="dm-back-btn" onclick="backToDmList()" aria-label="Back to teammates" title="Back to conversations">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
+        <div class="dm-avatar-wrap" style="position:relative; flex-shrink:0;">
+          <div id="dmThreadTargetAvatar" class="chat-avatar" style="width:34px; height:34px; font-size:12px;">GS</div>
+          <span id="dmThreadTargetPresence" class="dm-presence-dot offline"></span>
+        </div>
+        <div style="min-width:0;">
+          <div id="dmThreadTargetName" style="font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Teammate</div>
+          <div id="dmThreadTargetStatus" style="font-size:11px; color:var(--muted-foreground);">offline</div>
+        </div>
+      </div>
+      <button type="button" class="modal-close" onclick="toggleDmDrawer(false)" aria-label="Close direct messages">✕</button>
+    </div>
+
+    <!-- Scrollable Messages Container -->
+    <div class="dm-messages-container" id="dmMessagesContainer" style="flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:8px;">
+      <p style="color:var(--gray); text-align:center; padding:30px 10px; font-size:13px;">Start a direct message conversation...</p>
+    </div>
+
+    <!-- Fixed Bottom Message Input Bar -->
+    <form id="dmMessageForm" class="dm-input-bar" onsubmit="handleSendDirectMessage(event)">
+      <input type="text" id="dmMessageInput" class="form-control dm-input" placeholder="Type a message..." autocomplete="off" required>
+      <button type="submit" id="dmSendBtn" class="btn-green dm-send-btn" aria-label="Send message">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+      </button>
+    </form>
+  </div>
 </aside>
 
 <!-- Request Leadership Role Modal -->

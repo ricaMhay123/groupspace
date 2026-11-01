@@ -295,6 +295,20 @@ async function initDb() {
       );
     `;
 
+    await sql`
+      CREATE TABLE IF NOT EXISTS direct_messages (
+        id SERIAL PRIMARY KEY,
+        group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+        sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        receiver_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        message TEXT NOT NULL,
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `;
+    try { await sql`CREATE INDEX IF NOT EXISTS idx_direct_messages_group_users ON direct_messages (group_id, sender_id, receiver_id)`; } catch (e) {}
+    try { await sql`CREATE INDEX IF NOT EXISTS idx_direct_messages_receiver_read ON direct_messages (receiver_id, is_read)`; } catch (e) {}
+
     // Execute table column migrations to ensure all required columns exist in pre-existing tables
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name TEXT`; } catch (e) {}
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT`; } catch (e) {}

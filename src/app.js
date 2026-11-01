@@ -23,6 +23,7 @@ const expenseRoutes    = require('./modules/expenses/expense.routes');
 const personalRoutes   = require('./modules/personal-space/personal.routes');
 const discussionRoutes = require('./modules/discussions/discussion.routes');
 const calendarRoutes   = require('./modules/calendar/event.routes');
+const messageRoutes    = require('./modules/messages/message.routes');
 const personalCtrl     = require('./modules/personal-space/personal.controller');
 const { authMiddleware } = require('./middleware/auth.middleware');
 
@@ -50,6 +51,8 @@ app.use('/api/groups/:groupId/notes',       notebookRoutes); // legacy flat-note
 app.use('/api/groups/:groupId/expenses',    expenseRoutes);
 app.use('/api/groups/:groupId/discussions', discussionRoutes);
 app.use('/api/groups/:groupId/events',      calendarRoutes);
+app.use('/api/groups/:groupId/messages',    messageRoutes);
+app.use('/api/messages/direct',             messageRoutes);
 app.use('/api/personal', personalRoutes);
 
 // Collaborative Notebook module — top-level resource

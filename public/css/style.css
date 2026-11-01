@@ -3683,3 +3683,231 @@ html.dark .table-preset-borderless th {
 .table-pad-compact th, .table-pad-compact td { padding: 6px 8px !important; }
 .table-pad-standard th, .table-pad-standard td { padding: 10px 14px !important; }
 .table-pad-relaxed th, .table-pad-relaxed td { padding: 16px 20px !important; }
+
+
+/* ==========================================================================
+   Global Slide-Out Direct Messaging Drawer (1-on-1 Persistent PMs)
+   ========================================================================== */
+
+#dmDrawerOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: none;
+  z-index: 1099;
+  backdrop-filter: blur(2px);
+  transition: opacity 0.25s ease;
+}
+
+#dmDrawerOverlay.open {
+  display: block;
+}
+
+#dmDrawer {
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100vh;
+  width: 340px;
+  max-width: 100vw;
+  background: var(--card, #ffffff);
+  color: var(--foreground, #0f172a);
+  border-left: 1px solid var(--border, #e2e8f0);
+  box-shadow: -6px 0 24px rgba(0, 0, 0, 0.15);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+}
+
+#dmDrawer.open {
+  transform: translateX(0);
+}
+
+.dm-drawer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  background: var(--card, #ffffff);
+  flex-shrink: 0;
+}
+
+.dm-back-btn {
+  background: transparent;
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--foreground, #0f172a);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.dm-back-btn:hover {
+  background: var(--secondary, #f1f5f9);
+}
+
+.dm-teammate-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  border: 1px solid transparent;
+  text-decoration: none;
+  color: inherit;
+}
+
+.dm-teammate-item:hover {
+  background: var(--secondary, #f1f5f9);
+  border-color: var(--border, #e2e8f0);
+}
+
+.dm-teammate-item.active {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: var(--primary, #2563eb);
+}
+
+.dm-presence-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--card, #ffffff);
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  z-index: 2;
+}
+
+.dm-presence-dot.online {
+  background: #10b981;
+}
+
+.dm-presence-dot.offline {
+  background: #94a3b8;
+}
+
+.dm-unread-badge {
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  min-width: 18px;
+  text-align: center;
+  display: inline-block;
+}
+
+.dm-bubble {
+  max-width: 82%;
+  padding: 9px 12px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: break-word;
+  position: relative;
+  margin-bottom: 4px;
+}
+
+.dm-bubble.sent {
+  align-self: flex-end;
+  background: #2563eb;
+  color: #ffffff;
+  border-bottom-right-radius: 3px;
+}
+
+.dm-bubble.received {
+  align-self: flex-start;
+  background: var(--secondary, #f1f5f9);
+  color: var(--foreground, #0f172a);
+  border-bottom-left-radius: 3px;
+  border: 1px solid var(--border, #e2e8f0);
+}
+
+.dm-bubble-meta {
+  font-size: 10.5px;
+  opacity: 0.75;
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dm-bubble.sent .dm-bubble-meta {
+  justify-content: flex-end;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.dm-bubble.received .dm-bubble-meta {
+  justify-content: flex-start;
+  color: var(--gray, #64748b);
+}
+
+.dm-input-bar {
+  display: flex;
+  gap: 8px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--border, #e2e8f0);
+  background: var(--card, #ffffff);
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dm-input {
+  flex: 1;
+  font-size: 13px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border, #cbd5e1);
+  background: var(--card, #ffffff);
+  color: var(--foreground, #0f172a);
+}
+
+.dm-send-btn {
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+html.dark #dmDrawer {
+  background: #0f172a;
+  border-color: #334155;
+  color: #ffffff;
+}
+
+html.dark .dm-drawer-head,
+html.dark .dm-input-bar {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+html.dark .dm-teammate-item:hover {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+html.dark .dm-presence-dot {
+  border-color: #0f172a;
+}
+
+html.dark .dm-bubble.received {
+  background: #1e293b;
+  color: #ffffff;
+  border-color: #334155;
+}

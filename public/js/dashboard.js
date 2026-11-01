@@ -487,7 +487,7 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
     const roleLabel = m.role === 'co_leader' ? 'Co-Leader' : (m.role === 'leader' ? 'Leader' : 'Member');
     return `
       <li style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid var(--border); gap:12px;">
-        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+        <div style="display:flex; align-items:center; gap:10px; min-width:0; cursor:${isSelf ? 'default' : 'pointer'};" ${!isSelf ? `onclick="openDirectMessageDrawer(${m.user_id}, '${escapeHtml(m.full_name).replace(/'/g, "\\'")}', '${escapeHtml(m.avatar_initials || 'GS')}', '${m.status || 'offline'}')"` : ''} title="${isSelf ? '' : `Direct message ${escapeHtml(m.full_name)}`}">
           <div class="chat-avatar" style="width:32px; height:32px; font-size:12px; flex-shrink:0;">${escapeHtml(m.avatar_initials || 'GS')}</div>
           <div style="min-width:0;">
             <div style="font-weight:600; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
@@ -497,6 +497,11 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+          ${!isSelf ? `
+            <button type="button" class="btn-outline" style="padding:4px 8px; font-size:11.5px; display:inline-flex; align-items:center; gap:4px; border-radius:6px; cursor:pointer;" onclick="openDirectMessageDrawer(${m.user_id}, '${escapeHtml(m.full_name).replace(/'/g, "\\'")}', '${escapeHtml(m.avatar_initials || 'GS')}', '${m.status || 'offline'}')" title="Direct message">
+              💬
+            </button>
+          ` : ''}
           ${isSelf ? `
             <span class="status online" style="font-size:11px; font-weight:700;">${roleLabel}</span>
           ` : isPrimaryLeader ? `
@@ -2747,12 +2752,12 @@ async function selectTopic(topicId, title) {
 
       return `
         <div class="chat-message" id="comment-item-${c.id}" style="position:relative; display:flex; gap:12px; padding:12px; border-radius:10px; margin-bottom:12px; background:var(--muted, #f8fafc); border:1px solid var(--border); transition:background 0.2s ease;">
-          <div class="chat-avatar" style="width:36px; height:36px; border-radius:50%; background:var(--primary, #4f46e5); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px; flex-shrink:0;">
+          <div class="chat-avatar" style="width:36px; height:36px; border-radius:50%; background:var(--primary, #4f46e5); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px; flex-shrink:0; cursor:${isAuthor ? 'default' : 'pointer'};" ${!isAuthor ? `onclick="openDirectMessageDrawer(${c.user_id}, '${escapeHtml(c.user_name).replace(/'/g, "\\'")}', '${escapeHtml(c.user_initials || 'GS')}')"` : ''} title="${isAuthor ? '' : `Direct message ${escapeHtml(c.user_name)}`}">
             ${escapeHtml(c.user_initials || 'GS')}
           </div>
           <div class="chat-content" style="flex:1; min-width:0;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-              <h4 style="margin:0 0 4px 0; font-size:13px; font-weight:600; color:var(--text);">${escapeHtml(c.user_name)}</h4>
+              <h4 style="margin:0 0 4px 0; font-size:13px; font-weight:600; color:var(--text); cursor:${isAuthor ? 'default' : 'pointer'};" ${!isAuthor ? `onclick="openDirectMessageDrawer(${c.user_id}, '${escapeHtml(c.user_name).replace(/'/g, "\\'")}', '${escapeHtml(c.user_initials || 'GS')}')"` : ''}>${escapeHtml(c.user_name)}</h4>
               ${canDelete ? `
                 <button type="button" class="comment-delete-discrete" onclick="confirmDeleteComment(${c.id}, event)" title="Delete comment" style="background:none; border:none; color:var(--gray); font-size:13px; cursor:pointer; padding:2px 6px; border-radius:4px; opacity:0.7; transition:all 0.15s ease; display:inline-flex; align-items:center; justify-content:center;" onmouseover="this.style.opacity='1'; this.style.color='#ef4444';" onmouseout="this.style.opacity='0.7'; this.style.color='var(--gray)';">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
@@ -3398,4 +3403,322 @@ function formatDate(isoStr) {
   if (!isoStr) return '';
   const d = new Date(isoStr);
   return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+
+/* ==========================================================================
+   GLOBAL SLIDE-OUT DIRECT MESSAGING DRAWER (1-on-1 Persistent PMs)
+   ========================================================================== */
+
+let isDmDrawerOpen = false;
+let activeDmOtherUser = null; // { id, full_name, avatar_initials, status }
+let dmConversationsList = [];
+let dmPollInterval = null;
+
+function toggleDmDrawer(forceState) {
+  const overlay = document.getElementById('dmDrawerOverlay');
+  const drawer = document.getElementById('dmDrawer');
+  if (!overlay || !drawer) return;
+
+  if (typeof forceState === 'boolean') {
+    isDmDrawerOpen = forceState;
+  } else {
+    isDmDrawerOpen = !isDmDrawerOpen;
+  }
+
+  if (isDmDrawerOpen) {
+    overlay.classList.add('open');
+    drawer.classList.add('open');
+    drawer.setAttribute('aria-hidden', 'false');
+
+    // Update active workspace label
+    const pill = document.getElementById('dmWorkspacePill');
+    if (pill && currentGroupDetails && currentGroupDetails.name) {
+      pill.textContent = `Workspace: ${currentGroupDetails.name}`;
+    }
+
+    if (!activeDmOtherUser) {
+      backToDmList();
+    } else {
+      loadDmThread(activeDmOtherUser.id);
+    }
+
+    // Start polling every 5s while open
+    clearInterval(dmPollInterval);
+    dmPollInterval = setInterval(() => {
+      if (!isDmDrawerOpen) return;
+      if (activeDmOtherUser) {
+        loadDmThread(activeDmOtherUser.id, true);
+      } else {
+        loadDmConversations(true);
+      }
+    }, 5000);
+  } else {
+    overlay.classList.remove('open');
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+    clearInterval(dmPollInterval);
+  }
+}
+
+async function loadDmConversations(silent = false) {
+  if (!currentGroupId) return;
+  const listEl = document.getElementById('dmTeammatesList');
+  if (!listEl) return;
+
+  if (!silent && dmConversationsList.length === 0) {
+    listEl.innerHTML = '<p style="color:var(--gray); text-align:center; padding:24px 0; font-size:13px;">Loading teammates...</p>';
+  }
+
+  try {
+    const res = await apiFetch(`/api/groups/${currentGroupId}/messages/conversations`);
+    if (!res || !Array.isArray(res.data)) return;
+
+    dmConversationsList = res.data;
+
+    // Calculate total unread messages across all teammates
+    const totalUnread = dmConversationsList.reduce((acc, c) => acc + (Number(c.unread_count) || 0), 0);
+    const badge = document.getElementById('dmUnreadBadge');
+    if (badge) {
+      if (totalUnread > 0) {
+        badge.textContent = totalUnread > 99 ? '99+' : totalUnread;
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    renderDmTeammatesList(dmConversationsList);
+  } catch (err) {
+    console.warn('[DM] Failed to load conversations:', err.message);
+    if (!silent) {
+      listEl.innerHTML = '<p style="color:var(--gray); text-align:center; padding:20px 0; font-size:13px;">Could not load teammates.</p>';
+    }
+  }
+}
+
+function renderDmTeammatesList(items) {
+  const listEl = document.getElementById('dmTeammatesList');
+  if (!listEl) return;
+
+  if (!items || items.length === 0) {
+    listEl.innerHTML = '<p style="color:var(--gray); text-align:center; padding:24px 0; font-size:13px;">No other members in this workspace yet.</p>';
+    return;
+  }
+
+  listEl.innerHTML = items.map(m => {
+    const isOnline = m.status === 'online';
+    const lastSnippet = m.last_message ? escapeHtml(m.last_message) : 'No messages yet';
+    const unread = Number(m.unread_count) || 0;
+    const timeStr = m.last_message_at ? formatTimeAgo(m.last_message_at) : '';
+
+    return `
+      <div class="dm-teammate-item" onclick="openDirectMessageDrawer(${m.user_id}, '${escapeHtml(m.full_name).replace(/'/g, "\\'")}', '${escapeHtml(m.avatar_initials || 'GS')}', '${m.status}')">
+        <div style="display:flex; align-items:center; gap:10px; min-width:0; flex:1;">
+          <div class="dm-avatar-wrap" style="position:relative; flex-shrink:0;">
+            <div class="chat-avatar" style="width:36px; height:36px; font-size:13px;">${escapeHtml(m.avatar_initials || 'GS')}</div>
+            <span class="dm-presence-dot ${isOnline ? 'online' : 'offline'}" title="${isOnline ? 'Online' : 'Offline'}"></span>
+          </div>
+          <div style="min-width:0; flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:600; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                ${escapeHtml(m.full_name)}
+              </span>
+              ${timeStr ? `<span style="font-size:10px; color:var(--gray); margin-left:6px; flex-shrink:0;">${timeStr}</span>` : ''}
+            </div>
+            <div style="font-size:11.5px; color:${unread > 0 ? 'var(--text)' : 'var(--gray)'}; font-weight:${unread > 0 ? '700' : 'normal'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px;">
+              ${lastSnippet}
+            </div>
+          </div>
+        </div>
+        ${unread > 0 ? `<span class="dm-unread-badge" style="margin-left:8px;">${unread}</span>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function filterDmTeammates(query) {
+  const q = (query || '').toLowerCase().trim();
+  if (!q) {
+    renderDmTeammatesList(dmConversationsList);
+    return;
+  }
+  const filtered = dmConversationsList.filter(m =>
+    (m.full_name && m.full_name.toLowerCase().includes(q)) ||
+    (m.email && m.email.toLowerCase().includes(q))
+  );
+  renderDmTeammatesList(filtered);
+}
+
+function openDirectMessageDrawer(otherUserId, otherUserName, otherAvatar = 'GS', otherStatus = 'offline') {
+  activeDmOtherUser = {
+    id: Number(otherUserId),
+    full_name: otherUserName || 'Teammate',
+    avatar_initials: otherAvatar || 'GS',
+    status: otherStatus || 'offline'
+  };
+
+  toggleDmDrawer(true);
+
+  // Switch to Thread View
+  const listView = document.getElementById('dmListView');
+  const threadView = document.getElementById('dmThreadView');
+  if (listView) listView.style.display = 'none';
+  if (threadView) threadView.style.display = 'flex';
+
+  // Set thread header details
+  const nameEl = document.getElementById('dmThreadTargetName');
+  if (nameEl) nameEl.textContent = activeDmOtherUser.full_name;
+
+  const avatarEl = document.getElementById('dmThreadTargetAvatar');
+  if (avatarEl) avatarEl.textContent = activeDmOtherUser.avatar_initials;
+
+  const statusEl = document.getElementById('dmThreadTargetStatus');
+  const presenceEl = document.getElementById('dmThreadTargetPresence');
+  const isOnline = activeDmOtherUser.status === 'online';
+
+  if (statusEl) statusEl.textContent = isOnline ? 'online' : 'offline';
+  if (presenceEl) {
+    presenceEl.className = `dm-presence-dot ${isOnline ? 'online' : 'offline'}`;
+  }
+
+  loadDmThread(activeDmOtherUser.id);
+
+  setTimeout(() => {
+    const input = document.getElementById('dmMessageInput');
+    if (input) input.focus();
+  }, 100);
+}
+
+function backToDmList() {
+  activeDmOtherUser = null;
+  const listView = document.getElementById('dmListView');
+  const threadView = document.getElementById('dmThreadView');
+  if (listView) listView.style.display = 'flex';
+  if (threadView) threadView.style.display = 'none';
+
+  loadDmConversations();
+}
+
+async function loadDmThread(otherUserId, silent = false) {
+  if (!currentGroupId || !otherUserId) return;
+  const container = document.getElementById('dmMessagesContainer');
+  if (!container) return;
+
+  if (!silent && container.children.length <= 1) {
+    container.innerHTML = '<p style="color:var(--gray); text-align:center; padding:30px 10px; font-size:13px;">Loading conversation...</p>';
+  }
+
+  try {
+    const res = await apiFetch(`/api/groups/${currentGroupId}/messages/direct/${otherUserId}`);
+    if (!res || !Array.isArray(res.data)) return;
+
+    const messages = res.data;
+    if (messages.length === 0) {
+      container.innerHTML = '<p style="color:var(--gray); text-align:center; padding:40px 10px; font-size:13px;">No messages yet. Send a direct note to start the conversation!</p>';
+      return;
+    }
+
+    const currentUid = currentUser ? Number(currentUser.id) : 0;
+    container.innerHTML = messages.map(m => {
+      const isSent = Number(m.sender_id) === currentUid;
+      const timeStr = m.created_at ? formatTimeOfDay(m.created_at) : '';
+
+      return `
+        <div class="dm-bubble ${isSent ? 'sent' : 'received'}">
+          <div>${escapeHtml(m.message)}</div>
+          <div class="dm-bubble-meta">
+            <span>${timeStr}</span>
+            ${isSent ? `<span>${m.is_read ? '✓✓' : '✓'}</span>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.scrollTop = container.scrollHeight;
+
+    // Refresh unread counts in background
+    loadDmConversations(true);
+  } catch (err) {
+    console.warn('[DM] Failed to load messages:', err.message);
+    if (!silent) {
+      container.innerHTML = '<p style="color:var(--gray); text-align:center; padding:30px 10px; font-size:13px;">Could not load messages.</p>';
+    }
+  }
+}
+
+async function handleSendDirectMessage(event) {
+  if (event && event.preventDefault) event.preventDefault();
+  if (!activeDmOtherUser || !currentGroupId) return;
+
+  const input = document.getElementById('dmMessageInput');
+  if (!input) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+
+  const container = document.getElementById('dmMessagesContainer');
+  if (container) {
+    const optimisticBubble = document.createElement('div');
+    optimisticBubble.className = 'dm-bubble sent';
+    optimisticBubble.innerHTML = `
+      <div>${escapeHtml(text)}</div>
+      <div class="dm-bubble-meta">
+        <span>Just now</span>
+        <span>•</span>
+      </div>
+    `;
+    container.appendChild(optimisticBubble);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  try {
+    await apiFetch(`/api/groups/${currentGroupId}/messages/direct`, {
+      method: 'POST',
+      body: JSON.stringify({
+        receiverId: activeDmOtherUser.id,
+        message: text
+      })
+    });
+
+    await loadDmThread(activeDmOtherUser.id, true);
+  } catch (err) {
+    console.error('[DM] Failed to send message:', err);
+    if (typeof showToast === 'function') {
+      showToast(err.message || 'Failed to send message.', 'error');
+    }
+  }
+}
+
+function sendDirectMessage(event) {
+  return handleSendDirectMessage(event);
+}
+
+function formatTimeAgo(dateStr) {
+  try {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffSec = Math.floor((now - date) / 1000);
+    if (diffSec < 60) return 'now';
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `${diffMin}m`;
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours < 24) return `${diffHours}h`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays}d`;
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  } catch (e) {
+    return '';
+  }
+}
+
+function formatTimeOfDay(dateStr) {
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    return '';
+  }
 }

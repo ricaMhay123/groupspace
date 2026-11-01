@@ -96,3 +96,4 @@
 - [ ] Execute `git add .`.
 - [ ] Execute `git commit -m "feat: move profile settings to homespace, hide invite code discretely, add discussion file viewing, pdf/docx imports, and notebook table styles"`.
 - [ ] Execute `git push origin main`.
+

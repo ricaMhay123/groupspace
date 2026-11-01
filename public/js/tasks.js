@@ -65,11 +65,21 @@ function renderKanbanCard(task) {
   titleEl.textContent = task.title || 'Untitled Task';
   titleEl.title = task.title || '';
 
-  // LINE 2: ONLY assigned member's name
+  // LINE 2: ONLY assigned member's name (Clickable for Quick PM)
   const assigneeEl = document.createElement('div');
   assigneeEl.className = 'kanban-card-assignee';
   assigneeEl.style.cssText = 'font-size:0.8rem; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.2;';
   assigneeEl.textContent = task.assignee_name ? task.assignee_name : 'Unassigned';
+  if (task.assigned_to) {
+    assigneeEl.style.cursor = 'pointer';
+    assigneeEl.title = `Direct Message ${task.assignee_name || 'Assignee'}`;
+    assigneeEl.onclick = (e) => {
+      if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+      if (typeof openDirectMessageDrawer === 'function') {
+        openDirectMessageDrawer(task.assigned_to, task.assignee_name || 'Teammate');
+      }
+    };
+  }
 
   card.appendChild(titleEl);
   card.appendChild(assigneeEl);
