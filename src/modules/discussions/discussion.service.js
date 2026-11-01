@@ -299,6 +299,16 @@ async function getMentionableNotebooks(groupId, query = '') {
   return await DiscussionModel.findMentionableNotebooks(Number(groupId), query);
 }
 
+async function getMentionablePages(groupId, query = '', folderId = null) {
+  if (!groupId) return [];
+  return await DiscussionModel.findMentionablePages(Number(groupId), query, folderId);
+}
+
+async function getFolderPages(groupId, folderId) {
+  if (!groupId || !folderId) return [];
+  return await DiscussionModel.findPagesByFolder(Number(groupId), Number(folderId));
+}
+
 async function getMentionableFolders(groupId, query = '') {
   if (!groupId) return [];
   return await DiscussionModel.findMentionableFolders(Number(groupId), query);
@@ -343,14 +353,40 @@ async function deleteComment({ commentId, userId, userRole, groupId }) {
 }
 
 async function togglePinComment({ commentId, topicId, groupId, userId, userRole }) {
-  const topic = await DiscussionModel.findByIdInGroup(Number(topicId), Number(groupId));
+  let topic = null;
+  if (topicId) {
+    topic = await DiscussionModel.findByIdInGroup(Number(topicId), Number(groupId));
+  }
+  if (!topic) {
+    const comment = await DiscussionModel.findCommentById(Number(commentId));
+    if (comment) {
+      topic = await DiscussionModel.findByIdInGroup(Number(comment.discussion_id), Number(groupId || comment.group_id));
+    }
+  }
   if (!topic) {
     const err = new Error('Discussion topic not found in this workspace.');
     err.status = 404;
     throw err;
   }
 
-  const updated = await DiscussionModel.togglePinComment(Number(commentId), Number(topicId), Number(groupId), Number(userId));
+  // RESTRICTION: ONLY the Group Leader (role === 'leader' or 'co_leader') OR the original Thread Creator (author_user_id === currentUser.id)
+  let isLeader = isAdminRole(userRole);
+  if (!isLeader && (groupId || topic.group_id)) {
+    const memberRecord = await GroupModel.findMember(groupId || topic.group_id, userId);
+    if (memberRecord && isAdminRole(memberRecord.role)) {
+      isLeader = true;
+    }
+  }
+
+  const isThreadCreator = Number(topic.author_user_id) === Number(userId) || Number(topic.created_by) === Number(userId);
+
+  if (!isLeader && !isThreadCreator) {
+    const err = new Error('Forbidden: Only the Group Leader or the original Thread Creator can pin or unpin comments in discussions.');
+    err.status = 403;
+    throw err;
+  }
+
+  const updated = await DiscussionModel.togglePinComment(Number(commentId), Number(topic.id), Number(groupId || topic.group_id), Number(userId));
   if (!updated) {
     const err = new Error('Comment not found in this topic.');
     err.status = 404;
@@ -373,5 +409,7 @@ module.exports = {
   getMentionableTasks,
   getMentionableTopics,
   getMentionableNotebooks,
+  getMentionablePages,
+  getFolderPages,
   getMentionableFolders
 };

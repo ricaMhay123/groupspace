@@ -166,10 +166,81 @@ const DiscussionModel = {
       SELECT id, name
       FROM notebook_folders
       WHERE group_id = ${groupId}
-        AND COALESCE(is_private, FALSE) = FALSE
         AND LOWER(name) LIKE ${pattern}
       ORDER BY name ASC
-      LIMIT 8
+      LIMIT 10
+    `;
+  },
+
+  /**
+   * Category 1 - #NB Pages: Query all notebook pages in the active workspace
+   * that are NOT inside any folder (folder_id IS NULL).
+   * Also optionally queries pages for a specific folder when folderId is specified.
+   */
+  async findMentionablePages(groupId, q = '', folderId = null) {
+    const pattern = `%${String(q).toLowerCase().replace(/[\\%_]/g, '\\$&')}%`;
+    if (folderId !== null && folderId !== undefined) {
+      return await sql`
+        SELECT id, title, folder_id, notebook_id
+        FROM (
+          SELECT np.id, np.title, np.folder_id, np.notebook_id, np.position, np.updated_at
+          FROM notebook_pages np
+          JOIN notebooks n ON np.notebook_id = n.id
+          WHERE n.group_id = ${groupId}
+            AND np.folder_id = ${Number(folderId)}
+            AND LOWER(np.title) LIKE ${pattern}
+          UNION
+          SELECT n.id, n.title, n.folder_id, NULL as notebook_id, 0 as position, n.updated_at
+          FROM notes n
+          WHERE n.group_id = ${groupId}
+            AND n.folder_id = ${Number(folderId)}
+            AND LOWER(n.title) LIKE ${pattern}
+        ) sub_pages
+        ORDER BY position ASC, updated_at DESC
+        LIMIT 20
+      `;
+    }
+
+    // Category 1: Pages where folder_id IS NULL
+    return await sql`
+      SELECT id, title, folder_id, notebook_id
+      FROM (
+        SELECT np.id, np.title, np.folder_id, np.notebook_id, np.updated_at
+        FROM notebook_pages np
+        JOIN notebooks n ON np.notebook_id = n.id
+        WHERE n.group_id = ${groupId}
+          AND np.folder_id IS NULL
+          AND LOWER(np.title) LIKE ${pattern}
+        UNION
+        SELECT n.id, n.title, n.folder_id, NULL as notebook_id, n.updated_at
+        FROM notes n
+        WHERE n.group_id = ${groupId}
+          AND n.folder_id IS NULL
+          AND LOWER(n.title) LIKE ${pattern}
+      ) root_pages
+      ORDER BY updated_at DESC
+      LIMIT 12
+    `;
+  },
+
+  /** Query all sub-pages contained inside a specific notebook folder. */
+  async findPagesByFolder(groupId, folderId) {
+    return await sql`
+      SELECT id, title, folder_id, notebook_id
+      FROM (
+        SELECT np.id, np.title, np.folder_id, np.notebook_id, np.position, np.updated_at
+        FROM notebook_pages np
+        JOIN notebooks n ON np.notebook_id = n.id
+        WHERE n.group_id = ${groupId}
+          AND np.folder_id = ${Number(folderId)}
+        UNION
+        SELECT n.id, n.title, n.folder_id, NULL as notebook_id, 0 as position, n.updated_at
+        FROM notes n
+        WHERE n.group_id = ${groupId}
+          AND n.folder_id = ${Number(folderId)}
+      ) folder_pages
+      ORDER BY position ASC, updated_at DESC
+      LIMIT 30
     `;
   },
 

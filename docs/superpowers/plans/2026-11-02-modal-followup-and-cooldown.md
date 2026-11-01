@@ -31,3 +31,4 @@ In GroupSpace, Leaders and Co-Leaders can send a follow-up ping on tasks to nudg
    - In `followUpOnTask`, after 2s feedback set button to disabled `"Followed Up Today ✓"` and update local task state.
 5. `tests/test-task-modal-followup-cooldown.js`: New test suite verifying DDL, model, 24h rate limiting (429), outer Kanban card cleanliness, and modal button states.
 6. `tests/test-localhost.js`: Add suite 20 to the main localhost test runner.
+

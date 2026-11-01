@@ -2840,6 +2840,9 @@ async function selectTopic(topicId, title) {
     }
 
     const isLeader = currentGroupDetails && (currentGroupDetails.role === 'leader' || currentGroupDetails.role === 'co_leader');
+    const isThreadCreator = currentUser && (Number(topic.author_user_id) === Number(currentUser.id) || Number(topic.created_by) === Number(currentUser.id));
+    const canPin = Boolean(isLeader || isThreadCreator);
+    window.__canPinCurrentThread = canPin;
 
     container.innerHTML = comments.map(c => {
       const isAuthor = currentUser && Number(c.user_id) === Number(currentUser.id);
@@ -2855,9 +2858,15 @@ async function selectTopic(topicId, title) {
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
               <h4 style="margin:0 0 4px 0; font-size:13px; font-weight:600; color:var(--text); cursor:${isAuthor ? 'default' : 'pointer'};" ${!isAuthor ? `onclick="openDirectMessageDrawer(${c.user_id}, '${escapeHtml(c.user_name).replace(/'/g, "\\'")}', '${escapeHtml(c.user_initials || 'GS')}')"` : ''}>${escapeHtml(c.user_name)}</h4>
               <div style="display:flex; align-items:center; gap:4px;">
-                <button type="button" class="comment-pin-btn" onclick="togglePinDiscussionComment(${c.id}, event)" title="${isPinned ? 'Unpin comment' : 'Pin comment'}" style="background:none; border:none; color:${isPinned ? 'var(--warning, #f59e0b)' : 'var(--gray)'}; font-size:13px; cursor:pointer; padding:2px 6px; border-radius:4px; opacity:${isPinned ? '1' : '0.7'}; transition:all 0.15s ease; display:inline-flex; align-items:center; justify-content:center;">
-                  📌
-                </button>
+                ${canPin ? `
+                  <button type="button" class="comment-pin-btn" onclick="togglePinDiscussionComment(${c.id}, event)" title="${isPinned ? 'Unpin comment' : 'Pin comment'}" style="background:none; border:none; color:${isPinned ? 'var(--warning, #f59e0b)' : 'var(--gray)'}; font-size:13px; cursor:pointer; padding:2px 6px; border-radius:4px; opacity:${isPinned ? '1' : '0.7'}; transition:all 0.15s ease; display:inline-flex; align-items:center; justify-content:center;">
+                    📌
+                  </button>
+                ` : (isPinned ? `
+                  <span class="comment-pin-badge" title="Pinned in Thread" style="font-size:12px; opacity:0.8; padding:2px 4px; display:inline-flex; align-items:center; color:var(--warning, #f59e0b);">
+                    📌
+                  </span>
+                ` : '')}
                 ${canDelete ? `
                   <button type="button" class="comment-delete-discrete" onclick="confirmDeleteComment(${c.id}, event)" title="Delete comment" style="background:none; border:none; color:var(--gray); font-size:13px; cursor:pointer; padding:2px 6px; border-radius:4px; opacity:0.7; transition:all 0.15s ease; display:inline-flex; align-items:center; justify-content:center;" onmouseover="this.style.opacity='1'; this.style.color='#ef4444';" onmouseout="this.style.opacity='0.7'; this.style.color='var(--gray)';">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
@@ -2911,6 +2920,8 @@ function renderTopicPinnedTray(pinnedComments) {
     return;
   }
 
+  const canPin = window.__canPinCurrentThread !== false;
+
   listEl.innerHTML = pinnedComments.map(c => {
     const textSnippet = c.content ? escapeHtml(c.content).slice(0, 60) : (c.attachments && c.attachments.length ? '📎 Attachment' : 'Comment');
     return `
@@ -2918,9 +2929,11 @@ function renderTopicPinnedTray(pinnedComments) {
         <span class="pinned-tray-item-text">
           <strong>${escapeHtml(c.user_name || 'Member')}:</strong> ${textSnippet}
         </span>
-        <button type="button" class="pinned-tray-item-unpin" onclick="togglePinDiscussionComment(${c.id}, event)" title="Unpin comment" aria-label="Unpin comment">
-          ✕
-        </button>
+        ${canPin ? `
+          <button type="button" class="pinned-tray-item-unpin" onclick="togglePinDiscussionComment(${c.id}, event)" title="Unpin comment" aria-label="Unpin comment">
+            ✕
+          </button>
+        ` : ''}
       </div>
     `;
   }).join('');
@@ -2938,6 +2951,13 @@ function scrollToDiscussionComment(commentId) {
 async function togglePinDiscussionComment(commentId, e) {
   if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
   if (!activeTopicId || !currentGroupId) return;
+
+  if (window.__canPinCurrentThread === false) {
+    if (typeof showToast === 'function') {
+      showToast('Only the Group Leader or Thread Creator can pin or unpin comments in discussions.', 'error');
+    }
+    return;
+  }
 
   try {
     const res = await apiFetch(`/api/groups/${currentGroupId}/discussions/${activeTopicId}/comments/${commentId}/pin`, {

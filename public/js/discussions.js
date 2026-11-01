@@ -13,6 +13,7 @@
   let selectedIndex = -1;
   let dropdownEl = null;
   let activeInputEl = null;
+  let lastRootSuggestions = [];
 
   // Inject styles for mention pills and dropdown
   function injectMentionStyles() {
@@ -120,7 +121,7 @@
         color: #92400e;
         border: 1px solid #fde68a;
       }
-      .notebook-mention-pill {
+      .notebook-mention-pill, .page-mention-pill {
         background: #ecfdf5;
         color: #065f46;
         border: 1px solid #a7f3d0;
@@ -231,13 +232,32 @@
           initials: u.avatar_initials || (u.name ? u.name.slice(0, 2).toUpperCase() : 'U')
         }));
       } else if (trigger.type === '#') {
-        // Query topics, tasks, notebooks, and folders concurrently
-        const [topicsRes, tasksRes, notebooksRes, foldersRes] = await Promise.all([
+        // Query Category 1 (#NB Pages: folder_id IS NULL), Category 2 (#NB Folders), topics, tasks, and notebooks
+        const [pagesRes, foldersRes, topicsRes, tasksRes, notebooksRes] = await Promise.all([
+          apiFetch(`/api/groups/${groupId}/discussions/mentions/pages?q=${encodeURIComponent(trigger.query)}`).catch(() => ({ data: [] })),
+          apiFetch(`/api/groups/${groupId}/discussions/mentions/folders?q=${encodeURIComponent(trigger.query)}`).catch(() => ({ data: [] })),
           apiFetch(`/api/groups/${groupId}/discussions/mentions/topics?q=${encodeURIComponent(trigger.query)}`).catch(() => ({ data: [] })),
           apiFetch(`/api/groups/${groupId}/discussions/mentions/tasks?q=${encodeURIComponent(trigger.query)}`).catch(() => ({ data: [] })),
-          apiFetch(`/api/groups/${groupId}/discussions/mentions/notebooks?q=${encodeURIComponent(trigger.query)}`).catch(() => ({ data: [] })),
-          apiFetch(`/api/groups/${groupId}/discussions/mentions/folders?q=${encodeURIComponent(trigger.query)}`).catch(() => ({ data: [] }))
+          apiFetch(`/api/groups/${groupId}/discussions/mentions/notebooks?q=${encodeURIComponent(trigger.query)}`).catch(() => ({ data: [] }))
         ]);
+
+        const folders = (foldersRes.data || []).map(f => ({
+          type: 'folder',
+          id: f.id,
+          name: f.name
+        }));
+
+        const pages = (pagesRes.data || []).map(p => ({
+          type: 'page',
+          id: p.id,
+          name: p.title
+        }));
+
+        const notebooks = (notebooksRes.data || []).map(nb => ({
+          type: 'notebook',
+          id: nb.id,
+          name: nb.title
+        }));
 
         const topics = (topicsRes.data || []).map(t => ({
           type: 'topic',
@@ -252,19 +272,8 @@
           name: t.title
         }));
 
-        const notebooks = (notebooksRes.data || []).map(nb => ({
-          type: 'notebook',
-          id: nb.id,
-          name: nb.title
-        }));
-
-        const folders = (foldersRes.data || []).map(f => ({
-          type: 'folder',
-          id: f.id,
-          name: f.name
-        }));
-
-        return [...topics, ...tasks, ...notebooks, ...folders];
+        // Present folders first, then pages, topics, tasks, notebooks
+        return [...folders, ...pages, ...topics, ...tasks, ...notebooks];
       }
     } catch (err) {
       console.warn('[Discussions] Mention fetch failed:', err.message);
@@ -282,10 +291,11 @@
       return;
     }
 
+    lastRootSuggestions = items;
     suggestions = items;
     selectedIndex = 0;
 
-    const title = trigger.type === '@' ? 'Workspace Members' : 'Workspace Topics, Tasks & Notebooks';
+    const title = trigger.type === '@' ? 'Workspace Members' : 'Workspace Pages, Folders, Topics & Tasks';
     let html = `<div class="mention-dropdown-header">${title}</div>`;
 
     items.forEach((item, idx) => {
@@ -295,6 +305,26 @@
             <div class="mention-item-avatar">${escapeHtml(item.initials)}</div>
             <span>${escapeHtml(item.name)}</span>
             <span class="mention-item-tag">Member</span>
+          </div>
+        `;
+      } else if (item.type === 'folder') {
+        html += `
+          <div class="mention-item ${idx === 0 ? 'active' : ''}" data-idx="${idx}">
+            <div class="mention-item-avatar folder">📁</div>
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">
+              ${escapeHtml(item.name)}
+            </span>
+            <span class="mention-item-tag">#NB Folder ›</span>
+          </div>
+        `;
+      } else if (item.type === 'page') {
+        html += `
+          <div class="mention-item ${idx === 0 ? 'active' : ''}" data-idx="${idx}">
+            <div class="mention-item-avatar notebook">📄</div>
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">
+              ${escapeHtml(item.name)}
+            </span>
+            <span class="mention-item-tag">#NB Page</span>
           </div>
         `;
       } else if (item.type === 'topic') {
@@ -327,16 +357,6 @@
             <span class="mention-item-tag">Notebook</span>
           </div>
         `;
-      } else if (item.type === 'folder') {
-        html += `
-          <div class="mention-item ${idx === 0 ? 'active' : ''}" data-idx="${idx}">
-            <div class="mention-item-avatar folder">📁</div>
-            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-              ${escapeHtml(item.name)}
-            </span>
-            <span class="mention-item-tag">Folder</span>
-          </div>
-        `;
       }
     });
 
@@ -352,9 +372,109 @@
     });
   }
 
+  async function openFolderSubPagesView(folderItem) {
+    const dd = getDropdown();
+    if (!dd) return;
+
+    const groupId = typeof currentGroupId !== 'undefined' && currentGroupId 
+      ? currentGroupId 
+      : localStorage.getItem('groupspace_active_group_id');
+
+    let subPages = [];
+    try {
+      const res = await apiFetch(`/api/groups/${groupId}/discussions/mentions/folders/${folderItem.id}/pages`);
+      subPages = Array.isArray(res.data) ? res.data : [];
+    } catch (e) {
+      subPages = [];
+    }
+
+    const folderSuggestions = [
+      { type: 'folder_select', id: folderItem.id, name: folderItem.name }
+    ];
+    subPages.forEach(sp => {
+      folderSuggestions.push({
+        type: 'page',
+        id: sp.id,
+        name: sp.title,
+        folderName: folderItem.name
+      });
+    });
+
+    suggestions = folderSuggestions;
+    selectedIndex = 0;
+
+    let html = `
+      <div class="mention-dropdown-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <button type="button" class="mention-back-btn" id="mentionBackBtn" style="background:none; border:none; color:var(--primary, #4f46e5); font-weight:700; cursor:pointer; font-size:11px; padding:2px 4px; border-radius:4px; display:inline-flex; align-items:center; gap:3px;">
+          ← Back
+        </button>
+        <span style="font-weight:600; color:var(--text); font-size:11.5px;">📁 ${escapeHtml(folderItem.name)} (${subPages.length} pages)</span>
+      </div>
+    `;
+
+    folderSuggestions.forEach((item, idx) => {
+      if (item.type === 'folder_select') {
+        html += `
+          <div class="mention-item ${idx === 0 ? 'active' : ''}" data-idx="${idx}" style="background:rgba(79, 70, 229, 0.05); border-bottom:1px solid #e2e8f0;">
+            <div class="mention-item-avatar folder">📁</div>
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; font-weight:600;">
+              Mention entire folder: #[Folder: ${escapeHtml(item.name)}]
+            </span>
+            <span class="mention-item-tag">Mention Folder</span>
+          </div>
+        `;
+      } else if (item.type === 'page') {
+        html += `
+          <div class="mention-item ${idx === 0 ? 'active' : ''}" data-idx="${idx}">
+            <div class="mention-item-avatar notebook">📄</div>
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">
+              ${escapeHtml(item.name)}
+            </span>
+            <span class="mention-item-tag">#Page</span>
+          </div>
+        `;
+      }
+    });
+
+    if (subPages.length === 0) {
+      html += `
+        <div style="padding:10px 14px; font-size:12px; color:var(--gray); text-align:center;">
+          No sub-pages in this folder. You can mention the folder itself above.
+        </div>
+      `;
+    }
+
+    dd.innerHTML = html;
+    dd.style.display = 'block';
+
+    const backBtn = document.getElementById('mentionBackBtn');
+    if (backBtn) {
+      backBtn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (lastRootSuggestions && lastRootSuggestions.length > 0) {
+          renderDropdown(lastRootSuggestions, activeTrigger);
+        }
+      });
+    }
+
+    dd.querySelectorAll('.mention-item').forEach(el => {
+      el.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        const idx = Number(el.getAttribute('data-idx'));
+        applySuggestion(idx);
+      });
+    });
+  }
+
   function applySuggestion(idx) {
     const item = suggestions[idx];
     if (!item || !activeTrigger) return;
+
+    if (item.type === 'folder') {
+      openFolderSubPagesView(item);
+      return;
+    }
 
     const input = activeInputEl || document.getElementById('newCommentInput') || document.getElementById('topicTitle');
     if (!input) return;
@@ -367,9 +487,11 @@
       replacement = `#[${item.name}] `;
     } else if (item.type === 'task') {
       replacement = `#${item.id} `;
+    } else if (item.type === 'page') {
+      replacement = `#[Page: ${item.name}] `;
     } else if (item.type === 'notebook') {
       replacement = `#[Notebook: ${item.name}] `;
-    } else if (item.type === 'folder') {
+    } else if (item.type === 'folder' || item.type === 'folder_select') {
       replacement = `#[Folder: ${item.name}] `;
     }
 
@@ -467,6 +589,20 @@
   function highlightMentions(text) {
     if (!text) return '';
     let escaped = typeof escapeHtml === 'function' ? escapeHtml(text) : text;
+
+    // 1a. Replace bracketed Page mentions: #[Page: Spec Sheet]
+    escaped = escaped.replace(/#\[Page:\s*([^\]\r\n]{1,80})\]/gi, (match, title) => {
+      const cleanTitle = title.trim();
+      const enc = encodeURIComponent(cleanTitle);
+      return `<span class="mention-pill page-mention-pill clickable-tag" onclick="window.handlePageTagClick(decodeURIComponent('${enc}'))" role="button" tabindex="0" title="Open Page: ${cleanTitle}">📄 #Page: ${cleanTitle}</span>`;
+    });
+
+    // 1b. Replace unbracketed Page mentions: #Page:Spec
+    escaped = escaped.replace(/#Page:\s*([A-Za-z0-9_.\-]+(?:\s[A-Za-z0-9_.\-]+)?)/gi, (match, title) => {
+      const cleanTitle = title.trim();
+      const enc = encodeURIComponent(cleanTitle);
+      return `<span class="mention-pill page-mention-pill clickable-tag" onclick="window.handlePageTagClick(decodeURIComponent('${enc}'))" role="button" tabindex="0" title="Open Page: ${cleanTitle}">📄 #Page: ${cleanTitle}</span>`;
+    });
 
     // 1. Replace bracketed Notebook mentions: #[Notebook: Spec]
     escaped = escaped.replace(/#\[Notebook:\s*([^\]\r\n]{1,80})\]/gi, (match, title) => {
@@ -789,6 +925,10 @@
     }
   }
 
+  async function handlePageTagClick(rawTitle) {
+    return handleNotebookTagClick(rawTitle);
+  }
+
   // Export functions to window
   window.resetDiscussionMentions = hideDropdown;
   window.highlightMentions = highlightMentions;
@@ -796,6 +936,7 @@
   window.handleCreateTopic = handleTopicSubmit;
   window.handlePostComment = handleCommentSubmit;
   window.handleNotebookTagClick = handleNotebookTagClick;
+  window.handlePageTagClick = handlePageTagClick;
   window.handleFolderTagClick = handleFolderTagClick;
   window.handleTaskTagClick = handleTaskTagClick;
 

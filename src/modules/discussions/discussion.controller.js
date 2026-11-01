@@ -203,6 +203,36 @@ async function getMentionableNotebooks(req, res) {
   }
 }
 
+async function getMentionablePages(req, res) {
+  try {
+    const pages = await discussionService.getMentionablePages(req.params.groupId, req.query.q || '', req.query.folderId || null);
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: pages
+    });
+  } catch (error) {
+    return res.status(error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+async function getMentionableFolderPages(req, res) {
+  try {
+    const pages = await discussionService.getFolderPages(req.params.groupId, req.params.folderId);
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: pages
+    });
+  } catch (error) {
+    return res.status(error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 async function getMentionableFolders(req, res) {
   try {
     const folders = await discussionService.getMentionableFolders(req.params.groupId, req.query.q || '');
@@ -253,6 +283,8 @@ module.exports = {
   getMentionableTasks,
   getMentionableTopics,
   getMentionableNotebooks,
+  getMentionablePages,
+  getMentionableFolderPages,
   getMentionableFolders
 };
 
