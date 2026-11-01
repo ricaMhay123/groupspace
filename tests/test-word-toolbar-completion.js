@@ -30,5 +30,10 @@ console.log('  ✅ Embedded (Private Space) toolbar mirrors full toolbar');
 });
 assert(nbHtml.includes('Are you sure you want to delete this folder and all notes inside it? This action cannot be undone.'),
   'folder deletion must require confirmation');
-console.log('  ✅ Excluded features absent; folder delete confirmation present');
+assert(nbHtml.includes('data-ribbon-tab="file"') && nbHtml.includes('data-ribbon-group="file"'), 'File tab and File ribbon group present');
+assert(nbHtml.includes("selectStyleCard('no-spacing'"), 'Visual MS Word Styles gallery cards (Normal, No Spacing, Heading 1, Heading 2, Title) present');
+const fileTabSection = nbHtml.split('<!-- ==================== [HOME TAB] ==================== -->')[0];
+assert(fileTabSection.includes("exportPage('pdf')") && fileTabSection.includes("exportPage('txt')"), 'Export PDF and Save TXT cards are inside the File tab');
+assert(nbJs.includes('data-ribbon="file"') && nbJs.includes('data-ribbon-section="file"'), 'Embedded toolbar also includes File tab with Export options');
+console.log('  ✅ Excluded features absent; File tab export, MS Word Styles gallery & folder delete confirmation present');
 console.log('\n🎉 WORD TOOLBAR COMPLETION TESTS PASSED!\n');

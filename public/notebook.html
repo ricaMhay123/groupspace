@@ -1030,28 +1030,449 @@
         min-height: 44px;
       }
     }
+
+    /* ── MS Word Online / Desktop Authentic Ribbon & Paper Styling ── */
+    .nb-header {
+      background: #141d2f !important;
+      color: #ffffff !important;
+      border-bottom: 1px solid #1e293b !important;
+      height: 46px !important;
+      padding: 0 16px !important;
+    }
+    .nb-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .nb-brand-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #38bdf8 !important;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .nb-brand-divider {
+      color: #475569;
+      font-weight: 300;
+      font-size: 16px;
+      user-select: none;
+    }
+    .nb-doc-header-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: #f8fafc !important;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 320px;
+    }
+    .nb-autosave-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      margin-left: 8px;
+    }
+    .nb-header .nb-back-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #e2e8f0;
+      padding: 4px 10px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+    .nb-header .nb-back-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+      border-color: #38bdf8;
+    }
+    .nb-header .btn-nb-outline {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #f8fafc;
+      padding: 5px 11px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+    .nb-header .btn-nb-outline:hover {
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+      border-color: #38bdf8;
+    }
+    .btn-nb-share-primary {
+      background: #2563eb !important;
+      color: #ffffff !important;
+      border: 1px solid #3b82f6 !important;
+      padding: 5px 14px !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      border-radius: 6px !important;
+    }
+    .btn-nb-share-primary:hover {
+      background: #1d4ed8 !important;
+    }
+    .nb-header .btn-nb-theme {
+      width: 30px;
+      height: 30px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #cbd5e1;
+      border-radius: 6px;
+    }
+    .nb-sidebar-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+    .nb-sidebar-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: #38bdf8;
+    }
+    .nb-sidebar.desktop-collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      border-right: none !important;
+      overflow: hidden !important;
+    }
+
+    /* ── MS Word Ribbon Tabs Strip ── */
+    .nb-toolbar {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      padding: 0 !important;
+      gap: 0 !important;
+      background: var(--nb-surface, #ffffff) !important;
+      border-bottom: 1px solid var(--nb-border, #cbd5e1) !important;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+    }
+    .nb-ribbon-tabs {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      width: 100%;
+      padding: 0 14px !important;
+      margin-bottom: 0 !important;
+      background: var(--nb-surface, #ffffff);
+      border-bottom: 1px solid var(--nb-border, #e2e8f0);
+      height: 34px;
+    }
+    .nb-ribbon-tab {
+      position: relative;
+      background: transparent !important;
+      color: var(--nb-text-muted, #475569) !important;
+      border: none !important;
+      border-bottom: 2.5px solid transparent !important;
+      border-radius: 0 !important;
+      padding: 6px 14px !important;
+      height: 34px;
+      font-size: 12.5px !important;
+      font-weight: 500 !important;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .nb-ribbon-tab:hover {
+      color: var(--nb-text, #0f172a) !important;
+      background: rgba(37, 99, 235, 0.05) !important;
+    }
+    .nb-ribbon-tab.active {
+      color: #2563eb !important;
+      background: transparent !important;
+      font-weight: 700 !important;
+      border-bottom: 2.5px solid #2563eb !important;
+    }
+    html.dark .nb-ribbon-tab.active {
+      color: #38bdf8 !important;
+      border-bottom-color: #38bdf8 !important;
+    }
+
+    /* ── MS Word Ribbon Body & Compartments ── */
+    .nb-ribbon-body {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: stretch;
+      gap: 0;
+      padding: 6px 12px 4px 12px;
+      min-height: 86px;
+      background: var(--nb-tb-bg, #ffffff);
+    }
+    .nb-toolbar-group {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: stretch;
+      gap: 4px;
+      padding: 2px 14px 2px 14px !important;
+      border-right: 1px solid var(--nb-border, #e2e8f0) !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      min-height: 74px;
+    }
+    .nb-toolbar-group.ribbon-highlight {
+      background: transparent !important;
+    }
+    .nb-ribbon-group-content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      flex: 1;
+    }
+    .nb-ribbon-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: nowrap;
+    }
+    .nb-ribbon-group-footer {
+      text-align: center;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--nb-text-subtle, #64748b);
+      letter-spacing: 0.2px;
+      padding-top: 2px;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .nb-toolbar .btn-toolbar-fmt {
+      min-width: 26px;
+      height: 26px;
+      padding: 0 6px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      background: transparent;
+    }
+    .nb-toolbar .btn-toolbar-fmt:hover:not(:disabled),
+    .nb-toolbar .btn-toolbar-fmt.active:not(:disabled) {
+      background: rgba(37, 99, 235, 0.12);
+      border-color: rgba(37, 99, 235, 0.35);
+      color: var(--nb-tb-text, #0f172a) !important;
+      transform: none;
+    }
+    .nb-toolbar select {
+      height: 26px;
+      padding: 2px 6px;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+
+    /* ── MS Word Style Gallery Cards (Normal, No Spacing, Heading 1, Heading 2, Title) ── */
+    .nb-style-gallery {
+      display: flex;
+      align-items: stretch;
+      gap: 6px;
+    }
+    .nb-style-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: flex-start;
+      width: 78px;
+      height: 54px;
+      padding: 5px 8px;
+      border: 1px solid var(--nb-border, #cbd5e1);
+      border-radius: 4px;
+      background: var(--nb-tb-surface, #ffffff);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left;
+      overflow: hidden;
+    }
+    .nb-style-card:hover {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.05);
+    }
+    .nb-style-card.active {
+      border: 2px solid #0284c7;
+      background: rgba(2, 132, 199, 0.04);
+    }
+    .nb-style-card-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--nb-tb-text, #0f172a);
+      white-space: nowrap;
+      line-height: 1.2;
+    }
+    .nb-style-card-name.h1-preview {
+      color: #1d4ed8;
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+    .nb-style-card-name.h2-preview {
+      color: #2563eb;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+    .nb-style-card-name.title-preview {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--nb-tb-text, #0f172a);
+    }
+    .nb-style-card-sample {
+      font-size: 9.5px;
+      color: var(--nb-text-subtle, #64748b);
+    }
+
+    /* ── Tall Stacked Action / Export Cards (for File Tab & Ribbon) ── */
+    .nb-tall-cards-row {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+    }
+    .nb-tall-card-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      min-width: 68px;
+      height: 54px;
+      padding: 6px 10px;
+      border-radius: 5px;
+      border: 1px solid var(--nb-border, #cbd5e1);
+      background: var(--nb-tb-surface, #ffffff);
+      color: var(--nb-tb-text, #0f172a);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .nb-tall-card-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+      border-color: #2563eb;
+    }
+    .nb-tall-card-btn.pdf-card {
+      border-color: rgba(220, 38, 38, 0.35);
+      color: #2563eb;
+    }
+    .nb-tall-card-btn.pdf-card .card-icon {
+      color: #dc2626;
+      font-size: 16px;
+    }
+    .nb-tall-card-btn.txt-card {
+      border-color: rgba(22, 163, 74, 0.35);
+      color: #16a34a;
+    }
+    .nb-tall-card-btn.txt-card .card-icon {
+      color: #16a34a;
+      font-size: 16px;
+    }
+    .nb-tall-card-btn.docx-card {
+      border-color: rgba(37, 99, 235, 0.35);
+      color: #2563eb;
+    }
+    .nb-tall-card-btn.docx-card .card-icon {
+      color: #2563eb;
+      font-size: 16px;
+    }
+
+    /* ── Paper Sheet Canvas & Word Status Bar ── */
+    .nb-canvas-container {
+      background: #edf2f7;
+      padding: 24px 32px 40px 32px !important;
+      align-items: center;
+    }
+    html.dark .nb-canvas-container {
+      background: #0b1120;
+    }
+    .nb-canvas {
+      max-width: 816px;
+      min-height: 1056px;
+      padding: 56px 72px;
+      border-radius: 2px;
+      border: 1px solid #d1d5db;
+      box-shadow: 0 3px 14px rgba(15, 23, 42, 0.08);
+      transform-origin: top center;
+    }
+    .nb-status-bar {
+      height: 28px;
+      padding: 0 16px !important;
+      font-size: 11px !important;
+      background: var(--nb-surface, #ffffff) !important;
+      border-top: 1px solid var(--nb-border, #cbd5e1) !important;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nb-status-left, .nb-status-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .nb-status-divider {
+      color: var(--nb-border, #cbd5e1);
+    }
+    .nb-zoom-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nb-zoom-btn {
+      border: none;
+      background: transparent;
+      color: var(--nb-text-muted);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 0 4px;
+      line-height: 1;
+    }
+    .nb-zoom-btn:hover {
+      color: var(--nb-primary);
+    }
+
   </style>
 </head>
 <body>
 <header class="nb-header">
-  <div style="display:flex; align-items:center; gap:10px;">
+  <div class="nb-header-left">
     <button type="button" id="nbMobileSidebarBtn" class="mobile-hamburger-btn" aria-label="Toggle folders and pages drawer" title="Toggle Folders &amp; Pages" onclick="toggleNbMobileSidebar()">☰</button>
-    <a href="index.html" style="text-decoration:none; font-weight:800; font-size:15px; color:var(--nb-text); display:inline-flex; align-items:center; gap:6px;"><span>👥</span> GroupSpace</a>
-    <a href="dashboard.html" id="backBtn" class="nb-back-btn">&#8592; Back to Workspace</a>
-  </div>
-  <div class="nb-header-center">
-    <h1 id="notebookName">Collaborative Notebook</h1>
-    <p id="notebookMeta">Auto-titled upon saving from first phrase</p>
+    <button type="button" id="nbDesktopSidebarBtn" class="nb-sidebar-toggle-btn" title="Toggle Folders &amp; Pages Sidebar" onclick="toggleDesktopSidebar()">☰</button>
+    <a href="dashboard.html" id="backBtn" class="nb-back-btn" title="Back to Workspace">&#8592; Workspace</a>
+    <a href="index.html" class="nb-brand-title">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>GroupSpace Notebook</span>
+    </a>
+    <span class="nb-brand-divider">|</span>
+    <h1 id="notebookName" class="nb-doc-header-title">GroupSpace Project Documentation</h1>
+    <span id="nbTopAutoSaveBadge" class="nb-autosave-pill">Auto-saved &#10003;</span>
+    <p id="notebookMeta" style="display:none;">Auto-titled upon saving from first phrase</p>
   </div>
   <div class="nb-header-actions">
     <span id="readOnlyBadge" class="nb-readonly-badge">Read-Only Mode</span>
-    <button data-theme-toggle aria-label="Toggle theme" title="Toggle theme" class="btn-nb-theme">
-      <svg data-theme-moon xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
-      <svg data-theme-sun xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-    </button>
-    <button class="btn-nb btn-nb-outline" id="sharePageBtn" onclick="openSharePermissionsModal()" style="display:none;" title="Manage who can edit this page">Share / Permissions</button>
-    <button class="btn-nb btn-nb-outline" onclick="newPage()">+ New Page</button>
+    <button class="btn-nb btn-nb-outline" onclick="newPage()" title="Create a new page">+ New Page</button>
     <button class="btn-nb btn-nb-green" id="savePageBtn" onclick="saveCurrentPage()">Save Page</button>
+    <button class="btn-nb btn-nb-share-primary" id="sharePageBtn" onclick="openSharePermissionsModal()" title="Share &amp; Manage Page Permissions">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </button>
+    <button data-theme-toggle aria-label="Toggle theme" title="Toggle Dark/Light Theme" class="btn-nb-theme">
+      <svg data-theme-moon xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
+      <svg data-theme-sun xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
   </div>
 </header>
 
@@ -1075,405 +1496,561 @@
   <div class="nb-editor-area">
     <!-- High Contrast Dark Slate Toolbar (#0f172a) with Bright White Text/Icons (#ffffff) -->
     <div class="nb-toolbar" id="nbMainToolbar">
-      <!-- Microsoft Word Style Ribbon Tabs: Home / Insert / Draw / Layout -->
+      <!-- Microsoft Word Style Ribbon Tabs: File / Home / Insert / Draw / Layout / View -->
       <div class="nb-ribbon-tabs" role="tablist" aria-label="Notebook Ribbon Tabs">
+        <button type="button" class="nb-ribbon-tab" data-ribbon-tab="file" onclick="switchNotebookRibbonTab('file')">File</button>
         <button type="button" class="nb-ribbon-tab active" data-ribbon-tab="home" onclick="switchNotebookRibbonTab('home')">Home</button>
         <button type="button" class="nb-ribbon-tab" data-ribbon-tab="insert" onclick="switchNotebookRibbonTab('insert')">Insert</button>
         <button type="button" class="nb-ribbon-tab" data-ribbon-tab="draw" onclick="switchNotebookRibbonTab('draw')">Draw</button>
         <button type="button" class="nb-ribbon-tab" data-ribbon-tab="layout" onclick="switchNotebookRibbonTab('layout')">Layout</button>
+        <button type="button" class="nb-ribbon-tab" data-ribbon-tab="view" onclick="switchNotebookRibbonTab('view')">View</button>
         <button type="button" class="nb-ribbon-tab contextual-tab" id="nbTabTableDesign" data-ribbon-tab="table-design" style="display:none;" onclick="switchNotebookRibbonTab('table-design')">Table Design</button>
-        <span id="nbPrivacyIndicator" style="margin-left:auto; font-size:11px; color:#94a3b8; font-weight:600;">Microsoft Word Style Rich Text &amp; Flowchart Canvas</span>
+        <span id="nbPrivacyIndicator" style="margin-left:auto; font-size:11px; color:var(--nb-text-subtle, #64748b); font-weight:500;"></span>
       </div>
 
-      <!-- ==================== [HOME TAB] ==================== -->
-      <!-- 1. Clipboard Group: Paste, Cut, Copy, Format Painter -->
-      <div class="nb-toolbar-group" data-ribbon-group="home">
-        <label>Clipboard:</label>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Paste (Ctrl+V)" onclick="handleClipboardPaste()">📋 Paste</button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Cut (Ctrl+X)" onclick="execFmt('cut')">✂️ Cut</button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Copy (Ctrl+C)" onclick="execFmt('copy')">📄 Copy</button>
-        <button type="button" id="nbFormatPainterBtn" class="btn-toolbar-fmt nb-edit-ctrl" title="Format Painter (Copy &amp; Apply Styles)" onclick="toggleFormatPainter()">🎨 Painter</button>
-      </div>
-
-      <!-- 2. Font Group: Font Family, Numeric Font Sizes (12px - 36px), Bold, Italic, Underline, Strikethrough, Subscript, Superscript, Colors, Clear Formatting -->
-      <div class="nb-toolbar-group" data-ribbon-group="home">
-        <label for="nbFontFamily">Font:</label>
-        <select id="nbFontFamily" class="nb-edit-ctrl" onchange="applyFont(this.value)">
-          <option value="Arial, sans-serif" selected>Arial</option>
-          <option value="Calibri, sans-serif">Calibri</option>
-          <option value="'Times New Roman', serif">Times New Roman</option>
-          <option value="Inter, sans-serif">Inter</option>
-          <option value="Georgia, serif">Georgia</option>
-          <option value="'Courier New', monospace">Courier New</option>
-        </select>
-
-        <label for="nbFontSize">Size:</label>
-        <select id="nbFontSize" class="nb-edit-ctrl" onchange="applyFontSize(this.value)">
-          <option value="12px">12px</option>
-          <option value="14px">14px</option>
-          <option value="16px" selected>16px</option>
-          <option value="18px">18px</option>
-          <option value="20px">20px</option>
-          <option value="24px">24px</option>
-          <option value="28px">28px</option>
-          <option value="32px">32px</option>
-          <option value="36px">36px</option>
-        </select>
-
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Bold (Ctrl+B)" onclick="execFmt('bold')"><b>B</b></button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Italic (Ctrl+I)" onclick="execFmt('italic')"><i>I</i></button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Underline (Ctrl+U)" onclick="execFmt('underline')"><u>U</u></button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Strikethrough" onclick="execFmt('strikeThrough')"><s>S</s></button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Subscript (X₂)" onclick="execFmt('subscript')">X<sub>2</sub></button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Superscript (X²)" onclick="execFmt('superscript')">X<sup>2</sup></button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Clear Formatting" onclick="execFmt('removeFormat')">Tx</button>
-
-        <div class="nb-color-picker-wrap" title="Text Color (foreColor)">
-          <span>A</span>
-          <input type="color" id="nbTextColor" class="nb-edit-ctrl" value="#0f172a" onchange="applyTextColor(this.value)">
-        </div>
-        <div class="nb-color-picker-wrap" title="Text Highlight / Background (hiliteColor)">
-          <span>Highlight</span>
-          <input type="color" id="nbHighlightColor" class="nb-edit-ctrl" value="#fef08a" onchange="applyHighlightColor(this.value)">
-        </div>
-      </div>
-
-      <!-- 3. Paragraph & Styles Group: Bullets, Numbering, Alignments, Line Spacing, Pre-styled Headings, Find & Replace -->
-      <div class="nb-toolbar-group" data-ribbon-group="home">
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Bullet List" onclick="execFmt('insertUnorderedList')">• List</button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Numbered List" onclick="execFmt('insertOrderedList')">1. List</button>
-
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Left (justifyLeft)" onclick="execFmt('justifyLeft')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
-        </button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Center (justifyCenter)" onclick="execFmt('justifyCenter')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg>
-        </button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Right (justifyRight)" onclick="execFmt('justifyRight')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>
-        </button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Justify (justifyFull)" onclick="execFmt('justifyFull')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
-        </button>
-
-        <label for="nbLineHeight">Spacing:</label>
-        <select id="nbLineHeight" class="nb-edit-ctrl" onchange="applyLineHeight(this.value)">
-          <option value="1.0">1.0</option>
-          <option value="1.15">1.15</option>
-          <option value="1.5" selected>1.5</option>
-          <option value="2.0">2.0</option>
-        </select>
-
-        <label for="nbHeadingStyles">Styles:</label>
-        <select id="nbHeadingStyles" class="nb-edit-ctrl" onchange="applyHeadingStyle(this.value)">
-          <option value="p" selected>Normal</option>
-          <option value="h1">Heading 1</option>
-          <option value="h2">Heading 2</option>
-          <option value="title">Title</option>
-        </select>
-
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Find &amp; Replace Text" onclick="openFindReplacePrompt()">🔍 Find &amp; Replace</button>
-      </div>
-
-      <!-- ==================== [INSERT TAB] ==================== -->
-      <!-- 0. Pages & Illustrations Group -->
-      <div class="nb-toolbar-group" data-ribbon-group="insert" style="display:none;">
-        <label>Pages:</label>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertCoverPage()" title="Insert Cover Page">Cover Page</button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertBlankPage()" title="Insert Blank Page">Blank Page</button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertPageBreak()" title="Insert Page Break">Page Break</button>
-        <input type="file" id="nbPictureInput" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;" onchange="handleInsertPicture(event)">
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="document.getElementById('nbPictureInput').click()" title="Upload and embed an image">Picture</button>
-      </div>
-
-      <!-- 1. Tables Group: Dynamic Grid Generator -->
-      <div class="nb-toolbar-group" data-ribbon-group="insert" style="display:none;">
-        <label>Tables:</label>
-        <select id="nbInsertTableSelect" class="nb-edit-ctrl" onchange="if(this.value){insertDynamicTable(this.value); this.value='';}" title="Insert Editable HTML Table">
-          <option value="" disabled selected>+ Insert Table</option>
-          <option value="2x2">2 × 2 Table</option>
-          <option value="3x3">3 × 3 Table</option>
-          <option value="4x4">4 × 4 Table</option>
-          <option value="5x3">5 Columns × 3 Rows</option>
-          <option value="custom">Custom Grid...</option>
-        </select>
-      </div>
-
-      <!-- 2. Vector Shapes & Flowcharts Group -->
-      <div class="nb-toolbar-group" data-ribbon-group="insert" style="display:none;">
-        <label>Shapes:</label>
-        <select id="nbShapeSelect" class="nb-edit-ctrl" onchange="handleInsertShapeSelect(this)" style="color:var(--primary, #2563eb) !important; font-weight:700;" title="Insert Shape / Flowchart Elements">
-          <option value="" disabled selected>+ Insert Shape / Flowchart Elements</option>
-          <optgroup label="Shapes &amp; Flowchart Nodes">
-            <option value="rectangle">Rectangle (Process)</option>
-            <option value="circle">Circle</option>
-            <option value="diamond">Diamond (Decision)</option>
-            <option value="oval">Oval (Terminal)</option>
-            <option value="callout">Callout Box</option>
-          </optgroup>
-          <optgroup label="Connectors &amp; Lines">
-            <option value="straight_line">Straight Line</option>
-            <option value="dashed_line">Broken/Dashed Line</option>
-            <option value="arrow_line">Arrow Line</option>
-            <option value="dashed_arrow_line">Dashed Arrow Line</option>
-            <option value="straight_arrow_line">Straight Arrow Line</option>
-            <option value="broken_arrow_line">Broken Arrow Line</option>
-          </optgroup>
-        </select>
-
-        <label for="nbStrokeWidth">Stroke:</label>
-        <select id="nbStrokeWidth" class="nb-edit-ctrl" onchange="updateSelectedShapeStyle()" title="Line Stroke Thickness (1px to 8px)">
-          <option value="1">1px</option>
-          <option value="2" selected>2px</option>
-          <option value="3">3px</option>
-          <option value="4">4px</option>
-          <option value="6">6px</option>
-          <option value="8">8px</option>
-        </select>
-
-        <div class="nb-color-picker-wrap" title="Shape / Text Box Fill Color">
-          <span>Fill</span>
-          <input type="color" id="nbShapeFillColor" class="nb-edit-ctrl" value="#dbeafe" onchange="updateSelectedShapeStyle()">
+      <div class="nb-ribbon-body">
+        <!-- ==================== [FILE TAB (EXPORT, SAVE, IMPORT & FOLDER)] ==================== -->
+        <div class="nb-toolbar-group" data-ribbon-group="file" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-tall-cards-row">
+              <button type="button" class="nb-tall-card-btn pdf-card btn-export-sm" onclick="exportPage('pdf')" title="Export Document as PDF (.pdf)">
+                <span class="card-icon">&#128196;</span>
+                <span>Export PDF</span>
+              </button>
+              <button type="button" class="nb-tall-card-btn txt-card btn-export-sm" onclick="exportPage('txt')" title="Save as Plain Text (.txt)">
+                <span class="card-icon">&#11015;</span>
+                <span>Save TXT</span>
+              </button>
+              <button type="button" class="nb-tall-card-btn docx-card btn-export-sm" onclick="exportPage('docx')" title="Export as Microsoft Word (.docx)">
+                <span class="card-icon">&#128216;</span>
+                <span>Export DOCX</span>
+              </button>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Export &#8600;</div>
         </div>
 
-        <div class="nb-color-picker-wrap" title="Stroke / Line Color">
-          <span>Stroke</span>
-          <input type="color" id="nbShapeStrokeColor" class="nb-edit-ctrl" value="#2563eb" onchange="updateSelectedShapeStyle()">
-        </div>
-      </div>
-
-      <!-- 3. Text Boxes & Symbols Group -->
-      <div class="nb-toolbar-group" data-ribbon-group="insert" style="display:none;">
-        <button type="button" id="insertTextBoxBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTextBox()" title="Insert Draggable &amp; Rotatable Text Box">
-          + Text Box
-        </button>
-
-        <label>WordArt:</label>
-        <select id="nbWordArtSelect" class="nb-edit-ctrl" onchange="if(this.value){insertWordArt(this.value); this.value='';}" title="Insert WordArt Title">
-          <option value="" disabled selected>+ WordArt</option>
-          <option value="gradient">Gradient Modern</option>
-          <option value="neon">Neon Blue Glow</option>
-          <option value="3d">3D Emboss</option>
-          <option value="gold">Metallic Gold</option>
-        </select>
-
-        <label>Equations:</label>
-        <select id="nbEquationSelect" class="nb-edit-ctrl" onchange="if(this.value){insertEquation(this.value); this.value='';}" title="Insert Math Equation">
-          <option value="" disabled selected>+ Equation</option>
-          <option value="E = mc²">E = mc² (Mass-Energy)</option>
-          <option value="a² + b² = c²">a² + b² = c² (Pythagorean)</option>
-          <option value="x = (-b ± √(b² - 4ac)) / (2a)">Quadratic Formula</option>
-          <option value="e^(iπ) + 1 = 0">Euler's Identity</option>
-          <option value="A = πr²">Area of Circle</option>
-        </select>
-
-        <label>Symbols:</label>
-        <select id="nbSymbolSelect" class="nb-edit-ctrl" onchange="if(this.value){insertSymbol(this.value); this.value='';}" title="Insert Special Symbol">
-          <option value="" disabled selected>+ Symbol</option>
-          <option value="©">© Copyright</option>
-          <option value="®">® Registered</option>
-          <option value="™">™ Trademark</option>
-          <option value="°">° Degree</option>
-          <option value="±">± Plus/Minus</option>
-          <option value="≠">≠ Not Equal</option>
-          <option value="≈">≈ Approximately</option>
-          <option value="≤">≤ Less/Equal</option>
-          <option value="≥">≥ Greater/Equal</option>
-          <option value="→">→</option>
-          <option value="←">←</option>
-          <option value="★">★ Star</option>
-          <option value="✓">✓ Check</option>
-          <option value="∑">∑ Sum</option>
-          <option value="π">π Pi</option>
-          <option value="∞">∞ Infinity</option>
-        </select>
-
-        <input type="file" id="nbFileInput" accept=".docx,.pdf,.txt,.md,.markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,text/plain,text/markdown" style="display:none;" onchange="handleImportFile(event)">
-        <button type="button" class="btn-export-sm nb-edit-ctrl" onclick="triggerImportDocument(null)" title="Import .docx, .pdf, .txt, or .md document as new page">Import Document</button>
-      </div>
-
-      <!-- ==================== [DRAW TAB] ==================== -->
-      <!-- 1. Digital Inking Canvas Overlay Tools -->
-      <div class="nb-toolbar-group" data-ribbon-group="draw" style="display:none;">
-        <label>Ink Tools:</label>
-        <button type="button" id="nbInkPenBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('pen')" title="Pen tool">🖊️ Pen</button>
-        <button type="button" id="nbInkHighlighterBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('highlighter')" title="Highlighter tool">🖍️ Highlighter</button>
-        <button type="button" id="nbInkEraserBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('eraser')" title="Eraser tool">🧹 Eraser</button>
-        <button type="button" id="nbInkLassoBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('lasso')" title="Lasso select tool">✂️ Lasso Select</button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="clearInkCanvas()" title="Clear all digital ink">Clear Ink</button>
-      </div>
-
-      <!-- 2. Configurable Instruments: Adjustable thickness (1px-10px) and metallic/standard colors -->
-      <div class="nb-toolbar-group" data-ribbon-group="draw" style="display:none;">
-        <label for="nbInkThickness">Thickness:</label>
-        <select id="nbInkThickness" class="nb-edit-ctrl" onchange="updateInkingSettings()" title="Adjustable pen thickness (1px to 10px)">
-          <option value="1">1px Ultra Fine</option>
-          <option value="2">2px Fine</option>
-          <option value="3">3px</option>
-          <option value="4" selected>4px Medium</option>
-          <option value="6">6px Thick</option>
-          <option value="8">8px</option>
-          <option value="10">10px Broad</option>
-        </select>
-
-        <label for="nbInkMetallicPreset">Palette:</label>
-        <select id="nbInkMetallicPreset" class="nb-edit-ctrl" onchange="applyMetallicInkPreset(this.value)" title="Standard &amp; Metallic Presets">
-          <option value="#2563eb" selected>Standard Blue</option>
-          <option value="#0f172a">Slate Black</option>
-          <option value="#ef4444">Crimson Red</option>
-          <option value="#10b981">Emerald Green</option>
-          <option value="#d4af37">Metallic Gold</option>
-          <option value="#c0c0c0">Metallic Silver</option>
-          <option value="#cd7f32">Metallic Bronze</option>
-          <option value="#b76e79">Metallic Rose Gold</option>
-          <option value="#e5e4e2">Metallic Platinum</option>
-        </select>
-
-        <div class="nb-color-picker-wrap" title="Custom Ink Color">
-          <span>Custom</span>
-          <input type="color" id="nbInkColor" class="nb-edit-ctrl" value="#2563eb" onchange="updateInkingSettings()">
-        </div>
-      </div>
-
-      <!-- ==================== [LAYOUT TAB] ==================== -->
-      <!-- 1. Page Setup Group: Margins, Orientation, Paper Size, Column Splits -->
-      <div class="nb-toolbar-group" data-ribbon-group="layout" style="display:none;">
-        <label for="nbPageMargins">Margins:</label>
-        <select id="nbPageMargins" class="nb-edit-ctrl" onchange="applyPageMargins(this.value)">
-          <option value="normal" selected>Normal (40px)</option>
-          <option value="narrow">Narrow (18px)</option>
-          <option value="wide">Wide (64px)</option>
-        </select>
-
-        <label for="nbPageOrientation">Orientation:</label>
-        <select id="nbPageOrientation" class="nb-edit-ctrl" onchange="applyPageOrientation(this.value)">
-          <option value="portrait" selected>Portrait</option>
-          <option value="landscape">Landscape</option>
-        </select>
-
-        <label for="nbPaperSize">Size:</label>
-        <select id="nbPaperSize" class="nb-edit-ctrl" onchange="applyPaperSize(this.value)">
-          <option value="letter" selected>Letter (8.5 × 11")</option>
-          <option value="a4">A4 (210 × 297 mm)</option>
-          <option value="legal">Legal (8.5 × 14")</option>
-        </select>
-
-        <label for="nbPageColumns">Columns:</label>
-        <select id="nbPageColumns" class="nb-edit-ctrl" onchange="applyPageColumns(this.value)">
-          <option value="1" selected>Single</option>
-          <option value="2">Two-Column</option>
-          <option value="3">Three-Column</option>
-        </select>
-      </div>
-
-      <!-- 2. Spacing & Arrange Group: Indent, Paragraph Spacing, Arrange Z-Index, Text Wrap, Align/Rotate -->
-      <div class="nb-toolbar-group" data-ribbon-group="layout" style="display:none;">
-        <label>Indent:</label>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Decrease Indent (outdent)" onclick="execFmt('outdent')">⇤ Outdent</button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Increase Indent (indent)" onclick="execFmt('indent')">⇥ Indent</button>
-
-        <label>Spacing:</label>
-        <select id="nbParaSpacing" class="nb-edit-ctrl" onchange="applyParaSpacingDropdown(this.value)" title="Paragraph Spacing Before/After">
-          <option value="0_6" selected>After: 6pt</option>
-          <option value="0_0">None (0pt)</option>
-          <option value="6_6">Before &amp; After: 6pt</option>
-          <option value="12_12">Before &amp; After: 12pt</option>
-        </select>
-
-        <label>Arrange:</label>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Bring Forward" onclick="bringSelectedShapeForward()">Bring Forward</button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Send Backward" onclick="sendSelectedShapeBackward()">Send Backward</button>
-
-        <label>Wrap:</label>
-        <select id="nbTextWrapSelect" class="nb-edit-ctrl" onchange="applyTextWrap(this.value)" title="Text Wrap Mode">
-          <option value="inline" selected>In Line with Text</option>
-          <option value="square">Square</option>
-          <option value="behind">Behind Text</option>
-          <option value="front">In Front of Text</option>
-        </select>
-
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Rotate 90°" onclick="rotateSelectedShape90()">↻ 90°</button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Flip Horizontal" onclick="flipSelectedShapeH()">⇄ Flip</button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align to Center" onclick="alignSelectedShapeCenter()">⇹ Center</button>
-      </div>
-
-      <!-- 3. Table of Contents Group -->
-      <div class="nb-toolbar-group" data-ribbon-group="layout" style="display:none;">
-        <label>Contents:</label>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTableOfContents()" title="Insert Table of Contents">Insert TOC</button>
-        <select id="nbTocAddText" class="nb-edit-ctrl" onchange="if(this.value){markHeadingLevel(this.value); this.value='';}" title="Add Text to Table of Contents">
-          <option value="" disabled selected>Add Text</option>
-          <option value="1">Level 1</option>
-          <option value="2">Level 2</option>
-          <option value="3">Level 3</option>
-          <option value="0">Do Not Show</option>
-        </select>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="updateTableOfContents()" title="Update Table of Contents">Update Table</button>
-      </div>
-
-      <!-- 4. Numeric Indent & Spacing Group -->
-      <div class="nb-toolbar-group" data-ribbon-group="layout" style="display:none;">
-        <label for="nbIndentLeft">Indent Left:</label>
-        <input type="number" id="nbIndentLeft" class="nb-edit-ctrl" min="0" max="200" value="0" style="width:56px;" onchange="applyParagraphIndent('left', this.value)">
-        <label for="nbIndentRight">Right:</label>
-        <input type="number" id="nbIndentRight" class="nb-edit-ctrl" min="0" max="200" value="0" style="width:56px;" onchange="applyParagraphIndent('right', this.value)">
-        <label for="nbSpacingBefore">Before:</label>
-        <input type="number" id="nbSpacingBefore" class="nb-edit-ctrl" min="0" max="72" value="0" style="width:52px;" onchange="applyParagraphSpacingPt('before', this.value)"><span>pt</span>
-        <label for="nbSpacingAfter">After:</label>
-        <input type="number" id="nbSpacingAfter" class="nb-edit-ctrl" min="0" max="72" value="8" style="width:52px;" onchange="applyParagraphSpacingPt('after', this.value)"><span>pt</span>
-      </div>
-
-      <!-- ==================== [TABLE DESIGN TAB (CONTEXTUAL)] ==================== -->
-      <!-- 1. Table Style Presets & Formatting -->
-      <div class="nb-toolbar-group" data-ribbon-group="table-design" style="display:none;">
-        <label for="nbTablePresetSelect">Preset:</label>
-        <select id="nbTablePresetSelect" class="nb-edit-ctrl" onchange="applyTablePreset(this.value)" title="Table Style Preset">
-          <option value="default-grid" selected>Default Grid</option>
-          <option value="striped">Striped Rows</option>
-          <option value="header-accent">Header Accent</option>
-          <option value="borderless">Borderless</option>
-        </select>
-
-        <label for="nbTableCellPaddingSelect">Padding:</label>
-        <select id="nbTableCellPaddingSelect" class="nb-edit-ctrl" onchange="applyTableCellPadding(this.value)" title="Cell Padding">
-          <option value="compact">Compact (6px)</option>
-          <option value="standard" selected>Standard (10px)</option>
-          <option value="relaxed">Relaxed (16px)</option>
-        </select>
-
-        <div class="nb-color-picker-wrap" title="Table Border Color">
-          <span>Border</span>
-          <input type="color" id="nbTableBorderColor" class="nb-edit-ctrl" value="#cbd5e1" onchange="applyTableBorderColor(this.value)">
+        <div class="nb-toolbar-group" data-ribbon-group="file" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-tall-cards-row">
+              <button type="button" class="nb-tall-card-btn nb-edit-ctrl" onclick="newPage()" title="Create New Blank Page">
+                <span class="card-icon">&#10133;</span>
+                <span>New Page</span>
+              </button>
+              <button type="button" class="nb-tall-card-btn nb-edit-ctrl" onclick="saveCurrentPage()" title="Save Current Page (Ctrl+S)">
+                <span class="card-icon">&#128190;</span>
+                <span>Save Page</span>
+              </button>
+              <button type="button" class="nb-tall-card-btn nb-edit-ctrl" onclick="triggerImportDocument(null)" title="Import .docx, .pdf, .txt, or .md Document">
+                <span class="card-icon">&#128194;</span>
+                <span>Import File</span>
+              </button>
+              <button type="button" class="nb-tall-card-btn" onclick="window.print()" title="Print Document">
+                <span class="card-icon">&#128424;</span>
+                <span>Print</span>
+              </button>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Document &#8600;</div>
         </div>
 
-        <div class="nb-color-picker-wrap" title="Cell Shading Color">
-          <span>Shading</span>
-          <input type="color" id="nbTableCellShading" class="nb-edit-ctrl" value="#ffffff" onchange="applyTableCellShading(this.value)">
+        <div class="nb-toolbar-group" data-ribbon-group="file" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <label for="nbPageFolderSelect">Folder:</label>
+              <select id="nbPageFolderSelect" class="nb-edit-ctrl" onchange="handleMovePageToFolder(this.value)" title="Move page to folder" style="min-width:150px;">
+                <option value="">(Root / No Folder)</option>
+              </select>
+            </div>
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="createNewFolderPrompt()" title="Create New Folder">+ New Folder</button>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Organize &#8600;</div>
         </div>
-      </div>
 
-      <!-- 2. Table Rows & Columns Operations -->
-      <div class="nb-toolbar-group" data-ribbon-group="table-design" style="display:none;">
-        <label>Rows &amp; Cols:</label>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTableRow('above')" title="Insert Row Above">+ Row Above</button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTableRow('below')" title="Insert Row Below">+ Row Below</button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTableColumn('left')" title="Insert Column Left">+ Col Left</button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTableColumn('right')" title="Insert Column Right">+ Col Right</button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="deleteCurrentTableRow()" title="Delete Current Row" style="color:var(--danger, #ef4444);">Delete Row</button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="deleteCurrentTableColumn()" title="Delete Current Column" style="color:var(--danger, #ef4444);">Delete Col</button>
-        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="deleteActiveTable()" title="Delete Table" style="color:var(--danger, #ef4444); font-weight:700;">Delete Table</button>
-      </div>
+        <!-- ==================== [HOME TAB] ==================== -->
+        <!-- 1. Clipboard Group -->
+        <div class="nb-toolbar-group" data-ribbon-group="home">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Paste (Ctrl+V)" onclick="handleClipboardPaste()">&#128203; Paste</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Cut (Ctrl+X)" onclick="execFmt('cut')">&#9986; Cut</button>
+            </div>
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Copy (Ctrl+C)" onclick="execFmt('copy')">&#128196; Copy</button>
+              <button type="button" id="nbFormatPainterBtn" class="btn-toolbar-fmt nb-edit-ctrl" title="Format Painter" onclick="toggleFormatPainter()">&#128396; Painter</button>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Clipboard &#8600;</div>
+        </div>
 
-      <!-- ==================== ALWAYS-VISIBLE / FOLDER & EXPORT ==================== -->
-      <div class="nb-toolbar-group" data-ribbon-group="home insert draw layout table-design" style="margin-left:auto;">
-        <label for="nbPageFolderSelect">Folder:</label>
-        <select id="nbPageFolderSelect" class="nb-edit-ctrl" onchange="handleMovePageToFolder(this.value)" title="Move page to folder">
-          <option value="">(Root / No Folder)</option>
-        </select>
+        <!-- 2. Font Group (2-Row MS Word Layout) -->
+        <div class="nb-toolbar-group" data-ribbon-group="home">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <select id="nbFontFamily" class="nb-edit-ctrl" onchange="applyFont(this.value)" title="Font Family" style="width:136px;">
+                <option value="'Aptos', Calibri, sans-serif" selected>Aptos (Body)</option>
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="Calibri, sans-serif">Calibri</option>
+                <option value="'Times New Roman', serif">Times New Roman</option>
+                <option value="Inter, sans-serif">Inter</option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="'Courier New', monospace">Courier New</option>
+              </select>
+              <select id="nbFontSize" class="nb-edit-ctrl" onchange="applyFontSize(this.value)" title="Font Size" style="width:66px;">
+                <option value="12px">12px</option>
+                <option value="14px">14px</option>
+                <option value="16px" selected>16px</option>
+                <option value="18px">18px</option>
+                <option value="20px">20px</option>
+                <option value="24px">24px</option>
+                <option value="28px">28px</option>
+                <option value="32px">32px</option>
+                <option value="36px">36px</option>
+              </select>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Increase Font Size" onclick="stepFontSize(1)">A<sup style="font-size:8px;">&#9650;</sup></button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Decrease Font Size" onclick="stepFontSize(-1)">A<sub style="font-size:8px;">&#9660;</sub></button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Clear All Formatting" onclick="execFmt('removeFormat')">Tx</button>
+            </div>
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Bold (Ctrl+B)" onclick="execFmt('bold')"><b>B</b></button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Italic (Ctrl+I)" onclick="execFmt('italic')"><i>I</i></button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Underline (Ctrl+U)" onclick="execFmt('underline')"><u>U</u></button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Strikethrough" onclick="execFmt('strikeThrough')"><s>ab</s></button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Subscript (X₂)" onclick="execFmt('subscript')">x<sub>2</sub></button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Superscript (X²)" onclick="execFmt('superscript')">x<sup>2</sup></button>
+              <div class="nb-color-picker-wrap" title="Text Highlight Color" style="height:26px; padding:0 5px;">
+                <span style="font-weight:700; border-bottom:3px solid #facc15; line-height:1;">ab</span>
+                <input type="color" id="nbHighlightColor" class="nb-edit-ctrl" value="#fef08a" onchange="applyHighlightColor(this.value)">
+              </div>
+              <div class="nb-color-picker-wrap" title="Font Color" style="height:26px; padding:0 5px;">
+                <span style="font-weight:800; border-bottom:3px solid #ef4444; line-height:1;">A</span>
+                <input type="color" id="nbTextColor" class="nb-edit-ctrl" value="#0f172a" onchange="applyTextColor(this.value)">
+              </div>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Font &#8600;</div>
+        </div>
 
-        <button type="button" class="btn-export-sm" onclick="exportPage('txt')" title="Export Plain Text (.txt)">.txt</button>
-        <button type="button" class="btn-export-sm" onclick="exportPage('pdf')" title="Export PDF (.pdf)">.pdf</button>
-        <button type="button" class="btn-export-sm" onclick="exportPage('docx')" title="Export Word (.docx)">.docx</button>
+        <!-- 3. Paragraph Group (2-Row MS Word Layout) -->
+        <div class="nb-toolbar-group" data-ribbon-group="home">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Bullets" onclick="execFmt('insertUnorderedList')">&#8226;&#8801;</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Numbering" onclick="execFmt('insertOrderedList')">1&#8801;</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Decrease Indent" onclick="execFmt('outdent')">&#8676;</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Increase Indent" onclick="execFmt('indent')">&#8677;</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Sort Paragraphs A to Z" onclick="sortParagraphs()">A&#8595;Z</button>
+            </div>
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Left" onclick="execFmt('justifyLeft')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+              </button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Center" onclick="execFmt('justifyCenter')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg>
+              </button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align Right" onclick="execFmt('justifyRight')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>
+              </button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Justify" onclick="execFmt('justifyFull')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+              </button>
+              <select id="nbLineHeight" class="nb-edit-ctrl" onchange="applyLineHeight(this.value)" title="Line and Paragraph Spacing" style="width:60px;">
+                <option value="1.0">1.0</option>
+                <option value="1.15" selected>1.15</option>
+                <option value="1.5">1.5</option>
+                <option value="2.0">2.0</option>
+              </select>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Paragraph &#8600;</div>
+        </div>
+
+        <!-- 4. Styles Gallery Group (Visual MS Word Cards) -->
+        <div class="nb-toolbar-group" data-ribbon-group="home">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-style-gallery">
+              <button type="button" class="nb-style-card active nb-edit-ctrl" data-style-val="p" onclick="selectStyleCard('p', this)">
+                <span class="nb-style-card-name">Normal</span>
+                <span class="nb-style-card-sample">AaBbCcDd</span>
+              </button>
+              <button type="button" class="nb-style-card nb-edit-ctrl" data-style-val="no-spacing" onclick="selectStyleCard('no-spacing', this)">
+                <span class="nb-style-card-name">No Spacing</span>
+                <span class="nb-style-card-sample">AaBbCcDd</span>
+              </button>
+              <button type="button" class="nb-style-card nb-edit-ctrl" data-style-val="h1" onclick="selectStyleCard('h1', this)">
+                <span class="nb-style-card-name h1-preview">Heading 1</span>
+                <span class="nb-style-card-sample">AaBbCcDd</span>
+              </button>
+              <button type="button" class="nb-style-card nb-edit-ctrl" data-style-val="h2" onclick="selectStyleCard('h2', this)">
+                <span class="nb-style-card-name h2-preview">Heading 2</span>
+                <span class="nb-style-card-sample">AaBbCcDd</span>
+              </button>
+              <button type="button" class="nb-style-card nb-edit-ctrl" data-style-val="title" onclick="selectStyleCard('title', this)">
+                <span class="nb-style-card-name title-preview">Title</span>
+                <span class="nb-style-card-sample">AaBbCcDd</span>
+              </button>
+            </div>
+            <select id="nbHeadingStyles" class="nb-edit-ctrl" onchange="applyHeadingStyle(this.value)" style="display:none;">
+              <option value="p" selected>Normal</option>
+              <option value="h1">Heading 1</option>
+              <option value="h2">Heading 2</option>
+              <option value="title">Title</option>
+            </select>
+          </div>
+          <div class="nb-ribbon-group-footer">Styles &#8600;</div>
+        </div>
+
+        <!-- 5. Editing Group -->
+        <div class="nb-toolbar-group" data-ribbon-group="home">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Find &amp; Replace Text" onclick="openFindReplacePrompt()">&#128269; Find &amp; Replace</button>
+            </div>
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Select All Text" onclick="execFmt('selectAll')">&#9989; Select All</button>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Editing &#8600;</div>
+        </div>
+
+        <!-- ==================== [INSERT TAB] ==================== -->
+        <div class="nb-toolbar-group" data-ribbon-group="insert" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertCoverPage()" title="Insert Cover Page">Cover Page</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertBlankPage()" title="Insert Blank Page">Blank Page</button>
+            </div>
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertPageBreak()" title="Insert Page Break">Page Break</button>
+              <input type="file" id="nbPictureInput" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;" onchange="handleInsertPicture(event)">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="document.getElementById('nbPictureInput').click()" title="Upload and embed an image">Picture</button>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Pages &#8600;</div>
+        </div>
+
+        <div class="nb-toolbar-group" data-ribbon-group="insert" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <select id="nbInsertTableSelect" class="nb-edit-ctrl" onchange="if(this.value){insertDynamicTable(this.value); this.value='';}" title="Insert Editable HTML Table">
+                <option value="" disabled selected>+ Insert Table</option>
+                <option value="2x2">2 × 2 Table</option>
+                <option value="3x3">3 × 3 Table</option>
+                <option value="4x4">4 × 4 Table</option>
+                <option value="5x3">5 Columns × 3 Rows</option>
+                <option value="custom">Custom Grid...</option>
+              </select>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Tables &#8600;</div>
+        </div>
+
+        <div class="nb-toolbar-group" data-ribbon-group="insert" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <select id="nbShapeSelect" class="nb-edit-ctrl" onchange="handleInsertShapeSelect(this)" style="color:var(--primary, #2563eb) !important; font-weight:700;" title="Insert Shape / Flowchart Elements">
+                <option value="" disabled selected>+ Insert Shape / Flowchart Elements</option>
+                <optgroup label="Shapes &amp; Flowchart Nodes">
+                  <option value="rectangle">Rectangle (Process)</option>
+                  <option value="circle">Circle</option>
+                  <option value="diamond">Diamond (Decision)</option>
+                  <option value="oval">Oval (Terminal)</option>
+                  <option value="callout">Callout Box</option>
+                </optgroup>
+                <optgroup label="Connectors &amp; Lines">
+                  <option value="straight_line">Straight Line</option>
+                  <option value="dashed_line">Broken/Dashed Line</option>
+                  <option value="arrow_line">Arrow Line</option>
+                  <option value="dashed_arrow_line">Dashed Arrow Line</option>
+                  <option value="straight_arrow_line">Straight Arrow Line</option>
+                  <option value="broken_arrow_line">Broken Arrow Line</option>
+                </optgroup>
+              </select>
+              <select id="nbStrokeWidth" class="nb-edit-ctrl" onchange="updateSelectedShapeStyle()" title="Line Stroke Thickness (1px to 8px)">
+                <option value="1">1px</option>
+                <option value="2" selected>2px</option>
+                <option value="3">3px</option>
+                <option value="4">4px</option>
+                <option value="6">6px</option>
+                <option value="8">8px</option>
+              </select>
+            </div>
+            <div class="nb-ribbon-row">
+              <div class="nb-color-picker-wrap" title="Shape Fill Color" style="height:26px;">
+                <span>Fill</span>
+                <input type="color" id="nbShapeFillColor" class="nb-edit-ctrl" value="#dbeafe" onchange="updateSelectedShapeStyle()">
+              </div>
+              <div class="nb-color-picker-wrap" title="Stroke / Line Color" style="height:26px;">
+                <span>Stroke</span>
+                <input type="color" id="nbShapeStrokeColor" class="nb-edit-ctrl" value="#2563eb" onchange="updateSelectedShapeStyle()">
+              </div>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Illustrations &#8600;</div>
+        </div>
+
+        <div class="nb-toolbar-group" data-ribbon-group="insert" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <button type="button" id="insertTextBoxBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTextBox()" title="Insert Draggable &amp; Rotatable Text Box">+ Text Box</button>
+              <select id="nbWordArtSelect" class="nb-edit-ctrl" onchange="if(this.value){insertWordArt(this.value); this.value='';}" title="Insert WordArt Title">
+                <option value="" disabled selected>+ WordArt</option>
+                <option value="gradient">Gradient Modern</option>
+                <option value="neon">Neon Blue Glow</option>
+                <option value="3d">3D Emboss</option>
+                <option value="gold">Metallic Gold</option>
+              </select>
+            </div>
+            <div class="nb-ribbon-row">
+              <select id="nbEquationSelect" class="nb-edit-ctrl" onchange="if(this.value){insertEquation(this.value); this.value='';}" title="Insert Math Equation">
+                <option value="" disabled selected>+ Equation</option>
+                <option value="E = mc²">E = mc² (Mass-Energy)</option>
+                <option value="a² + b² = c²">a² + b² = c² (Pythagorean)</option>
+                <option value="x = (-b ± √(b² - 4ac)) / (2a)">Quadratic Formula</option>
+                <option value="e^(iπ) + 1 = 0">Euler's Identity</option>
+                <option value="A = πr²">Area of Circle</option>
+              </select>
+              <select id="nbSymbolSelect" class="nb-edit-ctrl" onchange="if(this.value){insertSymbol(this.value); this.value='';}" title="Insert Special Symbol">
+                <option value="" disabled selected>+ Symbol</option>
+                <option value="©">© Copyright</option>
+                <option value="®">® Registered</option>
+                <option value="™">™ Trademark</option>
+                <option value="°">° Degree</option>
+                <option value="±">± Plus/Minus</option>
+                <option value="≠">≠ Not Equal</option>
+                <option value="≈">≈ Approximately</option>
+                <option value="≤">≤ Less/Equal</option>
+                <option value="≥">≥ Greater/Equal</option>
+                <option value="→">→</option>
+                <option value="←">←</option>
+                <option value="★">★ Star</option>
+                <option value="✓">✓ Check</option>
+                <option value="∑">∑ Sum</option>
+                <option value="π">π Pi</option>
+                <option value="∞">∞ Infinity</option>
+              </select>
+              <input type="file" id="nbFileInput" accept=".docx,.pdf,.txt,.md,.markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,text/plain,text/markdown" style="display:none;" onchange="handleImportFile(event)">
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Text &amp; Symbols &#8600;</div>
+        </div>
+
+        <!-- ==================== [DRAW TAB] ==================== -->
+        <div class="nb-toolbar-group" data-ribbon-group="draw" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <button type="button" id="nbInkPenBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('pen')" title="Pen tool">🖊️ Pen</button>
+              <button type="button" id="nbInkHighlighterBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('highlighter')" title="Highlighter tool">🖍️ Highlighter</button>
+              <button type="button" id="nbInkEraserBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('eraser')" title="Eraser tool">🧹 Eraser</button>
+            </div>
+            <div class="nb-ribbon-row">
+              <button type="button" id="nbInkLassoBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('lasso')" title="Lasso select tool">✂️ Lasso Select</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="clearInkCanvas()" title="Clear all digital ink">Clear Ink</button>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Drawing Tools &#8600;</div>
+        </div>
+
+        <div class="nb-toolbar-group" data-ribbon-group="draw" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <label for="nbInkThickness">Size:</label>
+              <select id="nbInkThickness" class="nb-edit-ctrl" onchange="updateInkingSettings()" title="Adjustable pen thickness (1px to 10px)">
+                <option value="1">1px Ultra Fine</option>
+                <option value="2">2px Fine</option>
+                <option value="3">3px</option>
+                <option value="4" selected>4px Medium</option>
+                <option value="6">6px Thick</option>
+                <option value="8">8px</option>
+                <option value="10">10px Broad</option>
+              </select>
+            </div>
+            <div class="nb-ribbon-row">
+              <select id="nbInkMetallicPreset" class="nb-edit-ctrl" onchange="applyMetallicInkPreset(this.value)" title="Standard &amp; Metallic Presets">
+                <option value="#2563eb" selected>Standard Blue</option>
+                <option value="#0f172a">Slate Black</option>
+                <option value="#ef4444">Crimson Red</option>
+                <option value="#10b981">Emerald Green</option>
+                <option value="#d4af37">Metallic Gold</option>
+                <option value="#c0c0c0">Metallic Silver</option>
+                <option value="#cd7f32">Metallic Bronze</option>
+                <option value="#b76e79">Metallic Rose Gold</option>
+                <option value="#e5e4e2">Metallic Platinum</option>
+              </select>
+              <div class="nb-color-picker-wrap" title="Custom Ink Color" style="height:26px;">
+                <span>Ink</span>
+                <input type="color" id="nbInkColor" class="nb-edit-ctrl" value="#2563eb" onchange="updateInkingSettings()">
+              </div>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Pens &amp; Ink &#8600;</div>
+        </div>
+
+        <!-- ==================== [LAYOUT TAB] ==================== -->
+        <div class="nb-toolbar-group" data-ribbon-group="layout" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <label for="nbPageMargins">Margins:</label>
+              <select id="nbPageMargins" class="nb-edit-ctrl" onchange="applyPageMargins(this.value)">
+                <option value="normal" selected>Normal</option>
+                <option value="narrow">Narrow</option>
+                <option value="wide">Wide</option>
+              </select>
+              <label for="nbPageOrientation">Orientation:</label>
+              <select id="nbPageOrientation" class="nb-edit-ctrl" onchange="applyPageOrientation(this.value)">
+                <option value="portrait" selected>Portrait</option>
+                <option value="landscape">Landscape</option>
+              </select>
+            </div>
+            <div class="nb-ribbon-row">
+              <label for="nbPaperSize">Size:</label>
+              <select id="nbPaperSize" class="nb-edit-ctrl" onchange="applyPaperSize(this.value)">
+                <option value="letter" selected>Letter (8.5 × 11")</option>
+                <option value="a4">A4 (210 × 297 mm)</option>
+                <option value="legal">Legal (8.5 × 14")</option>
+              </select>
+              <label for="nbPageColumns">Columns:</label>
+              <select id="nbPageColumns" class="nb-edit-ctrl" onchange="applyPageColumns(this.value)">
+                <option value="1" selected>Single</option>
+                <option value="2">Two-Column</option>
+                <option value="3">Three-Column</option>
+              </select>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Page Setup &#8600;</div>
+        </div>
+
+        <div class="nb-toolbar-group" data-ribbon-group="layout" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <label for="nbIndentLeft">Indent L:</label>
+              <input type="number" id="nbIndentLeft" class="nb-edit-ctrl" min="0" max="200" value="0" style="width:48px; height:24px;" onchange="applyParagraphIndent('left', this.value)">
+              <label for="nbIndentRight">R:</label>
+              <input type="number" id="nbIndentRight" class="nb-edit-ctrl" min="0" max="200" value="0" style="width:48px; height:24px;" onchange="applyParagraphIndent('right', this.value)">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Decrease Indent (outdent)" onclick="execFmt('outdent')">⇤</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Increase Indent (indent)" onclick="execFmt('indent')">⇥</button>
+            </div>
+            <div class="nb-ribbon-row">
+              <label for="nbSpacingBefore">Before:</label>
+              <input type="number" id="nbSpacingBefore" class="nb-edit-ctrl" min="0" max="72" value="0" style="width:46px; height:24px;" onchange="applyParagraphSpacingPt('before', this.value)">
+              <label for="nbSpacingAfter">After:</label>
+              <input type="number" id="nbSpacingAfter" class="nb-edit-ctrl" min="0" max="72" value="8" style="width:46px; height:24px;" onchange="applyParagraphSpacingPt('after', this.value)">
+              <select id="nbParaSpacing" class="nb-edit-ctrl" onchange="applyParaSpacingDropdown(this.value)" title="Paragraph Spacing Preset">
+                <option value="0_6" selected>After: 6pt</option>
+                <option value="0_0">None (0pt)</option>
+                <option value="6_6">6pt / 6pt</option>
+                <option value="12_12">12pt / 12pt</option>
+              </select>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Paragraph &#8600;</div>
+        </div>
+
+        <div class="nb-toolbar-group" data-ribbon-group="layout" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTableOfContents()" title="Insert Table of Contents">Insert TOC</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="updateTableOfContents()" title="Update Table of Contents">Update Table</button>
+            </div>
+            <div class="nb-ribbon-row">
+              <select id="nbTocAddText" class="nb-edit-ctrl" onchange="if(this.value){markHeadingLevel(this.value); this.value='';}" title="Add Text to Table of Contents">
+                <option value="" disabled selected>Add Text Level...</option>
+                <option value="1">Level 1</option>
+                <option value="2">Level 2</option>
+                <option value="3">Level 3</option>
+                <option value="0">Do Not Show</option>
+              </select>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Table of Contents &#8600;</div>
+        </div>
+
+        <div class="nb-toolbar-group" data-ribbon-group="layout" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Bring Forward" onclick="bringSelectedShapeForward()">Bring Forward</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Send Backward" onclick="sendSelectedShapeBackward()">Send Backward</button>
+              <select id="nbTextWrapSelect" class="nb-edit-ctrl" onchange="applyTextWrap(this.value)" title="Text Wrap Mode">
+                <option value="inline" selected>In Line</option>
+                <option value="square">Square</option>
+                <option value="behind">Behind Text</option>
+                <option value="front">In Front</option>
+              </select>
+            </div>
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Rotate 90°" onclick="rotateSelectedShape90()">↻ 90°</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Flip Horizontal" onclick="flipSelectedShapeH()">⇄ Flip</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align to Center" onclick="alignSelectedShapeCenter()">⇹ Center</button>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Arrange &#8600;</div>
+        </div>
+
+        <!-- ==================== [VIEW TAB] ==================== -->
+        <div class="nb-toolbar-group" data-ribbon-group="view" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt" onclick="toggleDesktopSidebar()">&#9776; Toggle Pages &amp; Folders Sidebar</button>
+            </div>
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt" onclick="setCanvasZoom(100)">100% Zoom</button>
+              <button type="button" class="btn-toolbar-fmt" onclick="setCanvasZoom(125)">125%</button>
+              <button type="button" class="btn-toolbar-fmt" onclick="setCanvasZoom(90)">90%</button>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">View &amp; Zoom &#8600;</div>
+        </div>
+
+        <!-- ==================== [TABLE DESIGN TAB (CONTEXTUAL)] ==================== -->
+        <div class="nb-toolbar-group" data-ribbon-group="table-design" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <label for="nbTablePresetSelect">Preset:</label>
+              <select id="nbTablePresetSelect" class="nb-edit-ctrl" onchange="applyTablePreset(this.value)" title="Table Style Preset">
+                <option value="default-grid" selected>Default Grid</option>
+                <option value="striped">Striped Rows</option>
+                <option value="header-accent">Header Accent</option>
+                <option value="borderless">Borderless</option>
+              </select>
+              <label for="nbTableCellPaddingSelect">Padding:</label>
+              <select id="nbTableCellPaddingSelect" class="nb-edit-ctrl" onchange="applyTableCellPadding(this.value)" title="Cell Padding">
+                <option value="compact">Compact (6px)</option>
+                <option value="standard" selected>Standard (10px)</option>
+                <option value="relaxed">Relaxed (16px)</option>
+              </select>
+            </div>
+            <div class="nb-ribbon-row">
+              <div class="nb-color-picker-wrap" title="Table Border Color" style="height:26px;">
+                <span>Border</span>
+                <input type="color" id="nbTableBorderColor" class="nb-edit-ctrl" value="#cbd5e1" onchange="applyTableBorderColor(this.value)">
+              </div>
+              <div class="nb-color-picker-wrap" title="Cell Shading Color" style="height:26px;">
+                <span>Shading</span>
+                <input type="color" id="nbTableCellShading" class="nb-edit-ctrl" value="#ffffff" onchange="applyTableCellShading(this.value)">
+              </div>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Table Styles &#8600;</div>
+        </div>
+
+        <div class="nb-toolbar-group" data-ribbon-group="table-design" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTableRow('above')" title="Insert Row Above">+ Row Above</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTableRow('below')" title="Insert Row Below">+ Row Below</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTableColumn('left')" title="Insert Column Left">+ Col Left</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTableColumn('right')" title="Insert Column Right">+ Col Right</button>
+            </div>
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="deleteCurrentTableRow()" title="Delete Current Row" style="color:var(--danger, #ef4444);">Delete Row</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="deleteCurrentTableColumn()" title="Delete Current Column" style="color:var(--danger, #ef4444);">Delete Col</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="deleteActiveTable()" title="Delete Table" style="color:var(--danger, #ef4444); font-weight:700;">Delete Table</button>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Rows &amp; Columns &#8600;</div>
+        </div>
       </div>
     </div>
 
@@ -1484,7 +2061,7 @@
         <div class="nb-title-bar">
           <input type="text" id="nbPageTitle" name="manualTitleInput" data-alt-id="pageTitle"
                  class="nb-title-input nb-edit-ctrl"
-                 placeholder="Page Title (leave blank to auto-title from first phrase in canvas)..."
+                 placeholder="Document Title (leave blank to auto-title from first phrase)..."
                  autocomplete="off" />
         </div>
 
@@ -1494,17 +2071,33 @@
         <!-- Digital Inking HTML5 Canvas Overlay -->
         <canvas id="nbInkCanvas" class="nb-ink-canvas"></canvas>
 
-        <!-- Rich Text Canvas Editor (Hybrid auto-titled from first non-empty phrase/sentence if title input is left blank) -->
+        <!-- Rich Text Canvas Editor -->
         <div id="nbPageContent" class="nb-canvas-editor" contenteditable="true" spellcheck="true"
-             data-placeholder="Start typing your note here (if the title bar above is left blank, the first phrase/sentence automatically becomes the page title upon saving)..."></div>
+             data-placeholder="Welcome to your centralized team notebook. Start typing here..."></div>
       </div>
     </div>
 
-    <!-- Status Bar -->
+    <!-- MS Word Style Bottom Status Bar -->
     <div class="nb-status-bar">
-      <span id="nbAuthorInfo">-</span>
-      <span id="nbSaveStatus">Ready</span>
-      <span id="nbWordCount">0 words</span>
+      <div class="nb-status-left">
+        <span>Page 1 of 1</span>
+        <span class="nb-status-divider">|</span>
+        <span>Word Count: <strong id="nbWordCount">0 words</strong></span>
+        <span class="nb-status-divider">|</span>
+        <span>English (United States)</span>
+        <span class="nb-status-divider">|</span>
+        <span id="nbAuthorInfo">-</span>
+        <span class="nb-status-divider">|</span>
+        <span id="nbSaveStatus">Ready</span>
+      </div>
+      <div class="nb-status-right">
+        <div class="nb-zoom-controls">
+          <button type="button" class="nb-zoom-btn" onclick="stepCanvasZoom(-10)" title="Zoom Out">&minus;</button>
+          <input type="range" id="nbZoomSlider" min="60" max="150" step="5" value="100" oninput="setCanvasZoom(this.value)" style="width:80px; accent-color:#2563eb; cursor:pointer;">
+          <button type="button" class="nb-zoom-btn" onclick="stepCanvasZoom(10)" title="Zoom In">+</button>
+          <span id="nbZoomLabel" style="min-width:36px; text-align:right;">100%</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -2121,6 +2714,10 @@ function openPage(page) {
   }
 
   applyPagePermissionsUI(page);
+  const hdrTitle = document.getElementById('notebookName');
+  if (hdrTitle) hdrTitle.textContent = page.title || 'Untitled Note';
+  const topBadge = document.getElementById('nbTopAutoSaveBadge');
+  if (topBadge) topBadge.textContent = canCurrentUserEditPage(page) ? 'Auto-saved ✓' : 'Read-Only View';
   document.getElementById('nbAuthorInfo').textContent = 'Author: ' + (page.author_name || (currentUser && currentUser.fullName) || 'Member');
   document.getElementById('nbSaveStatus').textContent = canCurrentUserEditPage(page) ? 'Loaded' : 'Read-Only View';
   renderPagesList();
@@ -2144,6 +2741,10 @@ function clearEditor(folderId = null) {
   renderAllShapes();
 
   applyPagePermissionsUI({ id: null, created_by: currentUser ? currentUser.id : null });
+  const hdrTitle = document.getElementById('notebookName');
+  if (hdrTitle) hdrTitle.textContent = 'Untitled Note';
+  const topBadge = document.getElementById('nbTopAutoSaveBadge');
+  if (topBadge) topBadge.textContent = 'Ready';
   document.getElementById('nbAuthorInfo').textContent = '✍️ ' + ((currentUser && currentUser.fullName) || 'You');
   document.getElementById('nbSaveStatus').textContent = 'New page (custom title or auto-titles on save)';
 }
@@ -2252,6 +2853,10 @@ async function saveCurrentPage() {
   const orig = btn ? btn.textContent : 'Save Page';
   if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
   document.getElementById('nbSaveStatus').textContent = 'Saving...';
+  const topBadge = document.getElementById('nbTopAutoSaveBadge');
+  if (topBadge) topBadge.textContent = 'Saving...';
+  const hdrTitle = document.getElementById('notebookName');
+  if (hdrTitle) hdrTitle.textContent = title;
 
   try {
     if (isPersonalMode) {
@@ -2279,6 +2884,7 @@ async function saveCurrentPage() {
         currentPageId = (res.data && res.data.id) ? res.data.id : res.data;
       }
       document.getElementById('nbSaveStatus').textContent = 'Saved Private Note ' + new Date().toLocaleTimeString();
+      if (topBadge) topBadge.textContent = 'Auto-saved ✓';
       await loadPages();
       return;
     }
@@ -2312,9 +2918,11 @@ async function saveCurrentPage() {
     }
 
     document.getElementById('nbSaveStatus').textContent = '✅ Saved ' + new Date().toLocaleTimeString();
+    if (topBadge) topBadge.textContent = 'Auto-saved ✓';
     await loadPages();
   } catch (err) {
     document.getElementById('nbSaveStatus').textContent = '❌ Save failed';
+    if (topBadge) topBadge.textContent = 'Save failed';
     showToast(err.message || 'Failed to save.', 'error');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = orig; }
@@ -2325,6 +2933,8 @@ function scheduleAutoSave() {
   const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
   if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
   document.getElementById('nbSaveStatus').textContent = 'Unsaved changes...';
+  const topBadge = document.getElementById('nbTopAutoSaveBadge');
+  if (topBadge) topBadge.textContent = 'Unsaved changes...';
   clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(saveCurrentPage, 3500);
 }
@@ -2335,6 +2945,8 @@ function syncActiveTitleToSidebar() {
   if (currentPageObj) {
     currentPageObj.title = effectiveTitle;
   }
+  const hdrTitle = document.getElementById('notebookName');
+  if (hdrTitle) hdrTitle.textContent = effectiveTitle;
   document.querySelectorAll('.nb-page-item.active .nb-page-item-title').forEach(el => {
     el.textContent = effectiveTitle;
   });
@@ -2468,6 +3080,64 @@ function applyFormatPainterIfActive() {
   if (btn) btn.classList.remove('active');
   scheduleAutoSave();
   showToast('Format applied', 'success');
+}
+
+
+function selectStyleCard(styleVal, cardEl) {
+  document.querySelectorAll('.nb-style-card').forEach(btn => btn.classList.remove('active'));
+  if (cardEl) cardEl.classList.add('active');
+  const sel = document.getElementById('nbHeadingStyles');
+  if (sel && ['p', 'h1', 'h2', 'title'].includes(styleVal)) sel.value = styleVal;
+  if (styleVal === 'no-spacing') {
+    applyHeadingStyle('p');
+    applyLineHeight('1.0');
+    applyParaSpacingDropdown('0_0');
+  } else {
+    applyHeadingStyle(styleVal);
+  }
+}
+
+function stepFontSize(dir) {
+  const sizes = ['12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px', '36px'];
+  const sel = document.getElementById('nbFontSize');
+  const cur = sel ? sel.value : '16px';
+  let idx = sizes.indexOf(cur);
+  if (idx === -1) idx = 2;
+  idx = Math.max(0, Math.min(sizes.length - 1, idx + dir));
+  if (sel) sel.value = sizes[idx];
+  applyFontSize(sizes[idx]);
+}
+
+function sortParagraphs() {
+  if (!nbCanEditNow()) return;
+  const editor = document.getElementById('nbPageContent');
+  if (!editor) return;
+  const paras = Array.from(editor.querySelectorAll('p, div:not(.nb-toc):not(.nb-page-break)')).filter(el => el.parentElement === editor);
+  if (paras.length > 1) {
+    paras.sort((a, b) => (a.innerText || '').localeCompare(b.innerText || ''));
+    paras.forEach(p => editor.appendChild(p));
+    scheduleAutoSave();
+  }
+}
+
+function toggleDesktopSidebar() {
+  const sb = document.getElementById('nbSidebar');
+  if (sb) sb.classList.toggle('desktop-collapsed');
+}
+
+let currentZoomPct = 100;
+function setCanvasZoom(pct) {
+  currentZoomPct = Math.max(60, Math.min(150, Number(pct) || 100));
+  const canvas = document.getElementById('nbCanvas');
+  if (canvas) canvas.style.zoom = (currentZoomPct / 100);
+  const lbl = document.getElementById('nbZoomLabel');
+  if (lbl) lbl.textContent = currentZoomPct + '%';
+  const slider = document.getElementById('nbZoomSlider');
+  if (slider) slider.value = String(currentZoomPct);
+}
+
+function stepCanvasZoom(delta) {
+  setCanvasZoom(currentZoomPct + delta);
 }
 
 function applyHeadingStyle(val) {

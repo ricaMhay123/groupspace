@@ -167,13 +167,30 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
 
   container.innerHTML = `
     <div class="notebook-toolbar notebook-rich-toolbar" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:8px 12px; background:var(--toolbar-bg, #f8fafc); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:8px; margin-bottom:10px;">
-      <!-- MS Word Style Ribbon Options: Home / Insert / Draw / Layout -->
+      <!-- MS Word Style Ribbon Options: File / Home / Insert / Draw / Layout -->
       <div class="nb-word-ribbon-bar" style="display:flex; align-items:center; gap:4px; width:100%; padding-bottom:6px; margin-bottom:2px; border-bottom:1px solid var(--toolbar-border, #cbd5e1);">
+        <button type="button" class="nb-ribbon-btn" data-ribbon="file" onclick="switchEmbeddedRibbonTab(this, 'file')" style="background:transparent; color:var(--toolbar-text, #0f172a); border:1px solid transparent; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">File</button>
         <button type="button" class="nb-ribbon-btn active" data-ribbon="home" onclick="switchEmbeddedRibbonTab(this, 'home')" style="background:#2563eb; color:#ffffff; border:1px solid #38bdf8; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Home</button>
         <button type="button" class="nb-ribbon-btn" data-ribbon="insert" onclick="switchEmbeddedRibbonTab(this, 'insert')" style="background:transparent; color:var(--toolbar-text, #0f172a); border:1px solid transparent; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Insert</button>
         <button type="button" class="nb-ribbon-btn" data-ribbon="draw" onclick="switchEmbeddedRibbonTab(this, 'draw')" style="background:transparent; color:var(--toolbar-text, #0f172a); border:1px solid transparent; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Draw</button>
         <button type="button" class="nb-ribbon-btn" data-ribbon="layout" onclick="switchEmbeddedRibbonTab(this, 'layout')" style="background:transparent; color:var(--toolbar-text, #0f172a); border:1px solid transparent; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Layout</button>
         <span style="margin-left:auto; font-size:10.5px; color:var(--gray, #64748b); font-weight:600;">Auto-Title on Save</span>
+      </div>
+
+      <!-- File Tab: Export PDF / Save TXT / Export DOCX -->
+      <div data-ribbon-section="file" style="display:none; align-items:center; gap:8px; flex-wrap:wrap;">
+        <button type="button" onclick="embeddedExportEditor('pdf', ${targetArg})" title="Export PDF" style="display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-width:74px; height:48px; background:var(--toolbar-surface, #ffffff); color:#dc2626; border:1px solid #fecaca; border-radius:6px; padding:4px 10px; font-size:11px; font-weight:700; cursor:pointer;">
+          <span style="font-size:15px;">📄</span>
+          <span>Export PDF</span>
+        </button>
+        <button type="button" onclick="embeddedExportEditor('txt', ${targetArg})" title="Save TXT" style="display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-width:74px; height:48px; background:var(--toolbar-surface, #ffffff); color:#059669; border:1px solid #a7f3d0; border-radius:6px; padding:4px 10px; font-size:11px; font-weight:700; cursor:pointer;">
+          <span style="font-size:15px;">⬇</span>
+          <span>Save TXT</span>
+        </button>
+        <button type="button" onclick="embeddedExportEditor('docx', ${targetArg})" title="Export DOCX" style="display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-width:74px; height:48px; background:var(--toolbar-surface, #ffffff); color:#2563eb; border:1px solid #bfdbfe; border-radius:6px; padding:4px 10px; font-size:11px; font-weight:700; cursor:pointer;">
+          <span style="font-size:15px;">📘</span>
+          <span>Export DOCX</span>
+        </button>
       </div>
 
       <!-- Font Family Dropdown -->
@@ -710,6 +727,14 @@ function applyNotebookLineHeight(lineHeight, editorTargetId = null) {
 function applyNotebookParaMargin(margin) {
   const editorEl = document.getElementById('pageContent') || document.getElementById('noteContent');
   if (editorEl) editorEl.style.marginBottom = margin;
+}
+
+function embeddedExportEditor(format, editorTargetId = null) {
+  const editor = resolveNotebookEditorElement(editorTargetId);
+  const rawContent = editor ? (editor.innerHTML || editor.value || '') : '';
+  const titleEl = document.getElementById('personalNoteTitle') || document.getElementById('pageTitle') || document.getElementById('noteTitle');
+  const title = (titleEl && titleEl.value && titleEl.value.trim()) ? titleEl.value.trim() : extractAutoTitleClient(rawContent);
+  exportNotebook(format, 0, title, rawContent);
 }
 
 /**
