@@ -169,8 +169,14 @@
       dropdownEl.setAttribute('role', 'listbox');
       dropdownEl.setAttribute('aria-label', 'Autocomplete Suggestions');
       
+      dropdownEl.addEventListener('mousedown', (e) => {
+        // Prevent input from losing focus when clicking dropdown items
+        e.preventDefault();
+        e.stopPropagation();
+      });
+
       dropdownEl.addEventListener('pointerdown', (e) => {
-        // Prevent clicking inside dropdown from triggering blur or outside dismissal
+        e.preventDefault();
         e.stopPropagation();
       });
 
@@ -217,6 +223,9 @@
   }
 
   function hideDropdown() {
+    if (activeInputEl) {
+      try { activeInputEl.setAttribute('aria-expanded', 'false'); } catch (e) {}
+    }
     const dd = getDropdown();
     if (dd) {
       dd.style.display = 'none';
@@ -277,13 +286,40 @@
 
     try {
       if (trigger.type === '@') {
-        const res = await apiFetch(`/api/groups/${groupId}/discussions/mentions/users?q=${encodeURIComponent(trigger.query)}`).catch(() => ({ data: [] }));
-        return (res.data || []).map(u => ({
-          type: 'user',
-          id: u.id,
-          name: u.name,
-          initials: u.avatar_initials || (u.name ? u.name.slice(0, 2).toUpperCase() : 'U')
-        }));
+        let members = [];
+        try {
+          const res = await apiFetch(`/api/groups/${groupId}/discussions/mentions/users?q=${encodeURIComponent(trigger.query)}`);
+          if (res && Array.isArray(res.data) && res.data.length > 0) {
+            members = res.data.map(u => ({
+              type: 'user',
+              id: u.id,
+              name: u.name,
+              initials: u.avatar_initials || (u.name ? u.name.slice(0, 2).toUpperCase() : 'U')
+            }));
+          }
+        } catch (fetchErr) {
+          // Fall through to in-memory workspace members
+        }
+
+        // Resilient in-memory fallback: pull from active workspace members loaded on dashboard
+        if (members.length === 0) {
+          const groupDetails = window.currentGroupDetails || (typeof currentGroupDetails !== 'undefined' ? currentGroupDetails : null);
+          const cachedMembers = (groupDetails && Array.isArray(groupDetails.members)) ? groupDetails.members : [];
+          const qLower = (trigger.query || '').toLowerCase().trim();
+          members = cachedMembers
+            .filter(m => {
+              const name = (m.full_name || m.name || '').toLowerCase();
+              return !qLower || name.includes(qLower);
+            })
+            .map(m => ({
+              type: 'user',
+              id: m.id || m.user_id,
+              name: m.full_name || m.name,
+              initials: m.avatar_initials || (m.full_name ? m.full_name.slice(0, 2).toUpperCase() : 'U')
+            }));
+        }
+
+        return members;
       } else if (trigger.type === '#') {
         // Query Category 1 (#NB Pages: folder_id IS NULL), Category 2 (#NB Folders), topics, tasks, and notebooks
         const [pagesRes, foldersRes, topicsRes, tasksRes, notebooksRes] = await Promise.all([
@@ -325,6 +361,24 @@
           name: t.title
         }));
 
+        // Resilient in-memory fallback for topics from DOM topicsList if API is offline
+        if (topics.length === 0) {
+          const domTopics = document.querySelectorAll('#topicsList .file-item');
+          const qLower = (trigger.query || '').toLowerCase().trim();
+          domTopics.forEach(el => {
+            const h4 = el.querySelector('h4');
+            const title = h4 ? h4.textContent.trim() : '';
+            if (title && (!qLower || title.toLowerCase().includes(qLower))) {
+              topics.push({
+                type: 'topic',
+                id: el.getAttribute('data-topic-id') || 0,
+                name: title,
+                category: 'Topic'
+              });
+            }
+          });
+        }
+
         // Present folders first, then pages, topics, tasks, notebooks
         return [...folders, ...pages, ...topics, ...tasks, ...notebooks];
       }
@@ -354,6 +408,9 @@
         </div>
       `;
       dd.style.display = 'block';
+      if (activeInputEl) {
+        try { activeInputEl.setAttribute('aria-expanded', 'true'); } catch (e) {}
+      }
       return;
     }
 
@@ -428,6 +485,9 @@
 
     dd.innerHTML = html;
     dd.style.display = 'block';
+      if (activeInputEl) {
+        try { activeInputEl.setAttribute('aria-expanded', 'true'); } catch (e) {}
+      }
 
     dd.querySelectorAll('.mention-item').forEach(el => {
       el.addEventListener('mousedown', (e) => {
@@ -511,6 +571,9 @@
 
     dd.innerHTML = html;
     dd.style.display = 'block';
+      if (activeInputEl) {
+        try { activeInputEl.setAttribute('aria-expanded', 'true'); } catch (e) {}
+      }
 
     const backBtn = document.getElementById('mentionBackBtn');
     if (backBtn) {
@@ -576,12 +639,18 @@
     input._hasMentionListeners = true;
 
     // Suppress browser native writing suggestions / Edge AI prompts ("Sino? Ano? Paano? Bakit?")
+    input.setAttribute('role', 'combobox');
+    input.setAttribute('aria-autocomplete', 'list');
+    input.setAttribute('aria-expanded', 'false');
+    input.setAttribute('aria-haspopup', 'listbox');
+    input.setAttribute('aria-controls', 'mentionDropdown');
     input.setAttribute('autocomplete', 'off');
     input.setAttribute('autocorrect', 'off');
     input.setAttribute('autocapitalize', 'off');
     input.setAttribute('spellcheck', 'false');
     input.setAttribute('data-ms-editor', 'false');
     input.setAttribute('data-gramm', 'false');
+    input.setAttribute('data-enable-grammarly', 'false');
 
     let debounceTimer = null;
 

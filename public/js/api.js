@@ -5,7 +5,10 @@
 function getApiBaseUrl() {
   const custom = localStorage.getItem('groupspace_api_url');
   if (custom !== null) return custom;
-  if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  if (window.location.protocol === 'file:') {
+    return 'https://groupspace-w50r.onrender.com';
+  }
+  if (window.location.port === '5500') {
     return 'https://groupspace-w50r.onrender.com';
   }
   return '';

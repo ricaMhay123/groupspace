@@ -178,6 +178,8 @@ async function switchWorkspace(groupId) {
   try {
     const res = await apiFetch(`/api/groups/${currentGroupId}`);
     currentGroupDetails = res.data;
+    window.currentGroupDetails = currentGroupDetails;
+    window.currentGroupId = currentGroupId;
 
     // Update Header
     const jcBadge = document.getElementById('joinCodeBadge');

@@ -301,7 +301,7 @@
           <form id="postCommentForm" style="display:none;" onsubmit="handlePostComment(event)">
             <div id="commentAttachmentsPreview" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;"></div>
             <div style="display:flex; gap:8px; align-items:center;">
-              <input type="text" id="newCommentInput" class="form-control" placeholder="Type a reply... (Use @ for members, # for pages/folders)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-ms-editor="false" data-gramm="false" style="flex:1;">
+              <input type="text" id="newCommentInput" class="form-control" placeholder="Type a reply... (Use @ for members, # for pages/folders)" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="mentionDropdown" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-ms-editor="false" data-gramm="false" data-enable-grammarly="false" style="flex:1;">
               <label for="commentFileInput" class="btn-outline" style="cursor:pointer; padding:8px 12px; margin:0; display:inline-flex; align-items:center; justify-content:center; border-radius:8px;" title="Attach pictures or documents">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
               </label>
