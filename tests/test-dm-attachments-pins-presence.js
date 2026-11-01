@@ -87,3 +87,4 @@ assert(styleCss.includes('.dm-pinned-tray'), 'style.css defines .dm-pinned-tray'
 console.log('  ✅ CSS styles for pinned trays verified');
 
 console.log('\n🎉 ALL DM ATTACHMENTS, PINNED MESSAGES & PRESENCE TESTS PASSED!\n');
+

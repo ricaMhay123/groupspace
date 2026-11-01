@@ -1682,6 +1682,7 @@ async function loadDashboardFolders() {
   } catch (err) {
     dashboardNotebookFolders = [];
   }
+  window.dashboardNotebookFolders = dashboardNotebookFolders;
   renderDashboardFoldersBar();
   populateNoteFolderSelect();
   return dashboardNotebookFolders;
@@ -1723,6 +1724,7 @@ function filterDashboardNotesByFolder(folderId) {
   renderDashboardFoldersBar();
   renderDashboardNotesGrid(dashboardNotebookNotesCache);
 }
+window.filterDashboardNotesByFolder = filterDashboardNotesByFolder;
 
 async function promptCreateDashboardFolder() {
   const name = window.prompt('Enter new folder name:');
@@ -2000,7 +2002,7 @@ function renderDashboardNotesGrid(notes) {
     const canManagePerms = isLeaderRole || creatorId === currUid;
 
     return `
-      <div class="note-card ${n.is_pinned ? 'pinned' : ''}" style="cursor:pointer;" onclick="window.location.href='/notebook.html?groupId=' + currentGroupId + '&noteId=' + ${n.id}" title="Click to open in Full Editor">
+      <div id="note-card-${n.id}" data-note-id="${n.id}" data-note-title="${escapeHtml(displayTitle)}" class="note-card ${n.is_pinned ? 'pinned' : ''}" style="cursor:pointer;" onclick="window.location.href='/notebook.html?groupId=' + currentGroupId + '&noteId=' + ${n.id}" title="Click to open in Full Editor">
         <div>
           <h4 style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
             <span>${escapeHtml(displayTitle)}</span>

@@ -188,6 +188,36 @@ async function getMentionableTopics(req, res) {
   }
 }
 
+async function getMentionableNotebooks(req, res) {
+  try {
+    const notebooks = await discussionService.getMentionableNotebooks(req.params.groupId, req.query.q || '');
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: notebooks
+    });
+  } catch (error) {
+    return res.status(error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+async function getMentionableFolders(req, res) {
+  try {
+    const folders = await discussionService.getMentionableFolders(req.params.groupId, req.query.q || '');
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: folders
+    });
+  } catch (error) {
+    return res.status(error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 async function togglePinComment(req, res) {
   try {
     const comment = await discussionService.togglePinComment({
@@ -221,6 +251,8 @@ module.exports = {
   getActivity,
   getMentionableUsers,
   getMentionableTasks,
-  getMentionableTopics
+  getMentionableTopics,
+  getMentionableNotebooks,
+  getMentionableFolders
 };
 

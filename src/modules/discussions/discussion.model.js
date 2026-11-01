@@ -136,6 +136,43 @@ const DiscussionModel = {
     `;
   },
 
+  /** Shared active notebooks in the workspace, optionally filtered by title. */
+  async findMentionableNotebooks(groupId, q = '') {
+    const pattern = `%${String(q).toLowerCase().replace(/[\\%_]/g, '\\$&')}%`;
+    return await sql`
+      SELECT id, title
+      FROM (
+        SELECT id, title, updated_at
+        FROM notebooks
+        WHERE group_id = ${groupId}
+          AND COALESCE(is_private, FALSE) = FALSE
+          AND LOWER(title) LIKE ${pattern}
+        UNION
+        SELECT id, title, updated_at
+        FROM notes
+        WHERE group_id = ${groupId}
+          AND COALESCE(is_private, FALSE) = FALSE
+          AND LOWER(title) LIKE ${pattern}
+      ) combined_notebooks
+      ORDER BY updated_at DESC
+      LIMIT 8
+    `;
+  },
+
+  /** Active folders in the workspace, optionally filtered by name. */
+  async findMentionableFolders(groupId, q = '') {
+    const pattern = `%${String(q).toLowerCase().replace(/[\\%_]/g, '\\$&')}%`;
+    return await sql`
+      SELECT id, name
+      FROM notebook_folders
+      WHERE group_id = ${groupId}
+        AND COALESCE(is_private, FALSE) = FALSE
+        AND LOWER(name) LIKE ${pattern}
+      ORDER BY name ASC
+      LIMIT 8
+    `;
+  },
+
   /** All members enrolled in the workspace (no pagination/limit, for complete mention parsing). */
   async getAllGroupMembers(groupId) {
     return await sql`

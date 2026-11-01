@@ -294,6 +294,16 @@ async function getMentionableTopics(groupId, query = '') {
   return await DiscussionModel.findMentionableTopics(Number(groupId), query);
 }
 
+async function getMentionableNotebooks(groupId, query = '') {
+  if (!groupId) return [];
+  return await DiscussionModel.findMentionableNotebooks(Number(groupId), query);
+}
+
+async function getMentionableFolders(groupId, query = '') {
+  if (!groupId) return [];
+  return await DiscussionModel.findMentionableFolders(Number(groupId), query);
+}
+
 async function deleteComment({ commentId, userId, userRole, groupId }) {
   const comment = await DiscussionModel.findCommentById(Number(commentId));
   if (!comment) {
@@ -361,5 +371,7 @@ module.exports = {
   getActivityFeed,
   getMentionableUsers,
   getMentionableTasks,
-  getMentionableTopics
+  getMentionableTopics,
+  getMentionableNotebooks,
+  getMentionableFolders
 };

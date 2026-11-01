@@ -184,7 +184,8 @@ async function runLocalhostTests() {
       { script: 'tests/test-discussions-attachments.js', name: 'Discussions Attachment Lightbox & Download Badges' },
       { script: 'tests/test-notebook-document-imports.js', name: 'Notebook Document Imports & Table Styles' },
       { script: 'tests/test-direct-messaging-drawer.js', name: 'Direct Messaging Slide-Out Drawer & 1-on-1 PMs' },
-      { script: 'tests/test-dm-attachments-pins-presence.js', name: 'DM Attachments, Pinned Messages & Accurate Online Presence' }
+      { script: 'tests/test-dm-attachments-pins-presence.js', name: 'DM Attachments, Pinned Messages & Accurate Online Presence' },
+      { script: 'tests/test-workspace-mentions-notebook-tagging.js', name: 'Workspace Mentions (@) & Notebook/Folder (#) Tagging' }
     ];
 
     for (const suite of testSuites) {

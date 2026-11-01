@@ -117,3 +117,4 @@
 - [ ] Add `tests/test-dm-attachments-pins-presence.js` to `tests/test-localhost.js`.
 - [ ] Run `node tests/test-localhost.js` (all 16 suites passing).
 - [ ] Execute `git add .`, `git commit -m "feat: implement DM attachments, pinned messages in chats and threads, and accurate online presence"`, and `git push origin main`.
+

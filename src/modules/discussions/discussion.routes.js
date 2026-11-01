@@ -17,6 +17,8 @@ router.get('/activity', discussionController.getActivity);
 router.get('/mentions/users', discussionController.getMentionableUsers);
 router.get('/mentions/tasks', discussionController.getMentionableTasks);
 router.get('/mentions/topics', discussionController.getMentionableTopics);
+router.get('/mentions/notebooks', discussionController.getMentionableNotebooks);
+router.get('/mentions/folders', discussionController.getMentionableFolders);
 router.get('/:topicId', discussionController.getTopicDetails);
 router.post('/:topicId/comments', discussionController.postComment);
 router.put('/:topicId/comments/:commentId/pin', discussionController.togglePinComment);

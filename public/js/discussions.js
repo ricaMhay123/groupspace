@@ -12,6 +12,7 @@
   let suggestions = [];
   let selectedIndex = -1;
   let dropdownEl = null;
+  let activeInputEl = null;
 
   // Inject styles for mention pills and dropdown
   function injectMentionStyles() {
@@ -80,6 +81,14 @@
         background: #f59e0b;
         border-radius: 6px;
       }
+      .mention-item-avatar.notebook {
+        background: #10b981;
+        border-radius: 6px;
+      }
+      .mention-item-avatar.folder {
+        background: #0ea5e9;
+        border-radius: 6px;
+      }
       .mention-item-tag {
         font-size: 11px;
         color: #64748b;
@@ -111,6 +120,16 @@
         color: #92400e;
         border: 1px solid #fde68a;
       }
+      .notebook-mention-pill {
+        background: #ecfdf5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+      }
+      .folder-mention-pill {
+        background: #eff6ff;
+        color: #1e3a8a;
+        border: 1px solid #bfdbfe;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -130,6 +149,18 @@
       }
     }
     return dropdownEl;
+  }
+
+  function positionDropdown(input) {
+    const dd = getDropdown();
+    if (!dd || !input) return;
+    const parent = input.form || input.parentElement;
+    if (parent) {
+      parent.style.position = 'relative';
+      if (dd.parentElement !== parent) {
+        parent.insertBefore(dd, parent.firstChild);
+      }
+    }
   }
 
   function hideDropdown() {
@@ -200,10 +231,12 @@
           initials: u.avatar_initials || (u.name ? u.name.slice(0, 2).toUpperCase() : 'U')
         }));
       } else if (trigger.type === '#') {
-        // Query both topics and tasks concurrently
-        const [topicsRes, tasksRes] = await Promise.all([
+        // Query topics, tasks, notebooks, and folders concurrently
+        const [topicsRes, tasksRes, notebooksRes, foldersRes] = await Promise.all([
           apiFetch(`/api/groups/${groupId}/discussions/mentions/topics?q=${encodeURIComponent(trigger.query)}`).catch(() => ({ data: [] })),
-          apiFetch(`/api/groups/${groupId}/discussions/mentions/tasks?q=${encodeURIComponent(trigger.query)}`).catch(() => ({ data: [] }))
+          apiFetch(`/api/groups/${groupId}/discussions/mentions/tasks?q=${encodeURIComponent(trigger.query)}`).catch(() => ({ data: [] })),
+          apiFetch(`/api/groups/${groupId}/discussions/mentions/notebooks?q=${encodeURIComponent(trigger.query)}`).catch(() => ({ data: [] })),
+          apiFetch(`/api/groups/${groupId}/discussions/mentions/folders?q=${encodeURIComponent(trigger.query)}`).catch(() => ({ data: [] }))
         ]);
 
         const topics = (topicsRes.data || []).map(t => ({
@@ -219,7 +252,19 @@
           name: t.title
         }));
 
-        return [...topics, ...tasks];
+        const notebooks = (notebooksRes.data || []).map(nb => ({
+          type: 'notebook',
+          id: nb.id,
+          name: nb.title
+        }));
+
+        const folders = (foldersRes.data || []).map(f => ({
+          type: 'folder',
+          id: f.id,
+          name: f.name
+        }));
+
+        return [...topics, ...tasks, ...notebooks, ...folders];
       }
     } catch (err) {
       console.warn('[Discussions] Mention fetch failed:', err.message);
@@ -240,7 +285,7 @@
     suggestions = items;
     selectedIndex = 0;
 
-    const title = trigger.type === '@' ? 'Workspace Members' : 'Workspace Topics & Tasks';
+    const title = trigger.type === '@' ? 'Workspace Members' : 'Workspace Topics, Tasks & Notebooks';
     let html = `<div class="mention-dropdown-header">${title}</div>`;
 
     items.forEach((item, idx) => {
@@ -262,7 +307,7 @@
             <span class="mention-item-tag">Topic (${escapeHtml(item.category)})</span>
           </div>
         `;
-      } else {
+      } else if (item.type === 'task') {
         html += `
           <div class="mention-item ${idx === 0 ? 'active' : ''}" data-idx="${idx}">
             <div class="mention-item-avatar task">#</div>
@@ -270,6 +315,26 @@
               <strong>#${item.id}</strong> ${escapeHtml(item.name)}
             </span>
             <span class="mention-item-tag">Task</span>
+          </div>
+        `;
+      } else if (item.type === 'notebook') {
+        html += `
+          <div class="mention-item ${idx === 0 ? 'active' : ''}" data-idx="${idx}">
+            <div class="mention-item-avatar notebook">📖</div>
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+              ${escapeHtml(item.name)}
+            </span>
+            <span class="mention-item-tag">Notebook</span>
+          </div>
+        `;
+      } else if (item.type === 'folder') {
+        html += `
+          <div class="mention-item ${idx === 0 ? 'active' : ''}" data-idx="${idx}">
+            <div class="mention-item-avatar folder">📁</div>
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+              ${escapeHtml(item.name)}
+            </span>
+            <span class="mention-item-tag">Folder</span>
           </div>
         `;
       }
@@ -291,7 +356,7 @@
     const item = suggestions[idx];
     if (!item || !activeTrigger) return;
 
-    const input = document.getElementById('newCommentInput');
+    const input = activeInputEl || document.getElementById('newCommentInput') || document.getElementById('topicTitle');
     if (!input) return;
 
     const text = input.value;
@@ -300,8 +365,12 @@
       replacement = `@${item.name} `;
     } else if (item.type === 'topic') {
       replacement = `#[${item.name}] `;
-    } else {
+    } else if (item.type === 'task') {
       replacement = `#${item.id} `;
+    } else if (item.type === 'notebook') {
+      replacement = `#[Notebook: ${item.name}] `;
+    } else if (item.type === 'folder') {
+      replacement = `#[Folder: ${item.name}] `;
     }
 
     const before = text.slice(0, activeTrigger.startPos);
@@ -315,13 +384,18 @@
     hideDropdown();
   }
 
-  function setupMentionInput() {
-    const input = document.getElementById('newCommentInput');
-    if (!input) return;
+  function attachMentionListeners(input) {
+    if (!input || input._hasMentionListeners) return;
+    input._hasMentionListeners = true;
 
     let debounceTimer = null;
 
+    input.addEventListener('focus', () => {
+      activeInputEl = input;
+    });
+
     input.addEventListener('input', () => {
+      activeInputEl = input;
       const trigger = detectTrigger(input);
       if (!trigger) {
         hideDropdown();
@@ -329,6 +403,7 @@
       }
 
       activeTrigger = trigger;
+      positionDropdown(input);
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(async () => {
         const items = await fetchSuggestions(trigger);
@@ -367,8 +442,15 @@
 
     input.addEventListener('blur', () => {
       // Delay to let click event on suggestion item fire first
-      setTimeout(hideDropdown, 200);
+      setTimeout(hideDropdown, 250);
     });
+  }
+
+  function setupMentionInput() {
+    const commentInput = document.getElementById('newCommentInput');
+    const topicTitle = document.getElementById('topicTitle');
+    if (commentInput) attachMentionListeners(commentInput);
+    if (topicTitle) attachMentionListeners(topicTitle);
   }
 
   function updateActiveItem() {
@@ -381,37 +463,178 @@
   }
 
   // Helper to format comment text with highlighted pills
-  // Supports multiple members, mentioned topics, and mentioned tasks
+  // Supports multiple members, mentioned topics, tasks, notebooks, and folders
   function highlightMentions(text) {
     if (!text) return '';
     let escaped = typeof escapeHtml === 'function' ? escapeHtml(text) : text;
 
-    // 1. Replace bracketed topics: #[Topic Title]
+    // 1. Replace bracketed Notebook mentions: #[Notebook: Spec]
+    escaped = escaped.replace(/#\[Notebook:\s*([^\]\r\n]{1,80})\]/gi, (match, title) => {
+      const cleanTitle = title.trim();
+      const enc = encodeURIComponent(cleanTitle);
+      return `<span class="mention-pill notebook-mention-pill clickable-tag" onclick="window.handleNotebookTagClick(decodeURIComponent('${enc}'))" role="button" tabindex="0" title="Open Notebook: ${cleanTitle}">📖 #Notebook: ${cleanTitle}</span>`;
+    });
+
+    // 2. Replace unbracketed Notebook mentions: #Notebook:Spec
+    escaped = escaped.replace(/#Notebook:\s*([A-Za-z0-9_.\-]+(?:\s[A-Za-z0-9_.\-]+)?)/gi, (match, title) => {
+      const cleanTitle = title.trim();
+      const enc = encodeURIComponent(cleanTitle);
+      return `<span class="mention-pill notebook-mention-pill clickable-tag" onclick="window.handleNotebookTagClick(decodeURIComponent('${enc}'))" role="button" tabindex="0" title="Open Notebook: ${cleanTitle}">📖 #Notebook: ${cleanTitle}</span>`;
+    });
+
+    // 3. Replace bracketed Folder mentions: #[Folder: Design Assets]
+    escaped = escaped.replace(/#\[Folder:\s*([^\]\r\n]{1,80})\]/gi, (match, folderName) => {
+      const cleanName = folderName.trim();
+      const enc = encodeURIComponent(cleanName);
+      return `<span class="mention-pill folder-mention-pill clickable-tag" onclick="window.handleFolderTagClick(decodeURIComponent('${enc}'))" role="button" tabindex="0" title="Filter by Folder: ${cleanName}">📁 #Folder: ${cleanName}</span>`;
+    });
+
+    // 4. Replace unbracketed Folder mentions: #Folder:Assets
+    escaped = escaped.replace(/#Folder:\s*([A-Za-z0-9_.\-]+(?:\s[A-Za-z0-9_.\-]+)?)/gi, (match, folderName) => {
+      const cleanName = folderName.trim();
+      const enc = encodeURIComponent(cleanName);
+      return `<span class="mention-pill folder-mention-pill clickable-tag" onclick="window.handleFolderTagClick(decodeURIComponent('${enc}'))" role="button" tabindex="0" title="Filter by Folder: ${cleanName}">📁 #Folder: ${cleanName}</span>`;
+    });
+
+    // 5. Replace bracketed topics: #[Topic Title]
     escaped = escaped.replace(/#\[([^\]\r\n]{1,60})\]/g, (match, title) => {
       return `<span class="mention-pill topic-mention-pill">#${title.trim()}</span>`;
     });
 
-    // 2. Replace topic IDs: #topic:12 or #topic-12
+    // 6. Replace topic IDs: #topic:12 or #topic-12
     escaped = escaped.replace(/#topic[:\-](\d+)\b/gi, (match, id) => {
       return `<span class="mention-pill topic-mention-pill">#topic-${id}</span>`;
     });
 
-    // 3. Replace task IDs: #123 (numeric)
+    // 7. Replace task IDs: #123 (numeric)
     escaped = escaped.replace(/#(\d+)\b/g, (match, id) => {
-      return `<span class="mention-pill task-mention-pill">#task-${id}</span>`;
+      return `<span class="mention-pill task-mention-pill clickable-tag" onclick="window.handleTaskTagClick(${id})" role="button" tabindex="0" title="Go to Task #${id}">#task-${id}</span>`;
     });
 
-    // 4. Replace bracketed user mentions: @[John Doe]
+    // 8. Replace bracketed user mentions: @[John Doe]
     escaped = escaped.replace(/@\[([^\]\r\n]{1,50})\]/g, (match, name) => {
       return `<span class="mention-pill user-mention-pill">@${name.trim()}</span>`;
     });
 
-    // 5. Replace inline user mentions: @FirstName or @FirstName LastName (supports multiple in a row)
+    // 9. Replace inline user mentions: @FirstName or @FirstName LastName (supports multiple in a row)
     escaped = escaped.replace(/@([A-Za-z0-9_.-]+(?:\s[A-Za-z0-9_.-]+)?)(?=[.,!?:;]?(\s|$))/g, (match, name) => {
       return `<span class="mention-pill user-mention-pill">@${name.trim()}</span>`;
     });
 
     return escaped;
+  }
+
+  async function handleNotebookTagClick(rawTitle) {
+    if (!rawTitle) return;
+    const title = String(rawTitle).trim();
+
+    // 1. Switch to notebook tab
+    if (typeof switchTab === 'function') {
+      switchTab('notebook');
+    } else if (typeof window.switchTab === 'function') {
+      window.switchTab('notebook');
+    }
+
+    // 2. Filter the grid
+    const searchInput = document.getElementById('noteSearchInput');
+    if (searchInput) {
+      searchInput.value = title;
+    }
+    if (typeof loadNotebook === 'function') {
+      await loadNotebook(title);
+    } else if (typeof window.loadNotebook === 'function') {
+      await window.loadNotebook(title);
+    }
+
+    // 3. Highlight and scroll the note card with pulse animation
+    setTimeout(() => {
+      const grid = document.getElementById('notebookGrid');
+      if (!grid) return;
+      const cards = grid.querySelectorAll('.note-card');
+      let targetCard = null;
+      const lowerTitle = title.toLowerCase();
+
+      for (const card of cards) {
+        const cardTitle = card.getAttribute('data-note-title') || card.querySelector('h4 span')?.textContent || '';
+        if (cardTitle.toLowerCase().includes(lowerTitle)) {
+          targetCard = card;
+          break;
+        }
+      }
+
+      if (!targetCard && cards.length > 0) {
+        targetCard = cards[0];
+      }
+
+      if (targetCard) {
+        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        targetCard.classList.remove('card-highlight-pulse');
+        void targetCard.offsetWidth; // Force reflow
+        targetCard.classList.add('card-highlight-pulse');
+        setTimeout(() => targetCard.classList.remove('card-highlight-pulse'), 2500);
+      }
+    }, 350);
+  }
+
+  async function handleFolderTagClick(rawFolderName) {
+    if (!rawFolderName) return;
+    const folderName = String(rawFolderName).trim().toLowerCase();
+
+    // 1. Switch to notebook tab
+    if (typeof switchTab === 'function') {
+      switchTab('notebook');
+    } else if (typeof window.switchTab === 'function') {
+      window.switchTab('notebook');
+    }
+
+    // Clear search input if present
+    const searchInput = document.getElementById('noteSearchInput');
+    if (searchInput) searchInput.value = '';
+
+    // 2. Look up folder in window.dashboardNotebookFolders
+    let folders = window.dashboardNotebookFolders || (typeof dashboardNotebookFolders !== 'undefined' ? dashboardNotebookFolders : []);
+    if (!folders || folders.length === 0) {
+      if (typeof loadDashboardFolders === 'function') {
+        folders = await loadDashboardFolders();
+      } else if (typeof window.loadDashboardFolders === 'function') {
+        folders = await window.loadDashboardFolders();
+      }
+    }
+
+    const matched = (folders || []).find(f => (f.name || '').trim().toLowerCase() === folderName);
+    if (matched) {
+      if (typeof filterDashboardNotesByFolder === 'function') {
+        filterDashboardNotesByFolder(matched.id);
+      } else if (typeof window.filterDashboardNotesByFolder === 'function') {
+        window.filterDashboardNotesByFolder(matched.id);
+      }
+    } else {
+      if (typeof filterDashboardNotesByFolder === 'function') {
+        filterDashboardNotesByFolder('ALL');
+      } else if (typeof window.filterDashboardNotesByFolder === 'function') {
+        window.filterDashboardNotesByFolder('ALL');
+      }
+    }
+  }
+
+  function handleTaskTagClick(taskId) {
+    if (!taskId) return;
+    if (typeof switchTab === 'function') {
+      switchTab('tasks');
+    } else if (typeof window.switchTab === 'function') {
+      window.switchTab('tasks');
+    }
+
+    setTimeout(() => {
+      const card = document.getElementById(`task-card-${taskId}`) || document.querySelector(`[data-task-id="${taskId}"]`);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.classList.remove('card-highlight-pulse');
+        void card.offsetWidth; // Force reflow
+        card.classList.add('card-highlight-pulse');
+        setTimeout(() => card.classList.remove('card-highlight-pulse'), 2500);
+      }
+    }, 350);
   }
 
   // Explicit event listener and button click repairs for Discussion Board
@@ -572,6 +795,9 @@
   window.setupDiscussionBoardListeners = setupDiscussionBoardListeners;
   window.handleCreateTopic = handleTopicSubmit;
   window.handlePostComment = handleCommentSubmit;
+  window.handleNotebookTagClick = handleNotebookTagClick;
+  window.handleFolderTagClick = handleFolderTagClick;
+  window.handleTaskTagClick = handleTaskTagClick;
 
   function initDiscussions() {
     injectMentionStyles();
