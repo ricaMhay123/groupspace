@@ -2852,8 +2852,9 @@ async function selectTopic(topicId, title) {
     const canPin = Boolean(isLeader || isThreadCreator);
     window.__canPinCurrentThread = canPin;
 
-    container.innerHTML = comments.map(c => {
+    const renderOne = (c, level, replyToName) => {
       const isAuthor = currentUser && Number(c.user_id) === Number(currentUser.id);
+      const handleTag = replyToName ? `<span class="reply-handle" style="display:inline-block; font-size:11px; font-weight:700; color:var(--primary, #2563eb); background:rgba(37,99,235,0.1); border-radius:10px; padding:1px 8px; margin-right:6px;">@${escapeHtml(replyToName)}</span>` : '';
       const canDelete = isLeader || isAuthor;
       const isPinned = Boolean(c.is_pinned);
 
@@ -2883,13 +2884,51 @@ async function selectTopic(topicId, title) {
               </div>
             </div>
             ${isPinned ? `<div style="display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--warning, #f59e0b); font-weight:600; margin-bottom:4px;">📌 Pinned in Thread</div>` : ''}
-            ${c.content ? `<p style="margin:0 0 4px 0; font-size:13px; color:var(--text); line-height:1.5; word-break:break-word;">${typeof window.highlightMentions === 'function' ? window.highlightMentions(c.content) : escapeHtml(c.content)}</p>` : ''}
+            ${c.content ? `<p style="margin:0 0 4px 0; font-size:13px; color:var(--text); line-height:1.5; word-break:break-word;">${handleTag}${typeof window.highlightMentions === 'function' ? window.highlightMentions(c.content) : escapeHtml(c.content)}</p>` : ''}
             ${renderAttachmentsHtml(c.attachments, threadImages)}
-            <div style="font-size:11px; color:var(--gray); margin-top:4px;">${formatDate(c.created_at)}</div>
+            <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+              <span style="font-size:11px; color:var(--gray);">${formatDate(c.created_at)}</span>
+              <button type="button" class="comment-reply-btn" onclick="toggleInlineReply(${c.id}, event)" title="Reply to ${escapeHtml(c.user_name)}" style="background:none; border:none; color:var(--primary, #2563eb); font-size:12px; font-weight:600; cursor:pointer; padding:2px 4px; border-radius:4px;">Reply</button>
+            </div>
+            <div class="inline-reply-slot" id="inline-reply-slot-${c.id}" style="display:none; margin-top:8px;"></div>
           </div>
         </div>
       `;
-    }).join('');
+    };
+
+    // ---- Threaded tree: replies nest under their parent; indentation capped at 3 levels ----
+    const byParent = new Map();
+    const knownIds = new Set(comments.map(c => Number(c.id)));
+    comments.forEach(c => {
+      const pid = c.parent_comment_id && knownIds.has(Number(c.parent_comment_id)) ? Number(c.parent_comment_id) : 0;
+      if (!byParent.has(pid)) byParent.set(pid, []);
+      byParent.get(pid).push(c);
+    });
+    const countDescendants = (id) => (byParent.get(Number(id)) || []).reduce((n, ch) => n + 1 + countDescendants(ch.id), 0);
+    const MAX_INDENT_LEVEL = 3;
+
+    const renderBranch = (c, level, replyToName) => {
+      const kids = byParent.get(Number(c.id)) || [];
+      let html = '<div class="comment-thread" data-comment-id="' + c.id + '">' + renderOne(c, level, replyToName);
+      if (kids.length) {
+        const total = countDescendants(c.id);
+        const collapsible = kids.length > 1 || total > 1;
+        if (collapsible) {
+          html += '<button type="button" class="comment-collapse-btn" data-count="' + total + '" onclick="toggleCommentReplies(' + c.id + ', event)" style="background:none; border:none; color:var(--gray); font-size:11px; font-weight:600; cursor:pointer; margin:-4px 0 6px 16px; padding:2px 4px;">Hide ' + total + ' replies</button>';
+        }
+        if (level < MAX_INDENT_LEVEL) {
+          html += '<div class="comment-children" id="comment-children-' + c.id + '" style="border-left:2px solid #cbd5e1; margin-left:16px; padding-left:12px;">' +
+            kids.map(k => renderBranch(k, level + 1, null)).join('') + '</div>';
+        } else {
+          // Max depth reached: keep indentation flat and show an @AuthorName handle instead
+          html += '<div class="comment-children" id="comment-children-' + c.id + '">' +
+            kids.map(k => renderBranch(k, level, c.user_name || 'Member')).join('') + '</div>';
+        }
+      }
+      return html + '</div>';
+    };
+
+    container.innerHTML = (byParent.get(0) || []).map(c => renderBranch(c, 1, null)).join('');
 
     container.scrollTop = container.scrollHeight;
   } catch (err) {
@@ -2956,6 +2995,70 @@ function scrollToDiscussionComment(commentId) {
   }
 }
 
+function toggleCommentReplies(commentId, e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const box = document.getElementById('comment-children-' + commentId);
+  const btn = e && e.currentTarget ? e.currentTarget : null;
+  if (!box) return;
+  const hidden = box.style.display === 'none';
+  box.style.display = hidden ? '' : 'none';
+  if (btn) btn.textContent = (hidden ? 'Hide ' : 'Show ') + (btn.getAttribute('data-count') || '') + ' replies';
+}
+
+function toggleInlineReply(commentId, e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const slot = document.getElementById('inline-reply-slot-' + commentId);
+  if (!slot) return;
+  const opening = slot.style.display === 'none';
+  document.querySelectorAll('.inline-reply-slot').forEach(el => { el.style.display = 'none'; el.innerHTML = ''; });
+  if (!opening) return;
+  slot.style.display = 'flex';
+  slot.style.gap = '6px';
+  slot.innerHTML =
+    '<input type="text" class="inline-reply-input" id="inline-reply-input-' + commentId + '" placeholder="Write a reply... (@ to mention, # to tag)" maxlength="2000" ' +
+    'style="flex:1; min-width:0; padding:6px 10px; font-size:12px; border:1px solid var(--border, #cbd5e1); border-radius:8px; background:var(--card, #fff); color:var(--text, #0f172a);">' +
+    '<button type="button" class="btn-primary inline-reply-send" style="padding:6px 12px; font-size:12px; border-radius:8px;" onclick="submitInlineReply(' + commentId + ', event)">Reply</button>';
+  const input = document.getElementById('inline-reply-input-' + commentId);
+  if (input) {
+    input.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' && !ev.defaultPrevented) { ev.preventDefault(); submitInlineReply(commentId, ev); }
+    });
+    input.focus();
+  }
+}
+
+let isSubmittingInlineReply = false;
+async function submitInlineReply(parentCommentId, e) {
+  if (e && e.preventDefault) e.preventDefault();
+  if (isSubmittingInlineReply || !activeTopicId || !currentGroupId) return;
+  const input = document.getElementById('inline-reply-input-' + parentCommentId);
+  const content = input ? input.value.trim() : '';
+  if (!content) {
+    if (input) input.focus();
+    return;
+  }
+  isSubmittingInlineReply = true;
+  const sendBtn = input ? input.parentElement.querySelector('.inline-reply-send') : null;
+  if (sendBtn) sendBtn.disabled = true;
+  try {
+    await apiFetch('/api/groups/' + currentGroupId + '/discussions/' + activeTopicId + '/comments', {
+      method: 'POST',
+      body: JSON.stringify({ content, parentCommentId, attachments: [] })
+    });
+    if (typeof window.resetDiscussionMentions === 'function') window.resetDiscussionMentions();
+    const titleEl = document.getElementById('activeTopicTitle');
+    await selectTopic(activeTopicId, titleEl ? titleEl.textContent : '');
+  } catch (err) {
+    showToast(err.message || 'Failed to post reply', 'error');
+  } finally {
+    isSubmittingInlineReply = false;
+    if (sendBtn) sendBtn.disabled = false;
+  }
+}
+window.toggleInlineReply = toggleInlineReply;
+window.toggleCommentReplies = toggleCommentReplies;
+window.submitInlineReply = submitInlineReply;
+
 async function togglePinDiscussionComment(commentId, e) {
   if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
   if (!activeTopicId || !currentGroupId) return;
@@ -3002,11 +3105,8 @@ async function confirmDeleteComment(commentId, e) {
       el.style.opacity = '0';
       el.style.transform = 'scale(0.95)';
       setTimeout(() => {
-        el.remove();
-        const container = document.getElementById('commentsContainer');
-        if (container && container.children.length === 0) {
-          container.innerHTML = '<p style="color:var(--gray); text-align:center; padding:20px;">No replies yet. Be the first to reply!</p>';
-        }
+        const titleEl = document.getElementById('activeTopicTitle');
+        selectTopic(activeTopicId, titleEl ? titleEl.textContent : '');
       }, 250);
     }
   } catch (err) {

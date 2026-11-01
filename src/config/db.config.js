@@ -236,6 +236,7 @@ async function initDb() {
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         content TEXT NOT NULL,
         attachments JSONB DEFAULT '[]'::jsonb,
+        parent_comment_id INTEGER REFERENCES discussion_comments(id) ON DELETE CASCADE,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `;
@@ -457,6 +458,7 @@ async function initDb() {
     try { await sql`ALTER TABLE discussion_comments ADD COLUMN IF NOT EXISTS attachments JSONB DEFAULT '[]'::jsonb`; } catch (e) {}
     try { await sql`ALTER TABLE discussion_comments ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT FALSE`; } catch (e) {}
     try { await sql`ALTER TABLE discussion_comments ADD COLUMN IF NOT EXISTS pinned_at TIMESTAMPTZ`; } catch (e) {}
+    try { await sql`ALTER TABLE discussion_comments ADD COLUMN IF NOT EXISTS parent_comment_id INTEGER REFERENCES discussion_comments(id) ON DELETE CASCADE`; } catch (e) {}
 
     // Direct messages attachments, pin status & pinned_at
     try { await sql`ALTER TABLE direct_messages ADD COLUMN IF NOT EXISTS attachments JSONB DEFAULT '[]'::jsonb`; } catch (e) {}

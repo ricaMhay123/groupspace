@@ -180,45 +180,70 @@
         e.stopPropagation();
       });
 
-      const form = document.getElementById('postCommentForm');
-      if (form) {
-        form.style.position = 'relative';
-        form.insertBefore(dropdownEl, form.firstChild);
-      } else {
-        document.body.appendChild(dropdownEl);
-      }
+      // Floating overlay: always mounted on <body> so it is never clipped and can sit at the caret
+      document.body.appendChild(dropdownEl);
     }
     return dropdownEl;
+  }
+
+  /** Measure caret viewport coordinates inside a textarea / input via a hidden mirror element. */
+  function getCaretCoordinates(input) {
+    const rect = input.getBoundingClientRect();
+    try {
+      const cs = window.getComputedStyle(input);
+      const mirror = document.createElement('div');
+      const props = ['boxSizing', 'width', 'fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'letterSpacing',
+        'textTransform', 'wordSpacing', 'textIndent', 'lineHeight', 'paddingTop', 'paddingRight', 'paddingBottom',
+        'paddingLeft', 'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth'];
+      props.forEach(p => { mirror.style[p] = cs[p]; });
+      mirror.style.position = 'absolute';
+      mirror.style.visibility = 'hidden';
+      mirror.style.top = '0';
+      mirror.style.left = '-9999px';
+      mirror.style.whiteSpace = input.tagName === 'TEXTAREA' ? 'pre-wrap' : 'pre';
+      mirror.style.wordWrap = 'break-word';
+      mirror.textContent = input.value.substring(0, input.selectionStart || 0);
+      const marker = document.createElement('span');
+      marker.textContent = '\u200b';
+      mirror.appendChild(marker);
+      document.body.appendChild(mirror);
+      const lineH = parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) * 1.3) || 18;
+      let left = marker.offsetLeft - (input.scrollLeft || 0);
+      let top = marker.offsetTop - (input.scrollTop || 0);
+      document.body.removeChild(mirror);
+      left = Math.max(0, Math.min(left, rect.width - 20));
+      top = Math.max(0, Math.min(top, rect.height));
+      return { left: rect.left + left, top: rect.top + top, height: lineH };
+    } catch (e) {
+      return { left: rect.left + 12, top: rect.top, height: rect.height || 20 };
+    }
   }
 
   function positionDropdown(input) {
     const dd = getDropdown();
     if (!dd || !input) return;
-    const parent = input.form || input.parentElement;
-    if (parent) {
-      parent.style.position = 'relative';
-      if (dd.parentElement !== parent) {
-        parent.insertBefore(dd, parent.firstChild);
-      }
-    }
-
-    // Adapt position: if input is near top of viewport (< 220px), position below input
-    try {
-      const rect = input.getBoundingClientRect();
-      if (rect.top < 220) {
-        dd.style.bottom = 'auto';
-        dd.style.top = '100%';
-        dd.style.marginTop = '6px';
-        dd.style.marginBottom = '0';
-      } else {
-        dd.style.bottom = '100%';
-        dd.style.top = 'auto';
-        dd.style.marginTop = '0';
-        dd.style.marginBottom = '6px';
-      }
-    } catch (e) {
-      dd.style.bottom = '100%';
+    const caret = getCaretCoordinates(input);
+    const ddWidth = Math.min(340, window.innerWidth - 16);
+    const left = Math.max(8, Math.min(caret.left, window.innerWidth - ddWidth - 8));
+    dd.style.position = 'fixed';
+    dd.style.right = 'auto';
+    dd.style.left = left + 'px';
+    dd.style.width = ddWidth + 'px';
+    dd.style.marginTop = '0';
+    dd.style.marginBottom = '0';
+    const rect = input.getBoundingClientRect();
+    const spaceAbove = caret.top;
+    const spaceBelow = window.innerHeight - (caret.top + caret.height);
+    if (rect.top < 220 || (caret.top < 220 && spaceBelow > spaceAbove)) {
+      // Not enough room above - show NEAR the caret, just below
+      dd.style.bottom = 'auto';
+      dd.style.top = (caret.top + caret.height + 6) + 'px';
+      dd.style.maxHeight = Math.max(120, Math.min(250, spaceBelow - 14)) + 'px';
+    } else {
+      // Show ABOVE the caret line (grows upward)
       dd.style.top = 'auto';
+      dd.style.bottom = Math.max(8, window.innerHeight - caret.top + 6) + 'px';
+      dd.style.maxHeight = Math.max(120, Math.min(250, spaceAbove - 14)) + 'px';
     }
   }
 
@@ -418,10 +443,20 @@
     suggestions = items;
     selectedIndex = 0;
 
-    const title = trigger.type === '@' ? 'Workspace Members' : 'Workspace Pages, Folders, Topics & Tasks';
+    const title = trigger.type === '@' ? 'Workspace Members' : 'Workspace #NB Pages & #NB Folders';
     let html = `<div class="mention-dropdown-header">${title}</div>`;
+    let shownPagesHeader = false;
+    let shownFoldersHeader = false;
 
     items.forEach((item, idx) => {
+      if (trigger.type === '#' && item.type === 'page' && !shownPagesHeader) {
+        shownPagesHeader = true;
+        html += `<div class="mention-category-label" style="padding:4px 12px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#64748b; background:#f8fafc; border-top:1px solid #f1f5f9;">Category 1 — #NB Pages (Root)</div>`;
+      }
+      if (trigger.type === '#' && item.type === 'folder' && !shownFoldersHeader) {
+        shownFoldersHeader = true;
+        html += `<div class="mention-category-label" style="padding:4px 12px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#64748b; background:#f8fafc; border-top:1px solid #f1f5f9;">Category 2 — #NB Folders (Hover or Click to Expand)</div>`;
+      }
       if (item.type === 'user') {
         html += `
           <div class="mention-item ${idx === 0 ? 'active' : ''}" data-idx="${idx}">
@@ -432,13 +467,14 @@
         `;
       } else if (item.type === 'folder') {
         html += `
-          <div class="mention-item ${idx === 0 ? 'active' : ''}" data-idx="${idx}">
+          <div class="mention-item mention-folder-item ${idx === 0 ? 'active' : ''}" data-idx="${idx}" data-folder-id="${item.id}" data-folder-name="${escapeHtml(item.name)}">
             <div class="mention-item-avatar folder">📁</div>
             <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">
               ${escapeHtml(item.name)}
             </span>
-            <span class="mention-item-tag">#NB Folder ›</span>
+            <span class="mention-item-tag">#NB Folder ▾</span>
           </div>
+          <div class="mention-folder-accordion" id="mention-folder-acc-${item.id}" style="display:none; padding-left:18px; background:#f8fafc; border-bottom:1px solid #e2e8f0;"></div>
         `;
       } else if (item.type === 'page') {
         html += `
@@ -485,6 +521,7 @@
 
     dd.innerHTML = html;
     dd.style.display = 'block';
+    if (activeInputEl) positionDropdown(activeInputEl);
       if (activeInputEl) {
         try { activeInputEl.setAttribute('aria-expanded', 'true'); } catch (e) {}
       }
@@ -494,6 +531,69 @@
         e.preventDefault();
         const idx = Number(el.getAttribute('data-idx'));
         applySuggestion(idx);
+      });
+      if (el.classList.contains('mention-folder-item')) {
+        el.addEventListener('mouseenter', () => {
+          const fId = el.getAttribute('data-folder-id');
+          const fName = el.getAttribute('data-folder-name');
+          if (fId) expandFolderAccordionInline({ id: fId, name: fName });
+        });
+      }
+    });
+  }
+
+  const folderSubPagesCache = new Map();
+  async function expandFolderAccordionInline(folderItem) {
+    const accEl = document.getElementById('mention-folder-acc-' + folderItem.id);
+    if (!accEl) return;
+    if (accEl.getAttribute('data-loaded') === 'true') {
+      accEl.style.display = 'block';
+      return;
+    }
+    const groupId = getActiveGroupId();
+    if (!groupId) return;
+    accEl.setAttribute('data-loaded', 'true');
+    accEl.style.display = 'block';
+    accEl.innerHTML = '<div style="padding:6px 10px; font-size:11px; color:#64748b;">Loading sub-pages...</div>';
+    let subPages = folderSubPagesCache.get(String(folderItem.id));
+    if (!subPages) {
+      try {
+        const res = await apiFetch(`/api/groups/${groupId}/discussions/mentions/folders/${folderItem.id}/pages`);
+        subPages = Array.isArray(res.data) ? res.data : [];
+        folderSubPagesCache.set(String(folderItem.id), subPages);
+      } catch (e) {
+        subPages = [];
+      }
+    }
+    let accHtml = `
+      <div class="mention-sub-item" data-sub-type="folder_select" data-sub-name="${escapeHtml(folderItem.name)}" style="display:flex; align-items:center; gap:8px; padding:6px 10px; font-size:12px; cursor:pointer; font-weight:600; color:var(--primary, #2563eb);">
+        <span>📁 Mention Folder: #Folder: ${escapeHtml(folderItem.name)}</span>
+      </div>
+    `;
+    subPages.forEach(sp => {
+      accHtml += `
+        <div class="mention-sub-item" data-sub-type="page" data-sub-name="${escapeHtml(sp.title)}" style="display:flex; align-items:center; gap:8px; padding:6px 10px; font-size:12px; cursor:pointer; color:#0f172a;">
+          <span>📄 #Page: ${escapeHtml(sp.title)}</span>
+        </div>
+      `;
+    });
+    accEl.innerHTML = accHtml;
+    accEl.querySelectorAll('.mention-sub-item').forEach(subEl => {
+      subEl.addEventListener('mousedown', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const subType = subEl.getAttribute('data-sub-type');
+        const subName = subEl.getAttribute('data-sub-name');
+        if (!activeTrigger) return;
+        const input = activeInputEl || document.getElementById('newCommentInput') || document.getElementById('topicTitle');
+        if (!input) return;
+        const text = input.value;
+        const replacement = subType === 'folder_select' ? `#[Folder: ${subName}] ` : `#[Page: ${subName}] `;
+        input.value = text.slice(0, activeTrigger.startPos) + replacement + text.slice(activeTrigger.endPos);
+        const newCursor = activeTrigger.startPos + replacement.length;
+        input.setSelectionRange(newCursor, newCursor);
+        input.focus();
+        hideDropdown();
       });
     });
   }
@@ -680,6 +780,12 @@
 
     input.addEventListener('keydown', (e) => {
       const dd = getDropdown();
+      if (e.key === 'Escape' && dd && dd.style.display === 'block') {
+        e.preventDefault();
+        e.stopPropagation();
+        hideDropdown();
+        return;
+      }
       if (!dd || dd.style.display !== 'block' || suggestions.length === 0) {
         return;
       }
@@ -724,6 +830,19 @@
     }
     hideDropdown();
   });
+
+  // Attach mention autocomplete to dynamically-rendered inline reply inputs
+  document.addEventListener('focusin', (e) => {
+    const t = e.target;
+    if (t && t.classList && t.classList.contains('inline-reply-input')) attachMentionListeners(t);
+  });
+
+  // Hide overlay if the page scrolls/resizes (it is fixed-position)
+  window.addEventListener('resize', () => { hideDropdown(); });
+  document.addEventListener('scroll', () => {
+    const dd = dropdownEl;
+    if (dd && dd.style.display === 'block' && activeInputEl) positionDropdown(activeInputEl);
+  }, true);
 
   function setupMentionInput() {
     const commentInput = document.getElementById('newCommentInput');
@@ -930,6 +1049,104 @@
     }, 350);
   }
 
+  // ─── Threaded Replies (Reply-to-Reply) Renderer & Inline Reply Handlers ────
+  function renderThreadedComments(comments, options = {}) {
+    if (!Array.isArray(comments) || comments.length === 0) {
+      return '<p style="color:var(--gray); text-align:center; padding:20px;">No replies yet. Be the first to reply!</p>';
+    }
+    const currUser = options.currentUser || (typeof currentUser !== 'undefined' ? currentUser : window.currentUser);
+    const groupDetails = options.currentGroupDetails || (typeof currentGroupDetails !== 'undefined' ? currentGroupDetails : window.currentGroupDetails);
+    const topic = options.topic || {};
+    const threadImages = options.threadImages || window.__activeThreadImages || [];
+
+    const isLeader = groupDetails && (groupDetails.role === 'leader' || groupDetails.role === 'co_leader');
+    const isThreadCreator = currUser && (Number(topic.author_user_id) === Number(currUser.id) || Number(topic.created_by) === Number(currUser.id));
+    const canPin = typeof options.canPin === 'boolean' ? options.canPin : Boolean(isLeader || isThreadCreator);
+    window.__canPinCurrentThread = canPin;
+
+    const esc = typeof escapeHtml === 'function' ? escapeHtml : (str => String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
+    const fmtDate = typeof formatDate === 'function' ? formatDate : (d => d ? new Date(d).toLocaleString() : '');
+    const renderAtts = typeof renderAttachmentsHtml === 'function' ? renderAttachmentsHtml : (() => '');
+
+    const renderOne = (c, level, replyToName) => {
+      const isAuthor = currUser && Number(c.user_id) === Number(currUser.id);
+      const handleTag = replyToName ? `<span class="reply-handle" style="display:inline-block; font-size:11px; font-weight:700; color:var(--primary, #2563eb); background:rgba(37,99,235,0.1); border-radius:10px; padding:1px 8px; margin-right:6px;">@${esc(replyToName)}</span>` : '';
+      const canDelete = isLeader || isAuthor;
+      const isPinned = Boolean(c.is_pinned);
+
+      return `
+        <div class="chat-message" id="comment-item-${c.id}" style="position:relative; display:flex; gap:12px; padding:12px; border-radius:10px; margin-bottom:12px; background:var(--muted, #f8fafc); border:1px solid ${isPinned ? 'rgba(245, 158, 11, 0.45)' : 'var(--border)'}; transition:background 0.2s ease;">
+          <div class="chat-avatar" style="width:36px; height:36px; border-radius:50%; background:var(--primary, #4f46e5); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px; flex-shrink:0; cursor:${isAuthor ? 'default' : 'pointer'};" ${!isAuthor ? `onclick="openDirectMessageDrawer(${c.user_id}, '${esc(c.user_name).replace(/'/g, "\\'")}', '${esc(c.user_initials || 'GS')}')"` : ''} title="${isAuthor ? '' : `Direct message ${esc(c.user_name)}`}">
+            ${esc(c.user_initials || 'GS')}
+          </div>
+          <div class="chat-content" style="flex:1; min-width:0;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <h4 style="margin:0 0 4px 0; font-size:13px; font-weight:600; color:var(--text); cursor:${isAuthor ? 'default' : 'pointer'};" ${!isAuthor ? `onclick="openDirectMessageDrawer(${c.user_id}, '${esc(c.user_name).replace(/'/g, "\\'")}', '${esc(c.user_initials || 'GS')}')"` : ''}>${esc(c.user_name)}</h4>
+              <div style="display:flex; align-items:center; gap:4px;">
+                ${canPin ? `
+                  <button type="button" class="comment-pin-btn" onclick="togglePinDiscussionComment(${c.id}, event)" title="${isPinned ? 'Unpin comment' : 'Pin comment'}" style="background:none; border:none; color:${isPinned ? 'var(--warning, #f59e0b)' : 'var(--gray)'}; font-size:13px; cursor:pointer; padding:2px 6px; border-radius:4px; opacity:${isPinned ? '1' : '0.7'}; transition:all 0.15s ease; display:inline-flex; align-items:center; justify-content:center;">
+                    📌
+                  </button>
+                ` : (isPinned ? `
+                  <span class="comment-pin-badge" title="Pinned in Thread" style="font-size:12px; opacity:0.8; padding:2px 4px; display:inline-flex; align-items:center; color:var(--warning, #f59e0b);">
+                    📌
+                  </span>
+                ` : '')}
+                ${canDelete ? `
+                  <button type="button" class="comment-delete-discrete" onclick="confirmDeleteComment(${c.id}, event)" title="Delete comment" style="background:none; border:none; color:var(--gray); font-size:13px; cursor:pointer; padding:2px 6px; border-radius:4px; opacity:0.7; transition:all 0.15s ease; display:inline-flex; align-items:center; justify-content:center;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+            ${isPinned ? `<div style="display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--warning, #f59e0b); font-weight:600; margin-bottom:4px;">📌 Pinned in Thread</div>` : ''}
+            ${c.content ? `<p style="margin:0 0 4px 0; font-size:13px; color:var(--text); line-height:1.5; word-break:break-word;">${handleTag}${highlightMentions(c.content)}</p>` : ''}
+            ${renderAtts(c.attachments, threadImages)}
+            <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+              <span style="font-size:11px; color:var(--gray);">${fmtDate(c.created_at)}</span>
+              <button type="button" class="comment-reply-btn" onclick="toggleInlineReply(${c.id}, event)" title="Reply to ${esc(c.user_name)}" style="background:none; border:none; color:var(--primary, #2563eb); font-size:12px; font-weight:600; cursor:pointer; padding:2px 4px; border-radius:4px;">Reply</button>
+            </div>
+            <div class="inline-reply-slot" id="inline-reply-slot-${c.id}" style="display:none; margin-top:8px;"></div>
+          </div>
+        </div>
+      `;
+    };
+
+    const byParent = new Map();
+    const knownIds = new Set(comments.map(c => Number(c.id)));
+    comments.forEach(c => {
+      const pid = c.parent_comment_id && knownIds.has(Number(c.parent_comment_id)) ? Number(c.parent_comment_id) : 0;
+      if (!byParent.has(pid)) byParent.set(pid, []);
+      byParent.get(pid).push(c);
+    });
+    const countDescendants = (id) => (byParent.get(Number(id)) || []).reduce((n, ch) => n + 1 + countDescendants(ch.id), 0);
+    const MAX_INDENT_LEVEL = 3;
+
+    const renderBranch = (c, level, replyToName) => {
+      const kids = byParent.get(Number(c.id)) || [];
+      let html = '<div class="comment-thread" data-comment-id="' + c.id + '">' + renderOne(c, level, replyToName);
+      if (kids.length) {
+        const total = countDescendants(c.id);
+        if (kids.length > 1 || total > 1) {
+          html += '<button type="button" class="comment-collapse-btn" data-count="' + total + '" onclick="toggleCommentReplies(' + c.id + ', event)" style="background:none; border:none; color:var(--gray); font-size:11px; font-weight:600; cursor:pointer; margin:-4px 0 6px 16px; padding:2px 4px;">Hide ' + total + ' replies</button>';
+        }
+        if (level < MAX_INDENT_LEVEL) {
+          html += '<div class="comment-children" id="comment-children-' + c.id + '" style="border-left: 2px solid #cbd5e1; margin-left: 16px; padding-left: 12px;">' +
+            kids.map(k => renderBranch(k, level + 1, null)).join('') + '</div>';
+        } else {
+          html += '<div class="comment-children" id="comment-children-' + c.id + '">' +
+            kids.map(k => renderBranch(k, level, c.user_name || 'Member')).join('') + '</div>';
+        }
+      }
+      return html + '</div>';
+    };
+
+    return (byParent.get(0) || []).map(c => renderBranch(c, 1, null)).join('');
+  }
+
+  let handleTopicSubmitRef = null;
+  let handleCommentSubmitRef = null;
+
   // Explicit event listener and button click repairs for Discussion Board
   function setupDiscussionBoardListeners() {
     const submitTopicBtn = document.getElementById('submitTopicBtn');
@@ -1076,6 +1293,10 @@
         if (!postCommentForm) handleCommentSubmit(e);
       });
     }
+    handleTopicSubmitRef = handleTopicSubmit;
+    handleCommentSubmitRef = handleCommentSubmit;
+    window.handleCreateTopic = handleTopicSubmit;
+    window.handlePostComment = handleCommentSubmit;
   }
 
   async function handlePageTagClick(rawTitle) {
@@ -1086,8 +1307,9 @@
   window.resetDiscussionMentions = hideDropdown;
   window.highlightMentions = highlightMentions;
   window.setupDiscussionBoardListeners = setupDiscussionBoardListeners;
-  window.handleCreateTopic = handleTopicSubmit;
-  window.handlePostComment = handleCommentSubmit;
+  window.renderThreadedComments = renderThreadedComments;
+  window.handleCreateTopic = function (e) { return handleTopicSubmitRef ? handleTopicSubmitRef(e) : undefined; };
+  window.handlePostComment = function (e) { return handleCommentSubmitRef ? handleCommentSubmitRef(e) : undefined; };
   window.handleNotebookTagClick = handleNotebookTagClick;
   window.handlePageTagClick = handlePageTagClick;
   window.handleFolderTagClick = handleFolderTagClick;

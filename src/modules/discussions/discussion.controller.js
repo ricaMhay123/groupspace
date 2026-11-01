@@ -62,14 +62,15 @@ async function createTopic(req, res) {
 
 async function postComment(req, res) {
   try {
-    const { content, attachments } = req.body;
+    const { content, attachments, parentCommentId } = req.body;
     const comment = await discussionService.postComment({
       topicId: req.params.topicId,
       groupId: req.params.groupId,
       content,
       userId: req.user.id,
       userName: req.user.full_name,
-      attachments: Array.isArray(attachments) ? attachments : []
+      attachments: Array.isArray(attachments) ? attachments : [],
+      parentCommentId: parentCommentId || null
     });
 
     return res.status(HTTP_STATUS.CREATED).json({

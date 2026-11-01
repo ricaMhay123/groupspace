@@ -48,14 +48,23 @@ const DiscussionModel = {
     `;
   },
 
-  async addComment({ discussionId, userId, content, attachments = [] }) {
+  async addComment({ discussionId, userId, content, attachments = [], parentCommentId = null }) {
     const jsonAttachments = JSON.stringify(Array.isArray(attachments) ? attachments : []);
     const [result] = await sql`
-      INSERT INTO discussion_comments (discussion_id, user_id, content, attachments)
-      VALUES (${discussionId}, ${userId}, ${content}, ${jsonAttachments}::jsonb)
+      INSERT INTO discussion_comments (discussion_id, user_id, content, attachments, parent_comment_id)
+      VALUES (${discussionId}, ${userId}, ${content}, ${jsonAttachments}::jsonb, ${parentCommentId})
       RETURNING id
     `;
     return Number(result.id);
+  },
+
+  /** Find a comment only if it belongs to the given discussion. */
+  async findCommentInDiscussion(commentId, discussionId) {
+    const [row] = await sql`
+      SELECT id FROM discussion_comments
+      WHERE id = ${commentId} AND discussion_id = ${discussionId}
+    `;
+    return row || null;
   },
 
   async getComments(discussionId, groupId) {

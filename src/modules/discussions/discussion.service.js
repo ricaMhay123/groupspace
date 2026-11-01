@@ -117,7 +117,7 @@ async function getTopicDetails(topicId, groupId) {
   };
 }
 
-async function postComment({ topicId, groupId, content, userId, userName, attachments = [] }) {
+async function postComment({ topicId, groupId, content, userId, userName, attachments = [], parentCommentId = null }) {
   const cleanContent = sanitizeText(content);
   if (!cleanContent && (!attachments || attachments.length === 0)) {
     throw new Error('Comment must have text content or at least one attachment.');
@@ -131,13 +131,26 @@ async function postComment({ topicId, groupId, content, userId, userName, attach
     throw err;
   }
 
+  // 1b. Validate optional parent comment belongs to this same topic
+  let safeParentId = null;
+  if (parentCommentId !== null && parentCommentId !== undefined && parentCommentId !== '') {
+    const parent = await DiscussionModel.findCommentInDiscussion(Number(parentCommentId), Number(topicId));
+    if (!parent) {
+      const err = new Error('Parent comment not found in this topic.');
+      err.status = 404;
+      throw err;
+    }
+    safeParentId = Number(parent.id);
+  }
+
   // 2. Insert comment with attachments
   const normalizedAttachments = normalizeAttachments(attachments);
   const commentId = await DiscussionModel.addComment({
     discussionId: Number(topicId),
     userId,
     content: cleanContent || '',
-    attachments: normalizedAttachments
+    attachments: normalizedAttachments,
+    parentCommentId: safeParentId
   });
 
   // 3. Process workspace-scoped @mentions (supports multiple members in one comment)
