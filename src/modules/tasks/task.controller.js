@@ -13,6 +13,33 @@ const { isAdminRole } = require('../../config/constants');
 
 // ─── Helper ────────────────────────────────────────────────────────────────────
 
+// In-memory cache for duplicate task submission throttle (2000ms window)
+const recentTaskSubmissions = new Map();
+
+function isDuplicateTaskSubmission(userId, groupId, title) {
+  const cleanTitle = (title || '').trim().toLowerCase();
+  const key = `${userId}:${groupId}:${cleanTitle}`;
+  const now = Date.now();
+  const lastTime = recentTaskSubmissions.get(key);
+
+  if (lastTime && (now - lastTime) < 2000) {
+    return true;
+  }
+
+  recentTaskSubmissions.set(key, now);
+
+  // Periodic pruning of entries older than 10 seconds
+  if (recentTaskSubmissions.size > 200) {
+    for (const [k, time] of recentTaskSubmissions.entries()) {
+      if (now - time > 10000) {
+        recentTaskSubmissions.delete(k);
+      }
+    }
+  }
+
+  return false;
+}
+
 /** Map a service domain error to its explicit HTTP status code. */
 function errStatus(err) {
   return err.httpStatus || HTTP_STATUS.INTERNAL_SERVER_ERROR;
@@ -59,6 +86,14 @@ async function create(req, res) {
     }
 
     const groupId = req.params.groupId || req.query.groupId || req.groupId;
+
+    // Reject duplicate task submissions from the same user within 2 seconds
+    if (isDuplicateTaskSubmission(req.user.id, groupId, title)) {
+      return res.status(HTTP_STATUS.CONFLICT).json({
+        success: false,
+        message: 'Duplicate task submission detected. Please wait a moment.'
+      });
+    }
 
     const task = await taskService.createTask({
       groupId,
@@ -343,5 +378,7 @@ module.exports = {
   // Peer-assist
   getAssistOffers,
   offerAssist,
-  respondAssist
+  respondAssist,
+  // Throttling helper
+  isDuplicateTaskSubmission
 };

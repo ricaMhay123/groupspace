@@ -1601,8 +1601,17 @@ function createDefaultKanbanCard(task) {
   return card;
 }
 
+let isSubmittingTask = false;
+window.isSubmittingTask = isSubmittingTask;
+
 async function handleCreateTask(e) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
+
+  if (isSubmittingTask || window.isSubmittingTask) {
+    console.warn('[Tasks] Task creation submission already in-flight; ignoring duplicate click.');
+    return;
+  }
+
   const title = document.getElementById('taskTitle').value.trim();
   const description = document.getElementById('taskDesc').value.trim();
   const priority = document.getElementById('taskPriority').value;
@@ -1615,13 +1624,28 @@ async function handleCreateTask(e) {
 
   const estimatedDueDate = document.getElementById('taskDueDate') ? document.getElementById('taskDueDate').value : '';
 
+  if (!title) {
+    showToast('Please enter a task title.', 'error');
+    return;
+  }
+
   if (!estimatedDueDate) {
     showToast('Please select an estimated deadline date.', 'error');
     return;
   }
 
   const submitBtn = document.getElementById('createTaskSubmitBtn');
-  if (submitBtn) submitBtn.disabled = true;
+  const originalBtnHtml = submitBtn ? submitBtn.innerHTML : 'Create Task';
+
+  // Immediately lock state and disable submit button & pointer events
+  isSubmittingTask = true;
+  window.isSubmittingTask = true;
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.style.pointerEvents = 'none';
+    submitBtn.innerHTML = '<span class="task-btn-spinner" style="display:inline-block; width:12px; height:12px; border:2px solid #ffffff; border-top-color:transparent; border-radius:50%; animation:gs-spin 0.6s linear infinite; margin-right:6px; vertical-align:middle;"></span>Creating...';
+  }
 
   try {
     await apiFetch(`/api/groups/${currentGroupId}/tasks`, {
@@ -1648,7 +1672,13 @@ async function handleCreateTask(e) {
   } catch (err) {
     showToast(err.message, 'error');
   } finally {
-    if (submitBtn) submitBtn.disabled = false;
+    isSubmittingTask = false;
+    window.isSubmittingTask = false;
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.style.pointerEvents = 'auto';
+      submitBtn.innerHTML = originalBtnHtml;
+    }
   }
 }
 

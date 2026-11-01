@@ -607,27 +607,30 @@ window.toggleTaskFlag = toggleTaskFlag;
 window.offerTaskHelp = offerTaskHelp;
 window.updateLeaderBacklogBadge = updateLeaderBacklogBadge;
 
-// Ensure all task submit buttons have explicit event listeners with e.preventDefault()
+// Ensure all task submit buttons have explicit event listeners with e.preventDefault() and double-click protection
 function setupTaskEventListeners() {
   const taskForm = document.getElementById('createTaskForm');
   const taskBtn = document.getElementById('createTaskSubmitBtn');
 
+  function onTaskFormSubmit(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    if (window.isSubmittingTask) {
+      console.warn('[Tasks] Submission already in progress; ignoring duplicate event.');
+      return;
+    }
+    if (typeof handleCreateTask === 'function') {
+      handleCreateTask(e);
+    }
+  }
+
   if (taskForm) {
-    taskForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (typeof handleCreateTask === 'function') {
-        handleCreateTask(e);
-      }
-    });
+    taskForm.removeEventListener('submit', onTaskFormSubmit);
+    taskForm.addEventListener('submit', onTaskFormSubmit);
   }
 
   if (taskBtn && !taskForm) {
-    taskBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (typeof handleCreateTask === 'function') {
-        handleCreateTask(e);
-      }
-    });
+    taskBtn.removeEventListener('click', onTaskFormSubmit);
+    taskBtn.addEventListener('click', onTaskFormSubmit);
   }
 }
 
