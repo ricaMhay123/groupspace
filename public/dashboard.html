@@ -128,7 +128,7 @@
         <p style="color:var(--gray); margin:0; font-size:13px;">
           <strong>Dual-Approval Workflow:</strong> Workers submit finished tasks for approval. Workspace <strong>Leaders</strong> verify and grant final completion.
         </p>
-        <button onclick="openModal('createTaskModal')" class="btn-green">+ Create Task</button>
+        <button onclick="openCreateTaskModal(event)" class="btn-green">+ Create Task</button>
       </div>
 
       <div class="kanban-board">
@@ -418,11 +418,14 @@
           <option value="URGENT">Urgent</option>
         </select>
       </div>
-      <div class="form-group">
+      <div class="form-group" id="taskAssigneeGroup">
         <label>Assign To Member</label>
         <select id="taskAssignee" class="form-control">
           <option value="">Unassigned</option>
         </select>
+        <div id="taskAssigneeNote" style="display:none; font-size:11px; color:var(--gray); margin-top:4px;">
+          Members create tasks for themselves (submits to Leader Pending Approval queue).
+        </div>
       </div>
       <div class="form-group">
         <label>Estimated Deadline Date *</label>
@@ -475,8 +478,8 @@
       <textarea id="reviewNotes" class="form-control" rows="2" placeholder="e.g. Looks great, verified tests pass!"></textarea>
     </div>
     <div class="form-actions" style="margin-top:20px; display:flex; gap:12px;">
-      <button type="button" class="btn-outline" onclick="submitReview(false)" style="color:#dc2626; border-color:#dc2626;">Request Revisions</button>
-      <button type="button" class="btn-green" onclick="submitReview(true)">Approve as Done</button>
+      <button type="button" class="btn-outline" onclick="submitReview(false, event)" style="color:#dc2626; border-color:#dc2626;">Request Revisions</button>
+      <button type="button" class="btn-green" onclick="submitReview(true, event)">Approve as Done</button>
     </div>
   </div>
 </div>

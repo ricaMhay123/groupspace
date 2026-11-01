@@ -53,3 +53,4 @@ assert(styleCss.includes('cardHighlightPulse'), 'style.css defines cardHighlight
 console.log('  ✅ CSS tag pills and card highlight pulse verified');
 
 console.log('\n🎉 ALL WORKSPACE MENTIONS & NOTEBOOK/FOLDER TAGGING TESTS PASSED!\n');
+

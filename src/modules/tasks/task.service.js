@@ -237,15 +237,16 @@ async function deleteTask({ taskId, groupId, userId, userRole }) {
  * Mark a task as "Blocked / Help Needed" (is_flagged = true).
  *
  * Rules:
- *  - Only the task's assigned member (or a leader) may flag it.
+ *  - Only the task's assigned member may flag it.
+ *  - Unassigned members cannot flag tasks assigned to someone else.
  *  - Already-flagged tasks return a 409-level domain error.
  */
 async function flagTask({ taskId, groupId, userId, userRole, reason }) {
   const task = await _resolveTask(taskId, groupId);
-  const isLeader = isAdminRole(userRole);
+  const assignedUserId = task.assigned_to_user_id || task.assigned_to;
 
-  if (!isLeader && task.assigned_to_user_id !== userId) {
-    throw domainError(SYSTEM_MESSAGES.TASK_EDIT_DENIED, 403);
+  if (!assignedUserId || Number(assignedUserId) !== Number(userId)) {
+    throw domainError('Only the assigned member can report a blocker or flag this task for help.', 403);
   }
 
   if (task.is_flagged) {
@@ -274,10 +275,11 @@ async function flagTask({ taskId, groupId, userId, userRole, reason }) {
  */
 async function unflagTask({ taskId, groupId, userId, userRole }) {
   const task = await _resolveTask(taskId, groupId);
+  const assignedUserId = task.assigned_to_user_id || task.assigned_to;
   const isLeader = isAdminRole(userRole);
 
-  if (!isLeader && task.assigned_to_user_id !== userId) {
-    throw domainError(SYSTEM_MESSAGES.TASK_EDIT_DENIED, 403);
+  if ((!assignedUserId || Number(assignedUserId) !== Number(userId)) && !isLeader) {
+    throw domainError('Only the assigned member or a workspace leader can clear the blocker on this task.', 403);
   }
 
   const updated = await TaskModel.update(taskId, {

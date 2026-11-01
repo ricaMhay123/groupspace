@@ -131,6 +131,42 @@ function renderKanbanCard(task) {
       followUpOnTask(task.id, task.title, followUpBtn, e);
     };
     card.appendChild(followUpBtn);
+  } else if (task.status === 'PENDING_APPROVAL') {
+    if (isLeader) {
+      const reviewBtn = document.createElement('button');
+      reviewBtn.type = 'button';
+      reviewBtn.className = 'btn-green btn-review-approve';
+      reviewBtn.style.cssText = 'margin-top:8px; padding:4px 10px; font-size:11px; font-weight:600; border-radius:6px; cursor:pointer; width:100%; text-align:center; display:block;';
+      reviewBtn.textContent = 'Review & Approve';
+      reviewBtn.onclick = (e) => {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+        if (typeof openReviewModal === 'function') {
+          openReviewModal(task.id, task.title);
+        }
+      };
+      card.appendChild(reviewBtn);
+
+      if (assignedTo && currentUserId !== assignedTo) {
+        const followUpBtn = document.createElement('button');
+        followUpBtn.type = 'button';
+        followUpBtn.className = 'btn-outline btn-follow-up';
+        followUpBtn.setAttribute('data-task-id', task.id);
+        followUpBtn.style.cssText = 'margin-top:4px; padding:4px 10px; font-size:11px; font-weight:600; border-radius:6px; cursor:pointer; width:100%; text-align:center; display:block; color:var(--primary); border:1px solid var(--border); background:transparent;';
+        followUpBtn.textContent = 'Follow Up';
+        followUpBtn.onclick = (e) => {
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+          followUpOnTask(task.id, task.title, followUpBtn, e);
+        };
+        card.appendChild(followUpBtn);
+      }
+    } else {
+      const statusNote = document.createElement('div');
+      statusNote.style.cssText = 'margin-top:8px; font-size:11px; color:var(--warning, #f59e0b); font-weight:600; text-align:center;';
+      statusNote.textContent = '⏳ Awaiting Leader Review';
+      card.appendChild(statusNote);
+    }
   }
 
   return card;
@@ -219,8 +255,11 @@ async function openTaskDetailsModal(taskId) {
   } else if (task.status === 'PENDING_APPROVAL') {
     if (isLeader) {
       actionsHtml += `<button type="button" class="btn-green" style="padding:7px 16px; font-size:12px; font-weight:600;" onclick="event.preventDefault(); closeModal('taskDetailsModal'); openReviewModal(${task.id}, '${escapeHtml(task.title).replace(/'/g, "\\'")}')">Review & Approve</button>`;
+      if (assignedTo && currentUserId !== assignedTo) {
+        actionsHtml += `<button type="button" class="btn-outline btn-follow-up" data-task-id="${task.id}" style="padding:7px 16px; font-size:12px; font-weight:600; color:var(--primary); border:1px solid var(--border);" onclick="event.preventDefault(); followUpOnTask(${task.id}, '${escapeHtml(task.title).replace(/'/g, "\\'")}', this, event)">Follow Up</button>`;
+      }
     } else {
-      actionsHtml += `<span style="font-size:12px; color:var(--warning); font-weight:600;">Awaiting Leader Review</span>`;
+      actionsHtml += `<span style="font-size:12px; color:var(--warning); font-weight:600;">⏳ Awaiting Leader Review</span>`;
     }
   }
 
@@ -251,7 +290,7 @@ async function openTaskDetailsModal(taskId) {
     <div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
         <div style="font-size:11px; font-weight:700; color:var(--gray); text-transform:uppercase; letter-spacing:0.5px;">Blockers & Assistance</div>
-        ${(isAssignee || isLeader) ? `
+        ${isAssignee ? `
           <button type="button" class="btn-outline" style="padding:3px 10px; font-size:11px; border-radius:6px; color:${task.is_flagged ? '#10b981' : '#ef4444'}; border-color:${task.is_flagged ? '#10b981' : 'rgba(239,68,68,0.4)'}; cursor:pointer;" onclick="event.preventDefault(); toggleTaskFlagDetails(${task.id}, ${Boolean(task.is_flagged)}, event)">
             ${task.is_flagged ? 'Clear Help Flag' : 'Flag for Help'}
           </button>
@@ -374,12 +413,21 @@ async function respondAssistOffer(taskId, helperId, status, event = null) {
 }
 
 /**
- * Toggle task flagged status (Assignee or Leader only)
+ * Toggle task flagged status (Assignee only)
  */
 async function toggleTaskFlag(taskId, currentlyFlagged) {
   try {
     const activeGroupId = typeof currentGroupId !== 'undefined' ? currentGroupId : null;
     if (!activeGroupId) return;
+
+    let task = Array.isArray(window.currentTasks) ? window.currentTasks.find(t => Number(t.id) === Number(taskId)) : null;
+    if (task) {
+      const { isAssigned } = resolveTaskRoleContext(task);
+      if (!isAssigned) {
+        if (typeof showToast === 'function') showToast('Only the assigned member can report a blocker or flag this task for help.', 'error');
+        return;
+      }
+    }
 
     if (currentlyFlagged) {
       await apiFetch(`/api/groups/${activeGroupId}/tasks/${taskId}/unflag`, {

@@ -84,3 +84,4 @@
 - [ ] Run `.agents\skills\impeccable\scripts\impeccable.cmd detect public\dashboard.html public\css\style.css --no-advisory`.
 - [ ] Run `node tests/test-localhost.js` (verifying all 17 feature test suites pass).
 - [ ] Execute `git add .`, `git commit -m "feat: implement workspace-scoped mentions and notebook/folder tagging with seamless filter navigation"`, and `git push origin main`.
+

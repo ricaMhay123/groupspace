@@ -300,27 +300,12 @@ async function requireNotebookEditorAccess(req, res, next) {
 async function checkTaskCreationPermission(req, res, next) {
   const { role } = req.membership;
   const requesterId = Number(req.user.id); // identity comes from the JWT cookie, never the body
-  const rawAssignee = req.body.assignedToUserId;
-  const assignedTo  = (rawAssignee === undefined || rawAssignee === null || rawAssignee === '')
-    ? null
-    : Number(rawAssignee);
 
   // Leaders have no restriction
   if (isAdminRole(role)) return next();
 
-  // Members: a blank assignee defaults to themselves
-  if (assignedTo === null) {
-    req.body.assignedToUserId = requesterId;
-    return next();
-  }
-
-  // Members must never assign to anyone else
-  if (assignedTo !== requesterId) {
-    return res.status(HTTP_STATUS.FORBIDDEN).json({
-      success: false,
-      message: SYSTEM_MESSAGES.TASK_CREATION_DENIED
-    });
-  }
+  // Members: force assigned_to = currentUser.id (tasks can only be made for themselves)
+  req.body.assignedToUserId = requesterId;
 
   next();
 }

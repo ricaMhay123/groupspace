@@ -218,11 +218,23 @@ function copyJoinCode() {
 function populateMemberDropdowns(members) {
   const taskAssignee = document.getElementById('taskAssignee');
   const expPaidBy = document.getElementById('expPaidBy');
+  const taskNote = document.getElementById('taskAssigneeNote');
 
   if (taskAssignee) {
-    taskAssignee.innerHTML = '<option value="">Unassigned</option>' + members.map(m => `
-      <option value="${m.user_id}">${escapeHtml(m.full_name)} (${m.role})</option>
-    `).join('');
+    const isLeader = currentGroupDetails && (currentGroupDetails.role === 'leader' || currentGroupDetails.role === 'co_leader');
+    if (!isLeader && currentUser) {
+      taskAssignee.innerHTML = `<option value="${currentUser.id}" selected>${escapeHtml(currentUser.full_name || 'Myself')} (You - Self-Assigned)</option>`;
+      taskAssignee.disabled = true;
+      taskAssignee.title = 'Members can only create tasks for themselves (submits to Leader Pending Approval queue).';
+      if (taskNote) taskNote.style.display = 'block';
+    } else {
+      taskAssignee.disabled = false;
+      taskAssignee.title = 'Assign to a team member or leave unassigned';
+      if (taskNote) taskNote.style.display = 'none';
+      taskAssignee.innerHTML = '<option value="">Unassigned</option>' + members.map(m => `
+        <option value="${m.user_id}">${escapeHtml(m.full_name)} (${m.role})</option>
+      `).join('');
+    }
   }
 
   if (expPaidBy) {
@@ -231,6 +243,27 @@ function populateMemberDropdowns(members) {
     `).join('');
   }
 }
+
+function openCreateTaskModal(e = null) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+  const taskAssignee = document.getElementById('taskAssignee');
+  const taskNote = document.getElementById('taskAssigneeNote');
+  const isLeader = currentGroupDetails && (currentGroupDetails.role === 'leader' || currentGroupDetails.role === 'co_leader');
+
+  if (taskAssignee) {
+    if (!isLeader && currentUser) {
+      taskAssignee.innerHTML = `<option value="${currentUser.id}" selected>${escapeHtml(currentUser.full_name || 'Myself')} (You - Self-Assigned)</option>`;
+      taskAssignee.disabled = true;
+      taskAssignee.title = 'Members can only create tasks for themselves (submits to Leader Pending Approval queue).';
+      if (taskNote) taskNote.style.display = 'block';
+    } else {
+      taskAssignee.disabled = false;
+      if (taskNote) taskNote.style.display = 'none';
+    }
+  }
+  openModal('createTaskModal');
+}
+window.openCreateTaskModal = openCreateTaskModal;
 
 // ================= MOBILE SIDEBAR DRAWER TOGGLE ================= //
 function toggleMobileSidebar(forceState) {
@@ -1569,17 +1602,26 @@ function createDefaultKanbanCard(task) {
 }
 
 async function handleCreateTask(e) {
-  e.preventDefault();
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
   const title = document.getElementById('taskTitle').value.trim();
   const description = document.getElementById('taskDesc').value.trim();
   const priority = document.getElementById('taskPriority').value;
-  const assignedToUserId = document.getElementById('taskAssignee').value;
+  const isLeader = currentGroupDetails && (currentGroupDetails.role === 'leader' || currentGroupDetails.role === 'co_leader');
+  
+  // Force member task assignment to themselves
+  const assignedToUserId = isLeader
+    ? document.getElementById('taskAssignee').value
+    : (currentUser ? currentUser.id : document.getElementById('taskAssignee').value);
+
   const estimatedDueDate = document.getElementById('taskDueDate') ? document.getElementById('taskDueDate').value : '';
 
   if (!estimatedDueDate) {
     showToast('Please select an estimated deadline date.', 'error');
     return;
   }
+
+  const submitBtn = document.getElementById('createTaskSubmitBtn');
+  if (submitBtn) submitBtn.disabled = true;
 
   try {
     await apiFetch(`/api/groups/${currentGroupId}/tasks`, {
@@ -1595,13 +1637,18 @@ async function handleCreateTask(e) {
     });
     closeModal('createTaskModal');
     document.getElementById('createTaskForm').reset();
-    showToast('Task added to board!', 'success');
+    const successMsg = !isLeader
+      ? 'Task created and submitted for Leader Approval!'
+      : 'Task added to board!';
+    showToast(successMsg, 'success');
     loadTasks();
     if (typeof calendarInstance !== 'undefined' && calendarInstance) {
       calendarInstance.refetchEvents();
     }
   } catch (err) {
     showToast(err.message, 'error');
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
   }
 }
 
