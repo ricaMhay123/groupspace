@@ -1176,6 +1176,16 @@
       </div>
 
       <!-- ==================== [INSERT TAB] ==================== -->
+      <!-- 0. Pages & Illustrations Group -->
+      <div class="nb-toolbar-group" data-ribbon-group="insert" style="display:none;">
+        <label>Pages:</label>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertCoverPage()" title="Insert Cover Page">Cover Page</button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertBlankPage()" title="Insert Blank Page">Blank Page</button>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertPageBreak()" title="Insert Page Break">Page Break</button>
+        <input type="file" id="nbPictureInput" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;" onchange="handleInsertPicture(event)">
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="document.getElementById('nbPictureInput').click()" title="Upload and embed an image">Picture</button>
+      </div>
+
       <!-- 1. Tables Group: Dynamic Grid Generator -->
       <div class="nb-toolbar-group" data-ribbon-group="insert" style="display:none;">
         <label>Tables:</label>
@@ -1385,6 +1395,32 @@
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Rotate 90°" onclick="rotateSelectedShape90()">↻ 90°</button>
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Flip Horizontal" onclick="flipSelectedShapeH()">⇄ Flip</button>
         <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align to Center" onclick="alignSelectedShapeCenter()">⇹ Center</button>
+      </div>
+
+      <!-- 3. Table of Contents Group -->
+      <div class="nb-toolbar-group" data-ribbon-group="layout" style="display:none;">
+        <label>Contents:</label>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTableOfContents()" title="Insert Table of Contents">Insert TOC</button>
+        <select id="nbTocAddText" class="nb-edit-ctrl" onchange="if(this.value){markHeadingLevel(this.value); this.value='';}" title="Add Text to Table of Contents">
+          <option value="" disabled selected>Add Text</option>
+          <option value="1">Level 1</option>
+          <option value="2">Level 2</option>
+          <option value="3">Level 3</option>
+          <option value="0">Do Not Show</option>
+        </select>
+        <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="updateTableOfContents()" title="Update Table of Contents">Update Table</button>
+      </div>
+
+      <!-- 4. Numeric Indent & Spacing Group -->
+      <div class="nb-toolbar-group" data-ribbon-group="layout" style="display:none;">
+        <label for="nbIndentLeft">Indent Left:</label>
+        <input type="number" id="nbIndentLeft" class="nb-edit-ctrl" min="0" max="200" value="0" style="width:56px;" onchange="applyParagraphIndent('left', this.value)">
+        <label for="nbIndentRight">Right:</label>
+        <input type="number" id="nbIndentRight" class="nb-edit-ctrl" min="0" max="200" value="0" style="width:56px;" onchange="applyParagraphIndent('right', this.value)">
+        <label for="nbSpacingBefore">Before:</label>
+        <input type="number" id="nbSpacingBefore" class="nb-edit-ctrl" min="0" max="72" value="0" style="width:52px;" onchange="applyParagraphSpacingPt('before', this.value)"><span>pt</span>
+        <label for="nbSpacingAfter">After:</label>
+        <input type="number" id="nbSpacingAfter" class="nb-edit-ctrl" min="0" max="72" value="8" style="width:52px;" onchange="applyParagraphSpacingPt('after', this.value)"><span>pt</span>
       </div>
 
       <!-- ==================== [TABLE DESIGN TAB (CONTEXTUAL)] ==================== -->
@@ -2647,6 +2683,109 @@ function applyPaperSize(size) {
     canvas.style.maxWidth = '850px';
     canvas.style.minHeight = '1400px';
   }
+}
+
+function nbCanEditNow() {
+  const cur = pages.find(p => Number(p.id) === Number(currentPageId));
+  return !(cur && !canCurrentUserEditPage(cur));
+}
+
+function nbInsertHtml(html) {
+  if (!nbCanEditNow()) return;
+  const editor = document.getElementById('nbPageContent');
+  if (!editor) return;
+  editor.focus();
+  document.execCommand('insertHTML', false, html);
+  updateWordCount();
+  scheduleAutoSave();
+}
+
+function insertPageBreak() {
+  nbInsertHtml('<div class="nb-page-break" contenteditable="false" style="page-break-after:always;break-after:page;border-top:2px dashed #94a3b8;margin:18px 0;text-align:center;color:#94a3b8;font-size:11px;">Page Break</div><p><br></p>');
+}
+
+function insertBlankPage() {
+  insertPageBreak();
+}
+
+function insertCoverPage() {
+  nbInsertHtml('<div class="nb-cover-page" style="text-align:center;padding:96px 24px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:24px;"><h1 style="font-size:40px;margin:0 0 12px;">Document Title</h1><h3 style="font-weight:400;color:#64748b;margin:0 0 48px;">Subtitle</h3><p>Author &middot; ' + new Date().toLocaleDateString() + '</p></div><div class="nb-page-break" contenteditable="false" style="page-break-after:always;border-top:2px dashed #94a3b8;margin:18px 0;"></div><p><br></p>');
+}
+
+function handleInsertPicture(event) {
+  const file = event.target.files && event.target.files[0];
+  event.target.value = '';
+  if (!file || !/^image\//.test(file.type)) return;
+  const reader = new FileReader();
+  reader.onload = () => nbInsertHtml('<img src="' + reader.result + '" alt="' + String(file.name).replace(/[<>"]/g, '') + '" style="max-width:100%;height:auto;"><p><br></p>');
+  reader.readAsDataURL(file);
+}
+
+function markHeadingLevel(level) {
+  if (!nbCanEditNow()) return;
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount) return;
+  let node = sel.anchorNode;
+  const editor = document.getElementById('nbPageContent');
+  while (node && node !== editor && !(node.nodeType === 1 && /^(P|DIV|H[1-6]|LI)$/.test(node.nodeName))) node = node.parentNode;
+  if (!node || node === editor) return;
+  if (level === '0') node.removeAttribute('data-toc-level');
+  else node.setAttribute('data-toc-level', level);
+  scheduleAutoSave();
+}
+
+function buildTocHtml(editor) {
+  const items = [];
+  editor.querySelectorAll('h1,h2,h3,[data-toc-level]').forEach(el => {
+    if (el.closest('.nb-toc')) return;
+    const lvl = el.getAttribute('data-toc-level') || el.nodeName.replace('H', '');
+    const text = (el.textContent || '').trim();
+    if (text) items.push({ lvl: Math.min(3, Math.max(1, Number(lvl))), text });
+  });
+  const esc = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  return '<h3 style="margin:0 0 8px;">Table of Contents</h3>' + (items.length
+    ? items.map(i => '<div style="margin-left:' + (i.lvl - 1) * 18 + 'px;">' + esc(i.text) + '</div>').join('')
+    : '<div style="color:#94a3b8;">No headings found. Use Heading styles or Add Text.</div>');
+}
+
+function insertTableOfContents() {
+  const editor = document.getElementById('nbPageContent');
+  if (!editor) return;
+  nbInsertHtml('<div class="nb-toc" contenteditable="false" style="border:1px solid #cbd5e1;border-radius:8px;padding:14px 18px;margin:12px 0;">' + buildTocHtml(editor) + '</div><p><br></p>');
+}
+
+function updateTableOfContents() {
+  if (!nbCanEditNow()) return;
+  const editor = document.getElementById('nbPageContent');
+  if (!editor) return;
+  editor.querySelectorAll('.nb-toc').forEach(t => { t.innerHTML = buildTocHtml(editor); });
+  scheduleAutoSave();
+}
+
+function nbSelectedBlocks() {
+  const editor = document.getElementById('nbPageContent');
+  const sel = window.getSelection();
+  if (!editor || !sel || !sel.rangeCount) return [];
+  const range = sel.getRangeAt(0);
+  const blocks = Array.from(editor.querySelectorAll('p,div:not(.nb-toc),h1,h2,h3,h4,li')).filter(b => range.intersectsNode(b));
+  if (blocks.length) return blocks;
+  let n = sel.anchorNode;
+  while (n && n !== editor && !(n.nodeType === 1 && /^(P|DIV|H[1-6]|LI)$/.test(n.nodeName))) n = n.parentNode;
+  return n && n !== editor ? [n] : [];
+}
+
+function applyParagraphIndent(side, val) {
+  if (!nbCanEditNow()) return;
+  const v = Math.max(0, Number(val) || 0) + 'px';
+  nbSelectedBlocks().forEach(b => { if (side === 'left') b.style.marginLeft = v; else b.style.marginRight = v; });
+  scheduleAutoSave();
+}
+
+function applyParagraphSpacingPt(which, val) {
+  if (!nbCanEditNow()) return;
+  const v = Math.max(0, Number(val) || 0) + 'pt';
+  nbSelectedBlocks().forEach(b => { if (which === 'before') b.style.marginTop = v; else b.style.marginBottom = v; });
+  scheduleAutoSave();
 }
 
 function applyParaSpacingDropdown(val) {

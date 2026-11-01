@@ -297,6 +297,7 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
           <option value="2.0">2.0</option>
         </select>
       </div>
+      ${renderEmbeddedExtraRibbonSections(targetArg, targetContainerId)}
     </div>
   `;
 
@@ -305,6 +306,259 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
   if (initialActiveBtn) {
     switchEmbeddedRibbonTab(initialActiveBtn, 'home');
   }
+}
+
+/**
+ * Additional MS Word-style groups for the embedded editor (Personal Space + shared embeds),
+ * so it mirrors the full-page notebook toolbar: Heading styles, Pages, Picture, Text Box, WordArt,
+ * Equations, Symbols, Table styles, TOC, Page Setup, Indent / Spacing and Arrange.
+ */
+function renderEmbeddedExtraRibbonSections(targetArg, toolbarId) {
+  const sel = 'background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:6px; padding:4px 6px; font-size:12px; cursor:pointer;';
+  const btn = 'background:var(--toolbar-surface, #ffffff); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:5px; padding:4px 8px; font-size:11px; cursor:pointer;';
+  const lbl = 'font-size:11px; font-weight:700; color:var(--toolbar-text, #0f172a); margin:0;';
+  const num = 'width:54px; ' + sel;
+  const secStyle = 'display:flex; align-items:center; gap:4px; flex-wrap:wrap;';
+  const opts = (arr) => arr.map(([v, t]) => '<option value="' + v + '">' + t + '</option>').join('');
+  const picker = (id, title, fn) => '<select style="' + sel + '" title="' + title + '" onchange="if(this.value){' + fn + '(this.value, ' + targetArg + '); this.value=\'\';}"><option value="" disabled selected>' + title + '</option>';
+  return `
+    <div data-ribbon-section="home" style="${secStyle}">
+      <label style="${lbl}">Style:</label>
+      <select style="${sel}" onchange="applyEmbeddedHeadingStyle(this.value, ${targetArg})">
+        ${opts([['p', 'Normal'], ['h1', 'Heading 1'], ['h2', 'Heading 2'], ['h3', 'Heading 3'], ['title', 'Title']])}
+      </select>
+    </div>
+    <div data-ribbon-section="insert" style="${secStyle}">
+      <label style="${lbl}">Pages:</label>
+      <button type="button" style="${btn}" onclick="embeddedInsertCoverPage(${targetArg})">Cover Page</button>
+      <button type="button" style="${btn}" onclick="embeddedInsertPageBreak(${targetArg})">Blank Page</button>
+      <button type="button" style="${btn}" onclick="embeddedInsertPageBreak(${targetArg})">Page Break</button>
+      <input type="file" id="nbEmbedPic_${toolbarId}" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;" onchange="embeddedInsertPicture(event, ${targetArg})">
+      <button type="button" style="${btn}" onclick="document.getElementById('nbEmbedPic_${toolbarId}').click()">Picture</button>
+      <button type="button" style="${btn}" onclick="embeddedInsertTextBox(${targetArg})">+ Text Box</button>
+    </div>
+    <div data-ribbon-section="insert" style="${secStyle}">
+      <select style="${sel}" title="Table Style" onchange="if(this.value){applyEmbeddedTablePreset(this.value, ${targetArg}); this.value='';}">
+        <option value="" disabled selected>Table Style</option>
+        ${opts([['default-grid', 'Default Grid'], ['striped', 'Striped Rows'], ['header-accent', 'Header Accent'], ['borderless', 'Borderless']])}
+      </select>
+      <select style="${sel}" title="WordArt" onchange="if(this.value){embeddedInsertWordArt(this.value, ${targetArg}); this.value='';}">
+        <option value="" disabled selected>+ WordArt</option>
+        ${opts([['gradient', 'Gradient Modern'], ['neon', 'Neon Blue Glow'], ['3d', '3D Emboss'], ['gold', 'Metallic Gold']])}
+      </select>
+      <select style="${sel}" title="Equation" onchange="if(this.value){embeddedInsertText(this.value, ${targetArg}); this.value='';}">
+        <option value="" disabled selected>+ Equation</option>
+        ${opts([['E = mc²', 'E = mc²'], ['a² + b² = c²', 'a² + b² = c²'], ['x = (-b ± √(b² - 4ac)) / (2a)', 'Quadratic Formula'], ['A = πr²', 'Area of Circle']])}
+      </select>
+      <select style="${sel}" title="Symbol" onchange="if(this.value){embeddedInsertText(this.value, ${targetArg}); this.value='';}">
+        <option value="" disabled selected>+ Symbol</option>
+        ${opts([['©', '© Copyright'], ['®', '® Registered'], ['™', '™ Trademark'], ['°', '° Degree'], ['±', '± Plus/Minus'], ['≠', '≠'], ['≤', '≤'], ['≥', '≥'], ['→', '→'], ['★', '★'], ['✓', '✓'], ['π', 'π'], ['∞', '∞']])}
+      </select>
+    </div>
+    <div data-ribbon-section="layout" style="${secStyle}">
+      <label style="${lbl}">Contents:</label>
+      <button type="button" style="${btn}" onclick="embeddedInsertTOC(${targetArg})">Insert TOC</button>
+      <select style="${sel}" title="Add Text" onchange="if(this.value){embeddedMarkTocLevel(this.value, ${targetArg}); this.value='';}">
+        <option value="" disabled selected>Add Text</option>
+        ${opts([['1', 'Level 1'], ['2', 'Level 2'], ['3', 'Level 3'], ['0', 'Do Not Show']])}
+      </select>
+      <button type="button" style="${btn}" onclick="embeddedUpdateTOC(${targetArg})">Update Table</button>
+    </div>
+    <div data-ribbon-section="layout" style="${secStyle}">
+      <label style="${lbl}">Margins:</label>
+      <select style="${sel}" onchange="applyEmbeddedPageSetup('margins', this.value, ${targetArg})">${opts([['normal', 'Normal'], ['narrow', 'Narrow'], ['wide', 'Wide']])}</select>
+      <label style="${lbl}">Orientation:</label>
+      <select style="${sel}" onchange="applyEmbeddedPageSetup('orientation', this.value, ${targetArg})">${opts([['portrait', 'Portrait'], ['landscape', 'Landscape']])}</select>
+      <label style="${lbl}">Size:</label>
+      <select style="${sel}" onchange="applyEmbeddedPageSetup('size', this.value, ${targetArg})">${opts([['letter', 'Letter'], ['a4', 'A4'], ['legal', 'Legal']])}</select>
+      <label style="${lbl}">Columns:</label>
+      <select style="${sel}" onchange="applyEmbeddedPageSetup('columns', this.value, ${targetArg})">${opts([['1', '1'], ['2', '2'], ['3', '3']])}</select>
+    </div>
+    <div data-ribbon-section="layout" style="${secStyle}">
+      <label style="${lbl}">Indent L/R:</label>
+      <input type="number" min="0" max="200" value="0" style="${num}" onchange="applyEmbeddedBlockStyle('marginLeft', this.value + 'px', ${targetArg})">
+      <input type="number" min="0" max="200" value="0" style="${num}" onchange="applyEmbeddedBlockStyle('marginRight', this.value + 'px', ${targetArg})">
+      <label style="${lbl}">Before/After:</label>
+      <input type="number" min="0" max="72" value="0" style="${num}" onchange="applyEmbeddedBlockStyle('marginTop', this.value + 'pt', ${targetArg})">
+      <input type="number" min="0" max="72" value="8" style="${num}" onchange="applyEmbeddedBlockStyle('marginBottom', this.value + 'pt', ${targetArg})"><span style="${lbl}">pt</span>
+    </div>
+    <div data-ribbon-section="layout" style="${secStyle}">
+      <label style="${lbl}">Arrange:</label>
+      <button type="button" style="${btn}" onclick="arrangeEmbeddedShape('forward', ${targetArg})">Bring Forward</button>
+      <button type="button" style="${btn}" onclick="arrangeEmbeddedShape('backward', ${targetArg})">Send Backward</button>
+      <button type="button" style="${btn}" onclick="arrangeEmbeddedShape('rotate', ${targetArg})">Rotate 90°</button>
+      <button type="button" style="${btn}" onclick="arrangeEmbeddedShape('align', ${targetArg})">Align Center</button>
+    </div>
+  `;
+}
+
+function embeddedFinish(editor) {
+  editor.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function embeddedInsertHtml(html, editorTargetId = null) {
+  const editor = resolveNotebookEditorElement(editorTargetId);
+  if (!editor) return;
+  editor.focus();
+  document.execCommand('insertHTML', false, html);
+  embeddedFinish(editor);
+}
+
+function embeddedInsertText(text, editorTargetId = null) {
+  const editor = resolveNotebookEditorElement(editorTargetId);
+  if (!editor) return;
+  editor.focus();
+  document.execCommand('insertText', false, text);
+  embeddedFinish(editor);
+}
+
+function embeddedInsertPageBreak(editorTargetId = null) {
+  embeddedInsertHtml('<div class="nb-page-break" contenteditable="false" style="page-break-after:always;border-top:2px dashed #94a3b8;margin:18px 0;"></div><p><br></p>', editorTargetId);
+}
+
+function embeddedInsertCoverPage(editorTargetId = null) {
+  embeddedInsertHtml('<div class="nb-cover-page" style="text-align:center;padding:96px 24px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:24px;"><h1 style="font-size:40px;margin:0 0 12px;">Document Title</h1><h3 style="font-weight:400;color:#64748b;">Subtitle</h3><p>Author &middot; ' + new Date().toLocaleDateString() + '</p></div><p><br></p>', editorTargetId);
+}
+
+function embeddedInsertPicture(event, editorTargetId = null) {
+  const file = event.target.files && event.target.files[0];
+  event.target.value = '';
+  if (!file || !/^image\//.test(file.type)) return;
+  const reader = new FileReader();
+  reader.onload = () => embeddedInsertHtml('<img src="' + reader.result + '" alt="" style="max-width:100%;height:auto;"><p><br></p>', editorTargetId);
+  reader.readAsDataURL(file);
+}
+
+function embeddedInsertTextBox(editorTargetId = null) {
+  embeddedInsertHtml('<div class="nb-textbox" data-shape-type="textbox" contenteditable="true" style="display:inline-block;min-width:160px;min-height:60px;padding:10px;border:1px solid #2563eb;background:#eff6ff;border-radius:4px;">Text box</div>&nbsp;', editorTargetId);
+}
+
+function embeddedInsertWordArt(style, editorTargetId = null) {
+  const styles = {
+    gradient: 'background:linear-gradient(90deg,#2563eb,#9333ea);-webkit-background-clip:text;background-clip:text;color:transparent;',
+    neon: 'color:#38bdf8;text-shadow:0 0 8px #38bdf8,0 0 18px #2563eb;',
+    '3d': 'color:#e2e8f0;text-shadow:1px 1px 0 #94a3b8,2px 2px 0 #64748b,3px 3px 0 #475569;',
+    gold: 'background:linear-gradient(180deg,#fde68a,#d4af37);-webkit-background-clip:text;background-clip:text;color:transparent;'
+  };
+  embeddedInsertHtml('<span class="nb-wordart" style="font-size:36px;font-weight:800;' + (styles[style] || '') + '">WordArt</span>&nbsp;', editorTargetId);
+}
+
+function applyEmbeddedHeadingStyle(val, editorTargetId = null) {
+  const editor = resolveNotebookEditorElement(editorTargetId);
+  if (!editor) return;
+  editor.focus();
+  if (val === 'title') {
+    document.execCommand('formatBlock', false, 'h1');
+    const sel = window.getSelection();
+    const node = sel && sel.anchorNode && (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement);
+    const h = node && node.closest('h1');
+    if (h) { h.style.fontSize = '40px'; h.style.textAlign = 'center'; }
+  } else {
+    document.execCommand('formatBlock', false, val);
+  }
+  embeddedFinish(editor);
+}
+
+function applyEmbeddedTablePreset(preset, editorTargetId = null) {
+  const editor = resolveNotebookEditorElement(editorTargetId);
+  if (!editor) return;
+  const sel = window.getSelection();
+  let node = sel && sel.anchorNode ? (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement) : null;
+  let table = node && node.closest ? node.closest('table') : null;
+  if (!table) table = editor.querySelector('table:last-of-type');
+  if (!table) return;
+  table.classList.remove('table-preset-default-grid', 'table-preset-striped', 'table-preset-header-accent', 'table-preset-borderless');
+  table.classList.add('table-preset-' + preset);
+  embeddedFinish(editor);
+}
+
+function embeddedSelectedBlocks(editor) {
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount) return [];
+  const range = sel.getRangeAt(0);
+  const blocks = Array.from(editor.querySelectorAll('p,div:not(.nb-toc):not(.nb-page-break),h1,h2,h3,h4,li')).filter(b => range.intersectsNode(b));
+  if (blocks.length) return blocks;
+  let n = sel.anchorNode;
+  while (n && n !== editor && !(n.nodeType === 1 && /^(P|DIV|H[1-6]|LI)$/.test(n.nodeName))) n = n.parentNode;
+  return n && n !== editor ? [n] : [];
+}
+
+function applyEmbeddedBlockStyle(prop, value, editorTargetId = null) {
+  const editor = resolveNotebookEditorElement(editorTargetId);
+  if (!editor) return;
+  embeddedSelectedBlocks(editor).forEach(b => { b.style[prop] = value; });
+  embeddedFinish(editor);
+}
+
+function applyEmbeddedPageSetup(kind, value, editorTargetId = null) {
+  const editor = resolveNotebookEditorElement(editorTargetId);
+  if (!editor) return;
+  if (kind === 'margins') editor.style.padding = { normal: '40px', narrow: '18px', wide: '64px' }[value] || '40px';
+  if (kind === 'orientation') editor.classList.toggle('orientation-landscape', value === 'landscape');
+  if (kind === 'size') editor.style.maxWidth = { letter: '816px', a4: '794px', legal: '816px' }[value] || '816px';
+  if (kind === 'columns') {
+    editor.classList.remove('columns-2', 'columns-3');
+    if (value === '2' || value === '3') editor.classList.add('columns-' + value);
+  }
+  embeddedFinish(editor);
+}
+
+function embeddedBuildToc(editor) {
+  const esc = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const items = [];
+  editor.querySelectorAll('h1,h2,h3,[data-toc-level]').forEach(el => {
+    if (el.closest('.nb-toc')) return;
+    const lvl = Math.min(3, Math.max(1, Number(el.getAttribute('data-toc-level') || el.nodeName.replace('H', ''))));
+    const text = (el.textContent || '').trim();
+    if (text) items.push({ lvl, text });
+  });
+  return '<h3 style="margin:0 0 8px;">Table of Contents</h3>' + (items.length
+    ? items.map(i => '<div style="margin-left:' + (i.lvl - 1) * 18 + 'px;">' + esc(i.text) + '</div>').join('')
+    : '<div style="color:#94a3b8;">No headings found.</div>');
+}
+
+function embeddedInsertTOC(editorTargetId = null) {
+  const editor = resolveNotebookEditorElement(editorTargetId);
+  if (!editor) return;
+  embeddedInsertHtml('<div class="nb-toc" contenteditable="false" style="border:1px solid #cbd5e1;border-radius:8px;padding:14px 18px;margin:12px 0;">' + embeddedBuildToc(editor) + '</div><p><br></p>', editorTargetId);
+}
+
+function embeddedUpdateTOC(editorTargetId = null) {
+  const editor = resolveNotebookEditorElement(editorTargetId);
+  if (!editor) return;
+  editor.querySelectorAll('.nb-toc').forEach(t => { t.innerHTML = embeddedBuildToc(editor); });
+  embeddedFinish(editor);
+}
+
+function embeddedMarkTocLevel(level, editorTargetId = null) {
+  const editor = resolveNotebookEditorElement(editorTargetId);
+  if (!editor) return;
+  embeddedSelectedBlocks(editor).slice(0, 1).forEach(b => {
+    if (level === '0') b.removeAttribute('data-toc-level'); else b.setAttribute('data-toc-level', level);
+  });
+  embeddedFinish(editor);
+}
+
+function arrangeEmbeddedShape(action, editorTargetId = null) {
+  const editor = resolveNotebookEditorElement(editorTargetId);
+  if (!editor) return;
+  const sel = window.getSelection();
+  const node = sel && sel.anchorNode ? (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement) : null;
+  const shape = node && node.closest ? node.closest('[data-shape-type]') : null;
+  if (!shape || !editor.contains(shape)) return;
+  if (action === 'forward' || action === 'backward') {
+    shape.style.position = shape.style.position || 'relative';
+    const z = Number(shape.style.zIndex || 1) + (action === 'forward' ? 1 : -1);
+    shape.style.zIndex = String(Math.max(0, z));
+  } else if (action === 'rotate') {
+    const m = /rotate\((-?\d+)deg\)/.exec(shape.style.transform || '');
+    shape.style.transform = 'rotate(' + (((m ? Number(m[1]) : 0) + 90) % 360) + 'deg)';
+  } else if (action === 'align') {
+    shape.style.display = 'block';
+    shape.style.marginLeft = 'auto';
+    shape.style.marginRight = 'auto';
+  }
+  embeddedFinish(editor);
 }
 
 function switchEmbeddedRibbonTab(btnEl, tabName) {
