@@ -73,6 +73,7 @@ async function loadWorkspacesDropdown() {
       switcher.appendChild(opt);
     });
 
+    window.currentGroupId = Number(selectedId);
     switchWorkspace(selectedId);
   } catch (err) {
     showToast(err.message, 'error');
@@ -146,6 +147,7 @@ function showDashboardEmptyState() {
 async function switchWorkspace(groupId) {
   if (!groupId) return;
   currentGroupId = Number(groupId);
+  window.currentGroupId = currentGroupId;
   localStorage.setItem('groupspace_active_group_id', currentGroupId);
 
   // Reset discussions state to prevent leaking previous workspace topic/comments
@@ -1371,6 +1373,7 @@ async function confirmDeleteWorkspace(e) {
     closeModal('workspaceSettingsModal');
     localStorage.removeItem('groupspace_active_group_id');
     currentGroupId = null;
+    window.currentGroupId = null;
     currentGroupDetails = null;
     await loadWorkspacesDropdown();
   } catch (err) {
@@ -2794,6 +2797,9 @@ async function selectTopic(topicId, title) {
   if (titleEl) titleEl.textContent = title;
   const formEl = document.getElementById('postCommentForm');
   if (formEl) formEl.style.display = 'block';
+  if (typeof window.setupMentionInput === 'function') {
+    window.setupMentionInput();
+  }
 
   try {
     const res = await apiFetch(`/api/groups/${currentGroupId}/discussions/${topicId}`);

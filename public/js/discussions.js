@@ -15,6 +15,32 @@
   let activeInputEl = null;
   let lastRootSuggestions = [];
 
+  // Helper to accurately resolve the active workspace groupId across DOM, window, and storage
+  function getActiveGroupId() {
+    if (typeof window.currentGroupId !== 'undefined' && window.currentGroupId && !isNaN(Number(window.currentGroupId))) {
+      return Number(window.currentGroupId);
+    }
+    try {
+      if (typeof currentGroupId !== 'undefined' && currentGroupId && !isNaN(Number(currentGroupId))) {
+        return Number(currentGroupId);
+      }
+    } catch (e) {}
+    const switcher = document.getElementById('groupSwitcher');
+    if (switcher && switcher.value && !isNaN(Number(switcher.value)) && Number(switcher.value) > 0) {
+      return Number(switcher.value);
+    }
+    const stored = localStorage.getItem('groupspace_active_group_id');
+    if (stored && !isNaN(Number(stored)) && Number(stored) > 0) {
+      return Number(stored);
+    }
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlGid = urlParams.get('groupId') || urlParams.get('workspaceId') || urlParams.get('workspace_id');
+    if (urlGid && !isNaN(Number(urlGid)) && Number(urlGid) > 0) {
+      return Number(urlGid);
+    }
+    return null;
+  }
+
   // Inject styles for mention pills and dropdown
   function injectMentionStyles() {
     if (document.getElementById('discussion-mention-styles')) return;
@@ -30,10 +56,10 @@
         background: #ffffff;
         border: 1px solid #e2e8f0;
         border-radius: 12px;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 12px 28px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
         max-height: 250px;
         overflow-y: auto;
-        z-index: 1050;
+        z-index: 99999;
         display: none;
       }
       .mention-dropdown-header {
@@ -140,7 +166,14 @@
       dropdownEl = document.createElement('div');
       dropdownEl.className = 'mention-dropdown';
       dropdownEl.id = 'mentionDropdown';
+      dropdownEl.setAttribute('role', 'listbox');
+      dropdownEl.setAttribute('aria-label', 'Autocomplete Suggestions');
       
+      dropdownEl.addEventListener('pointerdown', (e) => {
+        // Prevent clicking inside dropdown from triggering blur or outside dismissal
+        e.stopPropagation();
+      });
+
       const form = document.getElementById('postCommentForm');
       if (form) {
         form.style.position = 'relative';
@@ -161,6 +194,25 @@
       if (dd.parentElement !== parent) {
         parent.insertBefore(dd, parent.firstChild);
       }
+    }
+
+    // Adapt position: if input is near top of viewport (< 220px), position below input
+    try {
+      const rect = input.getBoundingClientRect();
+      if (rect.top < 220) {
+        dd.style.bottom = 'auto';
+        dd.style.top = '100%';
+        dd.style.marginTop = '6px';
+        dd.style.marginBottom = '0';
+      } else {
+        dd.style.bottom = '100%';
+        dd.style.top = 'auto';
+        dd.style.marginTop = '0';
+        dd.style.marginBottom = '6px';
+      }
+    } catch (e) {
+      dd.style.bottom = '100%';
+      dd.style.top = 'auto';
     }
   }
 
@@ -216,15 +268,16 @@
   }
 
   async function fetchSuggestions(trigger) {
-    const groupId = typeof currentGroupId !== 'undefined' && currentGroupId 
-      ? currentGroupId 
-      : localStorage.getItem('groupspace_active_group_id');
+    const groupId = getActiveGroupId();
       
-    if (!groupId) return [];
+    if (!groupId) {
+      console.warn('[Discussions] Active workspace ID not resolved for mentions.');
+      return [];
+    }
 
     try {
       if (trigger.type === '@') {
-        const res = await apiFetch(`/api/groups/${groupId}/discussions/mentions/users?q=${encodeURIComponent(trigger.query)}`);
+        const res = await apiFetch(`/api/groups/${groupId}/discussions/mentions/users?q=${encodeURIComponent(trigger.query)}`).catch(() => ({ data: [] }));
         return (res.data || []).map(u => ({
           type: 'user',
           id: u.id,
@@ -287,7 +340,20 @@
     if (!dd) return;
 
     if (!items || items.length === 0) {
-      hideDropdown();
+      lastRootSuggestions = [];
+      suggestions = [];
+      selectedIndex = -1;
+      const title = trigger.type === '@' ? 'Workspace Members' : 'Workspace Pages & Folders';
+      const emptyMsg = trigger.query
+        ? `No results matching "${escapeHtml(trigger.query)}"`
+        : (trigger.type === '@' ? 'No members found in this workspace' : 'No notebook pages, folders, or topics found');
+      dd.innerHTML = `
+        <div class="mention-dropdown-header">${title}</div>
+        <div style="padding:12px 14px; font-size:12px; color:var(--gray, #64748b); text-align:center;">
+          ${emptyMsg}
+        </div>
+      `;
+      dd.style.display = 'block';
       return;
     }
 
@@ -376,9 +442,8 @@
     const dd = getDropdown();
     if (!dd) return;
 
-    const groupId = typeof currentGroupId !== 'undefined' && currentGroupId 
-      ? currentGroupId 
-      : localStorage.getItem('groupspace_active_group_id');
+    const groupId = getActiveGroupId();
+    if (!groupId) return;
 
     let subPages = [];
     try {
@@ -510,6 +575,14 @@
     if (!input || input._hasMentionListeners) return;
     input._hasMentionListeners = true;
 
+    // Suppress browser native writing suggestions / Edge AI prompts ("Sino? Ano? Paano? Bakit?")
+    input.setAttribute('autocomplete', 'off');
+    input.setAttribute('autocorrect', 'off');
+    input.setAttribute('autocapitalize', 'off');
+    input.setAttribute('spellcheck', 'false');
+    input.setAttribute('data-ms-editor', 'false');
+    input.setAttribute('data-gramm', 'false');
+
     let debounceTimer = null;
 
     input.addEventListener('focus', () => {
@@ -533,7 +606,7 @@
         if (activeTrigger && activeTrigger.startPos === trigger.startPos) {
           renderDropdown(items, trigger);
         }
-      }, 120);
+      }, 90);
     });
 
     input.addEventListener('keydown', (e) => {
@@ -563,10 +636,25 @@
     });
 
     input.addEventListener('blur', () => {
-      // Delay to let click event on suggestion item fire first
-      setTimeout(hideDropdown, 250);
+      setTimeout(() => {
+        const dd = getDropdown();
+        if (dd && dd.contains(document.activeElement)) return;
+        if (document.activeElement !== input) {
+          hideDropdown();
+        }
+      }, 300);
     });
   }
+
+  // Close dropdown on outside click
+  document.addEventListener('pointerdown', (e) => {
+    const dd = getDropdown();
+    if (!dd || dd.style.display !== 'block') return;
+    if (dd.contains(e.target) || (activeInputEl && activeInputEl === e.target)) {
+      return;
+    }
+    hideDropdown();
+  });
 
   function setupMentionInput() {
     const commentInput = document.getElementById('newCommentInput');
@@ -800,9 +888,7 @@
         return;
       }
 
-      const activeGid = (typeof currentGroupId !== 'undefined' && currentGroupId)
-        ? currentGroupId
-        : localStorage.getItem('groupspace_active_group_id');
+      const activeGid = getActiveGroupId();
 
       if (!activeGid) {
         if (typeof showToast === 'function') showToast('No active workspace selected.', 'error');
@@ -881,9 +967,7 @@
       }
 
       const topicId = typeof activeTopicId !== 'undefined' ? activeTopicId : null;
-      const activeGid = (typeof currentGroupId !== 'undefined' && currentGroupId)
-        ? currentGroupId
-        : localStorage.getItem('groupspace_active_group_id');
+      const activeGid = getActiveGroupId();
 
       if (!topicId || !activeGid) return;
 
@@ -939,6 +1023,7 @@
   window.handlePageTagClick = handlePageTagClick;
   window.handleFolderTagClick = handleFolderTagClick;
   window.handleTaskTagClick = handleTaskTagClick;
+  window.setupMentionInput = setupMentionInput;
 
   function initDiscussions() {
     injectMentionStyles();

@@ -58,3 +58,4 @@ In GroupSpace discussions, members can mention teammates and tag workspace resou
 - Add to `tests/test-localhost.js` as test suite 21.
 - Verify all tests pass (36 passed).
 - Execute terminal git commands: `git add .`, `git commit -m "feat: implement workspace @mentions, notebook page/folder #tagging, and restrict discussion pinning to leader/creator"`, `git push origin main`.
+

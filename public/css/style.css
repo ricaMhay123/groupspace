@@ -4338,3 +4338,24 @@ html.dark .folder-mention-pill:hover {
   margin-right: 6px;
   vertical-align: middle;
 }
+
+/* Suppress browser native writing assistant bubbles, autocomplete popups & ms clear/reveal */
+#newCommentInput::-ms-clear,
+#newCommentInput::-ms-reveal,
+#topicTitle::-ms-clear,
+#topicTitle::-ms-reveal,
+input[data-ms-editor="false"]::-ms-clear,
+input[data-ms-editor="false"]::-ms-reveal,
+textarea[data-ms-editor="false"]::-ms-clear,
+textarea[data-ms-editor="false"]::-ms-reveal {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Ensure discussion mention dropdown is never clipped by panel containers */
+#topicChatPanel {
+  overflow: visible !important;
+}
+

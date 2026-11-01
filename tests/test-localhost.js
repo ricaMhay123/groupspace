@@ -189,7 +189,8 @@ async function runLocalhostTests() {
       { script: 'tests/test-task-scope-approvals-assignee-flags.js', name: 'Task Creation Scope, Leader Approvals & Assignee-Only Flags' },
       { script: 'tests/test-duplicate-task-prevention.js', name: 'Dependency Installation & Duplicate Task Prevention' },
       { script: 'tests/test-task-modal-followup-cooldown.js', name: 'Task Modal Follow-Up Encapsulation & 24h Cooldown' },
-      { script: 'tests/test-workspace-mentions-notebook-tagging-pinning.js', name: 'Workspace Mentions, Notebook #Tagging & Restricted Pinning' }
+      { script: 'tests/test-workspace-mentions-notebook-tagging-pinning.js', name: 'Workspace Mentions, Notebook #Tagging & Restricted Pinning' },
+      { script: 'tests/test-discussion-mentions-popup-and-autocomplete-fix.js', name: 'Discussion Mentions Autocomplete & Writing Bubble Popup Fixes' }
     ];
 
     for (const suite of testSuites) {
