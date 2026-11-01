@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   currentUser = await checkAuth();
   if (!currentUser) return;
 
+  // Start presence heartbeat polling (2-minute window)
+  startPresenceHeartbeat();
+
   // Setup user UI if present
   const uFullNameEl = document.getElementById('userFullName');
   if (uFullNameEl) uFullNameEl.textContent = currentUser.fullName;
@@ -26,6 +29,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load workspaces list
   await loadWorkspacesDropdown();
 });
+
+function startPresenceHeartbeat() {
+  const sendHeartbeat = () => {
+    apiFetch('/api/auth/heartbeat', { method: 'POST' }).catch(() => {});
+  };
+  sendHeartbeat();
+  setInterval(sendHeartbeat, 60000);
+  window.addEventListener('focus', sendHeartbeat);
+}
 
 // ================= WORKSPACE SWITCHER ================= //
 async function loadWorkspacesDropdown() {
@@ -2739,6 +2751,10 @@ async function selectTopic(topicId, title) {
       topicAttEl.innerHTML = renderAttachmentsHtml(topic.attachments, threadImages);
     }
 
+    // Render pinned comments tray in active thread
+    const pinnedComments = comments.filter(c => c.is_pinned);
+    renderTopicPinnedTray(pinnedComments);
+
     if (comments.length === 0) {
       container.innerHTML = '<p style="color:var(--gray); text-align:center; padding:20px;">No replies yet. Be the first to reply!</p>';
       return;
@@ -2749,21 +2765,28 @@ async function selectTopic(topicId, title) {
     container.innerHTML = comments.map(c => {
       const isAuthor = currentUser && Number(c.user_id) === Number(currentUser.id);
       const canDelete = isLeader || isAuthor;
+      const isPinned = Boolean(c.is_pinned);
 
       return `
-        <div class="chat-message" id="comment-item-${c.id}" style="position:relative; display:flex; gap:12px; padding:12px; border-radius:10px; margin-bottom:12px; background:var(--muted, #f8fafc); border:1px solid var(--border); transition:background 0.2s ease;">
+        <div class="chat-message" id="comment-item-${c.id}" style="position:relative; display:flex; gap:12px; padding:12px; border-radius:10px; margin-bottom:12px; background:var(--muted, #f8fafc); border:1px solid ${isPinned ? 'rgba(245, 158, 11, 0.45)' : 'var(--border)'}; transition:background 0.2s ease;">
           <div class="chat-avatar" style="width:36px; height:36px; border-radius:50%; background:var(--primary, #4f46e5); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px; flex-shrink:0; cursor:${isAuthor ? 'default' : 'pointer'};" ${!isAuthor ? `onclick="openDirectMessageDrawer(${c.user_id}, '${escapeHtml(c.user_name).replace(/'/g, "\\'")}', '${escapeHtml(c.user_initials || 'GS')}')"` : ''} title="${isAuthor ? '' : `Direct message ${escapeHtml(c.user_name)}`}">
             ${escapeHtml(c.user_initials || 'GS')}
           </div>
           <div class="chat-content" style="flex:1; min-width:0;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
               <h4 style="margin:0 0 4px 0; font-size:13px; font-weight:600; color:var(--text); cursor:${isAuthor ? 'default' : 'pointer'};" ${!isAuthor ? `onclick="openDirectMessageDrawer(${c.user_id}, '${escapeHtml(c.user_name).replace(/'/g, "\\'")}', '${escapeHtml(c.user_initials || 'GS')}')"` : ''}>${escapeHtml(c.user_name)}</h4>
-              ${canDelete ? `
-                <button type="button" class="comment-delete-discrete" onclick="confirmDeleteComment(${c.id}, event)" title="Delete comment" style="background:none; border:none; color:var(--gray); font-size:13px; cursor:pointer; padding:2px 6px; border-radius:4px; opacity:0.7; transition:all 0.15s ease; display:inline-flex; align-items:center; justify-content:center;" onmouseover="this.style.opacity='1'; this.style.color='#ef4444';" onmouseout="this.style.opacity='0.7'; this.style.color='var(--gray)';">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              <div style="display:flex; align-items:center; gap:4px;">
+                <button type="button" class="comment-pin-btn" onclick="togglePinDiscussionComment(${c.id}, event)" title="${isPinned ? 'Unpin comment' : 'Pin comment'}" style="background:none; border:none; color:${isPinned ? 'var(--warning, #f59e0b)' : 'var(--gray)'}; font-size:13px; cursor:pointer; padding:2px 6px; border-radius:4px; opacity:${isPinned ? '1' : '0.7'}; transition:all 0.15s ease; display:inline-flex; align-items:center; justify-content:center;">
+                  📌
                 </button>
-              ` : ''}
+                ${canDelete ? `
+                  <button type="button" class="comment-delete-discrete" onclick="confirmDeleteComment(${c.id}, event)" title="Delete comment" style="background:none; border:none; color:var(--gray); font-size:13px; cursor:pointer; padding:2px 6px; border-radius:4px; opacity:0.7; transition:all 0.15s ease; display:inline-flex; align-items:center; justify-content:center;" onmouseover="this.style.opacity='1'; this.style.color='#ef4444';" onmouseout="this.style.opacity='0.7'; this.style.color='var(--gray)';">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  </button>
+                ` : ''}
+              </div>
             </div>
+            ${isPinned ? `<div style="display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--warning, #f59e0b); font-weight:600; margin-bottom:4px;">📌 Pinned in Thread</div>` : ''}
             ${c.content ? `<p style="margin:0 0 4px 0; font-size:13px; color:var(--text); line-height:1.5; word-break:break-word;">${typeof window.highlightMentions === 'function' ? window.highlightMentions(c.content) : escapeHtml(c.content)}</p>` : ''}
             ${renderAttachmentsHtml(c.attachments, threadImages)}
             <div style="font-size:11px; color:var(--gray); margin-top:4px;">${formatDate(c.created_at)}</div>
@@ -2775,6 +2798,84 @@ async function selectTopic(topicId, title) {
     container.scrollTop = container.scrollHeight;
   } catch (err) {
     showToast(err.message, 'error');
+  }
+}
+
+let isTopicPinnedTrayOpen = false;
+
+function toggleTopicPinnedTray(forceState) {
+  const tray = document.getElementById('topicPinnedTray');
+  if (!tray) return;
+  if (typeof forceState === 'boolean') {
+    isTopicPinnedTrayOpen = forceState;
+  } else {
+    isTopicPinnedTrayOpen = !isTopicPinnedTrayOpen;
+  }
+  tray.style.display = isTopicPinnedTrayOpen ? 'block' : 'none';
+}
+
+function renderTopicPinnedTray(pinnedComments) {
+  const listEl = document.getElementById('topicPinnedList');
+  const countEl = document.getElementById('topicPinnedCount');
+  const toggleBtn = document.getElementById('topicPinTrayToggleBtn');
+  if (!listEl) return;
+
+  const count = pinnedComments ? pinnedComments.length : 0;
+  if (countEl) countEl.textContent = `${count} Pinned`;
+  if (toggleBtn) toggleBtn.style.display = count > 0 ? 'inline-flex' : 'none';
+
+  if (!pinnedComments || pinnedComments.length === 0) {
+    listEl.innerHTML = '<p style="color:var(--gray); font-size:12px; margin:0; padding:8px 0; text-align:center;">No pinned comments in this thread.</p>';
+    if (isTopicPinnedTrayOpen && count === 0) {
+      toggleTopicPinnedTray(false);
+    }
+    return;
+  }
+
+  listEl.innerHTML = pinnedComments.map(c => {
+    const textSnippet = c.content ? escapeHtml(c.content).slice(0, 60) : (c.attachments && c.attachments.length ? '📎 Attachment' : 'Comment');
+    return `
+      <div class="pinned-tray-item" onclick="scrollToDiscussionComment(${c.id})">
+        <span class="pinned-tray-item-text">
+          <strong>${escapeHtml(c.user_name || 'Member')}:</strong> ${textSnippet}
+        </span>
+        <button type="button" class="pinned-tray-item-unpin" onclick="togglePinDiscussionComment(${c.id}, event)" title="Unpin comment" aria-label="Unpin comment">
+          ✕
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+function scrollToDiscussionComment(commentId) {
+  const el = document.getElementById(`comment-item-${commentId}`);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.style.outline = '2px solid var(--warning, #f59e0b)';
+    setTimeout(() => { if (el) el.style.outline = ''; }, 2000);
+  }
+}
+
+async function togglePinDiscussionComment(commentId, e) {
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+  if (!activeTopicId || !currentGroupId) return;
+
+  try {
+    const res = await apiFetch(`/api/groups/${currentGroupId}/discussions/${activeTopicId}/comments/${commentId}/pin`, {
+      method: 'PUT'
+    });
+    if (res && res.success) {
+      if (typeof showToast === 'function') {
+        showToast(res.message || 'Updated pin status.', 'info');
+      }
+      const titleEl = document.getElementById('activeTopicTitle');
+      await selectTopic(activeTopicId, titleEl ? titleEl.textContent : 'Topic');
+    }
+  } catch (err) {
+    console.error('[Discussion Pin] Error:', err);
+    if (typeof showToast === 'function') {
+      showToast(err.message || 'Failed to toggle pin.', 'error');
+    }
   }
 }
 
@@ -3414,6 +3515,8 @@ let isDmDrawerOpen = false;
 let activeDmOtherUser = null; // { id, full_name, avatar_initials, status }
 let dmConversationsList = [];
 let dmPollInterval = null;
+let stagedDmAttachments = [];
+let isDmPinnedTrayOpen = false;
 
 function toggleDmDrawer(forceState) {
   const overlay = document.getElementById('dmDrawerOverlay');
@@ -3582,6 +3685,9 @@ function openDirectMessageDrawer(otherUserId, otherUserName, otherAvatar = 'GS',
     presenceEl.className = `dm-presence-dot ${isOnline ? 'online' : 'offline'}`;
   }
 
+  stagedDmAttachments = [];
+  renderDmAttachmentStaging();
+
   loadDmThread(activeDmOtherUser.id);
 
   setTimeout(() => {
@@ -3592,12 +3698,162 @@ function openDirectMessageDrawer(otherUserId, otherUserName, otherAvatar = 'GS',
 
 function backToDmList() {
   activeDmOtherUser = null;
+  stagedDmAttachments = [];
+  renderDmAttachmentStaging();
+
   const listView = document.getElementById('dmListView');
   const threadView = document.getElementById('dmThreadView');
   if (listView) listView.style.display = 'flex';
   if (threadView) threadView.style.display = 'none';
 
   loadDmConversations();
+}
+
+function handleDmFileSelection(event) {
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
+
+  const fileList = Array.from(files);
+  let pending = fileList.length;
+
+  fileList.forEach(file => {
+    if (file.size > 10 * 1024 * 1024) {
+      if (typeof showToast === 'function') showToast(`File ${file.name} exceeds 10MB limit.`, 'warning');
+      pending--;
+      if (pending === 0) renderDmAttachmentStaging();
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      stagedDmAttachments.push({
+        file_name: file.name,
+        file_url: e.target.result,
+        file_type: file.type || 'application/octet-stream',
+        file_size: file.size
+      });
+      pending--;
+      if (pending === 0) renderDmAttachmentStaging();
+    };
+    reader.onerror = () => {
+      pending--;
+      if (pending === 0) renderDmAttachmentStaging();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  event.target.value = '';
+}
+
+function removeDmStagedAttachment(index) {
+  stagedDmAttachments.splice(index, 1);
+  renderDmAttachmentStaging();
+}
+
+function renderDmAttachmentStaging() {
+  const stagingEl = document.getElementById('dmAttachmentStaging');
+  if (!stagingEl) return;
+
+  if (stagedDmAttachments.length === 0) {
+    stagingEl.style.display = 'none';
+    stagingEl.innerHTML = '';
+    return;
+  }
+
+  stagingEl.style.display = 'flex';
+  stagingEl.innerHTML = stagedDmAttachments.map((att, idx) => `
+    <div class="dm-stage-chip">
+      <span class="dm-stage-chip-name" title="${escapeHtml(att.file_name)}">${escapeHtml(att.file_name)}</span>
+      <button type="button" class="dm-stage-chip-remove" onclick="removeDmStagedAttachment(${idx})" aria-label="Remove ${escapeHtml(att.file_name)}">✕</button>
+    </div>
+  `).join('');
+}
+
+function toggleDmPinnedTray(forceState) {
+  const tray = document.getElementById('dmPinnedTray');
+  if (!tray) return;
+  if (typeof forceState === 'boolean') {
+    isDmPinnedTrayOpen = forceState;
+  } else {
+    isDmPinnedTrayOpen = !isDmPinnedTrayOpen;
+  }
+  tray.style.display = isDmPinnedTrayOpen ? 'block' : 'none';
+}
+
+function renderDmPinnedTray(messages) {
+  const listEl = document.getElementById('dmPinnedList');
+  const countEl = document.getElementById('dmPinnedCount');
+  const badgeEl = document.getElementById('dmPinBadge');
+  if (!listEl) return;
+
+  const pinned = (messages || []).filter(m => m.is_pinned);
+  const count = pinned.length;
+
+  if (countEl) countEl.textContent = `${count} Pinned`;
+  if (badgeEl) {
+    if (count > 0) {
+      badgeEl.textContent = count > 99 ? '99+' : count;
+      badgeEl.style.display = 'inline-block';
+    } else {
+      badgeEl.style.display = 'none';
+    }
+  }
+
+  if (count === 0) {
+    listEl.innerHTML = '<p style="color:var(--gray); font-size:12px; margin:0; padding:8px 0; text-align:center;">No pinned messages in this chat.</p>';
+    return;
+  }
+
+  listEl.innerHTML = pinned.map(m => {
+    let previewText = m.message ? escapeHtml(m.message).slice(0, 50) : '';
+    const atts = Array.isArray(m.attachments) ? m.attachments : [];
+    if (!previewText && atts.length > 0) {
+      previewText = `📎 ${escapeHtml(atts[0].file_name || 'Attachment')}`;
+    }
+    return `
+      <div class="pinned-tray-item" onclick="scrollToDmMessage(${m.id})">
+        <span class="pinned-tray-item-text">
+          <strong>${escapeHtml(m.sender_name || 'Teammate')}:</strong> ${previewText}
+        </span>
+        <button type="button" class="pinned-tray-item-unpin" onclick="togglePinDmMessage(${m.id}, event)" title="Unpin message" aria-label="Unpin message">
+          ✕
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+function scrollToDmMessage(messageId) {
+  const el = document.getElementById(`dm-msg-${messageId}`);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.style.outline = '2px solid var(--warning, #f59e0b)';
+    setTimeout(() => { if (el) el.style.outline = ''; }, 2000);
+  }
+}
+
+async function togglePinDmMessage(messageId, e) {
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+  if (!currentGroupId || !messageId) return;
+
+  try {
+    const res = await apiFetch(`/api/groups/${currentGroupId}/messages/${messageId}/pin`, {
+      method: 'PUT'
+    });
+    if (res && res.success) {
+      if (typeof showToast === 'function') {
+        showToast(res.message || 'Updated pin status.', 'info');
+      }
+      if (activeDmOtherUser) {
+        await loadDmThread(activeDmOtherUser.id, true);
+      }
+    }
+  } catch (err) {
+    console.error('[DM Pin] Error:', err);
+    if (typeof showToast === 'function') {
+      showToast(err.message || 'Failed to toggle pin.', 'error');
+    }
+  }
 }
 
 async function loadDmThread(otherUserId, silent = false) {
@@ -3615,25 +3871,48 @@ async function loadDmThread(otherUserId, silent = false) {
 
     const messages = res.data;
     if (messages.length === 0) {
-      container.innerHTML = '<p style="color:var(--gray); text-align:center; padding:40px 10px; font-size:13px;">No messages yet. Send a direct note to start the conversation!</p>';
+      container.innerHTML = '<p style="color:var(--gray); text-align:center; padding:40px 10px; font-size:13px;">No messages yet. Send a direct note or file to start the conversation!</p>';
+      renderDmPinnedTray([]);
       return;
     }
+
+    // Collect thread images for lightbox cycling
+    const threadImages = [];
+    messages.forEach(m => {
+      const atts = Array.isArray(m.attachments) ? m.attachments : [];
+      atts.filter(isImageAttachment).forEach(img => {
+        threadImages.push({
+          file_url: img.file_url,
+          file_name: img.file_name || 'image'
+        });
+      });
+    });
+    window.__activeDmImages = threadImages;
 
     const currentUid = currentUser ? Number(currentUser.id) : 0;
     container.innerHTML = messages.map(m => {
       const isSent = Number(m.sender_id) === currentUid;
+      const isPinned = Boolean(m.is_pinned);
       const timeStr = m.created_at ? formatTimeOfDay(m.created_at) : '';
+      const atts = Array.isArray(m.attachments) ? m.attachments : [];
 
       return `
-        <div class="dm-bubble ${isSent ? 'sent' : 'received'}">
-          <div>${escapeHtml(m.message)}</div>
+        <div class="dm-bubble ${isSent ? 'sent' : 'received'} ${isPinned ? 'pinned' : ''}" id="dm-msg-${m.id}">
+          ${isPinned ? `<div class="dm-pinned-indicator">📌 Pinned</div>` : ''}
+          ${m.message ? `<div>${escapeHtml(m.message)}</div>` : ''}
+          ${atts.length > 0 ? renderAttachmentsHtml(atts, window.__activeDmImages) : ''}
           <div class="dm-bubble-meta">
             <span>${timeStr}</span>
             ${isSent ? `<span>${m.is_read ? '✓✓' : '✓'}</span>` : ''}
+            <button type="button" class="dm-msg-pin-btn" onclick="togglePinDmMessage(${m.id}, event)" title="${isPinned ? 'Unpin message' : 'Pin message'}" aria-label="${isPinned ? 'Unpin message' : 'Pin message'}">
+              ${isPinned ? '📌' : '📍'}
+            </button>
           </div>
         </div>
       `;
     }).join('');
+
+    renderDmPinnedTray(messages);
 
     container.scrollTop = container.scrollHeight;
 
@@ -3655,16 +3934,21 @@ async function handleSendDirectMessage(event) {
   if (!input) return;
 
   const text = input.value.trim();
-  if (!text) return;
+  const attachmentsToSend = [...stagedDmAttachments];
+
+  if (!text && attachmentsToSend.length === 0) return;
 
   input.value = '';
+  stagedDmAttachments = [];
+  renderDmAttachmentStaging();
 
   const container = document.getElementById('dmMessagesContainer');
   if (container) {
     const optimisticBubble = document.createElement('div');
     optimisticBubble.className = 'dm-bubble sent';
     optimisticBubble.innerHTML = `
-      <div>${escapeHtml(text)}</div>
+      ${text ? `<div>${escapeHtml(text)}</div>` : ''}
+      ${attachmentsToSend.length > 0 ? `<div style="font-size:11px; opacity:0.85; margin-top:2px;">📎 Sending ${attachmentsToSend.length} file(s)...</div>` : ''}
       <div class="dm-bubble-meta">
         <span>Just now</span>
         <span>•</span>
@@ -3679,7 +3963,8 @@ async function handleSendDirectMessage(event) {
       method: 'POST',
       body: JSON.stringify({
         receiverId: activeDmOtherUser.id,
-        message: text
+        message: text,
+        attachments: attachmentsToSend
       })
     });
 

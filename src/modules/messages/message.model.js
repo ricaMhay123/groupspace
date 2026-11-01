@@ -23,11 +23,12 @@ const MessageModel = {
   /**
    * Insert a new direct message.
    */
-  async createDirectMessage({ groupId, senderId, receiverId, message }) {
+  async createDirectMessage({ groupId, senderId, receiverId, message, attachments = [] }) {
+    const jsonAttachments = JSON.stringify(Array.isArray(attachments) ? attachments : []);
     const [row] = await sql`
-      INSERT INTO direct_messages (group_id, sender_id, receiver_id, message, is_read, created_at)
-      VALUES (${groupId}, ${senderId}, ${receiverId}, ${message}, FALSE, NOW())
-      RETURNING id, group_id, sender_id, receiver_id, message, is_read, created_at
+      INSERT INTO direct_messages (group_id, sender_id, receiver_id, message, attachments, is_read, is_pinned, created_at)
+      VALUES (${groupId}, ${senderId}, ${receiverId}, ${message}, ${jsonAttachments}::jsonb, FALSE, FALSE, NOW())
+      RETURNING id, group_id, sender_id, receiver_id, message, attachments, is_read, is_pinned, pinned_at, created_at
     `;
     return row;
   },
@@ -43,6 +44,9 @@ const MessageModel = {
         m.sender_id,
         m.receiver_id,
         m.message,
+        COALESCE(m.attachments, '[]'::jsonb) as attachments,
+        COALESCE(m.is_pinned, FALSE) as is_pinned,
+        m.pinned_at,
         m.is_read,
         m.created_at,
         s.full_name as sender_name,
@@ -60,6 +64,32 @@ const MessageModel = {
         )
       ORDER BY m.created_at ASC
     `;
+  },
+
+  /**
+   * Toggle pin status of a direct message.
+   */
+  async togglePinMessage(messageId, groupId, userId) {
+    const [msg] = await sql`
+      SELECT id, group_id, sender_id, receiver_id, is_pinned
+      FROM direct_messages
+      WHERE id = ${messageId} AND group_id = ${groupId}
+    `;
+    if (!msg) return null;
+    if (Number(msg.sender_id) !== Number(userId) && Number(msg.receiver_id) !== Number(userId)) {
+      const err = new Error('Not authorized to pin this message.');
+      err.status = 403;
+      throw err;
+    }
+    const nextPinned = !msg.is_pinned;
+    const [updated] = await sql`
+      UPDATE direct_messages
+      SET is_pinned = ${nextPinned},
+          pinned_at = ${nextPinned ? sql`NOW()` : null}
+      WHERE id = ${messageId} AND group_id = ${groupId}
+      RETURNING id, group_id, sender_id, receiver_id, message, COALESCE(attachments, '[]'::jsonb) as attachments, is_pinned, pinned_at, created_at
+    `;
+    return updated;
   },
 
   /**
@@ -88,7 +118,10 @@ const MessageModel = {
         u.full_name,
         u.email,
         u.avatar_initials,
-        COALESCE(u.status, 'offline') as status,
+        CASE 
+          WHEN u.last_active_at IS NOT NULL AND u.last_active_at >= NOW() - INTERVAL '2 minutes' THEN 'online'
+          ELSE 'offline'
+        END as status,
         gm.role,
         last_msg.message as last_message,
         last_msg.created_at as last_message_at,

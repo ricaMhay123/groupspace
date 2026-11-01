@@ -44,7 +44,18 @@ const GroupModel = {
 
   async findMembersByGroup(groupId) {
     return await sql`
-      SELECT gm.id as membership_id, gm.role, gm.joined_at, u.id as user_id, u.full_name, u.email, u.avatar_initials, u.status
+      SELECT 
+        gm.id as membership_id, 
+        gm.role, 
+        gm.joined_at, 
+        u.id as user_id, 
+        u.full_name, 
+        u.email, 
+        u.avatar_initials,
+        CASE 
+          WHEN u.last_active_at IS NOT NULL AND u.last_active_at >= NOW() - INTERVAL '2 minutes' THEN 'online'
+          ELSE 'offline'
+        END as status
       FROM group_members gm
       JOIN users u ON gm.user_id = u.id
       WHERE gm.group_id = ${groupId}

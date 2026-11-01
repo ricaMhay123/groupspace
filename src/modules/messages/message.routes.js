@@ -22,4 +22,8 @@ router.get('/direct/:otherUserId', MessageController.getDirectHistory);
 // Send a direct message to a teammate
 router.post('/direct', MessageController.sendDirectMessage);
 
+// Toggle pin status on a direct message
+router.put('/:messageId/pin', MessageController.togglePinMessage);
+router.put('/direct/:messageId/pin', MessageController.togglePinMessage);
+
 module.exports = router;

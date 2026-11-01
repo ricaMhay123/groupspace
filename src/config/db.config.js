@@ -315,6 +315,8 @@ async function initDb() {
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT`; } catch (e) {}
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_initials VARCHAR(10)`; } catch (e) {}
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'offline'`; } catch (e) {}
+    try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ DEFAULT NOW()`; } catch (e) {}
+    try { await sql`CREATE INDEX IF NOT EXISTS idx_users_last_active ON users (last_active_at)`; } catch (e) {}
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER DEFAULT 0`; } catch (e) {}
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS lockout_until TIMESTAMPTZ`; } catch (e) {}
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_failed_login TIMESTAMPTZ`; } catch (e) {}
@@ -452,6 +454,14 @@ async function initDb() {
     // Discussion and comments attachments column migrations
     try { await sql`ALTER TABLE discussions ADD COLUMN IF NOT EXISTS attachments JSONB DEFAULT '[]'::jsonb`; } catch (e) {}
     try { await sql`ALTER TABLE discussion_comments ADD COLUMN IF NOT EXISTS attachments JSONB DEFAULT '[]'::jsonb`; } catch (e) {}
+    try { await sql`ALTER TABLE discussion_comments ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT FALSE`; } catch (e) {}
+    try { await sql`ALTER TABLE discussion_comments ADD COLUMN IF NOT EXISTS pinned_at TIMESTAMPTZ`; } catch (e) {}
+
+    // Direct messages attachments, pin status & pinned_at
+    try { await sql`ALTER TABLE direct_messages ADD COLUMN IF NOT EXISTS attachments JSONB DEFAULT '[]'::jsonb`; } catch (e) {}
+    try { await sql`ALTER TABLE direct_messages ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT FALSE`; } catch (e) {}
+    try { await sql`ALTER TABLE direct_messages ADD COLUMN IF NOT EXISTS pinned_at TIMESTAMPTZ`; } catch (e) {}
+    try { await sql`CREATE INDEX IF NOT EXISTS idx_direct_messages_pinned ON direct_messages (group_id, is_pinned)`; } catch (e) {}
 
     // Relax any legacy NOT NULL constraints
     try { await sql`ALTER TABLE groups ALTER COLUMN group_name DROP NOT NULL`; } catch (e) {}

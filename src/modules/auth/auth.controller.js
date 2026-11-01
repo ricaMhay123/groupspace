@@ -159,6 +159,7 @@ async function logout(req, res) {
     message: 'Logged out successfully.'
   });
 }
+
 async function checkEmail(req, res) {
   try {
     const { email } = req.query;
@@ -225,6 +226,26 @@ async function deleteAccount(req, res) {
   }
 }
 
+async function heartbeat(req, res) {
+  try {
+    const sql = require('../../config/db.config');
+    await sql`
+      UPDATE users 
+      SET last_active_at = NOW(), status = 'online' 
+      WHERE id = ${req.user.id}
+    `;
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      last_active_at: new Date().toISOString()
+    });
+  } catch (error) {
+    return res.status(error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 module.exports = {
   sendVerificationCode,
   verifyCode,
@@ -237,5 +258,6 @@ module.exports = {
   checkEmail,
   testEmail,
   debugEnv,
-  deleteAccount
+  deleteAccount,
+  heartbeat
 };

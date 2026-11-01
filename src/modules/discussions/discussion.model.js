@@ -69,6 +69,29 @@ const DiscussionModel = {
     `;
   },
 
+  /**
+   * Toggle pin status on a discussion comment.
+   */
+  async togglePinComment(commentId, discussionId, groupId, userId) {
+    const [comment] = await sql`
+      SELECT c.id, c.discussion_id, c.user_id, c.is_pinned, d.group_id
+      FROM discussion_comments c
+      JOIN discussions d ON d.id = c.discussion_id
+      WHERE c.id = ${commentId} AND c.discussion_id = ${discussionId} AND d.group_id = ${groupId}
+    `;
+    if (!comment) return null;
+
+    const nextPinned = !comment.is_pinned;
+    const [updated] = await sql`
+      UPDATE discussion_comments
+      SET is_pinned = ${nextPinned},
+          pinned_at = ${nextPinned ? sql`NOW()` : null}
+      WHERE id = ${commentId}
+      RETURNING id, discussion_id, user_id, content, attachments, is_pinned, pinned_at, created_at
+    `;
+    return updated;
+  },
+
   // ─── Workspace-limited mention helpers ────────────────────────────────────
 
   /** Users enrolled in the workspace (group_members), optionally filtered by name. */

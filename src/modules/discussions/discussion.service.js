@@ -332,6 +332,23 @@ async function deleteComment({ commentId, userId, userRole, groupId }) {
   return { success: true };
 }
 
+async function togglePinComment({ commentId, topicId, groupId, userId, userRole }) {
+  const topic = await DiscussionModel.findByIdInGroup(Number(topicId), Number(groupId));
+  if (!topic) {
+    const err = new Error('Discussion topic not found in this workspace.');
+    err.status = 404;
+    throw err;
+  }
+
+  const updated = await DiscussionModel.togglePinComment(Number(commentId), Number(topicId), Number(groupId), Number(userId));
+  if (!updated) {
+    const err = new Error('Comment not found in this topic.');
+    err.status = 404;
+    throw err;
+  }
+  return updated;
+}
+
 module.exports = {
   normalizeAttachments,
   createTopic,
@@ -340,6 +357,7 @@ module.exports = {
   postComment,
   deleteTopic,
   deleteComment,
+  togglePinComment,
   getActivityFeed,
   getMentionableUsers,
   getMentionableTasks,

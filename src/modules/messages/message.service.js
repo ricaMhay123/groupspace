@@ -1,6 +1,6 @@
 /**
  * Direct Messaging Service
- * Business logic for 1-on-1 private messaging, membership validation, and feed notifications.
+ * Business logic for 1-on-1 private messaging, membership validation, attachments, and pinning.
  */
 
 'use strict';
@@ -47,9 +47,12 @@ class MessageService {
   /**
    * Send a direct message to a teammate in the active group.
    */
-  async sendDirectMessage({ groupId, senderId, receiverId, message, senderName = 'Teammate' }) {
-    if (!message || typeof message !== 'string' || !message.trim()) {
-      throw { status: 400, message: 'Message content cannot be empty.' };
+  async sendDirectMessage({ groupId, senderId, receiverId, message, attachments = [], senderName = 'Teammate' }) {
+    const trimmedMsg = (typeof message === 'string') ? message.trim() : '';
+    const safeAttachments = Array.isArray(attachments) ? attachments : [];
+
+    if (!trimmedMsg && safeAttachments.length === 0) {
+      throw { status: 400, message: 'Message content cannot be empty unless an attachment is provided.' };
     }
 
     if (Number(senderId) === Number(receiverId)) {
@@ -67,16 +70,17 @@ class MessageService {
       throw { status: 403, message: 'Recipient is not a member of this workspace group.' };
     }
 
-    const trimmedMsg = message.trim();
     const createdMsg = await MessageModel.createDirectMessage({
       groupId,
       senderId,
       receiverId,
-      message: trimmedMsg
+      message: trimmedMsg,
+      attachments: safeAttachments
     });
 
     // Create a personal_feed notification item for the receiver
-    const preview = trimmedMsg.length > 70 ? trimmedMsg.slice(0, 70) + '…' : trimmedMsg;
+    const notifText = trimmedMsg || (safeAttachments.length > 0 ? (safeAttachments[0].file_name || 'Attachment') : 'Direct Message');
+    const preview = notifText.length > 70 ? notifText.slice(0, 70) + '…' : notifText;
     await MessageModel.createFeedNotification({
       userId: receiverId,
       groupId,
@@ -86,6 +90,22 @@ class MessageService {
     });
 
     return createdMsg;
+  }
+
+  /**
+   * Toggle pin status on a direct message.
+   */
+  async togglePinMessage({ groupId, messageId, userId }) {
+    const isMember = await MessageModel.isMember(userId, groupId);
+    if (!isMember) {
+      throw { status: 403, message: 'You are not a member of this workspace group.' };
+    }
+
+    const updated = await MessageModel.togglePinMessage(messageId, groupId, userId);
+    if (!updated) {
+      throw { status: 404, message: 'Message not found.' };
+    }
+    return updated;
   }
 }
 

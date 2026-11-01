@@ -188,6 +188,28 @@ async function getMentionableTopics(req, res) {
   }
 }
 
+async function togglePinComment(req, res) {
+  try {
+    const comment = await discussionService.togglePinComment({
+      commentId: req.params.commentId,
+      topicId: req.params.topicId,
+      groupId: req.params.groupId,
+      userId: req.user.id,
+      userRole: req.membership ? req.membership.role : 'member'
+    });
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: comment.is_pinned ? 'Comment pinned.' : 'Comment unpinned.',
+      data: comment
+    });
+  } catch (error) {
+    return res.status(error.status || HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 module.exports = {
   getTopics,
   getTopicDetails,
@@ -195,6 +217,7 @@ module.exports = {
   postComment,
   removeTopic,
   removeComment,
+  togglePinComment,
   getActivity,
   getMentionableUsers,
   getMentionableTasks,

@@ -271,9 +271,29 @@
 
         <div class="dashboard-panel" id="topicChatPanel">
           <div class="panel-header" style="border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:16px;">
-            <h3 id="activeTopicTitle" style="margin:0 0 4px 0;">Select a Topic</h3>
-            <div id="activeTopicMeta" style="font-size:12px; color:var(--gray);"></div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+              <div>
+                <h3 id="activeTopicTitle" style="margin:0 0 4px 0;">Select a Topic</h3>
+                <div id="activeTopicMeta" style="font-size:12px; color:var(--gray);"></div>
+              </div>
+              <button type="button" id="topicPinTrayToggleBtn" class="btn-outline" style="display:none; font-size:12px; padding:4px 10px; border-radius:6px; align-items:center; gap:4px;" onclick="toggleTopicPinnedTray()" title="Toggle pinned comments in this thread">
+                📌 <span id="topicPinnedCount">0 Pinned</span>
+              </button>
+            </div>
             <div id="activeTopicAttachments" style="margin-top:8px;"></div>
+            <!-- Expandable Topic Pinned Comments Tray -->
+            <div id="topicPinnedTray" class="chat-pinned-tray" style="display:none; margin-top:10px;">
+              <div class="pinned-tray-header">
+                <span class="pinned-tray-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3H8l2 6H7l5 12 5-12h-3l2-6z"/></svg>
+                  <span>Pinned in this Thread</span>
+                </span>
+                <button type="button" class="pinned-tray-close-btn" onclick="toggleTopicPinnedTray(false)" aria-label="Close pinned comments">✕</button>
+              </div>
+              <div id="topicPinnedList" class="pinned-tray-list">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
           </div>
           <div id="commentsContainer" style="max-height:420px; overflow-y:auto; margin-bottom:18px; padding-right:4px;">
             <p style="color:var(--gray); text-align:center; padding:30px;">Click on a topic to view its replies and thread discussion.</p>
@@ -714,14 +734,38 @@
       <button type="button" class="modal-close" onclick="toggleDmDrawer(false)" aria-label="Close direct messages">✕</button>
     </div>
 
+    <!-- Expandable DM Pinned Messages Tray -->
+    <div id="dmPinnedTray" class="chat-pinned-tray dm-pinned-tray" style="display:none;">
+      <div class="pinned-tray-header">
+        <span class="pinned-tray-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3H8l2 6H7l5 12 5-12h-3l2-6z"/></svg>
+          <span id="dmPinnedCount">0 Pinned</span>
+        </span>
+        <button type="button" class="pinned-tray-close-btn" onclick="toggleDmPinnedTray(false)" aria-label="Close pinned messages">✕</button>
+      </div>
+      <div id="dmPinnedList" class="pinned-tray-list">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
     <!-- Scrollable Messages Container -->
     <div class="dm-messages-container" id="dmMessagesContainer" style="flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:8px;">
       <p style="color:var(--gray); text-align:center; padding:30px 10px; font-size:13px;">Start a direct message conversation...</p>
     </div>
 
+    <!-- Attachment Staging Chips Container -->
+    <div id="dmAttachmentStaging" class="dm-attachment-staging" style="display:none;"></div>
+
     <!-- Fixed Bottom Message Input Bar -->
     <form id="dmMessageForm" class="dm-input-bar" onsubmit="handleSendDirectMessage(event)">
-      <input type="text" id="dmMessageInput" class="form-control dm-input" placeholder="Type a message..." autocomplete="off" required>
+      <input type="file" id="dmFileInput" style="display:none;" multiple accept="image/*,.pdf,.docx,.txt,.zip" onchange="handleDmFileSelection(event)">
+      <button type="button" id="dmAttachBtn" class="dm-bar-btn" onclick="document.getElementById('dmFileInput').click()" aria-label="Attach file" title="Attach pictures or documents">
+        📎
+      </button>
+      <button type="button" id="dmPinTrayToggleBtn" class="dm-bar-btn" onclick="toggleDmPinnedTray()" aria-label="Pinned messages" title="View pinned messages">
+        📌<span id="dmPinBadge" class="dm-pin-badge" style="display:none;">0</span>
+      </button>
+      <input type="text" id="dmMessageInput" class="form-control dm-input" placeholder="Type a message..." autocomplete="off">
       <button type="submit" id="dmSendBtn" class="btn-green dm-send-btn" aria-label="Send message">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
       </button>

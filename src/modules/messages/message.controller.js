@@ -46,11 +46,12 @@ const MessageController = {
       const groupId = Number(req.params.groupId || req.body.groupId);
       const receiverId = Number(req.body.receiverId || req.body.receiver_id);
       const message = req.body.message;
+      const attachments = Array.isArray(req.body.attachments) ? req.body.attachments : [];
 
-      if (!groupId || !receiverId || !message) {
+      if (!groupId || !receiverId || (!message && attachments.length === 0)) {
         return res.status(400).json({
           success: false,
-          message: 'groupId, receiverId, and message content are required.'
+          message: 'groupId, receiverId, and message content or attachment are required.'
         });
       }
 
@@ -59,6 +60,7 @@ const MessageController = {
         senderId: req.user.id,
         receiverId,
         message,
+        attachments,
         senderName: req.user.full_name || 'Teammate'
       });
 
@@ -67,6 +69,32 @@ const MessageController = {
       console.error('[MessageController.sendDirectMessage] Error:', err);
       const status = err.status || 500;
       return res.status(status).json({ success: false, message: err.message || 'Failed to send direct message.' });
+    }
+  },
+
+  async togglePinMessage(req, res) {
+    try {
+      const groupId = Number(req.params.groupId || req.body.groupId);
+      const messageId = Number(req.params.messageId);
+
+      if (!groupId || !messageId) {
+        return res.status(400).json({ success: false, message: 'Valid groupId and messageId are required.' });
+      }
+
+      const updated = await messageService.togglePinMessage({
+        groupId,
+        messageId,
+        userId: req.user.id
+      });
+      return res.json({
+        success: true,
+        message: updated.is_pinned ? 'Message pinned.' : 'Message unpinned.',
+        data: updated
+      });
+    } catch (err) {
+      console.error('[MessageController.togglePinMessage] Error:', err);
+      const status = err.status || 500;
+      return res.status(status).json({ success: false, message: err.message || 'Failed to toggle message pin.' });
     }
   }
 };
