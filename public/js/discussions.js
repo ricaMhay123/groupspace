@@ -1065,9 +1065,21 @@
       if (targetCard) {
         targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
         targetCard.classList.remove('card-highlight-pulse');
+        const existingBeacon = targetCard.querySelector('.mentioned-beacon-tag');
+        if (existingBeacon) existingBeacon.remove();
+
+        const beacon = document.createElement('span');
+        beacon.className = 'mentioned-beacon-tag';
+        beacon.innerHTML = '📌 Mentioned Document';
+        targetCard.appendChild(beacon);
+
         void targetCard.offsetWidth; // Force reflow
         targetCard.classList.add('card-highlight-pulse');
-        setTimeout(() => targetCard.classList.remove('card-highlight-pulse'), 2500);
+
+        setTimeout(() => {
+          targetCard.classList.remove('card-highlight-pulse');
+          if (beacon.parentNode) beacon.remove();
+        }, 3600);
       }
     }, 350);
   }
@@ -1111,6 +1123,37 @@
         window.filterDashboardNotesByFolder('ALL');
       }
     }
+
+    // Highlight the active folder pill in the folder bar
+    setTimeout(() => {
+      const bar = document.getElementById('dashboardFoldersBar');
+      if (bar) {
+        const pills = bar.querySelectorAll('div, button');
+        for (const pill of pills) {
+          if (pill.textContent.toLowerCase().includes(folderName)) {
+            pill.classList.remove('card-highlight-pulse');
+            const existingBeacon = pill.querySelector('.mentioned-beacon-tag');
+            if (existingBeacon) existingBeacon.remove();
+
+            const beacon = document.createElement('span');
+            beacon.className = 'mentioned-beacon-tag';
+            beacon.style.top = '-14px';
+            beacon.style.right = '4px';
+            beacon.innerHTML = '📁 Mentioned Folder';
+            pill.style.position = 'relative';
+            pill.appendChild(beacon);
+
+            void pill.offsetWidth;
+            pill.classList.add('card-highlight-pulse');
+            setTimeout(() => {
+              pill.classList.remove('card-highlight-pulse');
+              if (beacon.parentNode) beacon.remove();
+            }, 3600);
+            break;
+          }
+        }
+      }
+    }, 400);
   }
 
   function handleTaskTagClick(taskId) {
@@ -1126,9 +1169,21 @@
       if (card) {
         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
         card.classList.remove('card-highlight-pulse');
+        const existingBeacon = card.querySelector('.mentioned-beacon-tag');
+        if (existingBeacon) existingBeacon.remove();
+
+        const beacon = document.createElement('span');
+        beacon.className = 'mentioned-beacon-tag';
+        beacon.innerHTML = '📌 Mentioned Task';
+        card.appendChild(beacon);
+
         void card.offsetWidth; // Force reflow
         card.classList.add('card-highlight-pulse');
-        setTimeout(() => card.classList.remove('card-highlight-pulse'), 2500);
+
+        setTimeout(() => {
+          card.classList.remove('card-highlight-pulse');
+          if (beacon.parentNode) beacon.remove();
+        }, 3600);
       }
     }, 350);
   }

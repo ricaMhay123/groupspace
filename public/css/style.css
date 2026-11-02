@@ -4329,28 +4329,95 @@ html.dark .folder-mention-pill:hover {
   border-color: rgba(14, 165, 233, 0.6);
 }
 
-/* Notebook card highlight pulse animation */
+/* Radiant Mention Highlight Pulse Animation */
 @keyframes cardHighlightPulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    outline: 0 solid rgba(16, 185, 129, 0.6);
+    outline-offset: 0;
     border-color: #10b981;
+    background-color: rgba(16, 185, 129, 0.14);
     transform: scale(1.02);
+    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.15);
   }
-  50% {
-    box-shadow: 0 0 0 12px rgba(16, 185, 129, 0);
+  30% {
+    outline: 4px solid rgba(16, 185, 129, 0.5);
+    outline-offset: 2px;
     border-color: #10b981;
+    background-color: rgba(16, 185, 129, 0.12);
     transform: scale(1.02);
+    box-shadow: 0 14px 28px -4px rgba(0, 0, 0, 0.18);
+  }
+  60% {
+    outline: 2px solid rgba(16, 185, 129, 0.35);
+    outline-offset: 2px;
+    border-color: #10b981;
+    background-color: rgba(16, 185, 129, 0.08);
+    transform: scale(1.01);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    outline: 0 solid rgba(16, 185, 129, 0);
+    outline-offset: 0;
+    border-color: var(--border);
+    background-color: transparent;
     transform: scale(1);
+    box-shadow: none;
   }
 }
 
 .card-highlight-pulse {
-  animation: cardHighlightPulse 1.8s cubic-bezier(0.25, 1, 0.5, 1) ease-in-out;
+  position: relative !important;
+  animation: cardHighlightPulse 3.5s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  border-width: 2.5px !important;
   border-color: #10b981 !important;
-  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  z-index: 10;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease, background-color 0.4s ease;
+}
+
+html.dark .card-highlight-pulse {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Floating Mentioned Beacon Tag */
+@keyframes beaconPopIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.85);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(0) scale(1.05);
+  }
+  30% {
+    transform: translateY(0) scale(1);
+  }
+  85% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.95);
+  }
+}
+
+.mentioned-beacon-tag {
+  position: absolute;
+  top: -12px;
+  right: 14px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff !important;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  z-index: 20;
+  animation: beaconPopIn 3.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* Button spinner for async actions */
