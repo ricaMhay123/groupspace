@@ -57,13 +57,13 @@
     </div>
 
     <!-- User Profile Settings Card Below Navigation -->
-    <div class="sidebar-profile-card" id="sidebarProfileCard" style="margin-top:auto; padding:12px; background:var(--secondary); border:1px solid var(--border); border-radius:12px; display:flex; align-items:center; gap:10px;">
+    <div class="sidebar-profile-card" id="sidebarProfileCard" style="margin-top:auto; padding:12px; background:var(--secondary); border:1px solid var(--border); border-radius:12px; display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openUserProfileModal()" title="Click to customize your profile">
       <div class="chat-avatar" id="sidebarUserAvatar" style="width:34px; height:34px; font-size:12px; flex-shrink:0;">GS</div>
       <div style="min-width:0; flex:1;">
         <div id="sidebarUserFullName" style="font-size:12.5px; font-weight:700; color:var(--foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">User</div>
         <div id="sidebarUserRole" style="font-size:11px; color:var(--muted-foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Member</div>
       </div>
-      <button type="button" class="btn-outline" style="padding:5px 9px; font-size:12px; border-radius:8px; cursor:pointer;" onclick="focusHomespaceSettingsDrawer()" title="Workspace Settings &amp; Controls">&#9881;&#65039;</button>
+      <button type="button" class="btn-outline" style="padding:5px 9px; font-size:12px; border-radius:8px; cursor:pointer;" onclick="event.stopPropagation(); focusHomespaceSettingsDrawer();" title="Workspace Settings &amp; Controls">&#9881;&#65039;</button>
     </div>
   </aside>
 
@@ -939,6 +939,66 @@
 </div>
 
 <!-- Delete Account security modal -->
+<!-- ================= MY PROFILE MODAL ================= -->
+<div class="modal-overlay" id="userProfileModal">
+  <div class="modal-card" style="max-width:440px;">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:20px;">👤</span>
+        <h3 style="margin:0;">My Profile</h3>
+      </div>
+      <button class="modal-close" onclick="closeModal('userProfileModal')">✕</button>
+    </div>
+    <form id="userProfileForm" onsubmit="handleSaveUserProfile(event)">
+      <!-- Avatar Preview & Color Palette -->
+      <div style="display:flex; flex-direction:column; align-items:center; margin:10px 0 20px 0; gap:10px;">
+        <div id="profileAvatarPreview" style="width:70px; height:70px; border-radius:50%; background:#4f46e5; color:#ffffff; font-size:24px; font-weight:800; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(0,0,0,0.12); transition:background 0.2s;">
+          GS
+        </div>
+        <div style="font-size:12px; font-weight:600; color:var(--gray);">Avatar Accent Color</div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:center;">
+          <button type="button" class="color-swatch-btn" onclick="selectProfileAvatarColor('#4f46e5')" style="width:24px; height:24px; border-radius:50%; background:#4f46e5; border:2px solid transparent; cursor:pointer;" title="Indigo"></button>
+          <button type="button" class="color-swatch-btn" onclick="selectProfileAvatarColor('#059669')" style="width:24px; height:24px; border-radius:50%; background:#059669; border:2px solid transparent; cursor:pointer;" title="Emerald"></button>
+          <button type="button" class="color-swatch-btn" onclick="selectProfileAvatarColor('#2563eb')" style="width:24px; height:24px; border-radius:50%; background:#2563eb; border:2px solid transparent; cursor:pointer;" title="Blue"></button>
+          <button type="button" class="color-swatch-btn" onclick="selectProfileAvatarColor('#7c3aed')" style="width:24px; height:24px; border-radius:50%; background:#7c3aed; border:2px solid transparent; cursor:pointer;" title="Violet"></button>
+          <button type="button" class="color-swatch-btn" onclick="selectProfileAvatarColor('#d97706')" style="width:24px; height:24px; border-radius:50%; background:#d97706; border:2px solid transparent; cursor:pointer;" title="Amber"></button>
+          <button type="button" class="color-swatch-btn" onclick="selectProfileAvatarColor('#e11d48')" style="width:24px; height:24px; border-radius:50%; background:#e11d48; border:2px solid transparent; cursor:pointer;" title="Rose"></button>
+          <button type="button" class="color-swatch-btn" onclick="selectProfileAvatarColor('#0891b2')" style="width:24px; height:24px; border-radius:50%; background:#0891b2; border:2px solid transparent; cursor:pointer;" title="Cyan"></button>
+          <button type="button" class="color-swatch-btn" onclick="selectProfileAvatarColor('#475569')" style="width:24px; height:24px; border-radius:50%; background:#475569; border:2px solid transparent; cursor:pointer;" title="Slate"></button>
+          <input type="color" id="profileColorInput" onchange="selectProfileAvatarColor(this.value)" value="#4f46e5" style="width:26px; height:26px; border:none; border-radius:50%; padding:0; cursor:pointer; background:none;" title="Custom Color">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Display Name *</label>
+        <input type="text" id="profileDisplayNameInput" class="form-control" placeholder="Enter your full name" required oninput="updateProfileAvatarPreviewInitials(this.value)">
+      </div>
+
+      <div class="form-group">
+        <label>Status Message</label>
+        <input type="text" id="profileStatusMessageInput" class="form-control" placeholder="e.g. 📚 Studying for exams, 💻 Coding deliverables...">
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+          <button type="button" class="btn-outline" style="padding:2px 8px; font-size:11px; border-radius:999px; cursor:pointer;" onclick="setProfileStatusPreset('🟢 Active & Online')">🟢 Active</button>
+          <button type="button" class="btn-outline" style="padding:2px 8px; font-size:11px; border-radius:999px; cursor:pointer;" onclick="setProfileStatusPreset('📚 Studying for Exams')">📚 Studying</button>
+          <button type="button" class="btn-outline" style="padding:2px 8px; font-size:11px; border-radius:999px; cursor:pointer;" onclick="setProfileStatusPreset('💻 In the Zone')">💻 In the Zone</button>
+          <button type="button" class="btn-outline" style="padding:2px 8px; font-size:11px; border-radius:999px; cursor:pointer;" onclick="setProfileStatusPreset('☕ On Break')">☕ On Break</button>
+          <button type="button" class="btn-outline" style="padding:2px 8px; font-size:11px; border-radius:999px; cursor:pointer;" onclick="setProfileStatusPreset('🌴 Away')">🌴 Away</button>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:14px; padding:10px 12px; background:var(--muted, #f8fafc); border-radius:10px; border:1px solid var(--border);">
+        <div style="font-size:11px; color:var(--gray);">Registered Email</div>
+        <div id="profileEmailDisplay" style="font-size:12.5px; font-weight:600; color:var(--foreground); word-break:break-all;">user@gmail.com</div>
+      </div>
+
+      <div class="form-actions" style="margin-top:20px;">
+        <button type="button" class="btn-outline" onclick="closeModal('userProfileModal')">Cancel</button>
+        <button type="submit" id="saveProfileBtn" class="btn-green">Save Profile</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="modal-overlay" id="deleteAccountModal">
   <div class="modal-card">
     <div class="modal-header">

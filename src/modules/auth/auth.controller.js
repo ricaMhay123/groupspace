@@ -246,6 +246,23 @@ async function heartbeat(req, res) {
   }
 }
 
+async function updateMe(req, res) {
+  try {
+    const { fullName, avatarColor, statusMessage } = req.body;
+    const user = await authService.updateUserProfile(req.user.id, { fullName, avatarColor, statusMessage });
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Profile updated successfully.',
+      data: user
+    });
+  } catch (error) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 module.exports = {
   sendVerificationCode,
   verifyCode,
@@ -254,6 +271,7 @@ module.exports = {
   resetPassword,
   login,
   getMe,
+  updateMe,
   logout,
   checkEmail,
   testEmail,

@@ -25,7 +25,11 @@
     <a href="workspaces.html" class="active" style="color:var(--primary); font-weight:600;">Workspaces</a>
   </nav>
   <div class="nav-buttons">
-    <span id="userNameBadge" style="font-weight:600; color:var(--primary); margin-right:10px;"></span>
+    <button type="button" id="userProfileChip" class="user-profile-chip" onclick="openUserProfileModal()" title="Click to customize your profile" style="display:inline-flex; align-items:center; gap:8px; padding:4px 12px 4px 5px; background:var(--secondary); border:1px solid var(--border); border-radius:999px; cursor:pointer; font-family:inherit; transition:background 0.2s, transform 0.15s; margin-right:6px;">
+      <div id="userAvatarBadge" class="chat-avatar" style="width:26px; height:26px; font-size:11px; background:#4f46e5; color:#ffffff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700;">GS</div>
+      <span id="userNameBadge" style="font-weight:600; font-size:13px; color:var(--foreground);">User</span>
+      <span style="font-size:11px; color:var(--muted-foreground);">⚙️</span>
+    </button>
     <button data-theme-toggle aria-label="Toggle theme" title="Toggle theme" class="login-btn" style="padding:8px;display:inline-flex;align-items:center;justify-content:center;">
       <svg data-theme-moon xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
       <svg data-theme-sun  xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -113,6 +117,66 @@
   </div>
 </div>
 
+<!-- ================= MY PROFILE MODAL ================= -->
+<div class="modal-overlay" id="userProfileModal">
+  <div class="modal-card" style="max-width:440px;">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:20px;">👤</span>
+        <h3 style="margin:0;">My Profile</h3>
+      </div>
+      <button class="modal-close" onclick="closeModal('userProfileModal')">✕</button>
+    </div>
+    <form id="userProfileForm" onsubmit="handleSaveUserProfile(event)">
+      <!-- Avatar Preview & Color Palette -->
+      <div style="display:flex; flex-direction:column; align-items:center; margin:10px 0 20px 0; gap:10px;">
+        <div id="profileAvatarPreview" style="width:70px; height:70px; border-radius:50%; background:#4f46e5; color:#ffffff; font-size:24px; font-weight:800; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(0,0,0,0.12); transition:background 0.2s;">
+          GS
+        </div>
+        <div style="font-size:12px; font-weight:600; color:var(--gray);">Avatar Accent Color</div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:center;">
+          <button type="button" class="color-swatch-btn" onclick="selectProfileAvatarColor('#4f46e5')" style="width:24px; height:24px; border-radius:50%; background:#4f46e5; border:2px solid transparent; cursor:pointer;" title="Indigo"></button>
+          <button type="button" class="color-swatch-btn" onclick="selectProfileAvatarColor('#059669')" style="width:24px; height:24px; border-radius:50%; background:#059669; border:2px solid transparent; cursor:pointer;" title="Emerald"></button>
+          <button type="button" class="color-swatch-btn" onclick="selectProfileAvatarColor('#2563eb')" style="width:24px; height:24px; border-radius:50%; background:#2563eb; border:2px solid transparent; cursor:pointer;" title="Blue"></button>
+          <button type="button" class="color-swatch-btn" onclick="selectProfileAvatarColor('#7c3aed')" style="width:24px; height:24px; border-radius:50%; background:#7c3aed; border:2px solid transparent; cursor:pointer;" title="Violet"></button>
+          <button type="button" class="color-swatch-btn" onclick="selectProfileAvatarColor('#d97706')" style="width:24px; height:24px; border-radius:50%; background:#d97706; border:2px solid transparent; cursor:pointer;" title="Amber"></button>
+          <button type="button" class="color-swatch-btn" onclick="selectProfileAvatarColor('#e11d48')" style="width:24px; height:24px; border-radius:50%; background:#e11d48; border:2px solid transparent; cursor:pointer;" title="Rose"></button>
+          <button type="button" class="color-swatch-btn" onclick="selectProfileAvatarColor('#0891b2')" style="width:24px; height:24px; border-radius:50%; background:#0891b2; border:2px solid transparent; cursor:pointer;" title="Cyan"></button>
+          <button type="button" class="color-swatch-btn" onclick="selectProfileAvatarColor('#475569')" style="width:24px; height:24px; border-radius:50%; background:#475569; border:2px solid transparent; cursor:pointer;" title="Slate"></button>
+          <input type="color" id="profileColorInput" onchange="selectProfileAvatarColor(this.value)" value="#4f46e5" style="width:26px; height:26px; border:none; border-radius:50%; padding:0; cursor:pointer; background:none;" title="Custom Color">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Display Name *</label>
+        <input type="text" id="profileDisplayNameInput" class="form-control" placeholder="Enter your full name" required oninput="updateProfileAvatarPreviewInitials(this.value)">
+      </div>
+
+      <div class="form-group">
+        <label>Status Message</label>
+        <input type="text" id="profileStatusMessageInput" class="form-control" placeholder="e.g. 📚 Studying for exams, 💻 Coding deliverables...">
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+          <button type="button" class="btn-outline" style="padding:2px 8px; font-size:11px; border-radius:999px; cursor:pointer;" onclick="setProfileStatusPreset('🟢 Active & Online')">🟢 Active</button>
+          <button type="button" class="btn-outline" style="padding:2px 8px; font-size:11px; border-radius:999px; cursor:pointer;" onclick="setProfileStatusPreset('📚 Studying for Exams')">📚 Studying</button>
+          <button type="button" class="btn-outline" style="padding:2px 8px; font-size:11px; border-radius:999px; cursor:pointer;" onclick="setProfileStatusPreset('💻 In the Zone')">💻 In the Zone</button>
+          <button type="button" class="btn-outline" style="padding:2px 8px; font-size:11px; border-radius:999px; cursor:pointer;" onclick="setProfileStatusPreset('☕ On Break')">☕ On Break</button>
+          <button type="button" class="btn-outline" style="padding:2px 8px; font-size:11px; border-radius:999px; cursor:pointer;" onclick="setProfileStatusPreset('🌴 Away')">🌴 Away</button>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:14px; padding:10px 12px; background:var(--muted, #f8fafc); border-radius:10px; border:1px solid var(--border);">
+        <div style="font-size:11px; color:var(--gray);">Registered Email</div>
+        <div id="profileEmailDisplay" style="font-size:12.5px; font-weight:600; color:var(--foreground); word-break:break-all;">user@gmail.com</div>
+      </div>
+
+      <div class="form-actions" style="margin-top:20px;">
+        <button type="button" class="btn-outline" onclick="closeModal('userProfileModal')">Cancel</button>
+        <button type="submit" id="saveProfileBtn" class="btn-green">Save Profile</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Toast notifications -->
 <div class="toast-container" id="toastContainer"></div>
 
@@ -125,11 +189,121 @@
     document.getElementById(id).classList.remove('active');
   }
 
+  
+  let currentProfileUser = null;
+  let selectedAvatarColor = '#4f46e5';
+
+  function updateHeaderUserBadge(user) {
+    if (!user) return;
+    const nameEl = document.getElementById('userNameBadge');
+    if (nameEl) nameEl.textContent = user.fullName || 'User';
+    const avatarEl = document.getElementById('userAvatarBadge');
+    if (avatarEl) {
+      avatarEl.textContent = user.avatarInitials || 'GS';
+      if (user.avatarColor) avatarEl.style.backgroundColor = user.avatarColor;
+    }
+  }
+
+  function openUserProfileModal() {
+    if (!currentProfileUser) return;
+    const modal = document.getElementById('userProfileModal');
+    if (!modal) return;
+
+    document.getElementById('profileDisplayNameInput').value = currentProfileUser.fullName || '';
+    document.getElementById('profileStatusMessageInput').value = currentProfileUser.statusMessage || '';
+    document.getElementById('profileEmailDisplay').textContent = currentProfileUser.email || '';
+
+    selectedAvatarColor = currentProfileUser.avatarColor || '#4f46e5';
+    selectProfileAvatarColor(selectedAvatarColor);
+    updateProfileAvatarPreviewInitials(currentProfileUser.fullName || '');
+
+    modal.classList.add('active');
+  }
+
+  function selectProfileAvatarColor(color) {
+    selectedAvatarColor = color || '#4f46e5';
+    const preview = document.getElementById('profileAvatarPreview');
+    if (preview) preview.style.backgroundColor = selectedAvatarColor;
+    const colorInput = document.getElementById('profileColorInput');
+    if (colorInput) {
+      colorInput.value = selectedAvatarColor.startsWith('#') && selectedAvatarColor.length === 7 ? selectedAvatarColor : '#4f46e5';
+    }
+    document.querySelectorAll('.color-swatch-btn').forEach(btn => {
+      const match = btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(selectedAvatarColor);
+      btn.style.outline = match ? '2px solid var(--primary)' : 'none';
+      btn.style.outlineOffset = match ? '2px' : '0';
+    });
+  }
+
+  function updateProfileAvatarPreviewInitials(name) {
+    const preview = document.getElementById('profileAvatarPreview');
+    if (!preview) return;
+    const initials = (name || '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map(w => w[0].toUpperCase())
+      .slice(0, 2)
+      .join('') || 'GS';
+    preview.textContent = initials;
+  }
+
+  function setProfileStatusPreset(preset) {
+    const input = document.getElementById('profileStatusMessageInput');
+    if (input) {
+      input.value = preset;
+      input.focus();
+    }
+  }
+
+  async function handleSaveUserProfile(e) {
+    e.preventDefault();
+    const fullName = document.getElementById('profileDisplayNameInput')?.value.trim();
+    const statusMessage = document.getElementById('profileStatusMessageInput')?.value.trim();
+    if (!fullName) {
+      showToast('Please enter your full name.', 'warning');
+      return;
+    }
+
+    const saveBtn = document.getElementById('saveProfileBtn');
+    try {
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+      }
+
+      const res = await apiFetch('/api/auth/me', {
+        method: 'PUT',
+        body: JSON.stringify({
+          fullName,
+          avatarColor: selectedAvatarColor,
+          statusMessage
+        })
+      });
+
+      if (res && res.data) {
+        currentProfileUser = res.data;
+        localStorage.setItem('groupspace_user', JSON.stringify(res.data));
+        updateHeaderUserBadge(res.data);
+      }
+      showToast('Profile updated successfully!', 'success');
+      closeModal('userProfileModal');
+    } catch (err) {
+      showToast(err.message || 'Failed to update profile.', 'error');
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Profile';
+      }
+    }
+  }
+
   async function loadWorkspaces() {
     try {
       const user = await checkAuth();
       if (!user) return;
-      document.getElementById('userNameBadge').textContent = user.fullName;
+      currentProfileUser = user;
+      updateHeaderUserBadge(user);
 
       const res = await apiFetch('/api/groups');
       const container = document.getElementById('workspaceGrid');

@@ -876,6 +876,10 @@ function updateSidebarProfileCard() {
 
   if (avatarEl && currentUser) {
     avatarEl.textContent = currentUser.avatarInitials || 'GS';
+    if (currentUser.avatarColor) {
+      avatarEl.style.backgroundColor = currentUser.avatarColor;
+      avatarEl.style.color = '#ffffff';
+    }
   }
   if (nameEl && currentUser) {
     nameEl.textContent = currentUser.fullName || 'User';
@@ -4777,3 +4781,109 @@ document.addEventListener('keydown', (e) => {
     closeAllActionDropdowns();
   }
 });
+
+
+/* ─── Profile Customization Modal ─── */
+let selectedProfileAvatarColor = '#4f46e5';
+
+function openUserProfileModal() {
+  if (!currentUser) return;
+  const modal = document.getElementById('userProfileModal');
+  if (!modal) return;
+
+  const nameInput = document.getElementById('profileDisplayNameInput');
+  const statusInput = document.getElementById('profileStatusMessageInput');
+  const emailDisplay = document.getElementById('profileEmailDisplay');
+
+  if (nameInput) nameInput.value = currentUser.fullName || '';
+  if (statusInput) statusInput.value = currentUser.statusMessage || '';
+  if (emailDisplay) emailDisplay.textContent = currentUser.email || '';
+
+  selectedProfileAvatarColor = currentUser.avatarColor || '#4f46e5';
+  selectProfileAvatarColor(selectedProfileAvatarColor);
+  updateProfileAvatarPreviewInitials(currentUser.fullName || '');
+
+  modal.classList.add('active');
+}
+
+function selectProfileAvatarColor(color) {
+  selectedProfileAvatarColor = color || '#4f46e5';
+  const preview = document.getElementById('profileAvatarPreview');
+  if (preview) preview.style.backgroundColor = selectedProfileAvatarColor;
+  const colorInput = document.getElementById('profileColorInput');
+  if (colorInput) {
+    colorInput.value = selectedProfileAvatarColor.startsWith('#') && selectedProfileAvatarColor.length === 7 ? selectedProfileAvatarColor : '#4f46e5';
+  }
+  document.querySelectorAll('.color-swatch-btn').forEach(btn => {
+    const match = btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(selectedProfileAvatarColor);
+    btn.style.outline = match ? '2px solid var(--primary)' : 'none';
+    btn.style.outlineOffset = match ? '2px' : '0';
+  });
+}
+
+function updateProfileAvatarPreviewInitials(name) {
+  const preview = document.getElementById('profileAvatarPreview');
+  if (!preview) return;
+  const initials = (name || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(w => w[0].toUpperCase())
+    .slice(0, 2)
+    .join('') || 'GS';
+  preview.textContent = initials;
+}
+
+function setProfileStatusPreset(preset) {
+  const input = document.getElementById('profileStatusMessageInput');
+  if (input) {
+    input.value = preset;
+    input.focus();
+  }
+}
+
+async function handleSaveUserProfile(e) {
+  e.preventDefault();
+  const fullName = document.getElementById('profileDisplayNameInput')?.value.trim();
+  const statusMessage = document.getElementById('profileStatusMessageInput')?.value.trim();
+  if (!fullName) {
+    showToast('Please enter your full name.', 'warning');
+    return;
+  }
+
+  const saveBtn = document.getElementById('saveProfileBtn');
+  try {
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+    }
+
+    const res = await apiFetch('/api/auth/me', {
+      method: 'PUT',
+      body: JSON.stringify({
+        fullName,
+        avatarColor: selectedProfileAvatarColor,
+        statusMessage
+      })
+    });
+
+    if (res && res.data) {
+      currentUser = { ...currentUser, ...res.data };
+      localStorage.setItem('groupspace_user', JSON.stringify(currentUser));
+      updateSidebarProfileCard();
+      // If leader/member homespace is mounted, re-render to reflect new name/avatar
+      if (typeof loadOverviewData === 'function' && currentTab === 'overview') {
+        loadOverviewData();
+      }
+    }
+    showToast('Profile updated successfully!', 'success');
+    closeModal('userProfileModal');
+  } catch (err) {
+    showToast(err.message || 'Failed to update profile.', 'error');
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Profile';
+    }
+  }
+}

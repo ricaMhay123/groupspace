@@ -192,7 +192,8 @@ async function runLocalhostTests() {
       { script: 'tests/test-workspace-mentions-notebook-tagging-pinning.js', name: 'Workspace Mentions, Notebook #Tagging & Restricted Pinning' },
       { script: 'tests/test-discussion-mentions-popup-and-autocomplete-fix.js', name: 'Discussion Mentions Autocomplete & Writing Bubble Popup Fixes' },
       { script: 'tests/test-expense-split-and-partial-settlement.js', name: 'Split Types & Partial Debt Settlements Overhaul' },
-      { script: 'tests/test-notebook-shape-format-and-homespace-polish.js', name: 'Notebook Shape Format & Homespace Polish' }
+      { script: 'tests/test-notebook-shape-format-and-homespace-polish.js', name: 'Notebook Shape Format & Homespace Polish' },
+      { script: 'tests/test-user-profile-modal.js', name: 'Direct User Profile Modal & Customization' }
     ];
 
     for (const suite of testSuites) {

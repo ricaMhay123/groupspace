@@ -277,6 +277,22 @@ header .nav-buttons {
   font-family: inherit;
 }
 
+
+.user-profile-chip {
+  transition: all 0.2s ease;
+}
+.user-profile-chip:hover {
+  background: var(--muted) !important;
+  border-color: var(--primary) !important;
+  transform: translateY(-1px);
+}
+.color-swatch-btn {
+  transition: transform 0.15s ease, outline 0.15s ease;
+}
+.color-swatch-btn:hover {
+  transform: scale(1.15);
+}
+
 .login-btn:hover {
   border-color: var(--primary);
   color: var(--primary);

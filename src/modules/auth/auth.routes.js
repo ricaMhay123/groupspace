@@ -15,6 +15,7 @@ router.post('/reset-password', authController.resetPassword);
 router.post('/login', authController.login);
 router.get('/check-email', authController.checkEmail);
 router.get('/me', authMiddleware, authController.getMe);
+router.put('/me', authMiddleware, authController.updateMe);
 router.post('/logout', authMiddleware, authController.logout);
 router.post('/heartbeat', authMiddleware, authController.heartbeat);
 router.get('/test-email', authController.testEmail);  // ← diagnostic, remove after fix
