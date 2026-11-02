@@ -5039,34 +5039,42 @@ body.bg-light,
   transform: rotate(0deg);
 }
 
-/* 6. Translucent Beige Washi Tape Overlays (::before) with pointer-events: none */
+/* 6. Push Pin Accents (::before) with pointer-events: none */
 .modal-card::before,
 .modal-content::before,
+.dashboard-panel::before,
+.dashboard-card-pinned::before,
+.workspace-card:nth-child(2n)::before,
+.push-pin::before,
+.pin-accent::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 26px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 28' fill='none'%3E%3Cpath d='M10 16 L10 27' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M10 27 L13 28' stroke='rgba(0,0,0,0.2)' stroke-width='1.5' stroke-linecap='round'/%3E%3Cellipse cx='10' cy='16' rx='6' ry='2.2' fill='%23dc2626'/%3E%3Cpath d='M5.5 11 C5.5 13.5, 7.5 15.2, 10 15.2 C12.5 15.2, 14.5 13.5, 14.5 11 C14.5 9, 12.8 7.2, 12 6.5 L8 6.5 C7.2 7.2, 5.5 9, 5.5 11 Z' fill='%23ef4444'/%3E%3Cellipse cx='10' cy='6.5' rx='4.5' ry='1.6' fill='%23b91c1c'/%3E%3Ccircle cx='10' cy='4.5' r='4' fill='%23f87171'/%3E%3Cellipse cx='8.6' cy='3.4' rx='1.4' ry='1' fill='%23ffffff' opacity='0.75'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  filter: drop-shadow(1px 2px 3px rgba(0, 0, 0, 0.18));
+  pointer-events: none !important;
+  z-index: 20;
+}
+
+/* Ensure panel-header and headers NEVER have text-blocking overlays */
+.panel-header::before,
 .dashboard-header::before,
 .workspace-header::before,
 .login-auth-card::before,
-.panel-header::before,
 .washi-tape::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%) rotate(-0.8deg);
-  width: 110px;
-  height: 20px;
-  background-color: rgba(245, 235, 215, 0.76);
-  backdrop-filter: blur(1px);
-  border-left: 2px dashed rgba(215, 200, 175, 0.85);
-  border-right: 2px dashed rgba(215, 200, 175, 0.85);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  pointer-events: none !important;
-  z-index: 12;
+  display: none !important;
 }
 
-.login-auth-card,
-.workspace-header,
-.dashboard-header,
-.panel-header {
+.dashboard-panel,
+.modal-card,
+.modal-content,
+.workspace-card {
   position: relative !important;
 }
 
@@ -5188,24 +5196,33 @@ html.dark .quick-capture-card,
   border-left-color: rgba(239, 68, 68, 0.35) !important;
 }
 
+/* Push pin subtle shadow adjustment in dark mode */
+html.dark .dashboard-panel::before,
 html.dark .modal-card::before,
 html.dark .modal-content::before,
+html.dark .workspace-card::before,
+html.dark .push-pin::before,
+html.dark .pin-accent::before,
+.dark .dashboard-panel::before,
+.dark .modal-card::before,
+.dark .modal-content::before,
+.dark .workspace-card::before,
+.dark .push-pin::before,
+.dark .pin-accent::before {
+  filter: drop-shadow(1px 2px 4px rgba(0, 0, 0, 0.45));
+}
+
+html.dark .panel-header::before,
 html.dark .dashboard-header::before,
 html.dark .workspace-header::before,
 html.dark .login-auth-card::before,
-html.dark .panel-header::before,
 html.dark .washi-tape::before,
-.dark .modal-card::before,
-.dark .modal-content::before,
+.dark .panel-header::before,
 .dark .dashboard-header::before,
 .dark .workspace-header::before,
 .dark .login-auth-card::before,
-.dark .panel-header::before,
 .dark .washi-tape::before {
-  background-color: rgba(212, 195, 160, 0.25);
-  border-left: 2px dashed rgba(212, 195, 160, 0.45);
-  border-right: 2px dashed rgba(212, 195, 160, 0.45);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  display: none !important;
 }
 
 html.dark .kanban-card:nth-child(2n+1)::after,
