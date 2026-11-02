@@ -1307,7 +1307,7 @@ async function saveWorkspaceName(newName, e) {
 
 async function resetWorkspaceInviteCode(e) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
-  if (!confirm('Are you sure you want to regenerate the invite code? The previous invite code will immediately become invalid.')) {
+  if (!(await gsConfirm('Are you sure you want to regenerate the invite code? The previous invite code will immediately become invalid.', { title: 'Regenerate invite code?', confirmText: 'Regenerate', danger: true }))) {
     return;
   }
   try {
@@ -1364,7 +1364,7 @@ async function confirmDeleteWorkspace(e) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
   if (!currentGroupId || !currentGroupDetails) return;
   const wsName = currentGroupDetails.name || 'this workspace';
-  const confirmation = confirm(`Are you sure you want to permanently delete "${wsName}"?\n\nThis will permanently remove all tasks, discussions, documents, expenses, and member records for this workspace. This action cannot be undone.`);
+  const confirmation = await gsConfirm(`Are you sure you want to permanently delete "${wsName}"?\n\nThis will permanently remove all tasks, discussions, documents, expenses, and member records for this workspace. This action cannot be undone.`, { title: 'Delete workspace?', confirmText: 'Delete', danger: true });
   if (!confirmation) return;
 
   try {
@@ -1497,7 +1497,7 @@ async function changeMemberRole(userId, newRole) {
 }
 
 async function removeMemberFromWorkspace(userId, memberName) {
-  if (!confirm(`Are you sure you want to remove ${memberName} from this workspace?`)) return;
+  if (!(await gsConfirm(`Are you sure you want to remove ${memberName} from this workspace?`, { title: 'Remove member?', confirmText: 'Remove', danger: true }))) return;
   try {
     const res = await apiFetch(`/api/groups/${currentGroupId}/members/${userId}`, {
       method: 'DELETE'
@@ -1727,7 +1727,7 @@ async function submitReview(approved, e) {
 
 async function deleteTask(taskId, e) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
-  if (!confirm('Are you sure you want to delete this task?')) return;
+  if (!(await gsConfirm('Are you sure you want to delete this task?', { title: 'Delete task?', confirmText: 'Delete', danger: true }))) return;
   try {
     await apiFetch(`/api/groups/${currentGroupId}/tasks/${taskId}`, { method: 'DELETE' });
     showToast('Task deleted.', 'success');
@@ -1826,7 +1826,7 @@ async function promptCreateDashboardFolder() {
 async function deleteDashboardFolder(folderId, e) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
   if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-  const confirmed = window.confirm('Are you sure you want to delete this folder and all notes inside it? This action cannot be undone.');
+  const confirmed = await gsConfirm('Are you sure you want to delete this folder and all notes inside it? This action cannot be undone.', { title: 'Delete folder?', confirmText: 'Delete', danger: true });
   if (!confirmed) return;
 
   try {
@@ -2252,7 +2252,7 @@ async function handleCreateNote(e) {
 async function deleteNote(noteId, e) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
   if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-  if (!confirm('Are you sure you want to delete this notebook page?')) return;
+  if (!(await gsConfirm('Are you sure you want to delete this notebook page?', { title: 'Delete page?', confirmText: 'Delete', danger: true }))) return;
   try {
     await apiFetch(`/api/groups/${currentGroupId}/notes/${noteId}`, { method: 'DELETE' });
     showToast('Note deleted.', 'success');
@@ -2430,7 +2430,7 @@ async function handleCreateExpense(e) {
 
 async function deleteExpense(expenseId, e) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
-  if (!confirm('Are you sure you want to delete this expense?')) return;
+  if (!(await gsConfirm('Are you sure you want to delete this expense?', { title: 'Delete expense?', confirmText: 'Delete', danger: true }))) return;
   try {
     await apiFetch(`/api/groups/${currentGroupId}/expenses/${expenseId}`, { method: 'DELETE' });
     showToast('Expense removed.', 'success');
@@ -2446,7 +2446,7 @@ async function recordDirectSettlement(fromUserId, fromName, toUserId, toName, am
   const originalText = btn ? btn.innerHTML : '';
 
   const confirmMsg = `Record settlement payment of ₱${Number(amount).toFixed(2)} from ${fromName} to ${toName}?`;
-  if (!confirm(confirmMsg)) return;
+  if (!(await gsConfirm(confirmMsg, { title: 'Record settlement?', confirmText: 'Record' }))) return;
 
   if (btn) {
     btn.disabled = true;
@@ -3092,7 +3092,7 @@ async function togglePinDiscussionComment(commentId, e) {
 
 async function confirmDeleteComment(commentId, e) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
-  if (!confirm('Are you sure you want to delete this comment?')) {
+  if (!(await gsConfirm('Are you sure you want to delete this comment?', { title: 'Delete comment?', confirmText: 'Delete', danger: true }))) {
     return;
   }
   try {
@@ -3215,8 +3215,13 @@ function ensurePersonalNotebookToolbars() {
     if (document.getElementById('personalNotebookToolbarContainer')) {
       renderNotebookRichTextToolbar('personalNotebookToolbarContainer', 'personalNotebookCanvas');
     }
-    if (document.getElementById('personalModalToolbarContainer')) {
-      renderNotebookRichTextToolbar('personalModalToolbarContainer', 'personalItemContent');
+    const modalToolbar = document.getElementById('personalModalToolbarContainer');
+    if (modalToolbar) {
+      if (personalSubTab === 'NOTE') {
+        renderNotebookRichTextToolbar('personalModalToolbarContainer', 'personalItemContent');
+      } else {
+        modalToolbar.innerHTML = '';
+      }
     }
   }
 }
@@ -3275,6 +3280,11 @@ function openPersonalAddModal() {
   const titleInput = document.getElementById('personalItemTitle');
   const folderGroup = document.getElementById('personalFolderGroup');
   const amountGroup = document.getElementById('personalAmountGroup');
+  const contentGroup = document.getElementById('personalContentGroup');
+  // Only full notebook pages get the rich-text canvas; To-Dos and Expenses stay simple.
+  if (contentGroup) contentGroup.style.display = personalSubTab === 'NOTE' ? 'block' : 'none';
+  const form = document.getElementById('personalItemForm');
+  if (form) form.reset();
 
   if (personalSubTab === 'NOTE') {
     if (titleGroup) titleGroup.style.display = 'block';
@@ -3297,9 +3307,12 @@ function openPersonalAddModal() {
     }
     if (folderGroup) folderGroup.style.display = 'none';
     if (amountGroup) amountGroup.style.display = personalSubTab === 'EXPENSE' ? 'block' : 'none';
+    const toolbarBox = document.getElementById('personalModalToolbarContainer');
+    if (toolbarBox) toolbarBox.innerHTML = '';
   }
 
   openModal('personalItemModal');
+  if (personalSubTab !== 'NOTE' && titleInput) setTimeout(() => titleInput.focus(), 60);
 }
 
 async function loadPersonalFolders() {
@@ -3378,7 +3391,7 @@ async function promptCreatePersonalFolder() {
 async function deletePersonalFolder(folderId, e) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
   if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-  const confirmed = window.confirm('Are you sure you want to delete this folder and all notes inside it? This action cannot be undone.');
+  const confirmed = await gsConfirm('Are you sure you want to delete this folder and all notes inside it? This action cannot be undone.', { title: 'Delete folder?', confirmText: 'Delete', danger: true });
   if (!confirmed) return;
 
   try {
@@ -3639,8 +3652,17 @@ async function loadPersonalItems(searchQuery = '') {
 async function handleSavePersonalItem(e) {
   e.preventDefault();
   const rawTitle = document.getElementById('personalItemTitle')?.value.trim() || '';
-  const content = document.getElementById('personalItemContent')?.value || '';
+  const content = personalSubTab === 'NOTE' ? (document.getElementById('personalItemContent')?.value || '') : '';
   const amount = parseFloat(document.getElementById('personalItemAmount')?.value) || 0;
+
+  if (personalSubTab !== 'NOTE' && !rawTitle) {
+    showToast(personalSubTab === 'EXPENSE' ? 'Please enter an item name.' : 'Please enter a task title.', 'warning');
+    return;
+  }
+  if (personalSubTab === 'EXPENSE' && !(amount > 0)) {
+    showToast('Please enter an amount greater than 0.', 'warning');
+    return;
+  }
   const folderEl = document.getElementById('personalItemFolderSelect');
   const folderId = (folderEl && folderEl.value) ? Number(folderEl.value) : null;
 
@@ -3689,7 +3711,7 @@ async function togglePersonalTask(id, checked) {
 async function deletePersonalItem(id, e) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
   if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-  if (!confirm('Remove item from your personal space?')) return;
+  if (!(await gsConfirm('Remove item from your personal space?', { title: 'Remove item?', confirmText: 'Remove', danger: true }))) return;
   try {
     await apiFetch(`/api/personal/${id}`, { method: 'DELETE' });
     showToast('Item deleted.', 'success');

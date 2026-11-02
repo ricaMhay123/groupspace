@@ -2501,8 +2501,9 @@ async function createNewFolderPrompt() {
  * MUST trigger the exact browser confirmation message before deleting from database.
  */
 async function deleteFolderWithConfirm(folderId, folderName) {
-  const confirmed = window.confirm(
-    'Are you sure you want to delete this folder and all notes inside it? This action cannot be undone.'
+  const confirmed = await gsConfirm(
+    'Are you sure you want to delete this folder and all notes inside it? This action cannot be undone.',
+    { title: 'Delete folder?', confirmText: 'Delete', danger: true }
   );
   if (!confirmed) return;
 

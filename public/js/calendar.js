@@ -510,8 +510,8 @@ function closeEventDetailsModal() {
   if (existing) existing.remove();
 }
 
-function confirmDeleteCalendarEvent(eventId, title) {
-  if (confirm(`Are you sure you want to delete the event "${title}"?`)) {
+async function confirmDeleteCalendarEvent(eventId, title) {
+  if (await gsConfirm(`Are you sure you want to delete the event "${title}"?`, { title: 'Delete event?', confirmText: 'Delete', danger: true })) {
     closeEventDetailsModal();
     deleteCalendarEvent(eventId);
   }
