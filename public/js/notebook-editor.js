@@ -920,7 +920,7 @@ class NotebookEditorComponent {
    */
   async exportPage(format) {
     if (!this._activePageId) {
-      showToast('No page is open to export.', 'error');
+      showToast('No document is open to export.', 'error');
       return;
     }
 
@@ -1303,7 +1303,7 @@ const NotebookModule = (() => {
 
   /* ── Create page ── */
   async function _createPage(notebookId) {
-    const title = window.gsPrompt ? await window.gsPrompt('New page title:', '', { title: 'New Page', placeholder: 'Page title...' }) : 'Untitled Page';
+    const title = window.gsPrompt ? await window.gsPrompt('New document title:', '', { title: 'New Document', placeholder: 'Document title...' }) : 'Untitled Page';
     if (!title?.trim()) return;
     try {
       const res = await apiFetch(`/api/notebooks/${notebookId}/pages`, {
@@ -1316,7 +1316,7 @@ const NotebookModule = (() => {
         _renderPageList(_activeNb.pages, page.id, notebookId, _activeNb.user_role);
         _openPage(page);
       }
-      showToast('Page created.', 'success');
+      showToast('Document created.', 'success');
     } catch (err) {
       showToast(err.message, 'error');
     }

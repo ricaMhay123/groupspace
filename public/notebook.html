@@ -1480,8 +1480,8 @@
 <body>
 <header class="nb-header">
   <div class="nb-header-left">
-    <button type="button" id="nbMobileSidebarBtn" class="mobile-hamburger-btn" aria-label="Toggle folders and pages drawer" title="Toggle Folders &amp; Pages" onclick="toggleNbMobileSidebar()">☰</button>
-    <button type="button" id="nbDesktopSidebarBtn" class="nb-sidebar-toggle-btn" title="Toggle Folders &amp; Pages Sidebar" onclick="toggleDesktopSidebar()">☰</button>
+    <button type="button" id="nbMobileSidebarBtn" class="mobile-hamburger-btn" aria-label="Toggle folders and documents drawer" title="Toggle Folders &amp; Documents" onclick="toggleNbMobileSidebar()">☰</button>
+    <button type="button" id="nbDesktopSidebarBtn" class="nb-sidebar-toggle-btn" title="Toggle Folders &amp; Documents Sidebar" onclick="toggleDesktopSidebar()">☰</button>
     <a href="dashboard.html" id="backBtn" class="nb-back-btn" title="Back to Workspace">&#8592; Workspace</a>
     <a href="index.html" class="nb-brand-title">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -1494,7 +1494,7 @@
   </div>
   <div class="nb-header-actions">
     <span id="readOnlyBadge" class="nb-readonly-badge">Read-Only Mode</span>
-    <button class="btn-nb btn-nb-outline" onclick="newPage()" title="Create a new page">+ New Page</button>
+    <button class="btn-nb btn-nb-outline" onclick="newPage()" title="Create a new document">+ New Document</button>
     <button class="btn-nb btn-nb-green" id="savePageBtn" onclick="saveCurrentPage()">Save Page</button>
     <button class="btn-nb btn-nb-share-primary" id="sharePageBtn" onclick="openSharePermissionsModal()" title="Share &amp; Manage Page Permissions">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
@@ -1511,15 +1511,15 @@
   <div id="nbSidebarOverlay" class="sidebar-drawer-overlay" onclick="toggleNbMobileSidebar(false)"></div>
   <aside class="nb-sidebar" id="nbSidebar">
     <div class="nb-sidebar-header">
-      <h3>Folders &amp; Pages</h3>
+      <h3>Folders &amp; Documents</h3>
       <div style="display:flex; align-items:center; gap:6px;">
         <button type="button" class="btn-sidebar-action" onclick="createNewFolderPrompt()" title="Create a new folder">+ Folder</button>
         <button type="button" class="mobile-hamburger-btn" style="min-width:36px; min-height:36px; padding:4px 8px; font-size:13px;" aria-label="Close folders drawer" onclick="toggleNbMobileSidebar(false)">✕</button>
       </div>
     </div>
-    <div class="nb-pages-list" id="nbPagesList"><div class="nb-empty-pages">Loading pages...</div></div>
+    <div class="nb-pages-list" id="nbPagesList"><div class="nb-empty-pages">Loading documents...</div></div>
     <div class="nb-sidebar-footer">
-      <button class="btn-nb btn-nb-outline" onclick="newPage()">+ New Blank Page</button>
+      <button class="btn-nb btn-nb-outline" onclick="newPage()">+ New Blank Document</button>
       <button class="btn-nb btn-nb-outline" onclick="triggerImportDocument(null)">Import Document (.txt / .md)</button>
     </div>
   </aside>
@@ -1565,13 +1565,13 @@
         <div class="nb-toolbar-group" data-ribbon-group="file" style="display:none;">
           <div class="nb-ribbon-group-content">
             <div class="nb-tall-cards-row">
-              <button type="button" class="nb-tall-card-btn nb-edit-ctrl" onclick="newPage()" title="Create New Blank Page">
+              <button type="button" class="nb-tall-card-btn nb-edit-ctrl" onclick="newPage()" title="Create New Blank Document">
                 <span class="card-icon">&#10133;</span>
-                <span>New Page</span>
+                <span>New Document</span>
               </button>
-              <button type="button" class="nb-tall-card-btn nb-edit-ctrl" onclick="saveCurrentPage()" title="Save Current Page (Ctrl+S)">
+              <button type="button" class="nb-tall-card-btn nb-edit-ctrl" onclick="saveCurrentPage()" title="Save Current Document (Ctrl+S)">
                 <span class="card-icon">&#128190;</span>
-                <span>Save Page</span>
+                <span>Save Document</span>
               </button>
               <button type="button" class="nb-tall-card-btn nb-edit-ctrl" onclick="triggerImportDocument(null)" title="Import .docx, .pdf, .txt, or .md Document">
                 <span class="card-icon">&#128194;</span>
@@ -1590,7 +1590,7 @@
           <div class="nb-ribbon-group-content">
             <div class="nb-ribbon-row">
               <label for="nbPageFolderSelect">Folder:</label>
-              <select id="nbPageFolderSelect" class="nb-edit-ctrl" onchange="handleMovePageToFolder(this.value)" title="Move page to folder" style="min-width:150px;">
+              <select id="nbPageFolderSelect" class="nb-edit-ctrl" onchange="handleMovePageToFolder(this.value)" title="Move document to folder" style="min-width:150px;">
                 <option value="">(Root / No Folder)</option>
               </select>
             </div>
@@ -2024,7 +2024,7 @@
         <div class="nb-toolbar-group" data-ribbon-group="view" style="display:none;">
           <div class="nb-ribbon-group-content">
             <div class="nb-ribbon-row">
-              <button type="button" class="btn-toolbar-fmt" onclick="toggleDesktopSidebar()">&#9776; Toggle Pages &amp; Folders Sidebar</button>
+              <button type="button" class="btn-toolbar-fmt" onclick="toggleDesktopSidebar()">&#9776; Toggle Documents &amp; Folders Sidebar</button>
             </div>
             <div class="nb-ribbon-row">
               <button type="button" class="btn-toolbar-fmt" onclick="setCanvasZoom(100)">100% Zoom</button>
@@ -2190,7 +2190,7 @@
     <!-- MS Word Style Bottom Status Bar -->
     <div class="nb-status-bar">
       <div class="nb-status-left">
-        <span>Page 1 of 1</span>
+        <span id="nbPageNumberDisplay">Page 1 of 1</span>
         <span class="nb-status-divider">|</span>
         <span>Word Count: <strong id="nbWordCount">0 words</strong></span>
         <span class="nb-status-divider">|</span>
@@ -2413,7 +2413,7 @@ async function loadPages() {
 
       if (pages.length === 0) {
         if (folders.length === 0) {
-          list.innerHTML = '<div class="nb-empty-pages">No private pages yet.<br>Click <strong>+ Folder</strong> or <strong>+ New Page</strong> to start.</div>';
+          list.innerHTML = '<div class="nb-empty-pages">No private documents yet.<br>Click <strong>+ Folder</strong> or <strong>+ New Document</strong> to start.</div>';
         }
         clearEditor();
         return;
@@ -2481,7 +2481,7 @@ async function loadPages() {
 
     if (pages.length === 0) {
       if (folders.length === 0) {
-        list.innerHTML = '<div class="nb-empty-pages">No folders or pages yet.<br>Click <strong>+ Folder</strong> or <strong>+ New Page</strong> to start.</div>';
+        list.innerHTML = '<div class="nb-empty-pages">No folders or documents yet.<br>Click <strong>+ Folder</strong> or <strong>+ New Document</strong> to start.</div>';
       }
       clearEditor();
       return;
@@ -2527,7 +2527,7 @@ function renderPagesList() {
               <span style="font-size:10.5px; color:var(--nb-text-muted);">(${folderPages.length})</span>
             </div>
             <div class="nb-folder-actions" onclick="event.stopPropagation();">
-              <button type="button" class="btn-folder-icon" title="New page in this folder" onclick="newPageInFolder(${folder.id})">+Page</button>
+              <button type="button" class="btn-folder-icon" title="New document in this folder" onclick="newPageInFolder(${folder.id})">+Doc</button>
               <button type="button" class="btn-folder-icon" title="Import document into this folder" onclick="triggerImportDocument(${folder.id})">Import</button>
               <button type="button" class="btn-folder-icon danger" title="Delete Folder" onclick="deleteFolderWithConfirm(${folder.id}, '${escapeHtml(folder.name).replace(/'/g, "\\'")}')">Delete</button>
             </div>
@@ -2545,11 +2545,11 @@ function renderPagesList() {
   // Render Root / Uncategorized Pages
   const rootPages = pages.filter(p => !p.folder_id || !folders.some(f => Number(f.id) === Number(p.folder_id)));
   if (folders.length > 0 && rootPages.length > 0) {
-    html += `<div class="nb-section-label">Uncategorized Pages</div>`;
+    html += `<div class="nb-section-label">Uncategorized Documents</div>`;
   }
   html += rootPages.map(p => renderSidebarPageItem(p)).join('');
 
-  list.innerHTML = html || '<div class="nb-empty-pages">No pages yet.</div>';
+  list.innerHTML = html || '<div class="nb-empty-pages">No documents yet.</div>';
 }
 
 function renderSidebarPageItem(p) {
@@ -2559,7 +2559,7 @@ function renderSidebarPageItem(p) {
   return `
     <div class="nb-page-item ${activeClass}" onclick="openPageById(${p.id})">
       <div class="nb-page-item-info">
-        <div class="nb-page-item-title">${escapeHtml(p.title || 'Untitled Page')}</div>
+        <div class="nb-page-item-title">${escapeHtml(p.title || 'Untitled Document')}</div>
         <div class="nb-page-item-meta">
           <span>By ${escapeHtml(p.author_name || 'Member')}</span>
           <span>${canEdit ? '' : 'Read-Only'}</span>
@@ -2717,11 +2717,11 @@ function openSharePermissionsModal(targetId = null) {
   const pageId = targetId || currentPageId;
   const page = pages.find(p => Number(p.id) === Number(pageId));
   if (!page) {
-    showToast('Please save this page first before sharing.', 'info');
+    showToast('Please save this document first before sharing.', 'info');
     return;
   }
   if (!canCurrentUserManagePermissions(page)) {
-    showToast('Only the page creator or a workspace Leader can manage permissions.', 'error');
+    showToast('Only the document creator or a workspace Leader can manage permissions.', 'error');
     return;
   }
 
@@ -2857,7 +2857,7 @@ function clearEditor(folderId = null) {
   const topBadge = document.getElementById('nbTopAutoSaveBadge');
   if (topBadge) topBadge.textContent = 'Ready';
   document.getElementById('nbAuthorInfo').textContent = '✍️ ' + ((currentUser && currentUser.fullName) || 'You');
-  document.getElementById('nbSaveStatus').textContent = 'New page (custom title or auto-titles on save)';
+  document.getElementById('nbSaveStatus').textContent = 'New document (custom title or auto-titles on save)';
 }
 
 function newPage(folderId = null) {
@@ -2866,7 +2866,7 @@ function newPage(folderId = null) {
   const editor = document.getElementById('nbPageContent');
   if (editor) editor.focus();
   document.querySelectorAll('.nb-page-item').forEach(el => el.classList.remove('active'));
-  showToast('New page started! Enter a custom title or let the canvas auto-title on save.', 'info');
+  showToast('New document started! Enter a custom title or let the canvas auto-title on save.', 'info');
 }
 
 /**
@@ -3096,6 +3096,13 @@ function setupEditorListeners() {
 
 function updateWordCount() {
   const editor = document.getElementById('nbPageContent');
+  if (editor) {
+    const pageBreaks = editor.querySelectorAll('.nb-page-break').length;
+    const pageNumEl = document.getElementById('nbPageNumberDisplay');
+    if (pageNumEl) {
+      pageNumEl.textContent = `Page 1 of ${pageBreaks + 1}`;
+    }
+  }
   const text = editor ? (editor.innerText || editor.textContent || '') : '';
   const w = text.trim().split(/\s+/).filter(Boolean).length;
   const el = document.getElementById('nbWordCount');
@@ -4740,7 +4747,7 @@ async function handleImportFile(event) {
     renderAllShapes();
     updateWordCount();
 
-    showToast(`Imported "${file.name}" as a new page!`, 'success');
+    showToast(`Imported "${file.name}" as a new document!`, 'success');
     await saveCurrentPage();
   } catch (err) {
     console.error('[ImportFile] Error importing document:', err);

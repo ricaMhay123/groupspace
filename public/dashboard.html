@@ -204,7 +204,7 @@
             </div>
           </div>
           <input type="file" id="dashboardImportFileInput" accept=".docx,.pdf,.txt,.md,.markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,text/plain,text/markdown" style="display:none;" onchange="handleDashboardImportDocument(event)">
-          <button type="button" onclick="openCreateNoteModal()" class="btn-primary btn-green">+ New Page</button>
+          <button type="button" onclick="openCreateNoteModal()" class="btn-primary btn-green">+ New Document</button>
         </div>
       </div>
 
@@ -529,16 +529,16 @@
 <div class="modal-overlay" id="createNoteModal">
   <div class="modal-card">
     <div class="modal-header">
-      <h3>Add Notebook Page</h3>
+      <h3>Add Notebook Document</h3>
       <button class="modal-close" onclick="closeModal('createNoteModal')">✕</button>
     </div>
     <form id="createNoteForm" onsubmit="handleCreateNote(event)">
       <div class="form-group">
         <label style="display:flex; justify-content:space-between; align-items:center;">
-          <span>Page Title</span>
+          <span>Document Title</span>
           <span style="font-size:11px; color:var(--gray); font-weight:400;">Optional — leave blank to auto-title</span>
         </label>
-        <input type="text" id="noteTitle" name="pageTitle" data-alt-id="manualTitleInput" class="form-control" placeholder="Enter custom page title, or leave blank to auto-title from canvas...">
+        <input type="text" id="noteTitle" name="pageTitle" data-alt-id="manualTitleInput" class="form-control" placeholder="Enter custom document title, or leave blank to auto-title from canvas...">
       </div>
       <div class="form-group">
         <label style="display:flex; justify-content:space-between; align-items:center;">
@@ -564,7 +564,7 @@
       </div>
       <div class="form-actions" style="margin-top:20px;">
         <button type="button" class="btn-outline" onclick="closeModal('createNoteModal')">Cancel</button>
-        <button type="submit" id="savePageBtn" class="btn-green">Save Page</button>
+        <button type="submit" id="savePageBtn" class="btn-green">Save Document</button>
       </div>
     </form>
   </div>
