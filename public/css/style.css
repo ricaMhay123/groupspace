@@ -4868,22 +4868,43 @@ html.dark .settle-chip:hover:not(.active) {
 
 /* =========================================================
    COLLAGE & PAPER-STYLE DESIGN SYSTEM
+   Applies across every part of the website:
+   - Graph Paper & Notebook Backgrounds (#fcfbf7 / #0f172a in dark)
+   - Red Notebook Margin Guide Lines
+   - Tactile Paper Cards & Containers with Layered Shadows
+   - Subtle Alternating Dynamic Rotations (Flatten on hover)
+   - Silver Paperclip (::after) & Translucent Washi Tape (::before) Accents
+   - Strict pointer-events: none on all pseudo-elements
    ========================================================= */
 
-/* 1. Graph Paper & Notebook Background Styling */
+/* 1. Universal Graph Paper & Notebook Background Styling */
+body,
+body.dashboard-page,
+body.login-page-body,
+body.bg-light,
+.workspace-page,
 .dashboard-main,
-.nb-canvas-container,
+.dashboard-layout,
 .tab-view,
-.notebook-grid,
-.kanban-board {
-  background-color: #fcfbf7;
+.kanban-board,
+.nb-canvas-container,
+.nb-sidebar,
+.dm-drawer,
+.settings-drawer,
+.calendar-view-container,
+.discussions-wrapper,
+.personal-space-view,
+.calendar-wrapper,
+.expenses-page,
+.discussions-page {
+  background-color: #fcfbf7 !important;
   background-image: 
     repeating-linear-gradient(0deg, rgba(59, 130, 246, 0.055) 0px, rgba(59, 130, 246, 0.055) 1px, transparent 1px, transparent 20px),
-    repeating-linear-gradient(90deg, rgba(59, 130, 246, 0.055) 0px, rgba(59, 130, 246, 0.055) 1px, transparent 1px, transparent 20px);
-  background-size: 20px 20px;
+    repeating-linear-gradient(90deg, rgba(59, 130, 246, 0.055) 0px, rgba(59, 130, 246, 0.055) 1px, transparent 1px, transparent 20px) !important;
+  background-size: 20px 20px !important;
 }
 
-/* Paper Card Containers, Metric Blocks, and Modal Wrappers */
+/* 2. Paper Card Containers, Metric Blocks, and Modal Wrappers across all pages */
 .dashboard-card,
 .summary-stat-box,
 .dashboard-panel,
@@ -4891,19 +4912,40 @@ html.dark .settle-chip:hover:not(.active) {
 .kanban-card,
 .note-card,
 .modal-card,
-.nb-canvas {
-  background-color: #fcfbf7 !important;
-  background-image: 
-    radial-gradient(circle, rgba(100, 116, 139, 0.32) 1.2px, transparent 1.6px),
-    linear-gradient(90deg, rgba(100, 116, 139, 0.28) 50%, transparent 50%),
-    repeating-linear-gradient(0deg, rgba(59, 130, 246, 0.045) 0px, rgba(59, 130, 246, 0.045) 1px, transparent 1px, transparent 20px),
-    repeating-linear-gradient(90deg, rgba(59, 130, 246, 0.045) 0px, rgba(59, 130, 246, 0.045) 1px, transparent 1px, transparent 20px) !important;
-  background-size: 8px 8px, 8px 1.5px, 20px 20px, 20px 20px !important;
-  background-position: bottom 6px left 4px, bottom 3px left 0, 0 0, 0 0 !important;
-  background-repeat: repeat-x, repeat-x, repeat, repeat !important;
-  box-shadow: 2px 8px 20px rgba(0, 0, 0, 0.06) !important;
+.modal-content,
+.workspace-card,
+.login-auth-card,
+.register-card,
+.feature-card,
+.discussion-thread-card,
+.discussion-message,
+.expense-card,
+.debt-settlement-card,
+.personal-card,
+.personal-stat-box,
+.nb-canvas,
+.dm-drawer-inner,
+.profile-modal-card {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 2px 8px 20px rgba(0, 0, 0, 0.05) !important;
   position: relative;
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease !important;
+}
+
+/* Card Hover Elevation */
+.dashboard-card:hover,
+.summary-stat-box:hover,
+.kanban-card:hover,
+.note-card:hover,
+.workspace-card:hover,
+.discussion-thread-card:hover,
+.personal-card:hover,
+.feature-card:hover {
+  transform: rotate(0deg) translateY(-3px) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.09) !important;
+  border-color: #cbd5e1 !important;
+  z-index: 5;
 }
 
 /* Torn bottom edge utility via standard CSS linear-gradient zig-zags */
@@ -4924,54 +4966,61 @@ html.dark .settle-chip:hover:not(.active) {
   mask-repeat: no-repeat, repeat-x, repeat-x;
 }
 
-/* Red Margin Guide Line on Note Containers */
+/* 3. Red Margin Guide Line on Note Containers & Main Views */
 .note-card,
 .nb-canvas,
 .note-container,
-.note-preview-wrapper {
+.note-preview-wrapper,
+.workspace-page,
+.dashboard-main,
+.dm-drawer,
+.settings-drawer,
+.discussions-chat-container,
+.personal-note-card,
+.quick-capture-card {
   border-left: 2px solid rgba(239, 68, 68, 0.4) !important;
 }
 
-/* 2. Collage Paper Alternating Rotations & Flatten on Hover */
-.dashboard-card:nth-child(odd),
-.summary-stat-box:nth-child(odd),
+/* 4. Collage Paper Alternating Rotations & Flatten on Hover */
 .kanban-card:nth-child(odd),
-.note-card:nth-child(odd) {
-  transform: rotate(-1deg);
+.note-card:nth-child(odd),
+.personal-card:nth-child(odd),
+.workspace-card:nth-child(odd) {
+  transform: rotate(-0.8deg);
 }
 
-.dashboard-card:nth-child(even),
-.summary-stat-box:nth-child(even),
 .kanban-card:nth-child(even),
-.note-card:nth-child(even) {
-  transform: rotate(1deg);
+.note-card:nth-child(even),
+.personal-card:nth-child(even),
+.workspace-card:nth-child(even) {
+  transform: rotate(0.8deg);
 }
 
-.dashboard-card:nth-child(3n),
-.summary-stat-box:nth-child(3n),
 .kanban-card:nth-child(3n),
-.note-card:nth-child(3n) {
-  transform: rotate(-0.5deg);
+.note-card:nth-child(3n),
+.personal-card:nth-child(3n),
+.workspace-card:nth-child(3n) {
+  transform: rotate(-0.4deg);
 }
 
-.dashboard-card:hover,
-.summary-stat-box:hover,
 .kanban-card:hover,
-.note-card:hover {
-  transform: rotate(0deg) translateY(-2px) !important;
-  box-shadow: 2px 12px 26px rgba(0, 0, 0, 0.09) !important;
-  z-index: 5;
+.note-card:hover,
+.personal-card:hover,
+.workspace-card:hover {
+  transform: rotate(0deg) translateY(-3px) !important;
 }
 
-/* 3. Paperclip Pseudo-Elements (::after) */
+/* 5. Paperclip Pseudo-Elements (::after) with pointer-events: none */
 .kanban-card:nth-child(2n+1)::after,
 .note-card:nth-child(3n+1)::after,
+.personal-card:nth-child(3n+1)::after,
+.workspace-card:nth-child(2n+1)::after,
 .nb-canvas::after,
 .paperclip-card::after {
   content: '';
   position: absolute;
-  top: -12px;
-  right: 22px;
+  top: -10px;
+  right: 20px;
   width: 20px;
   height: 38px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='40' viewBox='0 0 24 40' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 12v18a5 5 0 0 0 10 0V8a7 7 0 0 0-14 0v21a3 3 0 0 0 6 0V12'/%3E%3C/svg%3E");
@@ -4980,27 +5029,31 @@ html.dark .settle-chip:hover:not(.active) {
   filter: drop-shadow(1px 2px 3px rgba(0, 0, 0, 0.16));
   pointer-events: none !important;
   z-index: 15;
-  transform: rotate(6deg);
+  transform: rotate(5deg);
   transition: transform 0.2s ease;
 }
 
 .kanban-card:nth-child(2n+1):hover::after,
-.note-card:nth-child(3n+1):hover::after {
+.note-card:nth-child(3n+1):hover::after,
+.workspace-card:nth-child(2n+1):hover::after {
   transform: rotate(0deg);
 }
 
-/* 4. Translucent Beige Washi Tape Overlays (::before) */
+/* 6. Translucent Beige Washi Tape Overlays (::before) with pointer-events: none */
 .modal-card::before,
+.modal-content::before,
 .dashboard-header::before,
+.workspace-header::before,
+.login-auth-card::before,
 .panel-header::before,
 .washi-tape::before {
   content: '';
   position: absolute;
   top: 0;
   left: 50%;
-  transform: translateX(-50%) rotate(-1deg);
-  width: 120px;
-  height: 22px;
+  transform: translateX(-50%) rotate(-0.8deg);
+  width: 110px;
+  height: 20px;
   background-color: rgba(245, 235, 215, 0.76);
   backdrop-filter: blur(1px);
   border-left: 2px dashed rgba(215, 200, 175, 0.85);
@@ -5010,24 +5063,57 @@ html.dark .settle-chip:hover:not(.active) {
   z-index: 12;
 }
 
-.dashboard-header {
-  position: relative !important;
-}
-
+.login-auth-card,
+.workspace-header,
+.dashboard-header,
 .panel-header {
   position: relative !important;
 }
 
-/* Dark Mode Adaptations */
+/* 7. Dark Mode Blueprint Harmony across all pages */
+html.dark body,
+html.dark body.dashboard-page,
+html.dark body.login-page-body,
+html.dark body.bg-light,
+html.dark .workspace-page,
 html.dark .dashboard-main,
-html.dark .nb-canvas-container,
+html.dark .dashboard-layout,
 html.dark .tab-view,
-html.dark .notebook-grid,
-html.dark .kanban-board {
-  background-color: #0f172a;
+html.dark .kanban-board,
+html.dark .nb-canvas-container,
+html.dark .nb-sidebar,
+html.dark .dm-drawer,
+html.dark .settings-drawer,
+html.dark .calendar-view-container,
+html.dark .discussions-wrapper,
+html.dark .personal-space-view,
+html.dark .calendar-wrapper,
+html.dark .expenses-page,
+html.dark .discussions-page,
+.dark body,
+.dark body.dashboard-page,
+.dark body.login-page-body,
+.dark body.bg-light,
+.dark .workspace-page,
+.dark .dashboard-main,
+.dark .dashboard-layout,
+.dark .tab-view,
+.dark .kanban-board,
+.dark .nb-canvas-container,
+.dark .nb-sidebar,
+.dark .dm-drawer,
+.dark .settings-drawer,
+.dark .calendar-view-container,
+.dark .discussions-wrapper,
+.dark .personal-space-view,
+.dark .calendar-wrapper,
+.dark .expenses-page,
+.dark .discussions-page {
+  background-color: #0f172a !important;
   background-image: 
     repeating-linear-gradient(0deg, rgba(56, 189, 248, 0.045) 0px, rgba(56, 189, 248, 0.045) 1px, transparent 1px, transparent 20px),
-    repeating-linear-gradient(90deg, rgba(56, 189, 248, 0.045) 0px, rgba(56, 189, 248, 0.045) 1px, transparent 1px, transparent 20px);
+    repeating-linear-gradient(90deg, rgba(56, 189, 248, 0.045) 0px, rgba(56, 189, 248, 0.045) 1px, transparent 1px, transparent 20px) !important;
+  background-size: 20px 20px !important;
 }
 
 html.dark .dashboard-card,
@@ -5037,19 +5123,85 @@ html.dark .kanban-col,
 html.dark .kanban-card,
 html.dark .note-card,
 html.dark .modal-card,
-html.dark .nb-canvas {
+html.dark .modal-content,
+html.dark .workspace-card,
+html.dark .login-auth-card,
+html.dark .register-card,
+html.dark .feature-card,
+html.dark .discussion-thread-card,
+html.dark .discussion-message,
+html.dark .expense-card,
+html.dark .debt-settlement-card,
+html.dark .personal-card,
+html.dark .personal-stat-box,
+html.dark .nb-canvas,
+html.dark .dm-drawer-inner,
+html.dark .profile-modal-card,
+.dark .dashboard-card,
+.dark .summary-stat-box,
+.dark .dashboard-panel,
+.dark .kanban-col,
+.dark .kanban-card,
+.dark .note-card,
+.dark .modal-card,
+.dark .modal-content,
+.dark .workspace-card,
+.dark .login-auth-card,
+.dark .register-card,
+.dark .feature-card,
+.dark .discussion-thread-card,
+.dark .discussion-message,
+.dark .expense-card,
+.dark .debt-settlement-card,
+.dark .personal-card,
+.dark .personal-stat-box,
+.dark .nb-canvas,
+.dark .dm-drawer-inner,
+.dark .profile-modal-card {
   background-color: #1e293b !important;
-  background-image: 
-    linear-gradient(90deg, rgba(148, 163, 184, 0.25) 50%, transparent 50%),
-    repeating-linear-gradient(0deg, rgba(56, 189, 248, 0.04) 0px, rgba(56, 189, 248, 0.04) 1px, transparent 1px, transparent 20px),
-    repeating-linear-gradient(90deg, rgba(56, 189, 248, 0.04) 0px, rgba(56, 189, 248, 0.04) 1px, transparent 1px, transparent 20px) !important;
-  box-shadow: 2px 8px 20px rgba(0, 0, 0, 0.3) !important;
+  border-color: #334155 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+}
+
+html.dark .note-card,
+html.dark .nb-canvas,
+html.dark .note-container,
+html.dark .note-preview-wrapper,
+html.dark .workspace-page,
+html.dark .dashboard-main,
+html.dark .dm-drawer,
+html.dark .settings-drawer,
+html.dark .discussions-chat-container,
+html.dark .personal-note-card,
+html.dark .quick-capture-card,
+.dark .note-card,
+.dark .nb-canvas,
+.dark .note-container,
+.dark .note-preview-wrapper,
+.dark .workspace-page,
+.dark .dashboard-main,
+.dark .dm-drawer,
+.dark .settings-drawer,
+.dark .discussions-chat-container,
+.dark .personal-note-card,
+.dark .quick-capture-card {
+  border-left-color: rgba(239, 68, 68, 0.35) !important;
 }
 
 html.dark .modal-card::before,
+html.dark .modal-content::before,
 html.dark .dashboard-header::before,
+html.dark .workspace-header::before,
+html.dark .login-auth-card::before,
 html.dark .panel-header::before,
-html.dark .washi-tape::before {
+html.dark .washi-tape::before,
+.dark .modal-card::before,
+.dark .modal-content::before,
+.dark .dashboard-header::before,
+.dark .workspace-header::before,
+.dark .login-auth-card::before,
+.dark .panel-header::before,
+.dark .washi-tape::before {
   background-color: rgba(212, 195, 160, 0.25);
   border-left: 2px dashed rgba(212, 195, 160, 0.45);
   border-right: 2px dashed rgba(212, 195, 160, 0.45);
@@ -5058,8 +5210,16 @@ html.dark .washi-tape::before {
 
 html.dark .kanban-card:nth-child(2n+1)::after,
 html.dark .note-card:nth-child(3n+1)::after,
+html.dark .personal-card:nth-child(3n+1)::after,
+html.dark .workspace-card:nth-child(2n+1)::after,
 html.dark .nb-canvas::after,
-html.dark .paperclip-card::after {
+html.dark .paperclip-card::after,
+.dark .kanban-card:nth-child(2n+1)::after,
+.dark .note-card:nth-child(3n+1)::after,
+.dark .personal-card:nth-child(3n+1)::after,
+.dark .workspace-card:nth-child(2n+1)::after,
+.dark .nb-canvas::after,
+.dark .paperclip-card::after {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='40' viewBox='0 0 24 40' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 12v18a5 5 0 0 0 10 0V8a7 7 0 0 0-14 0v21a3 3 0 0 0 6 0V12'/%3E%3C/svg%3E");
   filter: drop-shadow(1px 2px 4px rgba(0, 0, 0, 0.45));
 }

@@ -27,28 +27,28 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      background-color: var(--background);
+      background-color: #fcfbf7 !important;
+      background-image: 
+        repeating-linear-gradient(0deg, rgba(59, 130, 246, 0.055) 0px, rgba(59, 130, 246, 0.055) 1px, transparent 1px, transparent 20px),
+        repeating-linear-gradient(90deg, rgba(59, 130, 246, 0.055) 0px, rgba(59, 130, 246, 0.055) 1px, transparent 1px, transparent 20px) !important;
+      background-size: 20px 20px !important;
       color: var(--foreground);
       font-family: var(--font-sans), 'Bricolage Grotesque', sans-serif;
       position: relative;
       overflow-x: hidden;
     }
 
-    /* Subtle Technical Grid Background (Matching Landing Hero) */
-    .login-grid-bg {
-      pointer-events: none;
-      position: fixed;
-      inset: 0;
-      opacity: 0.032;
-      background-image:
-        linear-gradient(to right, var(--foreground) 1px, transparent 1px),
-        linear-gradient(to bottom, var(--foreground) 1px, transparent 1px);
-      background-size: 40px 40px;
-      z-index: 0;
+    .dark body.login-page-body,
+    html.dark body.login-page-body {
+      background-color: #0f172a !important;
+      background-image: 
+        repeating-linear-gradient(0deg, rgba(56, 189, 248, 0.045) 0px, rgba(56, 189, 248, 0.045) 1px, transparent 1px, transparent 20px),
+        repeating-linear-gradient(90deg, rgba(56, 189, 248, 0.045) 0px, rgba(56, 189, 248, 0.045) 1px, transparent 1px, transparent 20px) !important;
     }
 
-    .dark .login-grid-bg {
-      opacity: 0.05;
+    /* Subtle Technical Grid Background */
+    .login-grid-bg {
+      display: none;
     }
 
     /* Navigation Header */
@@ -185,7 +185,7 @@
     }
 
     .login-hero-sub {
-      font-family: 'Inter', sans-serif;
+      font-family: var(--font-sans), sans-serif;
       font-size: 0.88rem;
       line-height: 1.5;
       color: var(--muted-foreground);
@@ -200,7 +200,7 @@
       border: 1px solid var(--border);
       border-radius: 18px;
       padding: 30px 28px;
-      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+      box-shadow: 2px 8px 20px rgba(0, 0, 0, 0.06);
       position: relative;
     }
 
