@@ -4609,3 +4609,192 @@ html.dark .settle-chip:hover:not(.active) {
 .homespace-settings-drawer-wrapper.open {
   right: 0;
 }
+
+
+/* ─── Personal Expense Donut Chart & Category Analytics ─── */
+.personal-expense-analytics {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 768px) {
+  .personal-expense-analytics {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 16px;
+  }
+}
+
+.donut-chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 180px;
+}
+
+.donut-chart-svg {
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.donut-chart-segment {
+  fill: transparent;
+  stroke-width: 22;
+  transition: stroke 0.25s ease, stroke-width 0.2s ease, opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.donut-chart-segment:hover {
+  stroke-width: 26;
+  opacity: 0.9;
+}
+
+.donut-chart-center-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.donut-chart-center-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.donut-chart-center-val {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+
+.category-analytics-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.category-top-callout {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.category-legend-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+}
+
+@media (max-width: 600px) {
+  .category-legend-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.category-legend-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.category-legend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--foreground);
+}
+
+.category-legend-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.category-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.category-legend-val {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.category-progress-track {
+  width: 100%;
+  height: 6px;
+  background: var(--muted);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.category-progress-bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.personal-expense-filter-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.personal-category-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.personal-category-pill:hover {
+  background: var(--secondary);
+  color: var(--foreground);
+  border-color: var(--primary);
+}
+
+.personal-category-pill.active {
+  background: var(--primary);
+  color: #ffffff !important;
+  border-color: var(--primary);
+}

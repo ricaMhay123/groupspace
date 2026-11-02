@@ -3797,6 +3797,8 @@ function openPersonalAddModal() {
     }
     if (folderGroup) folderGroup.style.display = 'none';
     if (amountGroup) amountGroup.style.display = personalSubTab === 'EXPENSE' ? 'block' : 'none';
+    const categoryGroup = document.getElementById('personalCategoryGroup');
+    if (categoryGroup) categoryGroup.style.display = personalSubTab === 'EXPENSE' ? 'block' : 'none';
     const toolbarBox = document.getElementById('personalModalToolbarContainer');
     if (toolbarBox) toolbarBox.innerHTML = '';
   }
@@ -4124,26 +4126,9 @@ async function loadPersonalItems(searchQuery = '') {
         </ul>
       `;
     } else {
-      // Expense
-      const total = items.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
-      container.innerHTML = `
-        <div style="margin-bottom:18px; font-size:18px; color:var(--primary); font-weight:700;">
-          Total Personal Spending: ₱${total.toFixed(2)}
-        </div>
-        <table class="expense-table">
-          <thead><tr><th>Item</th><th>Category</th><th>Amount</th><th>Action</th></tr></thead>
-          <tbody>
-            ${items.map(e => `
-              <tr>
-                <td><strong>${escapeHtml(e.title)}</strong></td>
-                <td>${escapeHtml(e.category || 'General')}</td>
-                <td style="color:var(--primary); font-weight:600;">₱${Number(e.amount).toFixed(2)}</td>
-                <td><span style="cursor:pointer; color:#FF7272; font-size:11px; font-weight:600;" onclick="deletePersonalItem(${e.id})">Delete</span></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
+      // Expense with Native SVG Donut Chart & Category Analytics
+      cachedPersonalExpenseItems = items;
+      renderPersonalExpenseAnalytics(items);
     }
   } catch (err) {
     showToast(err.message, 'error');
@@ -4167,6 +4152,10 @@ async function handleSavePersonalItem(e) {
   const folderEl = document.getElementById('personalItemFolderSelect');
   const folderId = (folderEl && folderEl.value) ? Number(folderEl.value) : null;
 
+  const category = personalSubTab === 'EXPENSE'
+    ? (document.getElementById('personalItemCategory')?.value || 'Personal / Other')
+    : 'Personal';
+
   // Hybrid Auto-Titling System for Notes: use manual title if provided, else extract from canvas, else "Untitled Note"
   const title = personalSubTab === 'NOTE'
     ? (rawTitle || extractDashboardAutoTitle(content))
@@ -4180,6 +4169,7 @@ async function handleSavePersonalItem(e) {
         title,
         content,
         amount,
+        category,
         folder_id: folderId,
         is_private: true
       })
@@ -4886,4 +4876,187 @@ async function handleSaveUserProfile(e) {
       saveBtn.textContent = 'Save Profile';
     }
   }
+}
+
+
+/* ─── Personal Expense Donut Chart & Category Analytics ─── */
+const PERSONAL_EXPENSE_CATEGORIES = {
+  'Food & Dining': { color: '#ef4444', emoji: '🍔' },
+  'School & Books': { color: '#6366f1', emoji: '📚' },
+  'Printing & Supplies': { color: '#0ea5e9', emoji: '🖨️' },
+  'Transportation': { color: '#f59e0b', emoji: '🚌' },
+  'Tech & Subscriptions': { color: '#8b5cf6', emoji: '💻' },
+  'Project Materials': { color: '#10b981', emoji: '🎯' },
+  'Personal / Other': { color: '#64748b', emoji: '🏷️' }
+};
+
+let currentPersonalExpenseFilter = 'ALL';
+let cachedPersonalExpenseItems = [];
+
+function getCategoryMeta(cat) {
+  return PERSONAL_EXPENSE_CATEGORIES[cat] || { color: '#64748b', emoji: '🏷️' };
+}
+
+function filterPersonalExpensesByCategory(category) {
+  currentPersonalExpenseFilter = category;
+  renderPersonalExpenseAnalytics(cachedPersonalExpenseItems);
+}
+
+function renderPersonalExpenseAnalytics(items) {
+  const container = document.getElementById('personalItemsContainer');
+  if (!container) return;
+
+  const total = items.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+
+  // Group by category
+  const catTotals = {};
+  items.forEach(e => {
+    const cat = e.category || 'Personal / Other';
+    catTotals[cat] = (catTotals[cat] || 0) + (Number(e.amount) || 0);
+  });
+
+  const sortedCats = Object.keys(catTotals).sort((a, b) => catTotals[b] - catTotals[a]);
+  const topCategory = sortedCats[0];
+  const topCatAmount = catTotals[topCategory] || 0;
+  const topCatMeta = topCategory ? getCategoryMeta(topCategory) : null;
+  const topCatPct = total > 0 ? Math.round((topCatAmount / total) * 100) : 0;
+
+  // SVG Donut calculation
+  // Radius r = 65, circumference C = 2 * Math.PI * 65 ≈ 408.407
+  const circumference = 408.4;
+  let accumulatedLength = 0;
+
+  const svgSlices = total > 0
+    ? sortedCats.map(cat => {
+        const amt = catTotals[cat];
+        const sliceLen = (amt / total) * circumference;
+        const meta = getCategoryMeta(cat);
+        const dashArray = `${sliceLen.toFixed(1)} ${(circumference - sliceLen).toFixed(1)}`;
+        const dashOffset = (-accumulatedLength).toFixed(1);
+        accumulatedLength += sliceLen;
+        const pct = Math.round((amt / total) * 100);
+        return `
+          <circle class="donut-chart-segment"
+            cx="90" cy="90" r="65"
+            stroke="${meta.color}"
+            stroke-dasharray="${dashArray}"
+            stroke-dashoffset="${dashOffset}"
+            title="${escapeHtml(cat)}: ₱${amt.toFixed(2)} (${pct}%)"
+            onclick="filterPersonalExpensesByCategory('${escapeHtml(cat).replace(/'/g, "\'")}')">
+          </circle>
+        `;
+      }).join('')
+    : `<circle cx="90" cy="90" r="65" fill="none" stroke="var(--border)" stroke-width="22"></circle>`;
+
+  // Category Breakdown Legend
+  const legendHtml = sortedCats.length > 0
+    ? sortedCats.map(cat => {
+        const amt = catTotals[cat];
+        const pct = total > 0 ? Math.round((amt / total) * 100) : 0;
+        const meta = getCategoryMeta(cat);
+        return `
+          <div class="category-legend-item" onclick="filterPersonalExpensesByCategory('${escapeHtml(cat).replace(/'/g, "\'")}')" style="cursor:pointer;" title="Click to filter by ${escapeHtml(cat)}">
+            <div class="category-legend-header">
+              <div class="category-legend-name">
+                <span class="category-legend-dot" style="background:${meta.color};"></span>
+                <span>${meta.emoji} ${escapeHtml(cat)}</span>
+              </div>
+              <div class="category-legend-val">₱${amt.toFixed(2)} <span style="font-size:11px; color:var(--muted-foreground); font-weight:normal;">(${pct}%)</span></div>
+            </div>
+            <div class="category-progress-track">
+              <div class="category-progress-bar" style="width:${pct}%; background:${meta.color};"></div>
+            </div>
+          </div>
+        `;
+      }).join('')
+    : `<div style="color:var(--muted-foreground); font-size:12px; padding:12px 0;">No expenses recorded yet. Click "+ Add Item" above to log your first expense!</div>`;
+
+  // Top Expense Callout
+  const topCalloutHtml = sortedCats.length > 0 && total > 0
+    ? `
+      <div class="category-top-callout">
+        <span>💡 <strong>Top Expense:</strong> ${topCatMeta.emoji} ${escapeHtml(topCategory)} (₱${topCatAmount.toFixed(2)} — ${topCatPct}% of total)</span>
+      </div>
+    `
+    : '';
+
+  // Filter Chips
+  const filterChipsList = ['ALL', ...sortedCats];
+  const filterChipsHtml = `
+    <div class="personal-expense-filter-chips">
+      <span style="font-size:12px; font-weight:600; color:var(--muted-foreground); margin-right:4px;">Filter:</span>
+      ${filterChipsList.map(c => {
+        const isAll = c === 'ALL';
+        const meta = isAll ? { emoji: '🏷️' } : getCategoryMeta(c);
+        const label = isAll ? 'All Items' : `${meta.emoji} ${c}`;
+        const isActive = currentPersonalExpenseFilter === c;
+        return `
+          <button type="button" class="personal-category-pill ${isActive ? 'active' : ''}" onclick="filterPersonalExpensesByCategory('${c}')">
+            ${label}
+          </button>
+        `;
+      }).join('')}
+    </div>
+  `;
+
+  // Filtered rows for table
+  const filteredItems = currentPersonalExpenseFilter === 'ALL'
+    ? items
+    : items.filter(e => (e.category || 'Personal / Other') === currentPersonalExpenseFilter);
+
+  const tableRowsHtml = filteredItems.length > 0
+    ? filteredItems.map(e => {
+        const meta = getCategoryMeta(e.category || 'Personal / Other');
+        return `
+          <tr>
+            <td><strong>${escapeHtml(e.title)}</strong></td>
+            <td>
+              <span style="display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; padding:2px 8px; border-radius:999px; background:${meta.color}18; color:${meta.color}; border:1px solid ${meta.color}35;">
+                ${meta.emoji} ${escapeHtml(e.category || 'Personal / Other')}
+              </span>
+            </td>
+            <td style="color:var(--primary); font-weight:700; font-variant-numeric:tabular-nums;">₱${Number(e.amount).toFixed(2)}</td>
+            <td><span style="cursor:pointer; color:#FF7272; font-size:11px; font-weight:600;" onclick="deletePersonalItem(${e.id})">Delete</span></td>
+          </tr>
+        `;
+      }).join('')
+    : `<tr><td colspan="4" style="text-align:center; padding:24px 12px; color:var(--muted-foreground); font-size:12.5px;">No expenses match "${escapeHtml(currentPersonalExpenseFilter)}".</td></tr>`;
+
+  container.innerHTML = `
+    <!-- Category Analytics Dashboard -->
+    <div class="personal-expense-analytics">
+      <!-- Donut Chart Card -->
+      <div class="donut-chart-container">
+        <svg class="donut-chart-svg" width="180" height="180" viewBox="0 0 180 180">
+          <!-- Background track -->
+          <circle cx="90" cy="90" r="65" fill="none" stroke="var(--muted)" stroke-width="22"></circle>
+          <!-- Category Segments -->
+          ${svgSlices}
+        </svg>
+        <div class="donut-chart-center-label">
+          <div class="donut-chart-center-sub">Total Spent</div>
+          <div class="donut-chart-center-val">₱${total.toFixed(2)}</div>
+        </div>
+      </div>
+
+      <!-- Category Breakdown Legend & Progress Bars -->
+      <div class="category-analytics-panel">
+        ${topCalloutHtml}
+        <div class="category-legend-list">
+          ${legendHtml}
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Filter Bar -->
+    ${items.length > 0 ? filterChipsHtml : ''}
+
+    <!-- Expense Details Table -->
+    <table class="expense-table">
+      <thead><tr><th>Item</th><th>Category</th><th>Amount</th><th>Action</th></tr></thead>
+      <tbody>
+        ${tableRowsHtml}
+      </tbody>
+    </table>
+  `;
 }

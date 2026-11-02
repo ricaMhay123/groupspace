@@ -106,3 +106,4 @@ if (failed > 0) {
 } else {
   console.log('🎉 All Direct "My Profile" Modal & Customization tests passed!\n');
 }
+
