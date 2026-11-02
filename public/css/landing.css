@@ -321,50 +321,127 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
-  margin: 20px 0 48px;
+  margin: 24px 0 48px;
   text-align: left;
 }
 
+/* ── Sticky Note Paper Cards ── */
 .feature-card {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 28px 24px 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  padding: 26px 22px 24px;
   position: relative;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03), 1px 6px 14px rgba(0, 0, 0, 0.06);
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
+/* Translucent Washi Tape Strip on Top */
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 16px;
+  background-color: rgba(245, 235, 215, 0.82);
+  backdrop-filter: blur(1px);
+  border-left: 1.5px dashed rgba(215, 200, 175, 0.85);
+  border-right: 1.5px dashed rgba(215, 200, 175, 0.85);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  pointer-events: none !important;
+  z-index: 2;
+}
+
+/* Card 1: Soft Canary Yellow Sticky Note (Discussions) */
+.feature-card:nth-child(1) {
+  background-color: #fefce8 !important;
+  border: 1px solid #fef08a !important;
+  transform: rotate(-1.2deg);
+}
+.feature-card:nth-child(1) .feature-kicker {
+  color: #a16207 !important;
+}
+
+/* Card 2: Soft Sky Blue Sticky Note (Tasks) */
+.feature-card:nth-child(2) {
+  background-color: #f0f9ff !important;
+  border: 1px solid #bae6fd !important;
+  transform: rotate(0.9deg);
+}
+.feature-card:nth-child(2) .feature-kicker {
+  color: #0369a1 !important;
+}
+
+/* Card 3: Soft Sage Mint Sticky Note (Documents) */
+.feature-card:nth-child(3) {
+  background-color: #f0fdf4 !important;
+  border: 1px solid #bbf7d0 !important;
+  transform: rotate(-0.7deg);
+}
+.feature-card:nth-child(3) .feature-kicker {
+  color: #15803d !important;
+}
+
+/* Card 4: Soft Peach Apricot Sticky Note (Schedule) */
+.feature-card:nth-child(4) {
+  background-color: #fff7ed !important;
+  border: 1px solid #fed7aa !important;
+  transform: rotate(1.1deg);
+}
+.feature-card:nth-child(4) .feature-kicker {
+  color: #c2410c !important;
+}
+
+/* Card 5: Soft Lavender Lilac Sticky Note (Team) */
+.feature-card:nth-child(5) {
+  background-color: #faf5ff !important;
+  border: 1px solid #e9d5ff !important;
+  transform: rotate(-0.9deg);
+}
+.feature-card:nth-child(5) .feature-kicker {
+  color: #7e22ce !important;
+}
+
+/* Card 6: Soft Blush Rose Sticky Note (Finance) */
+.feature-card:nth-child(6) {
+  background-color: #fff1f2 !important;
+  border: 1px solid #fecdd3 !important;
+  transform: rotate(0.8deg);
+}
+.feature-card:nth-child(6) .feature-kicker {
+  color: #be123c !important;
+}
+
+/* Hover: Flatten smoothly to 0deg with tactile paper lift */
 .feature-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
-  border-color: #cbd5e1;
+  transform: rotate(0deg) translateY(-4px) !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05), 2px 14px 28px rgba(0, 0, 0, 0.1) !important;
+  z-index: 10;
 }
 
 .feature-kicker {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #2563eb;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .feature-card h3 {
-  font-size: 1.25rem;
+  font-size: 1.1875rem;
   font-weight: 700;
   color: #0f172a;
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   letter-spacing: -0.01em;
 }
 
 .feature-card p {
   font-size: 0.9375rem;
-  line-height: 1.55;
-  color: #64748b;
+  line-height: 1.5;
+  color: #334155;
   margin: 0;
 }
 
@@ -1032,13 +1109,33 @@ html.dark .status-right {
 .dark .feature-card,
 html.dark .feature-card {
   background-color: #1e293b !important;
-  border-color: #334155 !important;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
 }
 
-.dark .feature-kicker,
-html.dark .feature-kicker {
-  color: #60a5fa !important;
+.dark .feature-card:nth-child(1), html.dark .feature-card:nth-child(1) { border-color: #ca8a04 !important; }
+.dark .feature-card:nth-child(1) .feature-kicker, html.dark .feature-card:nth-child(1) .feature-kicker { color: #fde047 !important; }
+
+.dark .feature-card:nth-child(2), html.dark .feature-card:nth-child(2) { border-color: #0284c7 !important; }
+.dark .feature-card:nth-child(2) .feature-kicker, html.dark .feature-card:nth-child(2) .feature-kicker { color: #7dd3fc !important; }
+
+.dark .feature-card:nth-child(3), html.dark .feature-card:nth-child(3) { border-color: #16a34a !important; }
+.dark .feature-card:nth-child(3) .feature-kicker, html.dark .feature-card:nth-child(3) .feature-kicker { color: #86efac !important; }
+
+.dark .feature-card:nth-child(4), html.dark .feature-card:nth-child(4) { border-color: #ea580c !important; }
+.dark .feature-card:nth-child(4) .feature-kicker, html.dark .feature-card:nth-child(4) .feature-kicker { color: #fdba74 !important; }
+
+.dark .feature-card:nth-child(5), html.dark .feature-card:nth-child(5) { border-color: #9333ea !important; }
+.dark .feature-card:nth-child(5) .feature-kicker, html.dark .feature-card:nth-child(5) .feature-kicker { color: #d8b4fe !important; }
+
+.dark .feature-card:nth-child(6), html.dark .feature-card:nth-child(6) { border-color: #e11d48 !important; }
+.dark .feature-card:nth-child(6) .feature-kicker, html.dark .feature-card:nth-child(6) .feature-kicker { color: #fda4af !important; }
+
+.dark .feature-card::before,
+html.dark .feature-card::before {
+  background-color: rgba(212, 195, 160, 0.25);
+  border-left-color: rgba(212, 195, 160, 0.45);
+  border-right-color: rgba(212, 195, 160, 0.45);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 .dark .showcase-paper-card,
