@@ -405,8 +405,8 @@ class NotebookEditorComponent {
     });
 
     const linkBtn = this._tbBtn('🔗', 'Insert Link');
-    linkBtn.addEventListener('click', () => {
-      const url = prompt('Enter URL:');
+    linkBtn.addEventListener('click', async () => {
+      const url = window.gsPrompt ? await window.gsPrompt('Enter URL:', 'https://', { title: 'Insert Link' }) : (window.prompt ? window.prompt('Enter URL:') : '');
       if (url) this._quill?.format('link', url, 'user');
     });
 
@@ -1303,7 +1303,7 @@ const NotebookModule = (() => {
 
   /* ── Create page ── */
   async function _createPage(notebookId) {
-    const title = prompt('New page title:');
+    const title = window.gsPrompt ? await window.gsPrompt('New page title:', '', { title: 'New Page', placeholder: 'Page title...' }) : 'Untitled Page';
     if (!title?.trim()) return;
     try {
       const res = await apiFetch(`/api/notebooks/${notebookId}/pages`, {

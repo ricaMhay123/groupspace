@@ -259,4 +259,173 @@ function escapeHtml(str) {
       (opts.danger ? cancelBtn : okBtn).focus();
     });
   };
+
+  /**
+   * gsPrompt(message, defaultValue, opts) -> Promise<string|null>
+   * Centered in-page prompt dialog replacing native browser prompt().
+   * Resolves with entered string on OK / Enter, or null on Cancel / Esc / backdrop click.
+   */
+  window.gsPrompt = function (message, defaultValue, opts) {
+    opts = opts || {};
+    injectStyles();
+    return new Promise((resolve) => {
+      const previouslyFocused = document.activeElement;
+      const overlay = document.createElement('div');
+      overlay.className = 'gs-confirm-overlay';
+
+      const card = document.createElement('div');
+      card.className = 'gs-confirm-card';
+      card.setAttribute('role', 'dialog');
+      card.setAttribute('aria-modal', 'true');
+
+      const title = document.createElement('h3');
+      title.className = 'gs-confirm-title';
+      title.textContent = opts.title || 'Enter Value';
+      title.id = 'gsPromptTitle';
+
+      const msg = document.createElement('p');
+      msg.className = 'gs-confirm-message';
+      msg.id = 'gsPromptMessage';
+      msg.textContent = String(message || '');
+
+      const input = document.createElement('input');
+      input.type = opts.inputType || 'text';
+      input.className = 'gs-prompt-input';
+      input.value = defaultValue != null ? String(defaultValue) : '';
+      if (opts.placeholder) input.placeholder = opts.placeholder;
+      input.style.cssText = 'width:100%; box-sizing:border-box; padding:9px 12px; margin:0 0 16px; border:1px solid var(--border, #cbd5e1); border-radius:10px; font-size:14px; background:var(--bg, #f8fafc); color:var(--text, #0f172a); outline:none; font-family:inherit; transition:border-color 0.15s ease;';
+      input.addEventListener('focus', () => { input.style.borderColor = '#2563eb'; });
+      input.addEventListener('blur', () => { input.style.borderColor = 'var(--border, #cbd5e1)'; });
+
+      card.setAttribute('aria-labelledby', 'gsPromptTitle');
+      if (message) card.setAttribute('aria-describedby', 'gsPromptMessage');
+
+      const actions = document.createElement('div');
+      actions.className = 'gs-confirm-actions';
+      const cancelBtn = document.createElement('button');
+      cancelBtn.type = 'button';
+      cancelBtn.className = 'gs-confirm-cancel';
+      cancelBtn.textContent = opts.cancelText || 'Cancel';
+      const okBtn = document.createElement('button');
+      okBtn.type = 'button';
+      okBtn.className = 'gs-confirm-ok';
+      okBtn.textContent = opts.confirmText || opts.okText || 'OK';
+      actions.appendChild(cancelBtn);
+      actions.appendChild(okBtn);
+
+      card.appendChild(title);
+      if (message) card.appendChild(msg);
+      card.appendChild(input);
+      card.appendChild(actions);
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+
+      requestAnimationFrame(() => {
+        overlay.classList.add('open');
+        input.focus();
+        input.select();
+      });
+
+      let done = false;
+      function finish(val) {
+        if (done) return;
+        done = true;
+        document.removeEventListener('keydown', onKey, true);
+        overlay.classList.remove('open');
+        setTimeout(() => overlay.remove(), 160);
+        if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+          try { previouslyFocused.focus(); } catch (e) {}
+        }
+        resolve(val);
+      }
+
+      function onKey(e) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          finish(null);
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          e.stopPropagation();
+          finish(input.value);
+        }
+      }
+
+      document.addEventListener('keydown', onKey, true);
+      cancelBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); finish(null); });
+      okBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); finish(input.value); });
+      overlay.addEventListener('mousedown', (e) => { if (e.target === overlay) finish(null); });
+    });
+  };
+
+  /**
+   * gsAlert(message, opts) -> Promise<void>
+   * Centered in-page alert dialog replacing native browser alert().
+   */
+  window.gsAlert = function (message, opts) {
+    opts = opts || {};
+    injectStyles();
+    return new Promise((resolve) => {
+      const previouslyFocused = document.activeElement;
+      const overlay = document.createElement('div');
+      overlay.className = 'gs-confirm-overlay';
+
+      const card = document.createElement('div');
+      card.className = 'gs-confirm-card';
+      card.setAttribute('role', 'alertdialog');
+      card.setAttribute('aria-modal', 'true');
+
+      const title = document.createElement('h3');
+      title.className = 'gs-confirm-title';
+      title.textContent = opts.title || 'Notice';
+
+      const msg = document.createElement('p');
+      msg.className = 'gs-confirm-message';
+      msg.textContent = String(message || '');
+
+      const actions = document.createElement('div');
+      actions.className = 'gs-confirm-actions';
+      const okBtn = document.createElement('button');
+      okBtn.type = 'button';
+      okBtn.className = 'gs-confirm-ok';
+      okBtn.textContent = opts.okText || 'OK';
+      actions.appendChild(okBtn);
+
+      card.appendChild(title);
+      card.appendChild(msg);
+      card.appendChild(actions);
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+
+      requestAnimationFrame(() => {
+        overlay.classList.add('open');
+        okBtn.focus();
+      });
+
+      let done = false;
+      function finish() {
+        if (done) return;
+        done = true;
+        document.removeEventListener('keydown', onKey, true);
+        overlay.classList.remove('open');
+        setTimeout(() => overlay.remove(), 160);
+        if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+          try { previouslyFocused.focus(); } catch (e) {}
+        }
+        resolve();
+      }
+
+      function onKey(e) {
+        if (e.key === 'Escape' || e.key === 'Enter') {
+          e.preventDefault();
+          e.stopPropagation();
+          finish();
+        }
+      }
+
+      document.addEventListener('keydown', onKey, true);
+      okBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); finish(); });
+      overlay.addEventListener('mousedown', (e) => { if (e.target === overlay) finish(); });
+    });
+  };
 })();

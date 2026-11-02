@@ -419,6 +419,7 @@ async function loadOverview() {
 
     // Render Expandable Workspace Settings & Controls Drawer
     renderHomespaceSettingsDrawer();
+    updateSidebarProfileCard();
   } catch (err) {
     showToast(err.message, 'error');
   }
@@ -601,7 +602,7 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
             </div>
             <span style="font-size:12px; color:var(--gray);">Dual-approval quality gate</span>
           </div>
-          <div style="padding:14px 16px;">
+          <div style="padding:14px 16px; max-height:260px; overflow-y:auto;">
             ${pendingHtml}
           </div>
         </div>
@@ -621,7 +622,7 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
             </div>
             <span style="font-size:12px; color:var(--gray);">${members.length} members</span>
           </div>
-          <ul class="task-list" style="margin:0; padding:4px 0; list-style:none;">
+          <ul class="task-list" style="margin:0; padding:4px 0; list-style:none; max-height:260px; overflow-y:auto;">
             ${rosterHtml}
           </ul>
         </div>
@@ -632,7 +633,7 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
             <h3>Recent Activity Feed</h3>
             <span style="font-size:12px; color:var(--gray);">Live workspace events</span>
           </div>
-          <div class="activity-feed">
+          <div class="activity-feed" style="max-height:260px; overflow-y:auto;">
             ${activityFeedHtml}
           </div>
         </div>
@@ -750,7 +751,7 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
             </div>
             <span style="font-size:12px; color:var(--gray);">Active assigned deliverables</span>
           </div>
-          <div style="padding:14px 16px;">
+          <div style="padding:14px 16px; max-height:260px; overflow-y:auto;">
             ${deliverablesHtml}
           </div>
         </div>
@@ -770,7 +771,7 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
             </div>
             <span style="font-size:12px; color:var(--gray);">${members.length} members</span>
           </div>
-          <div style="padding:12px 14px;">
+          <div style="padding:12px 14px; max-height:260px; overflow-y:auto;">
             <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:var(--gray); margin-bottom:8px;">
               Workspace Leader
             </div>
@@ -791,7 +792,7 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
             <h3>Recent Activity Feed</h3>
             <span style="font-size:12px; color:var(--gray);">Live workspace events</span>
           </div>
-          <div class="activity-feed">
+          <div class="activity-feed" style="max-height:260px; overflow-y:auto;">
             ${activityFeedHtml}
           </div>
         </div>
@@ -838,11 +839,12 @@ function copyHomespaceInviteCode() {
 }
 
 function toggleHomespaceSettingsDrawer(forceOpen = null) {
+  const container = document.getElementById('homespaceSettingsDrawerContainer');
+  const overlay = document.getElementById('hsSettingsDrawerOverlay');
   const accordion = document.getElementById('homespaceSettingsAccordion');
   const chevron = document.getElementById('hsAccordionChevron');
   const statusPill = document.getElementById('hsDrawerStatusPill');
   const header = document.getElementById('hsSettingsHeader');
-  if (!accordion) return;
 
   if (typeof forceOpen === 'boolean') {
     isHomespaceDrawerOpen = forceOpen;
@@ -850,23 +852,38 @@ function toggleHomespaceSettingsDrawer(forceOpen = null) {
     isHomespaceDrawerOpen = !isHomespaceDrawerOpen;
   }
 
-  accordion.classList.toggle('open', isHomespaceDrawerOpen);
+  if (container) {
+    container.classList.toggle('open', isHomespaceDrawerOpen);
+    container.setAttribute('aria-hidden', isHomespaceDrawerOpen ? 'false' : 'true');
+  }
+  if (overlay) {
+    overlay.classList.toggle('open', isHomespaceDrawerOpen);
+  }
+  if (accordion) accordion.classList.toggle('open', isHomespaceDrawerOpen);
   if (header) header.setAttribute('aria-expanded', isHomespaceDrawerOpen ? 'true' : 'false');
   if (chevron) chevron.classList.toggle('rotated', isHomespaceDrawerOpen);
   if (statusPill) statusPill.textContent = isHomespaceDrawerOpen ? 'Click to collapse' : 'Click to expand';
 }
 
 function focusHomespaceSettingsDrawer() {
-  if (currentTab !== 'overview') {
-    switchTab('overview');
-  }
   toggleHomespaceSettingsDrawer(true);
-  setTimeout(() => {
-    const el = document.getElementById('homespaceSettingsAccordion');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-  }, 100);
+}
+
+function updateSidebarProfileCard() {
+  const avatarEl = document.getElementById('sidebarUserAvatar');
+  const nameEl = document.getElementById('sidebarUserFullName');
+  const roleEl = document.getElementById('sidebarUserRole');
+
+  if (avatarEl && currentUser) {
+    avatarEl.textContent = currentUser.avatarInitials || 'GS';
+  }
+  if (nameEl && currentUser) {
+    nameEl.textContent = currentUser.fullName || 'User';
+  }
+  if (roleEl && currentGroupDetails) {
+    const r = (currentGroupDetails.role || 'member').toLowerCase();
+    roleEl.textContent = r === 'leader' ? 'Leader' : (r === 'co_leader' ? 'Co-Leader' : 'Member');
+  }
 }
 
 function renderHomespaceSettingsDrawer() {
@@ -886,6 +903,13 @@ function renderHomespaceSettingsDrawer() {
   const roleBadgeClass = (isPrimaryLeader || isCoLeader) ? 'online' : 'pending';
 
   container.innerHTML = `
+    <!-- Slide Drawer Header with Close Button -->
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); background:var(--card); position:sticky; top:0; z-index:10;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <h3 style="margin:0; font-size:16px; font-weight:700; color:var(--foreground);">Workspace Settings &amp; Controls</h3>
+      </div>
+      <button type="button" class="modal-close" onclick="toggleHomespaceSettingsDrawer(false)" aria-label="Close settings drawer" style="font-size:18px; width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; border:none; background:transparent; cursor:pointer;">&#10005;</button>
+    </div>
     <div class="homespace-settings-accordion ${isHomespaceDrawerOpen ? 'open' : ''}" id="homespaceSettingsAccordion">
       <!-- Accordion Header Trigger -->
       <div class="hs-accordion-header" id="hsSettingsHeader" onclick="toggleHomespaceSettingsDrawer()" role="button" tabindex="0" aria-expanded="${isHomespaceDrawerOpen ? 'true' : 'false'}" aria-controls="hsSettingsContent">
@@ -1413,7 +1437,7 @@ async function approveTaskInline(taskId, e) {
 async function rejectTaskInline(taskId, taskTitle, e) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
   if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-  const notes = prompt(`Enter rejection reason / revision notes for "${taskTitle}":`, 'Revisions required before approval.');
+  const notes = window.gsPrompt ? await window.gsPrompt(`Enter rejection reason / revision notes for "${taskTitle}":`, 'Revisions required before approval.', { title: 'Reject Task' }) : prompt(`Enter rejection reason / revision notes for "${taskTitle}":`, 'Revisions required before approval.');
   if (notes === null) return; // User cancelled
   try {
     const res = await apiFetch(`/api/groups/${currentGroupId}/tasks/${taskId}/approve`, {
@@ -1841,7 +1865,7 @@ function filterDashboardNotesByFolder(folderId) {
 window.filterDashboardNotesByFolder = filterDashboardNotesByFolder;
 
 async function promptCreateDashboardFolder() {
-  const name = window.prompt('Enter new folder name:');
+  const name = window.gsPrompt ? await window.gsPrompt('Enter new folder name:', '', { title: 'New Folder', placeholder: 'Folder name...' }) : window.prompt('Enter new folder name:');
   if (!name || !name.trim()) return;
   try {
     await apiFetch('/api/notebooks/folders', {
@@ -3840,7 +3864,7 @@ function filterPersonalNotesByFolder(folderId) {
 }
 
 async function promptCreatePersonalFolder() {
-  const name = window.prompt('Enter new private folder name:');
+  const name = window.gsPrompt ? await window.gsPrompt('Enter new private folder name:', '', { title: 'New Private Folder', placeholder: 'Folder name...' }) : window.prompt('Enter new private folder name:');
   if (!name || !name.trim()) return;
   try {
     await apiFetch('/api/personal/folders', {

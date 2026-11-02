@@ -55,6 +55,16 @@
         <li onclick="switchTab('personal')">Personal Space</li>
       </ul>
     </div>
+
+    <!-- User Profile Settings Card Below Navigation -->
+    <div class="sidebar-profile-card" id="sidebarProfileCard" style="margin-top:auto; padding:12px; background:var(--secondary); border:1px solid var(--border); border-radius:12px; display:flex; align-items:center; gap:10px;">
+      <div class="chat-avatar" id="sidebarUserAvatar" style="width:34px; height:34px; font-size:12px; flex-shrink:0;">GS</div>
+      <div style="min-width:0; flex:1;">
+        <div id="sidebarUserFullName" style="font-size:12.5px; font-weight:700; color:var(--foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">User</div>
+        <div id="sidebarUserRole" style="font-size:11px; color:var(--muted-foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Member</div>
+      </div>
+      <button type="button" class="btn-outline" style="padding:5px 9px; font-size:12px; border-radius:8px; cursor:pointer;" onclick="focusHomespaceSettingsDrawer()" title="Workspace Settings &amp; Controls">&#9881;&#65039;</button>
+    </div>
   </aside>
 
   <!-- ================= MAIN CONTENT ================= -->
@@ -113,8 +123,7 @@
         </div>
       </div>
 
-      <!-- Dedicated Expandable Workspace Settings & Controls Drawer -->
-      <div id="homespaceSettingsDrawerContainer" class="homespace-settings-drawer-wrapper" style="margin-top:20px;"></div>
+      <!-- Workspace Settings & Controls now appears when Settings is toggled -->
     </section>
 
     <!-- TAB 2: CALENDAR -->
@@ -416,6 +425,10 @@
         </div>
       </div>
     </section>
+
+    <!-- Slide-Out Workspace Settings & Controls Drawer -->
+    <div id="hsSettingsDrawerOverlay" class="hs-settings-drawer-overlay" onclick="toggleHomespaceSettingsDrawer(false)"></div>
+    <aside id="homespaceSettingsDrawerContainer" class="homespace-settings-drawer-wrapper" aria-hidden="true"></aside>
   </main>
 </div>
 

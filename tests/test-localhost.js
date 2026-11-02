@@ -191,7 +191,8 @@ async function runLocalhostTests() {
       { script: 'tests/test-task-modal-followup-cooldown.js', name: 'Task Modal Follow-Up Encapsulation & 24h Cooldown' },
       { script: 'tests/test-workspace-mentions-notebook-tagging-pinning.js', name: 'Workspace Mentions, Notebook #Tagging & Restricted Pinning' },
       { script: 'tests/test-discussion-mentions-popup-and-autocomplete-fix.js', name: 'Discussion Mentions Autocomplete & Writing Bubble Popup Fixes' },
-      { script: 'tests/test-expense-split-and-partial-settlement.js', name: 'Split Types & Partial Debt Settlements Overhaul' }
+      { script: 'tests/test-expense-split-and-partial-settlement.js', name: 'Split Types & Partial Debt Settlements Overhaul' },
+      { script: 'tests/test-notebook-shape-format-and-homespace-polish.js', name: 'Notebook Shape Format & Homespace Polish' }
     ];
 
     for (const suite of testSuites) {

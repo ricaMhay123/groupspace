@@ -1505,6 +1505,7 @@
         <button type="button" class="nb-ribbon-tab" data-ribbon-tab="layout" onclick="switchNotebookRibbonTab('layout')">Layout</button>
         <button type="button" class="nb-ribbon-tab" data-ribbon-tab="view" onclick="switchNotebookRibbonTab('view')">View</button>
         <button type="button" class="nb-ribbon-tab contextual-tab" id="nbTabTableDesign" data-ribbon-tab="table-design" style="display:none;" onclick="switchNotebookRibbonTab('table-design')">Table Design</button>
+        <button type="button" class="nb-ribbon-tab contextual-tab" id="nbTabShapeFormat" data-ribbon-tab="shape-format" style="display:none;" onclick="switchNotebookRibbonTab('shape-format')">Shape Format</button>
         <span id="nbPrivacyIndicator" style="margin-left:auto; font-size:11px; color:var(--nb-text-subtle, #64748b); font-weight:500;"></span>
       </div>
 
@@ -2051,6 +2052,84 @@
           </div>
           <div class="nb-ribbon-group-footer">Rows &amp; Columns &#8600;</div>
         </div>
+
+        <!-- ==================== [SHAPE FORMAT TAB (CONTEXTUAL)] ==================== -->
+        <div class="nb-toolbar-group" data-ribbon-group="shape-format" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <div class="nb-color-picker-wrap" title="Shape / Textbox Fill Color" style="height:26px;">
+                <span>Fill</span>
+                <input type="color" id="nbSfFillColor" class="nb-edit-ctrl" value="#ffffff" onchange="updateSelectedShapeFromPanel()">
+              </div>
+              <label style="display:inline-flex; align-items:center; gap:3px; font-size:11px; cursor:pointer;" title="Transparent background">
+                <input type="checkbox" id="nbSfNoFill" onchange="updateSelectedShapeFromPanel()"> No Fill
+              </label>
+              <div class="nb-color-picker-wrap" title="Shape / Textbox Border Color" style="height:26px;">
+                <span>Outline</span>
+                <input type="color" id="nbSfStrokeColor" class="nb-edit-ctrl" value="#2563eb" onchange="updateSelectedShapeFromPanel()">
+              </div>
+            </div>
+            <div class="nb-ribbon-row">
+              <label for="nbSfStrokeWidth" style="font-size:11px;">Weight:</label>
+              <select id="nbSfStrokeWidth" class="nb-edit-ctrl" onchange="updateSelectedShapeFromPanel()" title="Border Weight" style="width:70px;">
+                <option value="0">0px</option>
+                <option value="1">1px</option>
+                <option value="2" selected>2px</option>
+                <option value="3">3px</option>
+                <option value="4">4px</option>
+                <option value="6">6px</option>
+              </select>
+              <label for="nbSfBorderStyle" style="font-size:11px;">Style:</label>
+              <select id="nbSfBorderStyle" class="nb-edit-ctrl" onchange="updateSelectedShapeFromPanel()" title="Border Style" style="width:80px;">
+                <option value="solid" selected>Solid</option>
+                <option value="dashed">Dashed</option>
+                <option value="dotted">Dotted</option>
+              </select>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Shape Styles &#8600;</div>
+        </div>
+
+        <div class="nb-toolbar-group" data-ribbon-group="shape-format" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <label for="nbSfWidth" style="font-size:11px;">W:</label>
+              <input type="number" id="nbSfWidth" class="nb-edit-ctrl" min="20" max="1400" step="10" style="width:60px; height:24px; padding:0 4px; font-size:11px;" onchange="updateSelectedShapeFromPanel()">
+              <span style="font-size:11px;">px</span>
+              <label for="nbSfHeight" style="font-size:11px; margin-left:6px;">H:</label>
+              <input type="number" id="nbSfHeight" class="nb-edit-ctrl" min="20" max="1400" step="10" style="width:60px; height:24px; padding:0 4px; font-size:11px;" onchange="updateSelectedShapeFromPanel()">
+              <span style="font-size:11px;">px</span>
+            </div>
+            <div class="nb-ribbon-row">
+              <label for="nbSfOpacity" style="font-size:11px;">Opacity:</label>
+              <select id="nbSfOpacity" class="nb-edit-ctrl" onchange="updateSelectedShapeFromPanel()" title="Shape Opacity" style="width:72px;">
+                <option value="1" selected>100%</option>
+                <option value="0.9">90%</option>
+                <option value="0.75">75%</option>
+                <option value="0.5">50%</option>
+                <option value="0.25">25%</option>
+              </select>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Reset Size" onclick="resetSelectedShapeSize()">Reset</button>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Size &amp; Properties &#8600;</div>
+        </div>
+
+        <div class="nb-toolbar-group" data-ribbon-group="shape-format" style="display:none;">
+          <div class="nb-ribbon-group-content">
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Bring Forward" onclick="bringSelectedShapeForward()">Bring Forward</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Send Backward" onclick="sendSelectedShapeBackward()">Send Backward</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Align to Center" onclick="alignSelectedShapeCenter()">&#8697; Center</button>
+            </div>
+            <div class="nb-ribbon-row">
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Rotate 90 deg" onclick="rotateSelectedShape90()">&#8635; 90&deg;</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Flip Horizontal" onclick="flipSelectedShapeH()">&#8644; Flip</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Delete Shape or Textbox" onclick="deleteActiveSelectedShape()" style="color:var(--danger, #ef4444); font-weight:700;">&#10005; Delete</button>
+            </div>
+          </div>
+          <div class="nb-ribbon-group-footer">Arrange &amp; Manage &#8600;</div>
+        </div>
       </div>
     </div>
 
@@ -2471,7 +2550,7 @@ function toggleFolderCollapse(folderId) {
 
 /* ── Folders Creation, Movement & Safe Deletion Confirmation ── */
 async function createNewFolderPrompt() {
-  const name = prompt('Enter a name for the new folder:');
+  const name = await gsPrompt('Enter a name for the new folder:', '', { title: 'New Folder', placeholder: 'Folder name...' });
   if (!name || !name.trim()) return;
 
   try {
@@ -3159,15 +3238,15 @@ function applyHeadingStyle(val) {
   scheduleAutoSave();
 }
 
-function openFindReplacePrompt() {
+async function openFindReplacePrompt() {
   const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
   if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
   const editor = document.getElementById('nbPageContent');
   if (!editor) return;
 
-  const findText = prompt('Find what:');
+  const findText = await gsPrompt('Find what:', '', { title: 'Find & Replace', placeholder: 'Text to search for...' });
   if (!findText) return;
-  const replaceText = prompt(`Replace "${findText}" with:`, '');
+  const replaceText = await gsPrompt(`Replace "${findText}" with:`, '', { title: 'Find & Replace', placeholder: 'Replacement text...' });
   if (replaceText === null) return;
 
   const currentHtml = editor.innerHTML;
@@ -3184,14 +3263,14 @@ function openFindReplacePrompt() {
   showToast(`Replaced ${count} occurrence(s).`, 'success');
 }
 
-function insertWordArt(style) {
+async function insertWordArt(style) {
   const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
   if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
   const editor = document.getElementById('nbPageContent');
   if (!editor) return;
   editor.focus();
 
-  let text = prompt('Enter WordArt text:', 'WordArt Title');
+  let text = await gsPrompt('Enter WordArt text:', 'WordArt Title', { title: 'Insert WordArt', placeholder: 'WordArt text...' });
   if (!text) return;
 
   let artHtml = '';
@@ -3774,14 +3853,16 @@ function deleteActiveTable() {
   showToast('Table deleted', 'info');
 }
 
-function insertDynamicTable(val) {
+async function insertDynamicTable(val) {
   const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
   if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
 
   let rows = 3, cols = 3;
   if (val === 'custom') {
-    const promptRows = prompt('Enter number of rows (1-20):', '3');
-    const promptCols = prompt('Enter number of columns (1-10):', '3');
+    const promptRows = await gsPrompt('Enter number of rows (1-20):', '3', { title: 'Custom Table Rows' });
+    if (!promptRows) return;
+    const promptCols = await gsPrompt('Enter number of columns (1-10):', '3', { title: 'Custom Table Columns' });
+    if (!promptCols) return;
     rows = Math.max(1, Math.min(20, parseInt(promptRows, 10) || 3));
     cols = Math.max(1, Math.min(10, parseInt(promptCols, 10) || 3));
   } else if (val) {
@@ -4065,18 +4146,21 @@ function createShapeElement(shapeData) {
   el.style.height = shapeData.h + 'px';
   el.style.transform = `rotate(${shapeData.rot || 0}deg)`;
 
-  const sw = Number(shapeData.strokeWidth || 2);
+  const sw = Number(shapeData.strokeWidth != null ? shapeData.strokeWidth : 2);
   const stroke = shapeData.strokeColor || '#2563eb';
-  const fill = shapeData.fillColor || 'rgba(37,99,235,0.12)';
+  const fill = (shapeData.noFill || shapeData.fillColor === 'transparent') ? 'transparent' : (shapeData.fillColor || 'rgba(37,99,235,0.12)');
+  const bStyle = shapeData.borderStyle || 'solid';
+  const op = shapeData.opacity != null ? shapeData.opacity : 1;
+  el.style.opacity = op;
   const canEdit = canCurrentUserEditPage(pages.find(p => Number(p.id) === Number(currentPageId)));
 
   let innerVisual = '';
   const t = shapeData.type;
 
   if (t === 'rectangle') {
-    innerVisual = `<div style="width:100%; height:100%; border:${sw}px solid ${stroke}; background:${fill}; border-radius:6px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding:6px;"><div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}" style="text-align:center; font-weight:600; color:${stroke}; width:100%;">${shapeData.text || ''}</div></div>`;
+    innerVisual = `<div style="width:100%; height:100%; border:${sw}px ${bStyle} ${stroke}; background:${fill}; border-radius:6px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding:6px;"><div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}" style="text-align:center; font-weight:600; color:${stroke}; width:100%;">${shapeData.text || ''}</div></div>`;
   } else if (t === 'circle') {
-    innerVisual = `<div style="width:100%; height:100%; border:${sw}px solid ${stroke}; background:${fill}; border-radius:50%; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding:10px;"><div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}" style="text-align:center; font-weight:600; color:${stroke}; width:100%;">${shapeData.text || ''}</div></div>`;
+    innerVisual = `<div style="width:100%; height:100%; border:${sw}px ${bStyle} ${stroke}; background:${fill}; border-radius:50%; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding:10px;"><div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}" style="text-align:center; font-weight:600; color:${stroke}; width:100%;">${shapeData.text || ''}</div></div>`;
   } else if (t === 'diamond') {
     innerVisual = `
       <div style="width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center;">
@@ -4128,14 +4212,14 @@ function createShapeElement(shapeData) {
     `;
   } else if (t === 'callout') {
     innerVisual = `
-      <div style="width:100%; height:100%; position:relative; background:${fill}; border:${sw}px solid ${stroke}; border-radius:8px; padding:6px 10px; box-sizing:border-box; display:flex; align-items:center; justify-content:center;">
+      <div style="width:100%; height:100%; position:relative; background:${fill}; border:${sw}px ${bStyle} ${stroke}; border-radius:8px; padding:6px 10px; box-sizing:border-box; display:flex; align-items:center; justify-content:center;">
         <div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}" style="text-align:center; font-weight:600; color:${stroke}; width:100%;">${shapeData.text || 'Callout'}</div>
         <div style="position:absolute; bottom:-9px; left:20px; width:0; height:0; border-left:7px solid transparent; border-right:7px solid transparent; border-top:9px solid ${stroke};"></div>
       </div>
     `;
   } else if (t === 'textbox') {
     innerVisual = `
-      <div class="interactive-textbox-inner" style="background:${fill}; border:${sw}px solid ${stroke};">
+      <div class="interactive-textbox-inner" style="background:${fill}; border:${sw}px ${bStyle} ${stroke};">
         <div class="textbox-drag-bar" title="Drag Text Box">•••</div>
         <div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}">${shapeData.text || ''}</div>
       </div>
@@ -4331,21 +4415,109 @@ function selectShapeById(id) {
     else el.classList.remove('selected');
   });
 
-  // Sync toolbar controls with the selected shape's properties
+  // Reveal contextual Shape Format ribbon tab and switch to it
+  const sfTab = document.getElementById('nbTabShapeFormat');
+  if (sfTab) sfTab.style.display = 'inline-flex';
+  switchNotebookRibbonTab('shape-format');
+
+  // Sync toolbar controls and Shape Format panel with the selected shape's properties
   const shape = currentShapes.find(s => s.id === id);
   if (shape) {
     const swEl = document.getElementById('nbStrokeWidth');
     const fillEl = document.getElementById('nbShapeFillColor');
     const strokeEl = document.getElementById('nbShapeStrokeColor');
-    if (swEl && shape.strokeWidth) swEl.value = String(shape.strokeWidth);
+    if (swEl && shape.strokeWidth != null) swEl.value = String(shape.strokeWidth);
     if (fillEl && shape.fillColor && shape.fillColor.startsWith('#')) fillEl.value = shape.fillColor;
     if (strokeEl && shape.strokeColor && shape.strokeColor.startsWith('#')) strokeEl.value = shape.strokeColor;
+    syncShapeFormatPanel(shape);
   }
 }
 
 function deselectAllShapes() {
   activeSelectedShapeId = null;
   document.querySelectorAll('.interactive-shape').forEach(el => el.classList.remove('selected'));
+  const sfTab = document.getElementById('nbTabShapeFormat');
+  if (sfTab) sfTab.style.display = 'none';
+  if (document.querySelector('.nb-ribbon-tab.active[data-ribbon-tab="shape-format"]')) {
+    switchNotebookRibbonTab('home');
+  }
+}
+
+function syncShapeFormatPanel(shape) {
+  if (!shape) return;
+  const sfFill = document.getElementById('nbSfFillColor');
+  const sfNoFill = document.getElementById('nbSfNoFill');
+  const sfStroke = document.getElementById('nbSfStrokeColor');
+  const sfWidth = document.getElementById('nbSfWidth');
+  const sfHeight = document.getElementById('nbSfHeight');
+  const sfStrokeWidth = document.getElementById('nbSfStrokeWidth');
+  const sfBorderStyle = document.getElementById('nbSfBorderStyle');
+  const sfOpacity = document.getElementById('nbSfOpacity');
+
+  if (sfNoFill) sfNoFill.checked = (shape.fillColor === 'transparent' || shape.noFill === true);
+  if (sfFill && shape.fillColor && shape.fillColor.startsWith('#')) sfFill.value = shape.fillColor;
+  if (sfStroke && shape.strokeColor && shape.strokeColor.startsWith('#')) strokeElValue = shape.strokeColor;
+  if (sfStroke && shape.strokeColor && shape.strokeColor.startsWith('#')) sfStroke.value = shape.strokeColor;
+  if (sfWidth && shape.w) sfWidth.value = Math.round(shape.w);
+  if (sfHeight && shape.h) sfHeight.value = Math.round(shape.h);
+  if (sfStrokeWidth && shape.strokeWidth != null) sfStrokeWidth.value = String(shape.strokeWidth);
+  if (sfBorderStyle) sfBorderStyle.value = shape.borderStyle || 'solid';
+  if (sfOpacity) sfOpacity.value = String(shape.opacity != null ? shape.opacity : 1);
+}
+
+function updateSelectedShapeFromPanel() {
+  if (!activeSelectedShapeId) return;
+  const shape = currentShapes.find(s => s.id === activeSelectedShapeId);
+  if (!shape) return;
+
+  const sfFill = document.getElementById('nbSfFillColor');
+  const sfNoFill = document.getElementById('nbSfNoFill');
+  const sfStroke = document.getElementById('nbSfStrokeColor');
+  const sfWidth = document.getElementById('nbSfWidth');
+  const sfHeight = document.getElementById('nbSfHeight');
+  const sfStrokeWidth = document.getElementById('nbSfStrokeWidth');
+  const sfBorderStyle = document.getElementById('nbSfBorderStyle');
+  const sfOpacity = document.getElementById('nbSfOpacity');
+
+  if (sfNoFill && sfNoFill.checked) {
+    shape.fillColor = 'transparent';
+    shape.noFill = true;
+  } else if (sfFill) {
+    shape.fillColor = sfFill.value;
+    shape.noFill = false;
+  }
+
+  if (sfStroke) shape.strokeColor = sfStroke.value;
+  if (sfStrokeWidth) shape.strokeWidth = Number(sfStrokeWidth.value);
+  if (sfBorderStyle) shape.borderStyle = sfBorderStyle.value;
+  if (sfOpacity) shape.opacity = parseFloat(sfOpacity.value) || 1;
+  if (sfWidth && Number(sfWidth.value) >= 20) shape.w = Number(sfWidth.value);
+  if (sfHeight && Number(sfHeight.value) >= 20) shape.h = Number(sfHeight.value);
+
+  renderAllShapes();
+  selectShapeById(shape.id);
+  scheduleAutoSave();
+}
+
+function resetSelectedShapeSize() {
+  if (!activeSelectedShapeId) return;
+  const shape = currentShapes.find(s => s.id === activeSelectedShapeId);
+  if (!shape) return;
+  if (shape.type === 'textbox') {
+    shape.w = 220; shape.h = 110;
+  } else {
+    shape.w = 160; shape.h = 90;
+  }
+  renderAllShapes();
+  selectShapeById(shape.id);
+  scheduleAutoSave();
+}
+
+function deleteActiveSelectedShape() {
+  if (!activeSelectedShapeId) return;
+  const id = activeSelectedShapeId;
+  deselectAllShapes();
+  deleteShape(id);
 }
 
 function deleteShape(id) {

@@ -408,7 +408,7 @@ async function toggleTaskFlag(taskId, currentlyFlagged) {
       });
       if (typeof showToast === 'function') showToast('Task flag cleared.', 'success');
     } else {
-      const reason = prompt('What is blocking this task or what help do you need?', 'Need assistance on implementation');
+      const reason = window.gsPrompt ? await window.gsPrompt('What is blocking this task or what help do you need?', 'Need assistance on implementation', { title: 'Flag Task for Help' }) : prompt('What is blocking this task or what help do you need?', 'Need assistance on implementation');
       if (reason === null) return;
 
       await apiFetch(`/api/groups/${activeGroupId}/tasks/${taskId}/flag`, {
@@ -433,7 +433,7 @@ async function offerTaskHelp(taskId) {
     const activeGroupId = typeof currentGroupId !== 'undefined' ? currentGroupId : null;
     if (!activeGroupId) return;
 
-    const message = prompt('Leave a brief note on how you can assist (optional):', 'I can help review or pair program!');
+    const message = window.gsPrompt ? await window.gsPrompt('Leave a brief note on how you can assist (optional):', 'I can help review or pair program!', { title: 'Offer Assistance' }) : prompt('Leave a brief note on how you can assist (optional):', 'I can help review or pair program!');
     if (message === null) return;
 
     await apiFetch(`/api/groups/${activeGroupId}/tasks/${taskId}/assist`, {

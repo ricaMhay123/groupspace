@@ -4542,3 +4542,40 @@ html.dark .settle-chip:hover:not(.active) {
 
 
 
+
+
+/* Slide-Out Workspace Settings & Controls Drawer */
+.hs-settings-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 9998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.hs-settings-drawer-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.homespace-settings-drawer-wrapper {
+  position: fixed;
+  top: 0;
+  right: -520px;
+  width: 500px;
+  max-width: 95vw;
+  height: 100vh;
+  background: var(--card, #ffffff);
+  border-left: 1px solid var(--border, #e2e8f0);
+  box-shadow: -10px 0 35px rgba(0, 0, 0, 0.18);
+  z-index: 9999;
+  overflow-y: auto;
+  transition: right 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+.homespace-settings-drawer-wrapper.open {
+  right: 0;
+}

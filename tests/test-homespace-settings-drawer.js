@@ -44,12 +44,13 @@ const css = fs.readFileSync(cssPath, 'utf8');
 
 // ── 1. GLOBAL SIDEBAR CLEANUP ──
 console.log('\n🧹 1. Global Sidebar & Header Cleanup:');
-const sidebarMatch = html.match(/<aside class="dashboard-sidebar">([\s\S]*?)<\/aside>/);
+const sidebarMatch = html.match(/<aside[^>]*class="[^"]*dashboard-sidebar[^"]*"[^>]*>([\s\S]*?)<\/aside>/);
 const sidebarContent = sidebarMatch ? sidebarMatch[1] : '';
 
 assert(!sidebarContent.includes('class="profile-card"'), 'Sidebar no longer contains floating profile status card');
 assert(!sidebarContent.includes('data-theme-toggle'), 'Sidebar no longer contains persistent theme toggle button');
 assert(!sidebarContent.includes('logoutUser()'), 'Sidebar no longer contains persistent sign out button');
+assert(sidebarContent.includes('id="sidebarProfileCard"'), 'Sidebar includes user profile settings card below navigation');
 
 const headerMatch = html.match(/<div class="dashboard-header-actions">([\s\S]*?)<\/div>/);
 const headerContent = headerMatch ? headerMatch[1] : '';
