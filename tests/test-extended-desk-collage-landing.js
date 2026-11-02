@@ -108,3 +108,4 @@ if (failed > 0) {
 } else {
   console.log('🎉 Extended Desk Collage Landing Page tests passed successfully!\n');
 }
+

@@ -40,6 +40,10 @@ typography:
     fontFamily: "'JetBrains Mono', monospace"
     fontSize: "0.85rem"
     fontWeight: 500
+  serif:
+    fontFamily: "Georgia, serif"
+    fontSize: "0.875rem"
+    fontWeight: 700
   small:
     fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
     fontSize: "0.75rem"
