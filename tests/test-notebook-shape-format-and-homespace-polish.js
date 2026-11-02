@@ -62,8 +62,8 @@ assert(!nbHtml.includes("prompt('Enter number of rows"), 'Custom table creation 
 assert(!nbEditorJs.includes("prompt('New page title:')") && !nbEditorJs.includes("window.prompt('New page title:')"), 'notebook-editor.js page creation no longer uses native prompt()');
 assert(nbHtml.includes('gsPrompt'), 'notebook.html integrates gsPrompt for in-page dialogs');
 
-// ── 3. CONTEXTUAL SHAPE FORMAT RIBBON TAB ──
-console.log('\n🎨 3. Contextual Shape Format Ribbon Tab (notebook.html):');
+// ── 3. CONTEXTUAL SHAPE FORMAT RIBBON TAB & SHAPE DRAGGING ──
+console.log('\n🎨 3. Contextual Shape Format Ribbon Tab & Dragging (notebook.html):');
 assert(nbHtml.includes('id="nbTabShapeFormat"'), 'notebook.html includes #nbTabShapeFormat ribbon tab button');
 assert(nbHtml.includes('data-ribbon-tab="shape-format"'), 'Shape Format tab is registered in ribbon tabs');
 assert(nbHtml.includes('data-ribbon-group="shape-format"'), 'Ribbon body defines shape-format toolbar groups');
@@ -77,6 +77,9 @@ assert(nbHtml.includes('id="nbSfOpacity"'), 'Shape Format includes opacity selec
 assert(nbHtml.includes('deleteActiveSelectedShape'), 'Shape Format includes dedicated delete action');
 assert(nbHtml.includes("switchNotebookRibbonTab('shape-format')"), 'selectShapeById automatically switches to Shape Format tab');
 assert(nbHtml.includes('syncShapeFormatPanel'), 'notebook.html syncs panel inputs when shape is selected');
+assert(nbHtml.includes('setPointerCapture'), 'Shapes and textboxes use setPointerCapture for smooth dragging');
+assert(nbHtml.includes('data-corner="tc"') && nbHtml.includes('data-corner="bc"'), 'Shapes feature 8 resize handles (including top and bottom center)');
+assert(nbHtml.includes('is-dragging'), 'Shapes have active is-dragging state with cursor styling');
 
 // ── 4. HOMESPACE SETTINGS AS SLIDE-OUT DRAWER ──
 console.log('\n🚪 4. Workspace Settings & Controls Slide-Out Drawer:');

@@ -773,8 +773,24 @@
     .shape-resize-handle.tr { top: -5px; right: -5px; cursor: nesw-resize; }
     .shape-resize-handle.bl { bottom: -5px; left: -5px; cursor: nesw-resize; }
     .shape-resize-handle.br { bottom: -5px; right: -5px; cursor: nwse-resize; }
-    .shape-resize-handle.ml { top: calc(50% - 5px); left: -6px; cursor: ew-resize; border-radius: 50%; }
-    .shape-resize-handle.mr { top: calc(50% - 5px); right: -6px; cursor: ew-resize; border-radius: 50%; }
+    .shape-resize-handle.ml { top: calc(50% - 5px); left: -6px; cursor: ew-resize; }
+    .shape-resize-handle.mr { top: calc(50% - 5px); right: -6px; cursor: ew-resize; }
+    .shape-resize-handle.tc { top: -5px; left: calc(50% - 5px); cursor: ns-resize; }
+    .shape-resize-handle.bc { bottom: -5px; left: calc(50% - 5px); cursor: ns-resize; }
+    .interactive-shape.is-dragging {
+      opacity: 0.92;
+      box-shadow: 0 8px 26px rgba(15, 23, 42, 0.28) !important;
+      cursor: move !important;
+    }
+    .interactive-shape.selected {
+      outline: 2px solid #2563eb !important;
+      outline-offset: 2px;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 4px 14px rgba(37, 99, 235, 0.22);
+    }
+    html.dark .interactive-shape.selected {
+      outline-color: #38bdf8 !important;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.9), 0 4px 14px rgba(56, 189, 248, 0.3);
+    }
 
     .shape-delete-btn {
       position: absolute;
@@ -810,17 +826,32 @@
       box-sizing: border-box;
     }
     .textbox-drag-bar {
-      height: 14px;
-      background: rgba(15, 23, 42, 0.12);
+      height: 18px;
+      background: rgba(37, 99, 235, 0.08);
       cursor: move;
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 9px;
-      color: rgba(15, 23, 42, 0.5);
-      letter-spacing: 2px;
+      justify-content: space-between;
+      padding: 0 8px;
+      font-size: 10px;
+      color: #2563eb;
+      font-weight: 600;
+      letter-spacing: 0.5px;
       user-select: none;
       flex-shrink: 0;
+      border-bottom: 1px solid rgba(37, 99, 235, 0.15);
+      transition: background 0.15s ease;
+    }
+    .textbox-drag-bar:hover {
+      background: rgba(37, 99, 235, 0.18);
+    }
+    html.dark .textbox-drag-bar {
+      background: rgba(56, 189, 248, 0.12);
+      color: #38bdf8;
+      border-bottom-color: rgba(56, 189, 248, 0.2);
+    }
+    html.dark .textbox-drag-bar:hover {
+      background: rgba(56, 189, 248, 0.24);
     }
     .textbox-editable {
       flex: 1;
@@ -4220,7 +4251,7 @@ function createShapeElement(shapeData) {
   } else if (t === 'textbox') {
     innerVisual = `
       <div class="interactive-textbox-inner" style="background:${fill}; border:${sw}px ${bStyle} ${stroke};">
-        <div class="textbox-drag-bar" title="Drag Text Box">•••</div>
+        <div class="textbox-drag-bar" title="Drag Text Box All Around"><span style="font-size:10px; font-weight:700;">✥ Text Box</span><span style="font-size:9px; opacity:0.75;">Drag to Move</span></div>
         <div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}">${shapeData.text || ''}</div>
       </div>
     `;
@@ -4232,7 +4263,11 @@ function createShapeElement(shapeData) {
     : `<div class="shape-resize-handle tl" data-corner="tl"></div>
        <div class="shape-resize-handle tr" data-corner="tr"></div>
        <div class="shape-resize-handle bl" data-corner="bl"></div>
-       <div class="shape-resize-handle br" data-corner="br"></div>`;
+       <div class="shape-resize-handle br" data-corner="br"></div>
+       <div class="shape-resize-handle tc" data-corner="tc"></div>
+       <div class="shape-resize-handle bc" data-corner="bc"></div>
+       <div class="shape-resize-handle ml" data-corner="ml"></div>
+       <div class="shape-resize-handle mr" data-corner="mr"></div>`;
 
   el.innerHTML = `
     ${innerVisual}
@@ -4248,10 +4283,6 @@ function createShapeElement(shapeData) {
       shapeData.text = editableEl.innerHTML;
       scheduleAutoSave();
     });
-    editableEl.addEventListener('pointerdown', (e) => {
-      e.stopPropagation();
-      selectShapeById(shapeData.id);
-    });
   }
 
   bindShapeInteractions(el, shapeData);
@@ -4259,46 +4290,103 @@ function createShapeElement(shapeData) {
 }
 
 function bindShapeInteractions(shapeEl, shapeData) {
-  // 1. Dragging
+  // 1. Unified Draggable Behavior (Microsoft Word Style - Drag Anywhere All Around)
   shapeEl.addEventListener('pointerdown', (e) => {
     const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
     if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
 
+    // Do not initiate drag if clicking rotate handle, resize handle, or delete button
     if (
       e.target.closest('.shape-rot-handle') ||
       e.target.closest('.shape-resize-handle') ||
-      e.target.closest('.shape-delete-btn') ||
-      (e.target.closest('.textbox-editable') && !e.target.closest('.textbox-drag-bar'))
+      e.target.closest('.shape-delete-btn')
     ) {
       return;
     }
 
-    e.preventDefault();
-    e.stopPropagation();
+    const isDirectEditableClick = !!e.target.closest('.textbox-editable');
+    const isDragHandleClick = !!e.target.closest('.textbox-drag-bar') || !isDirectEditableClick;
+
     selectShapeById(shapeData.id);
 
     const startPointerX = e.clientX;
     const startPointerY = e.clientY;
-    const initialX = shapeData.x;
-    const initialY = shapeData.y;
+    const initialX = Number(shapeData.x) || 0;
+    const initialY = Number(shapeData.y) || 0;
+    let isDragging = false;
+    const pointerId = e.pointerId;
 
     function onPointerMove(moveEvent) {
       const dx = moveEvent.clientX - startPointerX;
       const dy = moveEvent.clientY - startPointerY;
-      shapeData.x = Math.max(0, initialX + dx);
-      shapeData.y = Math.max(0, initialY + dy);
-      shapeEl.style.left = shapeData.x + 'px';
-      shapeEl.style.top = shapeData.y + 'px';
-      scheduleAutoSave();
+
+      // Start dragging: immediately if clicking border/drag-bar, or after moving > 4px if clicking inside text
+      if (!isDragging) {
+        if (isDragHandleClick || Math.hypot(dx, dy) > 4) {
+          isDragging = true;
+          try {
+            shapeEl.setPointerCapture(pointerId);
+          } catch (err) {}
+          shapeEl.classList.add('is-dragging');
+          document.body.style.cursor = 'move';
+
+          // Remove text highlight while dragging
+          const editable = shapeEl.querySelector('.textbox-editable');
+          if (editable && document.activeElement === editable) {
+            window.getSelection()?.removeAllRanges();
+          }
+        }
+      }
+
+      if (isDragging) {
+        moveEvent.preventDefault();
+        const canvas = document.getElementById('nbCanvas');
+        const maxW = canvas ? (canvas.clientWidth - 20) : 800;
+
+        // Allow moving anywhere all around the canvas
+        shapeData.x = Math.max(0, Math.min(maxW, initialX + dx));
+        shapeData.y = Math.max(0, initialY + dy);
+
+        // Expand canvas height automatically if dragging down
+        if (canvas && (shapeData.y + (shapeData.h || 100) + 60 > canvas.offsetHeight)) {
+          canvas.style.minHeight = (shapeData.y + (shapeData.h || 100) + 120) + 'px';
+        }
+
+        shapeEl.style.left = shapeData.x + 'px';
+        shapeEl.style.top = shapeData.y + 'px';
+        scheduleAutoSave();
+      }
     }
 
-    function onPointerUp() {
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
+    function onPointerUp(upEvent) {
+      window.removeEventListener('pointermove', onPointerMove, true);
+      window.removeEventListener('pointerup', onPointerUp, true);
+      window.removeEventListener('pointercancel', onPointerUp, true);
+      shapeEl.classList.remove('is-dragging');
+      document.body.style.cursor = '';
+
+      try {
+        shapeEl.releasePointerCapture(pointerId);
+      } catch (err) {}
+
+      if (isDragging) {
+        upEvent.preventDefault();
+        upEvent.stopPropagation();
+        scheduleAutoSave();
+      } else if (isDirectEditableClick) {
+        // Normal click without movement: place cursor in editable text to type
+        const editable = shapeEl.querySelector('.textbox-editable');
+        if (editable) editable.focus();
+      }
     }
 
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointermove', onPointerMove, true);
+    window.addEventListener('pointerup', onPointerUp, true);
+    window.addEventListener('pointercancel', onPointerUp, true);
+
+    if (isDragHandleClick) {
+      e.preventDefault();
+    }
   });
 
   // 2. Rotation via circular top handle
@@ -4367,6 +4455,11 @@ function bindShapeInteractions(shapeEl, shapeData) {
         } else if (corner === 'ml') {
           newW = Math.max(40, initW - dx);
           newX = initX + (initW - newW);
+        } else if (corner === 'tc') {
+          newH = Math.max(24, initH - dy);
+          newY = initY + (initH - newH);
+        } else if (corner === 'bc') {
+          newH = Math.max(24, initH + dy);
         } else if (corner === 'br') {
           newW = Math.max(40, initW + dx);
           newH = Math.max(24, initH + dy);
@@ -4703,7 +4796,7 @@ async function exportPage(format) {
     deselectAllShapes();
     const canvasEl = document.getElementById('nbCanvas');
     const clone = canvasEl ? canvasEl.cloneNode(true) : document.createElement('div');
-    clone.querySelectorAll('.shape-handle, .shape-delete-btn, .shape-rotate-handle, .shape-action-btn').forEach(el => el.remove());
+    clone.querySelectorAll('.shape-handle, .shape-delete-btn, .shape-rotate-handle, .shape-action-btn, .shape-resize-handle, .shape-rot-handle, .textbox-drag-bar').forEach(el => el.remove());
     clone.style.cssText = `padding:28px; font-family:${font}; line-height:${lh}; color:#0f172a; background:#ffffff; position:relative; min-height:500px; box-shadow:none; border:none;`;
 
     html2pdf().from(clone).set({
