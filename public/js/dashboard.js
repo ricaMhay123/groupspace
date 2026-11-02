@@ -622,7 +622,7 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
             </div>
             <span style="font-size:12px; color:var(--gray);">${members.length} members</span>
           </div>
-          <ul class="task-list" style="margin:0; padding:4px 0; list-style:none; max-height:260px; overflow-y:auto;">
+          <ul class="task-list" style="margin:0; padding:4px 0; list-style:none; max-height:120px; overflow-y:auto;">
             ${rosterHtml}
           </ul>
         </div>

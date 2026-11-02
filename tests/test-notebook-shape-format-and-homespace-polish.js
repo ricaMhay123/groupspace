@@ -103,6 +103,7 @@ console.log('\n📜 6. Scrollable Panels in Homespace:');
 assert(dashJs.includes('class="activity-feed" style="max-height:260px; overflow-y:auto;"'), 'Activity feed is scrollable with max-height:260px');
 assert(dashJs.includes('max-height:260px; overflow-y:auto;'), 'Leader and Member Homespace panels enforce max-height:260px; overflow-y:auto');
 assert(dashJs.includes('max-height:230px; overflow-y:auto;'), 'Scratchpad notes list is scrollable with max-height:230px');
+assert(dashJs.includes('max-height:120px; overflow-y:auto;'), 'Workspace Roster & Roles enforces compact 2-person max-height:120px for balanced layout');
 
 console.log('\n================================================================');
 console.log(`📊 RESULTS: Passed: ${passed} | Failed: ${failed}`);

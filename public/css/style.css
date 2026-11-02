@@ -1072,6 +1072,20 @@ body.dashboard-page {
   list-style: none;
   padding: 0;
   margin: 0;
+  scrollbar-width: thin;
+}
+
+.task-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.task-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.task-list::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .task-list li {
