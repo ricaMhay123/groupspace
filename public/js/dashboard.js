@@ -1782,6 +1782,29 @@ function populateNoteFolderSelect() {
     dashboardNotebookFolders.map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
 }
 
+/**
+ * Renders every folder as a labelled section (Uncategorized first, then each
+ * folder in order, including empty ones) so "All Folders" shows the full tree.
+ */
+function buildFolderSectionsHtml(notes, folders, renderCard, filterFnName) {
+  const headingStyle = 'grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 2px; margin-top:8px; border-bottom:1px solid var(--border); font-size:13px; font-weight:700; color:var(--foreground); cursor:pointer;';
+  const countStyle = 'font-size:11px; font-weight:600; color:var(--muted-foreground);';
+  const emptyStyle = 'grid-column:1/-1; font-size:12px; color:var(--muted-foreground); padding:4px 2px 8px;';
+  const section = (label, filterArg, items) => `
+    <div style="${headingStyle}" onclick="${filterFnName}(${filterArg})" title="Open ${escapeHtml(label)}">
+      <span>${escapeHtml(label)}</span><span style="${countStyle}">${items.length} ${items.length === 1 ? 'page' : 'pages'}</span>
+    </div>
+    ${items.length ? items.map(renderCard).join('') : `<div style="${emptyStyle}">No pages in this folder yet.</div>`}
+  `;
+
+  const root = notes.filter(n => !n.folder_id);
+  let html = section('Uncategorized', "'ROOT'", root);
+  folders.forEach(f => {
+    html += section(f.name, f.id, notes.filter(n => Number(n.folder_id) === Number(f.id)));
+  });
+  return html;
+}
+
 function renderDashboardFoldersBar() {
   const bar = document.getElementById('notebookFoldersBar');
   if (!bar) return;
@@ -1789,7 +1812,10 @@ function renderDashboardFoldersBar() {
   const allActive = activeDashboardFolderFilter === 'ALL';
   let html = `
     <button type="button" onclick="filterDashboardNotesByFolder('ALL')" style="padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid ${allActive ? '#10b981' : 'var(--border)'}; background:${allActive ? 'rgba(16,185,129,0.15)' : 'var(--card)'}; color:${allActive ? '#10b981' : 'var(--text)'};">
-      All Pages
+      All Folders
+    </button>
+    <button type="button" onclick="filterDashboardNotesByFolder('ROOT')" style="padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid ${activeDashboardFolderFilter === 'ROOT' ? '#38bdf8' : 'var(--border)'}; background:${activeDashboardFolderFilter === 'ROOT' ? 'rgba(56,189,248,0.15)' : 'var(--card)'}; color:${activeDashboardFolderFilter === 'ROOT' ? '#38bdf8' : 'var(--text)'};">
+      Uncategorized
     </button>
   `;
 
@@ -1851,7 +1877,7 @@ async function deleteDashboardFolder(folderId, e) {
 function openCreateNoteModal() {
   populateNoteFolderSelect();
   const select = document.getElementById('noteFolderSelect');
-  if (select && activeDashboardFolderFilter !== 'ALL') {
+  if (select && activeDashboardFolderFilter !== 'ALL' && activeDashboardFolderFilter !== 'ROOT') {
     select.value = String(activeDashboardFolderFilter);
   }
   openModal('createNoteModal');
@@ -1951,7 +1977,7 @@ async function handleDashboardImportDocument(event) {
     const content = parsed.html || '<p>(Empty Document)</p>';
     const baseTitle = file.name.replace(/\.[^/.]+$/, '').trim() || 'Imported Document';
     const autoTitle = extractDashboardAutoTitle(content) || baseTitle;
-    const folderId = activeDashboardFolderFilter !== 'ALL' ? Number(activeDashboardFolderFilter) : null;
+    const folderId = (activeDashboardFolderFilter !== 'ALL' && activeDashboardFolderFilter !== 'ROOT') ? Number(activeDashboardFolderFilter) : null;
 
     const res = await apiFetch(`/api/groups/${currentGroupId}/notes`, {
       method: 'POST',
@@ -2067,11 +2093,14 @@ function renderDashboardNotesGrid(notes) {
   const container = document.getElementById('notebookGrid');
   if (!container) return;
 
-  const filtered = activeDashboardFolderFilter === 'ALL'
+  const showAllFolders = activeDashboardFolderFilter === 'ALL';
+  const filtered = showAllFolders
     ? notes
-    : notes.filter(n => String(n.folder_id || '') === String(activeDashboardFolderFilter));
+    : (activeDashboardFolderFilter === 'ROOT'
+        ? notes.filter(n => !n.folder_id)
+        : notes.filter(n => String(n.folder_id || '') === String(activeDashboardFolderFilter)));
 
-  if (!filtered || filtered.length === 0) {
+  if ((!filtered || filtered.length === 0) && !(showAllFolders && dashboardNotebookFolders.length > 0)) {
     container.innerHTML = '<p style="color:var(--gray); padding:30px;">No notebook pages in this view. Click <strong>+ New Page</strong> or <strong>Import Document</strong> to add one!</p>';
     return;
   }
@@ -2079,7 +2108,7 @@ function renderDashboardNotesGrid(notes) {
   const currUid = currentUser ? Number(currentUser.id) : 0;
   const isLeaderRole = currentGroupDetails && ['leader', 'co_leader'].includes(String(currentGroupDetails.role || '').toLowerCase());
 
-  container.innerHTML = filtered.map(n => {
+  const renderNoteCard = n => {
     const displayTitle = n.title || extractDashboardAutoTitle(n.content || '');
     const cleanPreview = (n.content || '').replace(/^<!--GS_SHAPES_JSON:.*?-->/, '').replace(/<[^>]*>/g, '').trim();
     const creatorId = Number(n.created_by || n.author_user_id || 0);
@@ -2124,7 +2153,11 @@ function renderDashboardNotesGrid(notes) {
         </div>
       </div>
     `;
-  }).join('');
+  };
+
+  container.innerHTML = showAllFolders
+    ? buildFolderSectionsHtml(filtered, dashboardNotebookFolders, renderNoteCard, 'filterDashboardNotesByFolder')
+    : filtered.map(renderNoteCard).join('');
 }
 
 async function loadNotebook(query = '') {
@@ -3338,7 +3371,11 @@ function renderPersonalFoldersBar() {
   let html = `
     <button type="button" onclick="filterPersonalNotesByFolder('ALL')"
       style="padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid ${activePersonalFolderFilter === 'ALL' ? '#38bdf8' : 'var(--border)'}; background:${activePersonalFolderFilter === 'ALL' ? 'rgba(56,189,248,0.15)' : 'var(--card)'}; color:${activePersonalFolderFilter === 'ALL' ? '#0284c7' : 'var(--text)'};">
-      All Private Pages
+      All Folders
+    </button>
+    <button type="button" onclick="filterPersonalNotesByFolder('ROOT')"
+      style="padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid ${activePersonalFolderFilter === 'ROOT' ? '#38bdf8' : 'var(--border)'}; background:${activePersonalFolderFilter === 'ROOT' ? 'rgba(56,189,248,0.15)' : 'var(--card)'}; color:${activePersonalFolderFilter === 'ROOT' ? '#0284c7' : 'var(--text)'};">
+      Uncategorized
     </button>
   `;
 
@@ -3362,13 +3399,13 @@ function populatePersonalFolderSelects() {
   const modalSelect = document.getElementById('personalItemFolderSelect');
   if (modalSelect) {
     modalSelect.innerHTML = optionsHtml;
-    if (activePersonalFolderFilter !== 'ALL') modalSelect.value = String(activePersonalFolderFilter);
+    if (activePersonalFolderFilter !== 'ALL' && activePersonalFolderFilter !== 'ROOT') modalSelect.value = String(activePersonalFolderFilter);
   }
 
   const inlineSelect = document.getElementById('personalInlineFolderSelect');
   if (inlineSelect) {
     inlineSelect.innerHTML = optionsHtml;
-    if (activePersonalFolderFilter !== 'ALL') inlineSelect.value = String(activePersonalFolderFilter);
+    if (activePersonalFolderFilter !== 'ALL' && activePersonalFolderFilter !== 'ROOT') inlineSelect.value = String(activePersonalFolderFilter);
   }
 }
 
@@ -3429,7 +3466,7 @@ async function handlePersonalImportDocument(event) {
     const content = parsed.html || '<p>(Empty Document)</p>';
     const baseTitle = file.name.replace(/\.[^/.]+$/, '').trim() || 'Private Note';
     const autoTitle = extractDashboardAutoTitle(content) || baseTitle;
-    const folderId = activePersonalFolderFilter !== 'ALL' ? Number(activePersonalFolderFilter) : null;
+    const folderId = (activePersonalFolderFilter !== 'ALL' && activePersonalFolderFilter !== 'ROOT') ? Number(activePersonalFolderFilter) : null;
 
     const res = await apiFetch('/api/personal', {
       method: 'POST',
@@ -3536,16 +3573,19 @@ function renderPersonalNotesGrid(items) {
   const container = document.getElementById('personalItemsContainer');
   if (!container) return;
 
-  const filtered = activePersonalFolderFilter === 'ALL'
+  const showAllFolders = activePersonalFolderFilter === 'ALL';
+  const filtered = showAllFolders
     ? items
-    : items.filter(n => String(n.folder_id || '') === String(activePersonalFolderFilter));
+    : (activePersonalFolderFilter === 'ROOT'
+        ? items.filter(n => !n.folder_id)
+        : items.filter(n => String(n.folder_id || '') === String(activePersonalFolderFilter)));
 
-  if (!filtered || filtered.length === 0) {
+  if ((!filtered || filtered.length === 0) && !(showAllFolders && personalNotebookFolders.length > 0)) {
     container.innerHTML = '<p style="color:var(--muted-foreground); padding:36px; text-align:center;">Your private library has no notes in this folder. Click <strong>+ New Note</strong> to start drafting!</p>';
     return;
   }
 
-  container.innerHTML = filtered.map(n => {
+  const renderPersonalCard = n => {
     const displayTitle = n.title || extractDashboardAutoTitle(n.content || '');
     const cleanPreview = (n.content || '').replace(/^<!--GS_SHAPES_JSON:.*?-->/, '').replace(/<[^>]*>/g, '').trim();
     const fullEditorUrl = `/notebook.html?personal=1${currentGroupId ? '&groupId=' + currentGroupId : ''}&noteId=${n.id}`;
@@ -3584,7 +3624,11 @@ function renderPersonalNotesGrid(items) {
         </div>
       </div>
     `;
-  }).join('');
+  };
+
+  container.innerHTML = showAllFolders
+    ? buildFolderSectionsHtml(filtered, personalNotebookFolders, renderPersonalCard, 'filterPersonalNotesByFolder')
+    : filtered.map(renderPersonalCard).join('');
 }
 
 async function loadPersonalItems(searchQuery = '') {
