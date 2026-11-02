@@ -194,7 +194,8 @@ async function runLocalhostTests() {
       { script: 'tests/test-expense-split-and-partial-settlement.js', name: 'Split Types & Partial Debt Settlements Overhaul' },
       { script: 'tests/test-notebook-shape-format-and-homespace-polish.js', name: 'Notebook Shape Format & Homespace Polish' },
       { script: 'tests/test-user-profile-modal.js', name: 'Direct User Profile Modal & Customization' },
-      { script: 'tests/test-personal-expense-donut-analytics.js', name: 'Personal Expense Donut Chart & Category Analytics' }
+      { script: 'tests/test-personal-expense-donut-analytics.js', name: 'Personal Expense Donut Chart & Category Analytics' },
+      { script: 'tests/test-extended-desk-collage-landing.js', name: 'Extended Desk Collage Landing Page Overhaul' }
     ];
 
     for (const suite of testSuites) {
