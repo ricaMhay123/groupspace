@@ -176,12 +176,26 @@
         <div class="dashboard-search" style="flex:1; min-width:220px;">
           <input type="text" id="noteSearchInput" placeholder="Search notebook pages and tags..." oninput="debounceNotesSearch()">
         </div>
-        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-          <button type="button" onclick="promptCreateDashboardFolder()" class="btn-outline" style="font-size:13px; padding:8px 14px;">+ Folder</button>
-          <button type="button" onclick="document.getElementById('dashboardImportFileInput').click()" class="btn-outline" style="font-size:13px; padding:8px 14px;">Import Document</button>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <div class="actions-dropdown-container">
+            <button type="button" id="notebookMoreActionsBtn" class="btn-outline" onclick="toggleActionsDropdown('notebookActionsMenu', event)" aria-haspopup="true" aria-expanded="false" style="font-size:13px; padding:8px 14px; display:inline-flex; align-items:center; gap:6px;">
+              <span>More</span>
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+            </button>
+            <div id="notebookActionsMenu" class="actions-dropdown-menu">
+              <button type="button" class="actions-dropdown-item" onclick="promptCreateDashboardFolder(); closeAllActionDropdowns();">
+                <span>📁</span> <span>+ New Folder</span>
+              </button>
+              <button type="button" class="actions-dropdown-item" onclick="document.getElementById('dashboardImportFileInput').click(); closeAllActionDropdowns();">
+                <span>📄</span> <span>Import Document</span>
+              </button>
+              <button type="button" class="actions-dropdown-item" onclick="window.open('notebook.html?groupId=' + currentGroupId, '_blank'); closeAllActionDropdowns();">
+                <span>⛶</span> <span>Full Editor</span>
+              </button>
+            </div>
+          </div>
           <input type="file" id="dashboardImportFileInput" accept=".docx,.pdf,.txt,.md,.markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,text/plain,text/markdown" style="display:none;" onchange="handleDashboardImportDocument(event)">
-          <button type="button" onclick="window.open('notebook.html?groupId=' + currentGroupId, '_blank')" class="btn-outline" style="font-size:13px; padding:8px 16px;">Full Editor</button>
-          <button type="button" onclick="openCreateNoteModal()" class="btn-green">+ New Page</button>
+          <button type="button" onclick="openCreateNoteModal()" class="btn-primary btn-green">+ New Page</button>
         </div>
       </div>
 
@@ -341,12 +355,26 @@
           <div class="dashboard-search" style="flex:1; min-width:220px;">
             <input type="text" id="personalNoteSearchInput" placeholder="Search private notebook pages and tags..." oninput="debouncePersonalNotesSearch()">
           </div>
-          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            <button type="button" onclick="promptCreatePersonalFolder()" class="btn-outline" style="font-size:13px; padding:8px 14px;">+ Folder</button>
-            <button type="button" onclick="document.getElementById('personalImportFileInput').click()" class="btn-outline" style="font-size:13px; padding:8px 14px;">Import Document</button>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <div class="actions-dropdown-container">
+              <button type="button" id="personalMoreActionsBtn" class="btn-outline" onclick="toggleActionsDropdown('personalActionsMenu', event)" aria-haspopup="true" aria-expanded="false" style="font-size:13px; padding:8px 14px; display:inline-flex; align-items:center; gap:6px;">
+                <span>More</span>
+                <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+              </button>
+              <div id="personalActionsMenu" class="actions-dropdown-menu">
+                <button type="button" class="actions-dropdown-item" onclick="promptCreatePersonalFolder(); closeAllActionDropdowns();">
+                  <span>📁</span> <span>+ New Folder</span>
+                </button>
+                <button type="button" class="actions-dropdown-item" onclick="document.getElementById('personalImportFileInput').click(); closeAllActionDropdowns();">
+                  <span>📄</span> <span>Import Document</span>
+                </button>
+                <button type="button" class="actions-dropdown-item" onclick="window.open('notebook.html?personal=1' + (currentGroupId ? '&groupId=' + currentGroupId : ''), '_blank'); closeAllActionDropdowns();">
+                  <span>⛶</span> <span>Full Editor</span>
+                </button>
+              </div>
+            </div>
             <input type="file" id="personalImportFileInput" accept=".docx,.pdf,.txt,.md,.markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,text/plain,text/markdown" style="display:none;" onchange="handlePersonalImportDocument(event)">
-            <button type="button" onclick="window.open('notebook.html?personal=1' + (currentGroupId ? '&groupId=' + currentGroupId : ''), '_blank')" class="btn-outline" style="font-size:13px; padding:8px 16px;">Full Editor</button>
-            <button type="button" id="togglePersonalQuickCaptureBtn" onclick="togglePersonalQuickCapture()" class="btn-green">+ New Note</button>
+            <button type="button" id="togglePersonalQuickCaptureBtn" onclick="togglePersonalQuickCapture()" class="btn-primary btn-green">+ New Note</button>
           </div>
         </div>
 

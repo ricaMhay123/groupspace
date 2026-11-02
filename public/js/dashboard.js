@@ -94,7 +94,7 @@ function showDashboardEmptyState() {
   if (actionBtn) actionBtn.style.display = 'none';
   if (joinBadge) joinBadge.style.display = 'none';
 
-  // Replace main content with a beautiful empty state
+  // Replace main content with an accessible, tokenized empty state
   const main = document.querySelector('.dashboard-main');
   if (!main) return;
 
@@ -102,42 +102,47 @@ function showDashboardEmptyState() {
     <div style="
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; min-height: 100vh; padding: 40px 24px;
-      text-align: center; background: #f1f5f9;
+      text-align: center; background: var(--background);
     ">
       <div style="
-        background: #ffffff; border-radius: 24px; padding: 56px 48px;
+        background: var(--card); border-radius: 20px; padding: 52px 44px;
         max-width: 520px; width: 100%;
-        box-shadow: 0 8px 40px rgba(79,70,229,0.10);
-        border: 1.5px solid #e2e8f0;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        border: 1px solid var(--border);
       ">
-        <div style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: #4f46e5; margin-bottom: 12px;">GETTING STARTED</div>
-        <h2 style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin-bottom: 12px; letter-spacing: -0.5px;">
+        <h2 style="font-size: 1.75rem; font-weight: 800; color: var(--foreground); margin-bottom: 12px; letter-spacing: -0.02em;">
           Welcome to GroupSpace
         </h2>
-        <p style="color: #64748b; font-size: 1rem; line-height: 1.7; margin-bottom: 32px; max-width: 360px; margin-left: auto; margin-right: auto;">
+        <p style="color: var(--muted-foreground); font-size: 0.95rem; line-height: 1.6; margin-bottom: 32px; max-width: 380px; margin-left: auto; margin-right: auto;">
           You're all set! Create your first workspace to start collaborating with your team on tasks, notes, expenses, and discussions.
         </p>
         <div style="display: flex; flex-direction: column; gap: 12px;">
-          <a href="workspaces.html" style="
+          <a href="workspaces.html" class="btn-primary" style="
             display: flex; align-items: center; justify-content: center; gap: 8px;
-            padding: 14px 28px; background: #4f46e5; color: #ffffff;
-            border-radius: 12px; font-weight: 700; font-size: 0.95rem;
-            text-decoration: none; box-shadow: 0 4px 14px rgba(79,70,229,0.35);
+            padding: 13px 28px; background: var(--primary); color: #ffffff;
+            border-radius: 10px; font-weight: 700; font-size: 0.95rem;
+            text-decoration: none; box-shadow: 0 4px 14px rgba(37,99,235,0.25);
           ">+ Create Your First Workspace</a>
-          <a href="workspaces.html" style="
+          <a href="workspaces.html" class="btn-outline" style="
             display: flex; align-items: center; justify-content: center; gap: 8px;
-            padding: 13px 28px; background: transparent; color: #4f46e5;
-            border: 1.5px solid #c7d2fe; border-radius: 12px;
+            padding: 12px 28px; background: transparent; color: var(--foreground);
+            border: 1px solid var(--border); border-radius: 10px;
             font-weight: 600; font-size: 0.95rem; text-decoration: none;
           ">Join with Invite Code</a>
         </div>
         <div style="
-          margin-top: 36px; padding-top: 28px; border-top: 1px solid #f1f5f9;
-          display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+          margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);
+          display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
         ">
-          <div><div style="font-size:0.68rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#6366f1;margin-bottom:4px;">01</div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Kanban Tasks</div></div>
-          <div><div style="font-size:0.68rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#6366f1;margin-bottom:4px;">02</div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Discussions</div></div>
-          <div><div style="font-size:0.68rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#6366f1;margin-bottom:4px;">03</div><div style="font-size:0.78rem;font-weight:600;color:#475569;">Expenses</div></div>
+          <div style="padding: 10px 8px; background: var(--muted); border-radius: 8px; border: 1px solid var(--border);">
+            <div style="font-size: 0.82rem; font-weight: 600; color: var(--foreground);">Kanban Tasks</div>
+          </div>
+          <div style="padding: 10px 8px; background: var(--muted); border-radius: 8px; border: 1px solid var(--border);">
+            <div style="font-size: 0.82rem; font-weight: 600; color: var(--foreground);">Discussions</div>
+          </div>
+          <div style="padding: 10px 8px; background: var(--muted); border-radius: 8px; border: 1px solid var(--border);">
+            <div style="font-size: 0.82rem; font-weight: 600; color: var(--foreground);">Expenses</div>
+          </div>
         </div>
       </div>
     </div>
@@ -4239,3 +4244,44 @@ function formatTimeOfDay(dateStr) {
     return '';
   }
 }
+
+
+/* =========================================================
+   ACTIONS DROPDOWN CONTROLLERS (DISTILLED ACTION BARS)
+   ========================================================= */
+
+function toggleActionsDropdown(menuId, event) {
+  if (event) event.stopPropagation();
+  const menu = document.getElementById(menuId);
+  if (!menu) return;
+  const wasActive = menu.classList.contains('active');
+  closeAllActionDropdowns();
+  if (!wasActive) {
+    menu.classList.add('active');
+    const btn = menu.previousElementSibling;
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+  }
+}
+
+function closeAllActionDropdowns() {
+  document.querySelectorAll('.actions-dropdown-menu.active').forEach(m => {
+    m.classList.remove('active');
+    const btn = m.previousElementSibling;
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  });
+}
+
+window.toggleActionsDropdown = toggleActionsDropdown;
+window.closeAllActionDropdowns = closeAllActionDropdowns;
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.actions-dropdown-container')) {
+    closeAllActionDropdowns();
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeAllActionDropdowns();
+  }
+});
