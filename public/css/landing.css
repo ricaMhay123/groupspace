@@ -344,84 +344,84 @@
   z-index: 10;
 }
 
-/* Card 1: 3D Tilted Bubblegum Pink Push Pin (Reference Photo 1) */
+/* Card 1: 3D Tilted Bubblegum Pink Push Pin (Reference Photo 1, sits outside card pinning to desk) */
 .feature-card:nth-child(1)::before {
-  top: -15px;
+  top: -20px;
   left: 50%;
   transform: translateX(-50%) rotate(-3deg);
-  width: 22px;
-  height: 30px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 38' fill='none'%3E%3Cpolygon points='12,25 9,37 15,25' fill='%2394a3b8'/%3E%3Cpolygon points='12,25 9,37 11.5,37' fill='%2364748b'/%3E%3Cpolygon points='9,37 9.8,37 12,25' fill='%23cbd5e1'/%3E%3Cellipse cx='16.5' cy='22' rx='10.5' ry='6.2' fill='%23db2777' transform='rotate(6 16.5 22)'/%3E%3Cellipse cx='16' cy='20.8' rx='10' ry='5.8' fill='%23f472b6' transform='rotate(6 16 20.8)'/%3E%3Cpath d='M8.5,20.5 C9.5,18 13,16.5 17,16.8 C21,17 24,18.5 25,20.5 C23.5,19 20,17.8 16.5,17.8 C12.5,17.8 9.5,19 8.5,20.5 Z' fill='%23ffffff' opacity='0.65'/%3E%3Cellipse cx='13' cy='19.5' rx='3.5' ry='1.8' fill='%23ffffff' opacity='0.5' transform='rotate(-10 13 19.5)'/%3E%3Cpath d='M12.8,18 C12.2,14 13.5,10.5 15,8.5 L20.5,9 C21.5,11 22.2,14.5 21,18.8 Z' fill='%23fbcfe8' transform='rotate(6 16 14)'/%3E%3Cpath d='M18.5,9 C19.5,11.5 20,14.5 19.2,18.5 L21,18.8 C22.2,14.5 21.5,11 20.5,9 Z' fill='%23db2777' opacity='0.45' transform='rotate(6 16 14)'/%3E%3Cpath d='M13.2,18 C12.8,14.5 13.8,11.5 15.2,9 L16.8,9.2 C15.5,11.5 14.5,14.5 14.8,18 Z' fill='%23ffffff' opacity='0.45' transform='rotate(6 16 14)'/%3E%3Cellipse cx='17.8' cy='8.2' rx='7.6' ry='4.5' fill='%23db2777' transform='rotate(8 17.8 8.2)'/%3E%3Cellipse cx='17.5' cy='7' rx='7.2' ry='4.2' fill='%23f472b6' transform='rotate(8 17.5 7)'/%3E%3Cellipse cx='17' cy='6.2' rx='6' ry='3.2' fill='%23fbcfe8' transform='rotate(8 17 6.2)'/%3E%3Cellipse cx='15.8' cy='5.4' rx='3.8' ry='1.6' fill='%23ffffff' opacity='0.8' transform='rotate(-6 15.8 5.4)'/%3E%3C/svg%3E");
+  width: 26px;
+  height: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 38' fill='none'%3E%3Cpolygon points='12,24 8.5,37 15.5,24' fill='%2394a3b8'/%3E%3Cpolygon points='12,24 8.5,37 11,37' fill='%2364748b'/%3E%3Cpolygon points='8.5,37 9.5,37 12,24' fill='%23e2e8f0'/%3E%3Cellipse cx='16.5' cy='22' rx='10.5' ry='6.2' fill='%23db2777' transform='rotate(6 16.5 22)'/%3E%3Cellipse cx='16' cy='20.8' rx='10' ry='5.8' fill='%23f472b6' transform='rotate(6 16 20.8)'/%3E%3Cpath d='M8.5,20.5 C9.5,18 13,16.5 17,16.8 C21,17 24,18.5 25,20.5 C23.5,19 20,17.8 16.5,17.8 C12.5,17.8 9.5,19 8.5,20.5 Z' fill='%23ffffff' opacity='0.7'/%3E%3Cellipse cx='13' cy='19.5' rx='3.5' ry='1.8' fill='%23ffffff' opacity='0.55' transform='rotate(-10 13 19.5)'/%3E%3Cpath d='M12.8,18 C12.2,14 13.5,10.5 15,8.5 L20.5,9 C21.5,11 22.2,14.5 21,18.8 Z' fill='%23fbcfe8' transform='rotate(6 16 14)'/%3E%3Cpath d='M18.5,9 C19.5,11.5 20,14.5 19.2,18.5 L21,18.8 C22.2,14.5 21.5,11 20.5,9 Z' fill='%23db2777' opacity='0.45' transform='rotate(6 16 14)'/%3E%3Cpath d='M13.2,18 C12.8,14.5 13.8,11.5 15.2,9 L16.8,9.2 C15.5,11.5 14.5,14.5 14.8,18 Z' fill='%23ffffff' opacity='0.5' transform='rotate(6 16 14)'/%3E%3Cellipse cx='17.8' cy='8.2' rx='7.6' ry='4.5' fill='%23db2777' transform='rotate(8 17.8 8.2)'/%3E%3Cellipse cx='17.5' cy='7' rx='7.2' ry='4.2' fill='%23f472b6' transform='rotate(8 17.5 7)'/%3E%3Cellipse cx='17' cy='6.2' rx='6' ry='3.2' fill='%23fbcfe8' transform='rotate(8 17 6.2)'/%3E%3Cellipse cx='15.8' cy='5.4' rx='3.8' ry='1.6' fill='%23ffffff' opacity='0.85' transform='rotate(-6 15.8 5.4)'/%3E%3C/svg%3E");
   background-size: contain;
   background-repeat: no-repeat;
-  filter: drop-shadow(2px 3px 4px rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.22));
 }
 
-/* Card 2: Golden Kraft Tan Washi Tape (Reference Photo 2 Top-Right) */
+/* Card 2: Golden Kraft Tan Washi Tape (Reference Photo 2 Top-Right, 50% on desk, 50% on card) */
 .feature-card:nth-child(2)::before {
-  top: -10px;
+  top: -13px;
   left: 52%;
   transform: translateX(-50%) rotate(2deg);
-  width: 62px;
-  height: 18px;
+  width: 76px;
+  height: 26px;
   background-color: rgba(229, 193, 133, 0.85);
-  border-left: 1.5px dashed rgba(180, 135, 75, 0.85);
-  border-right: 1.5px dashed rgba(180, 135, 75, 0.85);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-left: 2px dashed rgba(180, 135, 75, 0.85);
+  border-right: 2px dashed rgba(180, 135, 75, 0.85);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   border-radius: 1px;
 }
 
-/* Card 3: 3D Tilted Sky Blue Push Pin */
+/* Card 3: 3D Tilted Sky Blue Push Pin (sits outside card pinning to desk) */
 .feature-card:nth-child(3)::before {
-  top: -15px;
+  top: -20px;
   left: 50%;
   transform: translateX(-50%) rotate(4deg);
-  width: 22px;
-  height: 30px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 38' fill='none'%3E%3Cpolygon points='12,25 9,37 15,25' fill='%2394a3b8'/%3E%3Cpolygon points='12,25 9,37 11.5,37' fill='%2364748b'/%3E%3Cpolygon points='9,37 9.8,37 12,25' fill='%23cbd5e1'/%3E%3Cellipse cx='16.5' cy='22' rx='10.5' ry='6.2' fill='%230284c7' transform='rotate(6 16.5 22)'/%3E%3Cellipse cx='16' cy='20.8' rx='10' ry='5.8' fill='%2338bdf8' transform='rotate(6 16 20.8)'/%3E%3Cpath d='M8.5,20.5 C9.5,18 13,16.5 17,16.8 C21,17 24,18.5 25,20.5 C23.5,19 20,17.8 16.5,17.8 C12.5,17.8 9.5,19 8.5,20.5 Z' fill='%23ffffff' opacity='0.65'/%3E%3Cellipse cx='13' cy='19.5' rx='3.5' ry='1.8' fill='%23ffffff' opacity='0.5' transform='rotate(-10 13 19.5)'/%3E%3Cpath d='M12.8,18 C12.2,14 13.5,10.5 15,8.5 L20.5,9 C21.5,11 22.2,14.5 21,18.8 Z' fill='%23bae6fd' transform='rotate(6 16 14)'/%3E%3Cpath d='M18.5,9 C19.5,11.5 20,14.5 19.2,18.5 L21,18.8 C22.2,14.5 21.5,11 20.5,9 Z' fill='%230284c7' opacity='0.45' transform='rotate(6 16 14)'/%3E%3Cpath d='M13.2,18 C12.8,14.5 13.8,11.5 15.2,9 L16.8,9.2 C15.5,11.5 14.5,14.5 14.8,18 Z' fill='%23ffffff' opacity='0.45' transform='rotate(6 16 14)'/%3E%3Cellipse cx='17.8' cy='8.2' rx='7.6' ry='4.5' fill='%230284c7' transform='rotate(8 17.8 8.2)'/%3E%3Cellipse cx='17.5' cy='7' rx='7.2' ry='4.2' fill='%2338bdf8' transform='rotate(8 17.5 7)'/%3E%3Cellipse cx='17' cy='6.2' rx='6' ry='3.2' fill='%23bae6fd' transform='rotate(8 17 6.2)'/%3E%3Cellipse cx='15.8' cy='5.4' rx='3.8' ry='1.6' fill='%23ffffff' opacity='0.8' transform='rotate(-6 15.8 5.4)'/%3E%3C/svg%3E");
+  width: 26px;
+  height: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 38' fill='none'%3E%3Cpolygon points='12,24 8.5,37 15.5,24' fill='%2394a3b8'/%3E%3Cpolygon points='12,24 8.5,37 11,37' fill='%2364748b'/%3E%3Cpolygon points='8.5,37 9.5,37 12,24' fill='%23e2e8f0'/%3E%3Cellipse cx='16.5' cy='22' rx='10.5' ry='6.2' fill='%230284c7' transform='rotate(6 16.5 22)'/%3E%3Cellipse cx='16' cy='20.8' rx='10' ry='5.8' fill='%2338bdf8' transform='rotate(6 16 20.8)'/%3E%3Cpath d='M8.5,20.5 C9.5,18 13,16.5 17,16.8 C21,17 24,18.5 25,20.5 C23.5,19 20,17.8 16.5,17.8 C12.5,17.8 9.5,19 8.5,20.5 Z' fill='%23ffffff' opacity='0.7'/%3E%3Cellipse cx='13' cy='19.5' rx='3.5' ry='1.8' fill='%23ffffff' opacity='0.55' transform='rotate(-10 13 19.5)'/%3E%3Cpath d='M12.8,18 C12.2,14 13.5,10.5 15,8.5 L20.5,9 C21.5,11 22.2,14.5 21,18.8 Z' fill='%23bae6fd' transform='rotate(6 16 14)'/%3E%3Cpath d='M18.5,9 C19.5,11.5 20,14.5 19.2,18.5 L21,18.8 C22.2,14.5 21.5,11 20.5,9 Z' fill='%230284c7' opacity='0.45' transform='rotate(6 16 14)'/%3E%3Cpath d='M13.2,18 C12.8,14.5 13.8,11.5 15.2,9 L16.8,9.2 C15.5,11.5 14.5,14.5 14.8,18 Z' fill='%23ffffff' opacity='0.5' transform='rotate(6 16 14)'/%3E%3Cellipse cx='17.8' cy='8.2' rx='7.6' ry='4.5' fill='%230284c7' transform='rotate(8 17.8 8.2)'/%3E%3Cellipse cx='17.5' cy='7' rx='7.2' ry='4.2' fill='%2338bdf8' transform='rotate(8 17.5 7)'/%3E%3Cellipse cx='17' cy='6.2' rx='6' ry='3.2' fill='%23bae6fd' transform='rotate(8 17 6.2)'/%3E%3Cellipse cx='15.8' cy='5.4' rx='3.8' ry='1.6' fill='%23ffffff' opacity='0.85' transform='rotate(-6 15.8 5.4)'/%3E%3C/svg%3E");
   background-size: contain;
   background-repeat: no-repeat;
-  filter: drop-shadow(2px 3px 4px rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.22));
 }
 
-/* Card 4: Diagonal Corner Parchment Washi Tape (Reference Photo 2 Bottom-Left) */
+/* Card 4: Diagonal Corner Parchment Washi Tape (Reference Photo 2 Bottom-Left, overhangs corner) */
 .feature-card:nth-child(4)::before {
-  top: 6px;
-  right: 8px;
-  transform: rotate(38deg);
-  width: 54px;
-  height: 16px;
+  top: -6px;
+  right: -10px;
+  transform: rotate(40deg);
+  width: 68px;
+  height: 22px;
   background-color: rgba(247, 243, 233, 0.88);
-  border-left: 1.5px dashed rgba(215, 205, 185, 0.85);
-  border-right: 1.5px dashed rgba(215, 205, 185, 0.85);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-left: 2px dashed rgba(215, 205, 185, 0.85);
+  border-right: 2px dashed rgba(215, 205, 185, 0.85);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   border-radius: 1px;
 }
 
-/* Card 5: 3D Tilted Sage Mint Push Pin */
+/* Card 5: 3D Tilted Sage Mint Push Pin (sits outside card pinning to desk) */
 .feature-card:nth-child(5)::before {
-  top: -15px;
+  top: -20px;
   left: 50%;
   transform: translateX(-50%) rotate(-4deg);
-  width: 22px;
-  height: 30px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 38' fill='none'%3E%3Cpolygon points='12,25 9,37 15,25' fill='%2394a3b8'/%3E%3Cpolygon points='12,25 9,37 11.5,37' fill='%2364748b'/%3E%3Cpolygon points='9,37 9.8,37 12,25' fill='%23cbd5e1'/%3E%3Cellipse cx='16.5' cy='22' rx='10.5' ry='6.2' fill='%23059669' transform='rotate(6 16.5 22)'/%3E%3Cellipse cx='16' cy='20.8' rx='10' ry='5.8' fill='%2334d399' transform='rotate(6 16 20.8)'/%3E%3Cpath d='M8.5,20.5 C9.5,18 13,16.5 17,16.8 C21,17 24,18.5 25,20.5 C23.5,19 20,17.8 16.5,17.8 C12.5,17.8 9.5,19 8.5,20.5 Z' fill='%23ffffff' opacity='0.65'/%3E%3Cellipse cx='13' cy='19.5' rx='3.5' ry='1.8' fill='%23ffffff' opacity='0.5' transform='rotate(-10 13 19.5)'/%3E%3Cpath d='M12.8,18 C12.2,14 13.5,10.5 15,8.5 L20.5,9 C21.5,11 22.2,14.5 21,18.8 Z' fill='%23a7f3d0' transform='rotate(6 16 14)'/%3E%3Cpath d='M18.5,9 C19.5,11.5 20,14.5 19.2,18.5 L21,18.8 C22.2,14.5 21.5,11 20.5,9 Z' fill='%23059669' opacity='0.45' transform='rotate(6 16 14)'/%3E%3Cpath d='M13.2,18 C12.8,14.5 13.8,11.5 15.2,9 L16.8,9.2 C15.5,11.5 14.5,14.5 14.8,18 Z' fill='%23ffffff' opacity='0.45' transform='rotate(6 16 14)'/%3E%3Cellipse cx='17.8' cy='8.2' rx='7.6' ry='4.5' fill='%23059669' transform='rotate(8 17.8 8.2)'/%3E%3Cellipse cx='17.5' cy='7' rx='7.2' ry='4.2' fill='%2334d399' transform='rotate(8 17.5 7)'/%3E%3Cellipse cx='17' cy='6.2' rx='6' ry='3.2' fill='%23a7f3d0' transform='rotate(8 17 6.2)'/%3E%3Cellipse cx='15.8' cy='5.4' rx='3.8' ry='1.6' fill='%23ffffff' opacity='0.8' transform='rotate(-6 15.8 5.4)'/%3E%3C/svg%3E");
+  width: 26px;
+  height: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 38' fill='none'%3E%3Cpolygon points='12,24 8.5,37 15.5,24' fill='%2394a3b8'/%3E%3Cpolygon points='12,24 8.5,37 11,37' fill='%2364748b'/%3E%3Cpolygon points='8.5,37 9.5,37 12,24' fill='%23e2e8f0'/%3E%3Cellipse cx='16.5' cy='22' rx='10.5' ry='6.2' fill='%23059669' transform='rotate(6 16.5 22)'/%3E%3Cellipse cx='16' cy='20.8' rx='10' ry='5.8' fill='%2334d399' transform='rotate(6 16 20.8)'/%3E%3Cpath d='M8.5,20.5 C9.5,18 13,16.5 17,16.8 C21,17 24,18.5 25,20.5 C23.5,19 20,17.8 16.5,17.8 C12.5,17.8 9.5,19 8.5,20.5 Z' fill='%23ffffff' opacity='0.7'/%3E%3Cellipse cx='13' cy='19.5' rx='3.5' ry='1.8' fill='%23ffffff' opacity='0.55' transform='rotate(-10 13 19.5)'/%3E%3Cpath d='M12.8,18 C12.2,14 13.5,10.5 15,8.5 L20.5,9 C21.5,11 22.2,14.5 21,18.8 Z' fill='%23a7f3d0' transform='rotate(6 16 14)'/%3E%3Cpath d='M18.5,9 C19.5,11.5 20,14.5 19.2,18.5 L21,18.8 C22.2,14.5 21.5,11 20.5,9 Z' fill='%23059669' opacity='0.45' transform='rotate(6 16 14)'/%3E%3Cpath d='M13.2,18 C12.8,14.5 13.8,11.5 15.2,9 L16.8,9.2 C15.5,11.5 14.5,14.5 14.8,18 Z' fill='%23ffffff' opacity='0.5' transform='rotate(6 16 14)'/%3E%3Cellipse cx='17.8' cy='8.2' rx='7.6' ry='4.5' fill='%23059669' transform='rotate(8 17.8 8.2)'/%3E%3Cellipse cx='17.5' cy='7' rx='7.2' ry='4.2' fill='%2334d399' transform='rotate(8 17.5 7)'/%3E%3Cellipse cx='17' cy='6.2' rx='6' ry='3.2' fill='%23a7f3d0' transform='rotate(8 17 6.2)'/%3E%3Cellipse cx='15.8' cy='5.4' rx='3.8' ry='1.6' fill='%23ffffff' opacity='0.85' transform='rotate(-6 15.8 5.4)'/%3E%3C/svg%3E");
   background-size: contain;
   background-repeat: no-repeat;
-  filter: drop-shadow(2px 3px 4px rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.22));
 }
 
-/* Card 6: Frosted White Crinkle Washi Tape (Reference Photo 2 Middle-Left) */
+/* Card 6: Frosted White Crinkle Washi Tape (Reference Photo 2 Middle-Left, 50% on desk, 50% on card) */
 .feature-card:nth-child(6)::before {
-  top: -10px;
+  top: -13px;
   left: 45%;
   transform: translateX(-50%) rotate(-2.5deg);
-  width: 56px;
-  height: 17px;
+  width: 72px;
+  height: 25px;
   background-color: rgba(255, 255, 255, 0.9);
-  border-left: 1.5px dashed rgba(200, 200, 200, 0.8);
-  border-right: 1.5px dashed rgba(200, 200, 200, 0.8);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-left: 2px dashed rgba(200, 200, 200, 0.8);
+  border-right: 2px dashed rgba(200, 200, 200, 0.8);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   border-radius: 1px;
 }
 
