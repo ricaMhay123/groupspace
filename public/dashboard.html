@@ -588,11 +588,11 @@
         <input type="text" id="expTitle" class="form-control" placeholder="e.g. Domain Registration & Hosting" required>
       </div>
       <div class="form-group">
-        <label>Amount (₱ PHP) *</label>
-        <input type="number" step="0.01" min="0.01" id="expAmount" class="form-control" placeholder="₱0.00" required>
+        <label for="expAmount">Amount (₱ PHP) *</label>
+        <input type="number" step="0.01" min="0.01" id="expAmount" class="form-control" placeholder="₱0.00" required oninput="renderExpenseSplitBreakdown()">
       </div>
       <div class="form-group">
-        <label>Category</label>
+        <label for="expCategory">Category</label>
         <select id="expCategory" class="form-control">
           <option value="Tools & Software">Tools & Software</option>
           <option value="Hardware / Supplies">Hardware / Supplies</option>
@@ -602,18 +602,101 @@
         </select>
       </div>
       <div class="form-group">
-        <label>Who Paid?</label>
+        <label for="expPaidBy">Who Paid?</label>
         <select id="expPaidBy" class="form-control"></select>
       </div>
       <div class="form-group">
-        <label>Split Type</label>
-        <select id="expSplitType" class="form-control">
+        <label for="expSplitType">Split Type</label>
+        <select id="expSplitType" class="form-control" onchange="renderExpenseSplitBreakdown()">
           <option value="EQUAL">Equal Split Among All Members</option>
+          <option value="SUBSET">Selected Members Only (Equal)</option>
+          <option value="EXACT">Exact Amounts (₱ per member)</option>
+          <option value="PERCENT">Percentages (% per member)</option>
+          <option value="SHARES">Shares / Ratios (e.g. 1 share, 2 shares)</option>
         </select>
+      </div>
+      <div class="form-group" id="expSplitSection" style="margin-top:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <label style="margin:0; font-weight:600; font-size:13px;">Split Breakdown</label>
+          <span id="expSplitSummaryBadge" style="font-size:11px; font-weight:600; color:var(--muted-foreground);">Auto-calculating...</span>
+        </div>
+        <div id="expSplitBreakdownContainer" style="background:var(--muted); border:1px solid var(--border); border-radius:10px; padding:10px; max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
+          <!-- Dynamically populated -->
+        </div>
       </div>
       <div class="form-actions" style="margin-top:20px;">
         <button type="button" class="btn-outline" onclick="closeModal('createExpenseModal')">Cancel</button>
         <button type="submit" class="btn-green">Add to Ledger</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- Settle Up Partial/Full Debt Settlement Modal -->
+<div class="modal-overlay" id="settleUpModal" role="dialog" aria-modal="true" aria-labelledby="settleModalTitle">
+  <div class="modal-card" style="max-width:480px;">
+    <div class="modal-header">
+      <div>
+        <h3 id="settleModalTitle" style="margin:0; font-size:1.15rem; font-weight:700;">Record Debt Settlement</h3>
+        <p id="settleModalSub" style="margin:2px 0 0 0; font-size:12px; color:var(--muted-foreground);">Settle outstanding project balance</p>
+      </div>
+      <button type="button" class="modal-close" onclick="closeModal('settleUpModal')" aria-label="Close modal">✕</button>
+    </div>
+    <form id="settleUpForm" onsubmit="handleConfirmSettlePayment(event)">
+      <!-- Debt context banner -->
+      <div style="background:var(--muted); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <span style="font-size:12px; color:var(--muted-foreground); font-weight:500;">Payer ➔ Recipient</span>
+          <span id="settlePayerToRecipient" style="font-size:13px; font-weight:700; color:var(--foreground);">Kevin ➔ Rica</span>
+        </div>
+        <div style="display:flex; align-items:baseline; justify-content:space-between;">
+          <span style="font-size:12px; color:var(--muted-foreground); font-weight:500;">Total Balance Owed:</span>
+          <span id="settleTotalDebtDisplay" style="font-size:1.25rem; font-weight:800; color:var(--destructive, #dc2626);">₱0.00</span>
+        </div>
+      </div>
+
+      <!-- Quick fraction selection chips -->
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="display:block; font-size:12px; font-weight:600; color:var(--muted-foreground); margin-bottom:6px;">Quick Payment Fractions</label>
+        <div class="settle-fraction-chips" style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button type="button" class="settle-chip" onclick="applySettleFraction(0.125, this)">⅛ (12.5%)</button>
+          <button type="button" class="settle-chip" onclick="applySettleFraction(0.25, this)">¼ (25%)</button>
+          <button type="button" class="settle-chip" onclick="applySettleFraction(0.50, this)">½ (50%)</button>
+          <button type="button" class="settle-chip" onclick="applySettleFraction(0.75, this)">¾ (75%)</button>
+          <button type="button" class="settle-chip active" onclick="applySettleFraction(1.0, this)">Full Balance</button>
+        </div>
+      </div>
+
+      <!-- Payment Amount Input -->
+      <div class="form-group" style="margin-bottom:14px;">
+        <label for="settleAmountInput" style="display:block; font-size:13px; font-weight:600; margin-bottom:4px;">Payment Amount (₱ PHP) *</label>
+        <div style="position:relative; display:flex; align-items:center;">
+          <span style="position:absolute; left:12px; font-weight:700; color:var(--muted-foreground); font-size:15px;">₱</span>
+          <input type="number" step="0.01" min="0.01" id="settleAmountInput" class="form-control" style="padding-left:30px; font-size:16px; font-weight:700;" required oninput="handleSettleAmountInput()">
+        </div>
+      </div>
+
+      <!-- Real-time remaining balance & progress indicator -->
+      <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:12px;">
+          <span style="color:var(--muted-foreground);">Remaining Balance after payment:</span>
+          <strong id="settleRemainingBalanceDisplay" style="color:var(--foreground); font-size:13px;">₱0.00</strong>
+        </div>
+        <div style="height:6px; background:var(--muted); border-radius:3px; overflow:hidden;">
+          <div id="settleProgressBar" style="height:100%; width:100%; background:var(--primary); transition:width 0.2s ease;"></div>
+        </div>
+      </div>
+
+      <!-- Optional payment note / reference -->
+      <div class="form-group" style="margin-bottom:18px;">
+        <label for="settleNotesInput" style="display:block; font-size:12px; font-weight:600; color:var(--muted-foreground); margin-bottom:4px;">Payment Method / Reference (Optional)</label>
+        <input type="text" id="settleNotesInput" class="form-control" placeholder="e.g. Paid via GCash ref #8291, Maya, or cash in campus">
+      </div>
+
+      <div class="form-actions" style="margin-top:20px; display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="btn-outline" onclick="closeModal('settleUpModal')">Cancel</button>
+        <button type="submit" id="settleConfirmSubmitBtn" class="btn-primary btn-green">Confirm Payment</button>
       </div>
     </form>
   </div>

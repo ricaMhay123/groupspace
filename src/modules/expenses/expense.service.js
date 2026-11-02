@@ -23,7 +23,7 @@ async function addExpense({ groupId, title, amount, category, paidByUserId, spli
   const members = await GroupModel.findMembersByGroup(groupId);
 
   let splits = [];
-  if (splitType === EXPENSE_SPLIT_TYPE.EXACT && customSplits.length > 0) {
+  if (['EXACT', 'PERCENT', 'SHARES'].includes(splitType) && customSplits.length > 0) {
     // Validate custom splits total matches amount
     let sum = 0;
     splits = customSplits.map(s => {
@@ -33,7 +33,7 @@ async function addExpense({ groupId, title, amount, category, paidByUserId, spli
     });
 
     if (Math.abs(sum - numAmount) > 0.05) {
-      throw new Error(`Custom split amounts ($${sum}) must equal total expense amount ($${numAmount}).`);
+      throw new Error(`Custom split amounts (₱${sum.toFixed(2)}) must equal total expense amount (₱${numAmount.toFixed(2)}).`);
     }
   } else {
     // Equal split among participants (or all members if none selected)
@@ -68,7 +68,7 @@ async function addExpense({ groupId, title, amount, category, paidByUserId, spli
     groupId,
     userId: paidByUserId,
     actionType: 'EXPENSE_LOGGED',
-    description: `${actorName || 'A member'} logged expense: "${cleanTitle}" ($${numAmount.toFixed(2)}).`
+    description: `${actorName || 'A member'} logged expense: "${cleanTitle}" (₱${numAmount.toFixed(2)}).`
   });
 
   return await ExpenseModel.findById(expenseId);

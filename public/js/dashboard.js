@@ -246,6 +246,7 @@ function populateMemberDropdowns(members) {
     }
   }
 
+  renderExpenseSplitBreakdown();
   if (expPaidBy) {
     expPaidBy.innerHTML = members.map(m => `
       <option value="${m.user_id}" ${m.user_id === currentUser.id ? 'selected' : ''}>${escapeHtml(m.full_name)}</option>
@@ -2389,8 +2390,8 @@ async function loadExpenses() {
 
         const canSettle = isFromMe || isToMe || (typeof currentGroupRole === 'string' && ['ADMIN', 'LEADER', 'CO_LEADER', 'COLEADER'].includes(currentGroupRole.toUpperCase()));
         const actionButtonHtml = canSettle
-          ? `<button type="button" class="btn-settle-action" onclick="recordDirectSettlement(${s.fromUserId}, '${escapeHtml(s.fromName).replace(/'/g, "\\'")}', ${s.toUserId}, '${escapeHtml(s.toName).replace(/'/g, "\\'")}', ${s.amount}, event)">
-               Mark Settled ✓
+          ? `<button type="button" class="btn-settle-action" onclick="openSettleUpModal(${s.fromUserId}, '${escapeHtml(s.fromName).replace(/'/g, "\\'")}', ${s.toUserId}, '${escapeHtml(s.toName).replace(/'/g, "\\'")}', ${s.amount}, event)" title="Settle in full or partial installments">
+               Settle Up ₱
              </button>`
           : '';
 
@@ -2428,7 +2429,19 @@ async function loadExpenses() {
         <td><strong>${escapeHtml(e.title)}</strong></td>
         <td><span class="expense-cat-badge">${escapeHtml(e.category)}</span></td>
         <td>${escapeHtml(e.payer_name)}</td>
-        <td>${e.splits ? `${e.splits.length} members` : 'Equal'}</td>
+        <td>
+          ${e.category === 'Settlement'
+            ? '<span style="background:rgba(16,185,129,0.15); color:#047857; font-weight:700; font-size:11px; padding:2px 8px; border-radius:12px;">Settlement</span>'
+            : (e.split_type === 'SUBSET'
+                ? `<span style="font-size:11px; color:var(--muted-foreground); font-weight:600;">Selected (${e.splits ? e.splits.length : 0})</span>`
+                : (e.split_type === 'EXACT'
+                    ? '<span style="font-size:11px; color:var(--muted-foreground); font-weight:600;">Exact Split</span>'
+                    : (e.split_type === 'PERCENT'
+                        ? '<span style="font-size:11px; color:var(--muted-foreground); font-weight:600;">Percentage</span>'
+                        : (e.split_type === 'SHARES'
+                            ? '<span style="font-size:11px; color:var(--muted-foreground); font-weight:600;">Shares</span>'
+                            : `<span style="font-size:11px; color:var(--muted-foreground); font-weight:600;">All (${e.splits ? e.splits.length : 'Equal'})</span>`))))}
+        </td>
         <td style="color:var(--foreground); font-weight:700; font-variant-numeric:tabular-nums;">₱${Number(e.amount).toFixed(2)}</td>
         <td>
           <button type="button" class="btn-table-action-delete" onclick="deleteExpense(${e.id}, event)">
@@ -2444,6 +2457,222 @@ async function loadExpenses() {
   }
 }
 
+
+/* =========================================================
+   DYNAMIC EXPENSE SPLIT BREAKDOWN CONTROLLER
+   ========================================================= */
+
+function renderExpenseSplitBreakdown() {
+  const container = document.getElementById('expSplitBreakdownContainer');
+  const badge = document.getElementById('expSplitSummaryBadge');
+  if (!container) return;
+
+  const members = (currentGroupDetails && Array.isArray(currentGroupDetails.members)) ? currentGroupDetails.members : [];
+  if (members.length === 0) {
+    container.innerHTML = '<p style="color:var(--muted-foreground); font-size:12px; margin:0; text-align:center;">No workspace members found to split with.</p>';
+    if (badge) badge.textContent = '';
+    return;
+  }
+
+  const total = parseFloat(document.getElementById('expAmount')?.value) || 0;
+  const splitType = document.getElementById('expSplitType')?.value || 'EQUAL';
+
+  if (splitType === 'EQUAL') {
+    const perPerson = members.length > 0 ? (total / members.length).toFixed(2) : '0.00';
+    if (badge) {
+      badge.style.color = 'var(--muted-foreground)';
+      badge.textContent = `₱${perPerson} / member (${members.length} members)`;
+    }
+
+    container.innerHTML = members.map(m => `
+      <div class="split-member-row">
+        <div class="split-member-info">
+          <span class="split-member-avatar">${escapeHtml(m.full_name.charAt(0).toUpperCase())}</span>
+          <span class="split-member-name">${escapeHtml(m.full_name)}</span>
+        </div>
+        <span style="font-weight:700; color:var(--foreground); font-size:13px;">₱${perPerson}</span>
+      </div>
+    `).join('');
+  } else if (splitType === 'SUBSET') {
+    container.innerHTML = members.map(m => `
+      <div class="split-member-row">
+        <label class="split-member-info" style="cursor:pointer; margin:0;">
+          <input type="checkbox" class="exp-subset-chk" value="${m.user_id}" checked onchange="updateSubsetSplitTotal()" style="cursor:pointer; width:16px; height:16px;">
+          <span class="split-member-avatar">${escapeHtml(m.full_name.charAt(0).toUpperCase())}</span>
+          <span class="split-member-name">${escapeHtml(m.full_name)}</span>
+        </label>
+        <span id="subset-amt-${m.user_id}" style="font-weight:700; color:var(--foreground); font-size:13px;">₱0.00</span>
+      </div>
+    `).join('');
+    updateSubsetSplitTotal();
+  } else if (splitType === 'EXACT') {
+    const defaultSplit = members.length > 0 ? (total / members.length).toFixed(2) : '0.00';
+    container.innerHTML = members.map(m => `
+      <div class="split-member-row">
+        <div class="split-member-info">
+          <span class="split-member-avatar">${escapeHtml(m.full_name.charAt(0).toUpperCase())}</span>
+          <span class="split-member-name">${escapeHtml(m.full_name)}</span>
+        </div>
+        <div class="split-member-input-group">
+          <span style="font-size:12px; font-weight:700; color:var(--muted-foreground);">₱</span>
+          <input type="number" step="0.01" min="0" class="split-member-input exp-exact-input" data-user-id="${m.user_id}" value="${defaultSplit}" oninput="updateExactSplitTotal()">
+        </div>
+      </div>
+    `).join('');
+    updateExactSplitTotal();
+  } else if (splitType === 'PERCENT') {
+    const defaultPct = members.length > 0 ? (100 / members.length).toFixed(1) : '0';
+    container.innerHTML = members.map(m => `
+      <div class="split-member-row">
+        <div class="split-member-info">
+          <span class="split-member-avatar">${escapeHtml(m.full_name.charAt(0).toUpperCase())}</span>
+          <span class="split-member-name">${escapeHtml(m.full_name)}</span>
+        </div>
+        <div class="split-member-input-group">
+          <input type="number" step="0.5" min="0" max="100" class="split-member-input exp-percent-input" data-user-id="${m.user_id}" value="${defaultPct}" oninput="updatePercentSplitTotal()">
+          <span style="font-size:12px; font-weight:700; color:var(--muted-foreground);">%</span>
+          <span id="pct-val-${m.user_id}" style="font-weight:700; font-size:12px; min-width:65px; text-align:right; color:var(--foreground);">₱0.00</span>
+        </div>
+      </div>
+    `).join('');
+    updatePercentSplitTotal();
+  } else if (splitType === 'SHARES') {
+    container.innerHTML = members.map(m => `
+      <div class="split-member-row">
+        <div class="split-member-info">
+          <span class="split-member-avatar">${escapeHtml(m.full_name.charAt(0).toUpperCase())}</span>
+          <span class="split-member-name">${escapeHtml(m.full_name)}</span>
+        </div>
+        <div class="split-member-input-group">
+          <input type="number" step="1" min="0" max="100" class="split-member-input exp-shares-input" data-user-id="${m.user_id}" value="1" oninput="updateSharesSplitTotal()">
+          <span style="font-size:11px; color:var(--muted-foreground); margin-right:4px;">share(s)</span>
+          <span id="share-val-${m.user_id}" style="font-weight:700; font-size:12px; min-width:65px; text-align:right; color:var(--foreground);">₱0.00</span>
+        </div>
+      </div>
+    `).join('');
+    updateSharesSplitTotal();
+  }
+}
+
+function updateSubsetSplitTotal() {
+  const badge = document.getElementById('expSplitSummaryBadge');
+  const total = parseFloat(document.getElementById('expAmount')?.value) || 0;
+  const checked = Array.from(document.querySelectorAll('.exp-subset-chk:checked'));
+  const allChks = Array.from(document.querySelectorAll('.exp-subset-chk'));
+
+  const count = checked.length;
+  const perPerson = count > 0 ? (total / count).toFixed(2) : '0.00';
+
+  if (badge) {
+    if (count === 0) {
+      badge.style.color = '#dc2626';
+      badge.textContent = 'Select at least 1 member';
+    } else {
+      badge.style.color = 'var(--muted-foreground)';
+      badge.textContent = `₱${perPerson} / member (${count} of ${allChks.length} selected)`;
+    }
+  }
+
+  allChks.forEach(chk => {
+    const amtEl = document.getElementById(`subset-amt-${chk.value}`);
+    if (amtEl) {
+      if (chk.checked) {
+        amtEl.textContent = `₱${perPerson}`;
+        amtEl.style.opacity = '1';
+      } else {
+        amtEl.textContent = '₱0.00';
+        amtEl.style.opacity = '0.4';
+      }
+    }
+  });
+}
+
+function updateExactSplitTotal() {
+  const badge = document.getElementById('expSplitSummaryBadge');
+  const total = parseFloat(document.getElementById('expAmount')?.value) || 0;
+  const inputs = Array.from(document.querySelectorAll('.exp-exact-input'));
+
+  let sum = 0;
+  inputs.forEach(inp => {
+    sum += parseFloat(inp.value) || 0;
+  });
+
+  const diff = Math.round((total - sum) * 100) / 100;
+  if (badge) {
+    if (Math.abs(diff) < 0.01) {
+      badge.style.color = '#059669';
+      badge.textContent = `✓ Balanced (₱${total.toFixed(2)})`;
+    } else if (diff > 0) {
+      badge.style.color = '#b45309';
+      badge.textContent = `Remaining: ₱${diff.toFixed(2)}`;
+    } else {
+      badge.style.color = '#dc2626';
+      badge.textContent = `Over by: ₱${Math.abs(diff).toFixed(2)}`;
+    }
+  }
+}
+
+function updatePercentSplitTotal() {
+  const badge = document.getElementById('expSplitSummaryBadge');
+  const total = parseFloat(document.getElementById('expAmount')?.value) || 0;
+  const inputs = Array.from(document.querySelectorAll('.exp-percent-input'));
+
+  let sumPct = 0;
+  inputs.forEach(inp => {
+    const pct = parseFloat(inp.value) || 0;
+    sumPct += pct;
+    const amt = (total * (pct / 100)).toFixed(2);
+    const valEl = document.getElementById(`pct-val-${inp.dataset.userId}`);
+    if (valEl) valEl.textContent = `₱${amt}`;
+  });
+
+  sumPct = Math.round(sumPct * 10) / 10;
+  if (badge) {
+    if (Math.abs(sumPct - 100) < 0.1) {
+      badge.style.color = '#059669';
+      badge.textContent = '✓ 100% Allocated';
+    } else {
+      badge.style.color = '#dc2626';
+      badge.textContent = `Total: ${sumPct}% (must equal 100%)`;
+    }
+  }
+}
+
+function updateSharesSplitTotal() {
+  const badge = document.getElementById('expSplitSummaryBadge');
+  const total = parseFloat(document.getElementById('expAmount')?.value) || 0;
+  const inputs = Array.from(document.querySelectorAll('.exp-shares-input'));
+
+  let sumShares = 0;
+  inputs.forEach(inp => {
+    sumShares += parseFloat(inp.value) || 0;
+  });
+
+  const shareVal = sumShares > 0 ? (total / sumShares) : 0;
+  inputs.forEach(inp => {
+    const s = parseFloat(inp.value) || 0;
+    const amt = (s * shareVal).toFixed(2);
+    const valEl = document.getElementById(`share-val-${inp.dataset.userId}`);
+    if (valEl) valEl.textContent = `₱${amt}`;
+  });
+
+  if (badge) {
+    if (sumShares <= 0) {
+      badge.style.color = '#dc2626';
+      badge.textContent = 'Assign at least 1 share';
+    } else {
+      badge.style.color = 'var(--muted-foreground)';
+      badge.textContent = `₱${shareVal.toFixed(2)}/share (${sumShares} shares)`;
+    }
+  }
+}
+
+window.renderExpenseSplitBreakdown = renderExpenseSplitBreakdown;
+window.updateSubsetSplitTotal = updateSubsetSplitTotal;
+window.updateExactSplitTotal = updateExactSplitTotal;
+window.updatePercentSplitTotal = updatePercentSplitTotal;
+window.updateSharesSplitTotal = updateSharesSplitTotal;
+
 async function handleCreateExpense(e) {
   e.preventDefault();
   const title = document.getElementById('expTitle').value.trim();
@@ -2452,10 +2681,81 @@ async function handleCreateExpense(e) {
   const paidByUserId = document.getElementById('expPaidBy').value;
   const splitType = document.getElementById('expSplitType').value;
 
+  let participantUserIds = [];
+  let customSplits = [];
+
+  if (splitType === 'SUBSET') {
+    participantUserIds = Array.from(document.querySelectorAll('.exp-subset-chk:checked')).map(chk => Number(chk.value));
+    if (participantUserIds.length === 0) {
+      showToast('Please select at least one participating member.', 'error');
+      return;
+    }
+  } else if (splitType === 'EXACT') {
+    const inputs = Array.from(document.querySelectorAll('.exp-exact-input'));
+    let sum = 0;
+    customSplits = inputs.map(inp => {
+      const val = Math.round((parseFloat(inp.value) || 0) * 100) / 100;
+      sum += val;
+      return { userId: Number(inp.dataset.userId), amount: val };
+    });
+    if (Math.abs(sum - amount) > 0.05) {
+      showToast(`Exact splits total (₱${sum.toFixed(2)}) must equal total expense (₱${amount.toFixed(2)}).`, 'error');
+      return;
+    }
+  } else if (splitType === 'PERCENT') {
+    const inputs = Array.from(document.querySelectorAll('.exp-percent-input'));
+    let sumPct = 0;
+    let runningSum = 0;
+    customSplits = inputs.map((inp, idx) => {
+      const pct = parseFloat(inp.value) || 0;
+      sumPct += pct;
+      let calculatedAmt = Math.round((amount * (pct / 100)) * 100) / 100;
+      runningSum += calculatedAmt;
+      return { userId: Number(inp.dataset.userId), amount: calculatedAmt };
+    });
+    if (Math.abs(sumPct - 100) > 0.1) {
+      showToast(`Percentages must sum to 100% (currently ${sumPct.toFixed(1)}%).`, 'error');
+      return;
+    }
+    // Adjust last split for 1-cent rounding difference
+    const diff = Math.round((amount - runningSum) * 100) / 100;
+    if (Math.abs(diff) <= 0.05 && customSplits.length > 0) {
+      customSplits[customSplits.length - 1].amount = Math.round((customSplits[customSplits.length - 1].amount + diff) * 100) / 100;
+    }
+  } else if (splitType === 'SHARES') {
+    const inputs = Array.from(document.querySelectorAll('.exp-shares-input'));
+    let sumShares = 0;
+    inputs.forEach(inp => { sumShares += parseFloat(inp.value) || 0; });
+    if (sumShares <= 0) {
+      showToast('Total shares must be greater than zero.', 'error');
+      return;
+    }
+    let runningSum = 0;
+    customSplits = inputs.map(inp => {
+      const s = parseFloat(inp.value) || 0;
+      const calculatedAmt = Math.round(((amount * s) / sumShares) * 100) / 100;
+      runningSum += calculatedAmt;
+      return { userId: Number(inp.dataset.userId), amount: calculatedAmt };
+    });
+    // Adjust last split for 1-cent rounding difference
+    const diff = Math.round((amount - runningSum) * 100) / 100;
+    if (Math.abs(diff) <= 0.05 && customSplits.length > 0) {
+      customSplits[customSplits.length - 1].amount = Math.round((customSplits[customSplits.length - 1].amount + diff) * 100) / 100;
+    }
+  }
+
   try {
     await apiFetch(`/api/groups/${currentGroupId}/expenses`, {
       method: 'POST',
-      body: JSON.stringify({ title, amount, category, paidByUserId, splitType })
+      body: JSON.stringify({
+        title,
+        amount,
+        category,
+        paidByUserId,
+        splitType,
+        participantUserIds,
+        customSplits
+      })
     });
     closeModal('createExpenseModal');
     document.getElementById('createExpenseForm').reset();
@@ -2478,7 +2778,129 @@ async function deleteExpense(expenseId, e) {
   }
 }
 
-async function recordDirectSettlement(fromUserId, fromName, toUserId, toName, amount, event) {
+/* =========================================================
+   PARTIAL DEBT SETTLEMENT & SETTLE UP MODAL
+   ========================================================= */
+
+let activeSettlementTarget = {
+  fromUserId: null,
+  fromName: '',
+  toUserId: null,
+  toName: '',
+  fullAmount: 0,
+  selectedAmount: 0
+};
+
+function openSettleUpModal(fromUserId, fromName, toUserId, toName, fullAmount, event) {
+  if (event && typeof event.preventDefault === 'function') event.preventDefault();
+  if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
+
+  activeSettlementTarget = {
+    fromUserId: Number(fromUserId),
+    fromName: fromName || 'Member',
+    toUserId: Number(toUserId),
+    toName: toName || 'Member',
+    fullAmount: Number(fullAmount) || 0,
+    selectedAmount: Number(fullAmount) || 0
+  };
+
+  const payerToRecip = document.getElementById('settlePayerToRecipient');
+  const debtDisplay = document.getElementById('settleTotalDebtDisplay');
+  const amtInput = document.getElementById('settleAmountInput');
+  const notesInput = document.getElementById('settleNotesInput');
+
+  if (payerToRecip) payerToRecip.textContent = `${activeSettlementTarget.fromName} ➔ ${activeSettlementTarget.toName}`;
+  if (debtDisplay) debtDisplay.textContent = `₱${activeSettlementTarget.fullAmount.toFixed(2)}`;
+  if (amtInput) amtInput.value = activeSettlementTarget.fullAmount.toFixed(2);
+  if (notesInput) notesInput.value = '';
+
+  // Reset active chip to Full Balance
+  document.querySelectorAll('.settle-fraction-chips .settle-chip').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.textContent.includes('Full')) btn.classList.add('active');
+  });
+
+  handleSettleAmountInput();
+  openModal('settleUpModal');
+}
+
+function applySettleFraction(fraction, btn) {
+  document.querySelectorAll('.settle-fraction-chips .settle-chip').forEach(c => c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const targetAmt = Math.round(activeSettlementTarget.fullAmount * fraction * 100) / 100;
+  const amtInput = document.getElementById('settleAmountInput');
+  if (amtInput) {
+    amtInput.value = targetAmt.toFixed(2);
+    handleSettleAmountInput();
+  }
+}
+
+function handleSettleAmountInput() {
+  const amtInput = document.getElementById('settleAmountInput');
+  const remainDisplay = document.getElementById('settleRemainingBalanceDisplay');
+  const progressBar = document.getElementById('settleProgressBar');
+  const submitBtn = document.getElementById('settleConfirmSubmitBtn');
+
+  const val = parseFloat(amtInput?.value) || 0;
+  activeSettlementTarget.selectedAmount = val;
+
+  const full = activeSettlementTarget.fullAmount;
+  const remaining = Math.max(0, Math.round((full - val) * 100) / 100);
+  const pct = full > 0 ? Math.min(100, Math.max(0, (val / full) * 100)) : 100;
+
+  if (remainDisplay) {
+    if (remaining === 0) {
+      remainDisplay.innerHTML = '<span style="color:#059669; font-weight:700;">₱0.00 (Fully Settled ✓)</span>';
+    } else {
+      remainDisplay.textContent = `₱${remaining.toFixed(2)} (${Math.round(100 - pct)}% remaining)`;
+    }
+  }
+
+  if (progressBar) {
+    progressBar.style.width = `${pct}%`;
+    progressBar.style.background = (remaining === 0) ? '#047857' : 'var(--primary)';
+  }
+
+  if (submitBtn) {
+    submitBtn.textContent = `Confirm Payment (₱${val.toFixed(2)})`;
+  }
+}
+
+async function handleConfirmSettlePayment(event) {
+  if (event && typeof event.preventDefault === 'function') event.preventDefault();
+
+  const amt = activeSettlementTarget.selectedAmount;
+  if (!amt || amt <= 0) {
+    showToast('Please enter a valid positive payment amount.', 'error');
+    return;
+  }
+
+  if (amt > activeSettlementTarget.fullAmount + 0.05) {
+    showToast(`Payment amount cannot exceed total outstanding debt of ₱${activeSettlementTarget.fullAmount.toFixed(2)}.`, 'error');
+    return;
+  }
+
+  const notes = document.getElementById('settleNotesInput')?.value.trim() || '';
+  closeModal('settleUpModal');
+
+  await recordDirectSettlement(
+    activeSettlementTarget.fromUserId,
+    activeSettlementTarget.fromName,
+    activeSettlementTarget.toUserId,
+    activeSettlementTarget.toName,
+    amt,
+    null,
+    notes
+  );
+}
+
+window.openSettleUpModal = openSettleUpModal;
+window.applySettleFraction = applySettleFraction;
+window.handleSettleAmountInput = handleSettleAmountInput;
+window.handleConfirmSettlePayment = handleConfirmSettlePayment;
+
+async function recordDirectSettlement(fromUserId, fromName, toUserId, toName, amount, event, notes = '') {
   if (event && typeof event.preventDefault === 'function') event.preventDefault();
   const btn = event ? event.currentTarget : null;
   const originalText = btn ? btn.innerHTML : '';
@@ -2497,7 +2919,8 @@ async function recordDirectSettlement(fromUserId, fromName, toUserId, toName, am
       body: JSON.stringify({
         fromUserId,
         toUserId,
-        amount
+        amount,
+        notes: notes || undefined
       })
     });
 
@@ -2519,6 +2942,7 @@ async function recordDirectSettlement(fromUserId, fromName, toUserId, toName, am
     showToast(err.message || 'Failed to record settlement', 'error');
   }
 }
+
 
 // ================= TAB 5: DISCUSSIONS ================= //
 let pendingTopicAttachments = [];
