@@ -1,13 +1,23 @@
 /**
- * Test Suite: Extended Desk Collage Landing Page Overhaul
+ * Test Suite: Extended Desk Collage Landing Page Overhaul (User Specification)
  *
  * Verifies:
  * 1. Clean stationery header (GroupSpace logo, #themeToggle, navigation links) with omission of Mac dots & dev labels
  * 2. Continuous red notebook margin guide line
- * 3. Hand-sketched blue ink annotations (arrows, encircled title) with pointer-events: none
- * 4. 3 tactile paper showcase cards (NOTE_CARD_01 with binder holes & paperclip, CARD_02 with washi tape & sticky note, CARD_03 with code snippet & paperclip)
- * 5. Extended desk sections: wooden clipboard workflow, collage memo board, and receipt expense demo
- * 6. CSS stationery styling: #fcfbf7 graph paper grid, alternating rotations (-1.2deg, +1.2deg), torn bottom edges, and dark mode harmony
+ * 3. Hero section per Pic 2 specification:
+ *    - Headline: "Organize your team to maximum impact"
+ *    - Subtext: "GroupSpace simplifies collaboration for students, organizations, and project teams. Manage discussions, tasks, files, schedules, and expenses inside one modern workspace."
+ *    - Action buttons: "Get Started" and "Explore Features"
+ * 4. Six feature cards grid per Pic 2 specification:
+ *    - Section title: "Everything Your Team Needs"
+ *    - Card 1: 01 / Discussions -> Group Discussions
+ *    - Card 2: 02 / Tasks -> Task Management
+ *    - Card 3: 03 / Documents -> File Sharing
+ *    - Card 4: 04 / Schedule -> Calendar
+ *    - Card 5: 05 / Team -> Group Members
+ *    - Card 6: 06 / Finance -> Expense Tracker
+ * 5. Extended desk sections below the fold: wooden clipboard workflow, collage memo board, and receipt expense demo
+ * 6. CSS stationery styling: #fcfbf7 graph paper grid, dark mode harmony, and responsive card layouts
  */
 
 'use strict';
@@ -64,25 +74,57 @@ check('Continuous red notebook margin guide line present', () => {
   );
 });
 
-// 3. Hand-Sketched Annotations
-check('Hand-sketched ink annotations present with pointer-events: none', () => {
-  assert(indexHtml.includes('sketch-arrow'), 'Must include sketched downward arrows');
-  assert(indexHtml.includes('sketch-loop'), 'Must include sketched headline loop');
-  assert(landingCss.includes('.sketch-arrow') || landingCss.includes('.sketch-loop'), 'CSS must define sketch annotation rules');
-  assert(landingCss.includes('pointer-events: none'), 'CSS must enforce pointer-events: none on annotations');
+// 3. Hero Section per Pic 2 Specification
+check('Hero headline, subtext, and action buttons match Pic 2 specification', () => {
+  assert(indexHtml.includes('Organize your team'), 'Must include "Organize your team" headline');
+  assert(indexHtml.includes('maximum impact'), 'Must include "maximum impact"');
+  assert(indexHtml.includes('GroupSpace simplifies collaboration'), 'Must include hero subtext');
+  assert(indexHtml.includes('Get Started'), 'Must include "Get Started" CTA');
+  assert(indexHtml.includes('Explore Features'), 'Must include "Explore Features" CTA');
+  assert(landingCss.includes('.hero-heading'), 'CSS must define .hero-heading');
+  assert(landingCss.includes('.hero-subtext'), 'CSS must define .hero-subtext');
+  assert(landingCss.includes('.hero-btn-primary'), 'CSS must define .hero-btn-primary');
+  assert(landingCss.includes('.hero-btn-secondary'), 'CSS must define .hero-btn-secondary');
 });
 
-// 4. Three Paper Showcase Cards
-check('Three tactile paper showcase cards with authentic stationery elements', () => {
-  assert(indexHtml.includes('NOTE_CARD_01'), 'Must include NOTE_CARD_01');
-  assert(indexHtml.includes('CARD_02'), 'Must include CARD_02');
-  assert(indexHtml.includes('CARD_03'), 'Must include CARD_03');
-  assert(indexHtml.includes('binder-hole'), 'Must include punched binder holes on Card 1');
-  assert(indexHtml.includes('Priority!'), 'Must include Priority! badge on Card 1');
-  assert(indexHtml.includes('Organized'), 'Must include Organized badge on Card 2');
-  assert(indexHtml.includes('post-it-note') || indexHtml.includes('sticky-note'), 'Must include sticky note insert on Card 2');
-  assert(indexHtml.includes('Ready') || indexHtml.includes('✓ Ready'), 'Must include Ready badge on Card 3');
-  assert(indexHtml.includes('dark-code-snippet') || indexHtml.includes('code-snippet'), 'Must include code snippet on Card 3');
+// 4. Six Feature Cards Grid per Pic 2 Specification
+check('Six core feature cards with kickers and descriptions match Pic 2 specification', () => {
+  assert(indexHtml.includes('Everything Your Team Needs'), 'Must include "Everything Your Team Needs" title');
+  
+  // Card 1: Discussions
+  assert(indexHtml.includes('01 / Discussions'), 'Must include kicker 01 / Discussions');
+  assert(indexHtml.includes('Group Discussions'), 'Must include title Group Discussions');
+  assert(indexHtml.includes('Create discussion threads, ask questions, and keep everyone updated.'), 'Must include Discussions copy');
+
+  // Card 2: Tasks
+  assert(indexHtml.includes('02 / Tasks'), 'Must include kicker 02 / Tasks');
+  assert(indexHtml.includes('Task Management'), 'Must include title Task Management');
+  assert(indexHtml.includes("Assign tasks, monitor deadlines, and track every member's progress."), 'Must include Tasks copy');
+
+  // Card 3: Documents
+  assert(indexHtml.includes('03 / Documents'), 'Must include kicker 03 / Documents');
+  assert(indexHtml.includes('File Sharing'), 'Must include title File Sharing');
+  assert(indexHtml.includes('Upload and organize documents, presentations, images, and reports.'), 'Must include Documents copy');
+
+  // Card 4: Schedule
+  assert(indexHtml.includes('04 / Schedule'), 'Must include kicker 04 / Schedule');
+  assert(indexHtml.includes('Calendar'), 'Must include title Calendar');
+  assert(indexHtml.includes('Never miss meetings or project deadlines with a shared calendar.'), 'Must include Schedule copy');
+
+  // Card 5: Team
+  assert(indexHtml.includes('05 / Team'), 'Must include kicker 05 / Team');
+  assert(indexHtml.includes('Group Members'), 'Must include title Group Members');
+  assert(indexHtml.includes('Manage team members and assign different responsibilities.'), 'Must include Team copy');
+
+  // Card 6: Finance
+  assert(indexHtml.includes('06 / Finance'), 'Must include kicker 06 / Finance');
+  assert(indexHtml.includes('Expense Tracker'), 'Must include title Expense Tracker');
+  assert(indexHtml.includes('Record shared expenses and easily monitor group contributions.'), 'Must include Finance copy');
+
+  // CSS definitions
+  assert(landingCss.includes('.feature-container'), 'CSS must define .feature-container');
+  assert(landingCss.includes('.feature-card'), 'CSS must define .feature-card');
+  assert(landingCss.includes('.feature-kicker'), 'CSS must define .feature-kicker');
 });
 
 // 5. Extended Desk Sections Below the Fold
@@ -93,12 +135,12 @@ check('Extended desk sections (clipboard workflow, memo board, receipt demo)', (
 });
 
 // 6. CSS Stationery Styling & Dark Mode Harmony
-check('CSS graph paper pattern, alternating rotations, and dark mode harmony', () => {
+check('CSS graph paper pattern, responsive grid, and dark mode harmony', () => {
   assert(landingCss.includes('#fcfbf7'), 'CSS must define #fcfbf7 paper background');
   assert(landingCss.includes('repeating-linear-gradient'), 'CSS must define repeating blue graph grid pattern');
-  assert(landingCss.includes('rotate('), 'CSS must define alternating card rotations');
-  assert(landingCss.includes('paper-torn-bottom') || landingCss.includes('torn-bottom'), 'CSS must define torn bottom edge');
   assert(landingCss.includes('.dark') || landingCss.includes('html.dark'), 'CSS must define dark mode stationery rules');
+  assert(landingCss.includes('@media (max-width: 768px)'), 'CSS must define mobile responsive media query');
+  assert(landingCss.includes('min-height: 44px'), 'CSS must enforce 44px touch targets on mobile');
 });
 
 console.log(`\nResults: ${passed} passed, ${failed} failed.`);
@@ -108,4 +150,3 @@ if (failed > 0) {
 } else {
   console.log('🎉 Extended Desk Collage Landing Page tests passed successfully!\n');
 }
-

@@ -43,9 +43,9 @@
 
           <!-- Desktop nav links -->
           <nav class="landing-nav-links" aria-label="Main navigation">
-            <a href="#samples" class="landing-nav-link">Showcase</a>
             <a href="#features" class="landing-nav-link">Features</a>
             <a href="#works" class="landing-nav-link">How It Works</a>
+            <a href="#receipt" class="landing-nav-link">Settlements</a>
           </nav>
         </div>
 
@@ -141,9 +141,9 @@
       <!-- Mobile menu -->
       <div id="mobileMenu" class="mobile-menu" aria-hidden="true">
         <div class="mobile-menu-links">
-          <a href="#samples" class="mobile-menu-link" onclick="closeMobileMenu()">Showcase</a>
           <a href="#features" class="mobile-menu-link" onclick="closeMobileMenu()">Features</a>
           <a href="#works" class="mobile-menu-link" onclick="closeMobileMenu()">How It Works</a>
+          <a href="#receipt" class="mobile-menu-link" onclick="closeMobileMenu()">Settlements</a>
         </div>
         <div class="mobile-menu-auth">
           <a href="/login.html" class="mobile-menu-link" onclick="closeMobileMenu()">Sign in</a>
@@ -158,146 +158,93 @@
       <!-- ===================== HERO SECTION ===================== -->
       <section class="hero-section" id="home">
         <div class="hero-inner">
-          
-          <!-- Hand-Sketched Downward Blue Ink Arrows -->
-          <div class="sketch-arrows-wrap" aria-hidden="true">
-            <!-- Arrow 1 (Left tilted) -->
-            <svg class="sketch-arrow" viewBox="0 0 40 46" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M8 6 L28 36 M15 36 L28 36 L28 22" stroke="#2563eb" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <!-- Arrow 2 (Center straight) -->
-            <svg class="sketch-arrow" viewBox="0 0 40 46" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20 4 L20 38 M11 28 L20 38 L29 28" stroke="#2563eb" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <!-- Arrow 3 (Right tilted) -->
-            <svg class="sketch-arrow" viewBox="0 0 40 46" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M32 6 L12 36 M25 36 L12 36 L12 22" stroke="#2563eb" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
+          <div class="hero-text" id="heroText">
+            <h1 class="hero-heading" id="heroHeading">
+              Organize your team<br />
+              to maximum impact
+            </h1>
 
-          <!-- Hero Headline with Encircled Blue Loop -->
-          <div class="sketch-title-wrap">
-            <h1 class="hero-heading">Craft Creative Ideas</h1>
-            <!-- Hand-drawn Elliptical Vector Loop -->
-            <svg class="sketch-loop" viewBox="0 0 540 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M 45 48 C 30 18, 120 10, 270 8 C 420 6, 515 16, 520 48 C 525 80, 420 90, 260 92 C 100 94, 25 82, 38 46 C 44 28, 95 18, 180 14" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
+            <p class="hero-subtext" id="heroSubtext">
+              GroupSpace simplifies collaboration for students, organizations, and
+              project teams. Manage discussions, tasks, files, schedules, and
+              expenses inside one modern workspace.
+            </p>
 
-          <!-- Subtitle -->
-          <p class="hero-subtext">
-            A tactile digital canvas built with paper-like textures, torn page cards, clips, and hand-sketched annotations. Designed for intuitive project planning.
+            <div class="hero-cta-row" id="heroCTA">
+              <a href="/register.html" class="hero-btn-primary">
+                Get Started →
+              </a>
+              <a href="#features" class="hero-btn-secondary">Explore Features</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== FEATURES SECTION ===================== -->
+      <section class="features" id="features">
+        <div class="section-title">
+          <h2>Everything Your Team Needs</h2>
+          <p class="section-subtitle">
+            GroupSpace provides powerful tools that help students, organizations,
+            and project teams collaborate more efficiently.
           </p>
-
-          <!-- Action Buttons -->
-          <div class="hero-cta-row">
-            <a href="/register.html" class="hero-btn-primary">
-              Start Brainstorming →
-            </a>
-            <a href="#samples" class="hero-btn-secondary">
-              <span>📄</span> View Samples
-            </a>
-          </div>
-
         </div>
 
-        <!-- ===================== THREE PAPER SHOWCASE CARDS ===================== -->
-        <h2 class="sr-only">Interactive Stationery Showcase</h2>
-        <div class="paper-cards-grid" id="samples">
-          
-          <!-- CARD 1: NOTE_CARD_01 (Notebook & Digital Inking) -->
-          <article class="showcase-paper-card paper-torn-bottom has-binder">
-            <!-- Silver Paperclip at Top Right -->
-            <span class="card-paperclip clip-right" aria-hidden="true"></span>
-            
-            <!-- 3 Punched Binder Holes -->
-            <div class="binder-holes-col" aria-hidden="true">
-              <span class="binder-hole"></span>
-              <span class="binder-hole"></span>
-              <span class="binder-hole"></span>
-            </div>
-
-            <div class="card-top-row">
-              <span class="card-label-mono">
-                <span class="card-dot"></span> NOTE_CARD_01
-              </span>
-              <span class="card-script-badge badge-priority">Priority!</span>
-            </div>
-
-            <h3 class="showcase-card-title">Tactile Paper UI</h3>
-            <p class="showcase-card-text">
-              Crafted with authentic paper textures, subtle drop shadows, and torn bottom edges to bring tactile depth into modern web design.
+        <div class="feature-container">
+          <!-- Feature 1: Discussions -->
+          <div class="feature-card">
+            <div class="feature-kicker">01 / Discussions</div>
+            <h3>Group Discussions</h3>
+            <p>
+              Create discussion threads, ask questions, and keep everyone updated.
             </p>
-
-            <div class="card-bottom-row">
-              <span>Updated 2h ago</span>
-              <span class="stationery-pill pill-design-system">Design System</span>
-            </div>
-          </article>
-
-          <!-- CARD 2: CARD_02 (Kanban Task Board & Approvals) -->
-          <article class="showcase-paper-card paper-torn-bottom">
-            <!-- Translucent Washi Tape at Top Center -->
-            <span class="washi-tape-strip" aria-hidden="true"></span>
-
-            <div class="card-top-row">
-              <span class="card-label-mono">CARD_02</span>
-              <span class="card-script-badge badge-organized">Organized</span>
-            </div>
-
-            <h3 class="showcase-card-title">Grid & Layout Logic</h3>
-            <p class="showcase-card-text">
-              Repeating linear-gradients simulate graph paper notebook lines for a clean structured baseline that keeps copy aligned.
-            </p>
-
-            <!-- Sticky Post-It Note Callout -->
-            <blockquote class="post-it-note">
-              <p>"Remember to test responsive column stacking on mobile screens!"</p>
-            </blockquote>
-
-            <div class="card-bottom-row">
-              <span>Drafted Notes</span>
-              <span class="stationery-pill pill-structure">Structure</span>
-            </div>
-          </article>
-
-          <!-- CARD 3: CARD_03 (Zero Bloat & Expense Net Split) -->
-          <article class="showcase-paper-card paper-torn-bottom">
-            <!-- Silver Paperclip at Top Left -->
-            <span class="card-paperclip clip-left" aria-hidden="true"></span>
-
-            <div class="card-top-row">
-              <span class="card-label-mono">CARD_03</span>
-              <span class="card-script-badge badge-ready">✓ Ready</span>
-            </div>
-
-            <h3 class="showcase-card-title">Zero Dependencies</h3>
-            <p class="showcase-card-text">
-              Pure CSS gradient patterns, SVG overlays, and Tailwind utilities. Lightweight, fast-loading, and completely framework independent.
-            </p>
-
-            <!-- Dark Code Terminal Block Insert -->
-            <pre class="dark-code-snippet"><code>background: repeating-linear-gradient(...)</code></pre>
-
-            <div class="card-bottom-row">
-              <span>Standalone File</span>
-              <span class="stationery-pill pill-optimized">Optimized</span>
-            </div>
-          </article>
-
-        </div>
-
-        <!-- Desk Status Bar -->
-        <div class="desk-status-bar">
-          <div class="status-left">
-            <span class="status-dot"></span>
-            <span>Hand-crafted Grid Canvas System</span>
           </div>
-          <div class="status-right">
-            Tip: Hover over paper cards to inspect paper depth!
+
+          <!-- Feature 2: Tasks -->
+          <div class="feature-card">
+            <div class="feature-kicker">02 / Tasks</div>
+            <h3>Task Management</h3>
+            <p>
+              Assign tasks, monitor deadlines, and track every member's progress.
+            </p>
+          </div>
+
+          <!-- Feature 3: Documents -->
+          <div class="feature-card">
+            <div class="feature-kicker">03 / Documents</div>
+            <h3>File Sharing</h3>
+            <p>
+              Upload and organize documents, presentations, images, and reports.
+            </p>
+          </div>
+
+          <!-- Feature 4: Schedule -->
+          <div class="feature-card">
+            <div class="feature-kicker">04 / Schedule</div>
+            <h3>Calendar</h3>
+            <p>
+              Never miss meetings or project deadlines with a shared calendar.
+            </p>
+          </div>
+
+          <!-- Feature 5: Team -->
+          <div class="feature-card">
+            <div class="feature-kicker">05 / Team</div>
+            <h3>Group Members</h3>
+            <p>
+              Manage team members and assign different responsibilities.
+            </p>
+          </div>
+
+          <!-- Feature 6: Finance -->
+          <div class="feature-card">
+            <div class="feature-kicker">06 / Finance</div>
+            <h3>Expense Tracker</h3>
+            <p>
+              Record shared expenses and easily monitor group contributions.
+            </p>
           </div>
         </div>
-
       </section>
 
       <!-- ===================== EXTENDED DESK: WOODEN CLIPBOARD WORKFLOW ===================== -->
@@ -343,10 +290,10 @@
       </section>
 
       <!-- ===================== EXTENDED DESK: COLLAGE MEMO BOARD ===================== -->
-      <section class="desk-section" id="features">
+      <section class="desk-section" id="highlights">
         <div class="desk-section-header">
-          <div class="desk-kicker">02 / Core Capabilities</div>
-          <h2 class="desk-section-title">Everything Your Team Needs</h2>
+          <div class="desk-kicker">02 / Workspace Highlights</div>
+          <h2 class="desk-section-title">Designed for Everyday Team Flow</h2>
           <p class="desk-section-desc">
             Tactile, focused tools that keep team members aligned without enterprise bloat.
           </p>
@@ -449,9 +396,10 @@
           </div>
           <div class="footer-nav">
             <a href="#home">Top</a>
-            <a href="#samples">Showcase</a>
             <a href="#features">Features</a>
             <a href="#works">How It Works</a>
+            <a href="#highlights">Highlights</a>
+            <a href="#receipt">Settlements</a>
             <a href="/login.html">Login</a>
             <a href="/register.html">Register</a>
           </div>

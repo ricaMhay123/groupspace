@@ -289,6 +289,85 @@
   transform: translateY(-1px);
 }
 
+/* ── Six Core Feature Cards Grid (Pic 2 Specification) ── */
+.features {
+  padding: 24px 0 64px;
+  position: relative;
+}
+
+.section-title {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.section-title h2 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+}
+
+.section-subtitle,
+.section-title p {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: #64748b;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.feature-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin: 20px 0 48px;
+  text-align: left;
+}
+
+.feature-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 28px 24px 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
+}
+
+.feature-kicker {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #2563eb;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.feature-card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 10px;
+  letter-spacing: -0.01em;
+}
+
+.feature-card p {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: #64748b;
+  margin: 0;
+}
+
 /* ── Three Tactile Paper Showcase Cards Grid ── */
 .paper-cards-grid {
   display: grid;
@@ -914,6 +993,10 @@ html.dark .landing-header {
 html.dark .logo-text,
 .dark .hero-heading,
 html.dark .hero-heading,
+.dark .section-title h2,
+html.dark .section-title h2,
+.dark .feature-card h3,
+html.dark .feature-card h3,
 .dark .showcase-card-title,
 html.dark .showcase-card-title,
 .dark .desk-section-title,
@@ -929,6 +1012,12 @@ html.dark .receipt-head h4 {
 
 .dark .hero-subtext,
 html.dark .hero-subtext,
+.dark .section-subtitle,
+html.dark .section-subtitle,
+.dark .section-title p,
+html.dark .section-title p,
+.dark .feature-card p,
+html.dark .feature-card p,
 .dark .showcase-card-text,
 html.dark .showcase-card-text,
 .dark .desk-section-desc,
@@ -938,6 +1027,18 @@ html.dark .phase-item p,
 .dark .status-right,
 html.dark .status-right {
   color: #94a3b8 !important;
+}
+
+.dark .feature-card,
+html.dark .feature-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+}
+
+.dark .feature-kicker,
+html.dark .feature-kicker {
+  color: #60a5fa !important;
 }
 
 .dark .showcase-paper-card,
@@ -1015,8 +1116,15 @@ html.dark .landing-signin-link {
   overflow-x: hidden;
 }
 
+@media (max-width: 900px) {
+  .feature-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 /* ── Mobile Responsive Stacking ── */
 @media (max-width: 768px) {
+  .feature-container,
   .paper-cards-grid,
   .clipboard-phases-grid,
   .memo-board-grid {
