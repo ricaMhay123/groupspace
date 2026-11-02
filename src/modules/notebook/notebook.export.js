@@ -26,8 +26,12 @@ const { SYSTEM_MESSAGES } = require('../../config/constants');
  */
 function _buildDocumentHtml(title, htmlContent, font = 'Arial, sans-serif') {
   const safeTitle   = title   ? title.replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Untitled';
-  const cleanedHtml = (htmlContent || '<p></p>').replace(/<!--GS_SHAPES_JSON:.*?-->/gs, '');
-  const safeContent = cleanedHtml || '<p></p>';
+  const cleanedHtml = (htmlContent || '<p></p>')
+    .replace(/<!--GS_SHAPES_JSON:.*?-->/gs, '')
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+    .replace(/<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>/gi, '');
+  const safeContent = cleanedHtml.trim() || '<p></p>';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -91,12 +95,17 @@ async function generateDocx({ title, htmlContent, font, creator = 'GroupSpace', 
     description:     'Exported from GroupSpace Collaborative Notebook',
     keywords:        ['groupspace', 'notebook', 'export'],
     orientation:     'portrait',
-    // Page margins in twips (1 inch = 1440 twips)
+    // Page margins in twips (1 inch = 1440 twips; header/footer = 720 twips, gutter = 0).
+    // All properties MUST be explicitly defined numbers to avoid invalid OOXML
+    // attributes like w:header="undefined" which corrupt the document in Microsoft Word.
     margins: {
       top:    1440,
-      right:  1080,
+      right:  1440,
       bottom: 1440,
-      left:   1080,
+      left:   1440,
+      header: 720,
+      footer: 720,
+      gutter: 0,
     },
     font:       font ? font.split(',')[0].replace(/['"]/g, '').trim() : 'Arial',
     fontSize:   24,          // half-points → 12pt

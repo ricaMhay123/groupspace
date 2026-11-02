@@ -4522,11 +4522,16 @@ async function exportPage(format) {
   } else if (format === 'pdf') {
     if (typeof html2pdf === 'undefined') {
       showToast('Loading PDF engine...', 'info');
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+      script.onload = () => exportPage('pdf');
+      document.head.appendChild(script);
       return;
     }
     deselectAllShapes();
     const canvasEl = document.getElementById('nbCanvas');
     const clone = canvasEl ? canvasEl.cloneNode(true) : document.createElement('div');
+    clone.querySelectorAll('.shape-handle, .shape-delete-btn, .shape-rotate-handle, .shape-action-btn').forEach(el => el.remove());
     clone.style.cssText = `padding:28px; font-family:${font}; line-height:${lh}; color:#0f172a; background:#ffffff; position:relative; min-height:500px; box-shadow:none; border:none;`;
 
     html2pdf().from(clone).set({
@@ -4542,6 +4547,17 @@ async function exportPage(format) {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
+      let finalHtml = `<div>${htmlContent}</div>`;
+      if (typeof currentShapes !== 'undefined' && currentShapes.length > 0) {
+        const textboxItems = currentShapes
+          .filter(s => (s.type === 'textbox' || s.type === 'callout') && s.text)
+          .map(s => `<div style="border:1px solid #cbd5e1; border-radius:6px; padding:10px; margin:12px 0; background:#f8fafc;">${s.text}</div>`)
+          .join('');
+        if (textboxItems) {
+          finalHtml += `<div style="margin-top:24px; padding-top:12px; border-top:1px dashed #cbd5e1;"><p><strong>Text Boxes &amp; Callouts:</strong></p>${textboxItems}</div>`;
+        }
+      }
+
       const r = await fetch('/api/notebooks/export/docx', {
         method: 'POST',
         headers,
@@ -4551,7 +4567,7 @@ async function exportPage(format) {
           notebookId: currentNotebookId || 0,
           pageId: currentPageId || 0,
           title,
-          htmlContent: `<div>${htmlContent}</div>`,
+          htmlContent: finalHtml,
           font: font.split(',')[0].replace(/'/g, '').trim(),
           lineHeight: parseFloat(lh)
         })

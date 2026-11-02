@@ -119,6 +119,25 @@ async function runTests() {
   assert(notebookModelCode.includes('COALESCE(n.is_private, FALSE) = FALSE'), 'notebook.model.js must exclude private notes from group queries');
   console.log('[PASS] Isolated Personal Notebook Space & strict privacy filtering verified');
 
+  // 5. Verify DOCX Generation and Margin Schema Integrity
+  const JSZip = require('jszip');
+  const notebookExport = require('../src/modules/notebook/notebook.export');
+  const testDocxBuf = await notebookExport.generateDocx({
+    title: 'Word Export Verification',
+    htmlContent: '<p>Testing document export margins and schema compliance.</p>'
+  });
+  assert(Buffer.isBuffer(testDocxBuf), 'generateDocx must return a Buffer');
+  assert(testDocxBuf.length > 1000, 'generateDocx buffer must be a non-empty document');
+
+  const zip = await JSZip.loadAsync(testDocxBuf);
+  const docXml = await zip.file('word/document.xml').async('string');
+  assert(!docXml.includes('undefined'), 'DOCX word/document.xml must not contain any "undefined" attribute values');
+  assert(docXml.includes('w:pgMar'), 'DOCX word/document.xml must contain page margins (<w:pgMar>) element');
+  assert(docXml.includes('w:header="720"'), 'DOCX page margins must define valid w:header attribute');
+  assert(docXml.includes('w:footer="720"'), 'DOCX page margins must define valid w:footer attribute');
+  assert(docXml.includes('w:gutter="0"'), 'DOCX page margins must define valid w:gutter attribute');
+  console.log('[PASS] DOCX Export margin schema integrity and XML validity verified (zero undefined attributes)');
+
   console.log('\nALL TESTS PASSED SUCCESSFULLY!');
 }
 

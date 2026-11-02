@@ -954,7 +954,11 @@ class NotebookEditorComponent {
         /* ──────────────── .pdf ──────────────── */
         case 'pdf': {
           if (typeof html2pdf === 'undefined') {
-            showToast('html2pdf.js is not loaded. Add the CDN script to your page.', 'error');
+            showToast('Loading PDF engine…', 'info');
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+            script.onload = () => this.exportPage('pdf');
+            document.head.appendChild(script);
             return;
           }
 
