@@ -44,5 +44,51 @@ for (const css of [landingCss, styleCss]) {
 }
 console.log('[PASS] Top ambient animation full-viewport width & overflow-x protection verified');
 
-console.log('\nALL MOBILE RESPONSIVE & TOP AMBIENT ANIMATION TESTS PASSED!');
+// 6. Mobile sidebar touch active feedback & 44px target bounds (Task 2)
+assert(
+  styleCss.includes('#sidebarMenu li a:active') || styleCss.includes('#sidebarMenu a:active'),
+  'style.css must define touch :active feedback for mobile sidebar navigation links'
+);
+assert(
+  styleCss.includes('.mobile-hamburger-btn') && styleCss.includes('min-width: 44px'),
+  'style.css must enforce min-width: 44px on mobile hamburger button'
+);
+console.log('[PASS] Mobile navigation touch active feedback and 44x44px buttons verified (Task 2)');
 
+// 7. Mobile Card Padding & Boundary Protection (Task 3)
+assert(
+  styleCss.includes('.dashboard-panel') && styleCss.includes('padding: 16px 14px !important;') && styleCss.includes('overflow-x: clip;'),
+  'style.css must set 16px 14px padding and overflow-x: clip on cards in mobile media query'
+);
+console.log('[PASS] Mobile card padding & boundary clipping verified (Task 3)');
+
+// 8. Mobile Modals & Close Button Touch Ergonomics (Task 4)
+assert(
+  styleCss.includes('.modal-card') && styleCss.includes('max-width: calc(100vw - 20px) !important;'),
+  'style.css must fit modal card cleanly within 100vw on mobile'
+);
+assert(
+  styleCss.includes('.modal-close') && styleCss.includes('min-width: 44px;') && styleCss.includes('min-height: 44px;'),
+  'style.css must enforce 44x44px min touch target on modal close triggers'
+);
+console.log('[PASS] Mobile modals and 44x44px close triggers verified (Task 4)');
+
+// 9. Calendar Filter Chip Horizontal Touch Scroll (Task 5)
+assert(
+  styleCss.includes('.cal-filter-bar') && styleCss.includes('overflow-x: auto;') && styleCss.includes('-webkit-overflow-scrolling: touch;'),
+  'style.css must make calendar filter chips horizontally scrollable on mobile'
+);
+console.log('[PASS] Calendar filter ribbon horizontal touch scroll verified (Task 5)');
+
+// 10. Direct Messaging Full-Screen Mobile Sheet & Safe Area Inset (Task 6)
+assert(
+  styleCss.includes('.dm-drawer') && styleCss.includes('width: 100vw !important;') && styleCss.includes('right: -100vw !important;'),
+  'style.css must expand DM drawer to full viewport width on mobile'
+);
+assert(
+  styleCss.includes('env(safe-area-inset-bottom)'),
+  'style.css must support safe-area-inset-bottom for mobile composers'
+);
+console.log('[PASS] Direct messaging full-screen mobile sheet & safe area insets verified (Task 6)');
+
+console.log('\nALL MOBILE RESPONSIVE & TOP AMBIENT ANIMATION TESTS PASSED!');

@@ -2520,6 +2520,11 @@ body {
   .mobile-hamburger-btn,
   .mobile-sidebar-close-btn {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    -webkit-tap-highlight-color: transparent;
   }
 
   /* Main Dashboard Content Area */
@@ -2550,6 +2555,25 @@ body {
     width: 100%;
   }
 
+  /* Sidebar Navigation Items & Touch Active Feedback */
+  #sidebarMenu li {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+  #sidebarMenu li:active,
+  #sidebarMenu li a:active,
+  #sidebarMenu a:active {
+    transform: scale(0.98);
+    background: var(--secondary);
+  }
+
   /* Stack Dashboard Cards, Metric Strips, Grids & Kanban Columns cleanly */
   .dashboard-cards,
   .expense-summary-grid,
@@ -2561,6 +2585,15 @@ body {
     grid-template-columns: 1fr !important;
     gap: 14px;
     width: 100%;
+    max-width: 100%;
+  }
+
+  /* Task 3: Content Card Padding & Boundary Protection */
+  .dashboard-panel,
+  .dashboard-card,
+  .hs-drawer-card {
+    padding: 16px 14px !important;
+    overflow-x: clip;
     max-width: 100%;
   }
 
@@ -2580,13 +2613,6 @@ body {
     max-height: none;
   }
 
-  /* Prevent tables & panels from overflowing viewport */
-  .dashboard-panel {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-  }
-
   .expense-table {
     display: block;
     width: 100%;
@@ -2594,13 +2620,78 @@ body {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Modals fit mobile screens comfortably */
+  /* Task 4: Modals fit mobile screens comfortably with 44px close targets */
   .modal-card {
     width: 100%;
-    max-width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 20px) !important;
+    max-height: calc(100vh - 32px);
     padding: 20px 16px;
-    max-height: 90vh;
     overflow-y: auto;
+    border-radius: 14px;
+  }
+
+  .modal-close {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Task 5: Team Calendar & Filter Chip Horizontal Scroll */
+  .cal-filter-bar {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    gap: 8px;
+  }
+
+  .cal-filter-bar::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .cal-pill {
+    flex-shrink: 0;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .cal-view-btn,
+  .fc-button {
+    min-height: 44px;
+  }
+
+  /* Task 6: Direct Messaging Drawer & Mobile Full-Screen Chat */
+  .dm-drawer {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    right: -100vw !important;
+  }
+
+  .dm-drawer.open {
+    right: 0 !important;
+  }
+
+  .dm-input-row,
+  .dm-composer,
+  .dm-chat-footer {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  .dm-send-btn,
+  .dm-attach-btn,
+  #dmSendBtn,
+  #dmAttachBtn {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   /* Minimum 44px height on touch targets (buttons, inputs, dropdowns, nav items) */
@@ -2613,6 +2704,7 @@ body {
   .login-btn,
   .logout-btn,
   .header-bell-btn,
+  .header-dm-btn,
   .hamburger-btn,
   .mobile-hamburger-btn,
   .personal-tab,
@@ -2630,11 +2722,6 @@ body {
     min-height: 44px;
   }
 
-  #sidebarMenu li {
-    display: flex;
-    align-items: center;
-  }
-
   /* Top ambient animations remain 100% viewport width without horizontal scrollbars */
   .hero-section,
   .hero-blob,
@@ -2647,7 +2734,6 @@ body {
     right: 0;
   }
 }
-
 
 /* =========================================================
    TEAM CALENDAR & FULLCALENDAR DESIGN SYSTEM SKINNING
