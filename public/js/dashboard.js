@@ -875,10 +875,12 @@ function updateSidebarProfileCard() {
   const roleEl = document.getElementById('sidebarUserRole');
 
   if (avatarEl && currentUser) {
-    avatarEl.textContent = currentUser.avatarInitials || 'GS';
-    if (currentUser.avatarColor) {
-      avatarEl.style.backgroundColor = currentUser.avatarColor;
-      avatarEl.style.color = '#ffffff';
+    avatarEl.style.backgroundColor = currentUser.avatarColor;
+    avatarEl.style.color = '#ffffff';
+    if (currentUser.avatarUrl) {
+      avatarEl.innerHTML = `<img src="${currentUser.avatarUrl}" alt="${currentUser.fullName || 'User'}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">`;
+    } else {
+      avatarEl.textContent = currentUser.avatarInitials || 'GS';
     }
   }
   if (nameEl && currentUser) {
@@ -4775,6 +4777,89 @@ document.addEventListener('keydown', (e) => {
 
 /* ─── Profile Customization Modal ─── */
 let selectedProfileAvatarColor = '#4f46e5';
+let selectedProfileAvatarUrl = '';
+
+function renderProfileAvatarPreview() {
+  const preview = document.getElementById('profileAvatarPreview');
+  const removeBtn = document.getElementById('removeProfilePicBtn');
+  if (!preview) return;
+  preview.style.backgroundColor = selectedProfileAvatarColor;
+
+  if (selectedProfileAvatarUrl) {
+    preview.innerHTML = `<img id="profileAvatarImg" src="${selectedProfileAvatarUrl}" alt="Profile Picture" style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;">`;
+    if (removeBtn) removeBtn.style.display = 'inline-flex';
+  } else {
+    const name = document.getElementById('profileDisplayNameInput')?.value || (currentUser ? currentUser.fullName : '');
+    const initials = (name || '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map(w => w[0].toUpperCase())
+      .slice(0, 2)
+      .join('') || 'GS';
+    preview.textContent = initials;
+    if (removeBtn) removeBtn.style.display = 'none';
+  }
+}
+
+function handleProfilePictureSelected(event) {
+  const file = event && event.target && event.target.files && event.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    showToast('Please select a valid image file (PNG, JPG, WebP).', 'warning');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const maxDim = 256;
+      let width = img.width;
+      let height = img.height;
+      if (width > height) {
+        if (width > maxDim) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        }
+      } else {
+        if (height > maxDim) {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      selectedProfileAvatarUrl = canvas.toDataURL('image/jpeg', 0.85);
+      renderProfileAvatarPreview();
+      const urlInput = document.getElementById('profilePictureUrlInput');
+      if (urlInput) urlInput.value = '';
+      showToast('Photo ready! Click Save to apply.', 'info');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleProfilePictureUrl(url) {
+  const cleanUrl = (url || '').trim();
+  if (!cleanUrl) return;
+  selectedProfileAvatarUrl = cleanUrl;
+  renderProfileAvatarPreview();
+  showToast('Photo URL applied! Click Save to apply.', 'info');
+}
+
+function removeProfilePicture() {
+  selectedProfileAvatarUrl = '';
+  const fileInput = document.getElementById('profilePictureInput');
+  if (fileInput) fileInput.value = '';
+  const urlInput = document.getElementById('profilePictureUrlInput');
+  if (urlInput) urlInput.value = '';
+  renderProfileAvatarPreview();
+  showToast('Profile photo removed. Initials restored.', 'info');
+}
 
 function openUserProfileModal() {
   if (!currentUser) return;
@@ -4790,8 +4875,12 @@ function openUserProfileModal() {
   if (emailDisplay) emailDisplay.textContent = currentUser.email || '';
 
   selectedProfileAvatarColor = currentUser.avatarColor || '#4f46e5';
+  selectedProfileAvatarUrl = currentUser.avatarUrl || '';
+  const urlInput = document.getElementById('profilePictureUrlInput');
+  if (urlInput) urlInput.value = selectedProfileAvatarUrl.startsWith('data:') ? '' : selectedProfileAvatarUrl;
+
   selectProfileAvatarColor(selectedProfileAvatarColor);
-  updateProfileAvatarPreviewInitials(currentUser.fullName || '');
+  renderProfileAvatarPreview();
 
   modal.classList.add('active');
 }
@@ -4812,16 +4901,9 @@ function selectProfileAvatarColor(color) {
 }
 
 function updateProfileAvatarPreviewInitials(name) {
-  const preview = document.getElementById('profileAvatarPreview');
-  if (!preview) return;
-  const initials = (name || '')
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map(w => w[0].toUpperCase())
-    .slice(0, 2)
-    .join('') || 'GS';
-  preview.textContent = initials;
+  if (!selectedProfileAvatarUrl) {
+    renderProfileAvatarPreview();
+  }
 }
 
 function setProfileStatusPreset(preset) {
@@ -4853,7 +4935,8 @@ async function handleSaveUserProfile(e) {
       body: JSON.stringify({
         fullName,
         avatarColor: selectedProfileAvatarColor,
-        statusMessage
+        statusMessage,
+        avatarUrl: selectedProfileAvatarUrl
       })
     });
 

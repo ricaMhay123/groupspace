@@ -248,8 +248,8 @@ async function heartbeat(req, res) {
 
 async function updateMe(req, res) {
   try {
-    const { fullName, avatarColor, statusMessage } = req.body;
-    const user = await authService.updateUserProfile(req.user.id, { fullName, avatarColor, statusMessage });
+    const { fullName, avatarColor, statusMessage, avatarUrl } = req.body;
+    const user = await authService.updateUserProfile(req.user.id, { fullName, avatarColor, statusMessage, avatarUrl });
     return res.status(HTTP_STATUS.OK).json({
       success: true,
       message: 'Profile updated successfully.',

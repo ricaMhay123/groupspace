@@ -30,6 +30,7 @@ async function initDb() {
         status VARCHAR(20) DEFAULT 'offline',
         avatar_color TEXT DEFAULT '#4f46e5',
         status_message TEXT DEFAULT '',
+        avatar_url TEXT DEFAULT '',
         failed_login_attempts INTEGER DEFAULT 0,
         lockout_until TIMESTAMPTZ,
         last_failed_login TIMESTAMPTZ,
@@ -321,6 +322,7 @@ async function initDb() {
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'offline'`; } catch (e) {}
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_color TEXT DEFAULT '#4f46e5'`; } catch (e) {}
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS status_message TEXT DEFAULT ''`; } catch (e) {}
+    try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT DEFAULT ''`; } catch (e) {}
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ DEFAULT NOW()`; } catch (e) {}
     try { await sql`CREATE INDEX IF NOT EXISTS idx_users_last_active ON users (last_active_at)`; } catch (e) {}
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER DEFAULT 0`; } catch (e) {}

@@ -263,6 +263,7 @@ async function loginUser({ email, password }) {
       avatarInitials: user.avatar_initials,
       avatarColor: user.avatar_color || '#4f46e5',
       statusMessage: user.status_message || '',
+      avatarUrl: user.avatar_url || '',
       status: 'online'
     },
     token
@@ -301,7 +302,7 @@ async function resetPasswordWithOtp({ email, otpCode, newPassword }) {
 
 async function getUserProfile(userId) {
   const [user] = await sql`
-    SELECT id, full_name, email, avatar_initials, status, avatar_color, status_message, created_at
+    SELECT id, full_name, email, avatar_initials, status, avatar_color, status_message, avatar_url, created_at
     FROM users
     WHERE id = ${userId}
   `;
@@ -316,11 +317,12 @@ async function getUserProfile(userId) {
     status: user.status,
     avatarColor: user.avatar_color || '#4f46e5',
     statusMessage: user.status_message || '',
+    avatarUrl: user.avatar_url || '',
     createdAt: user.created_at
   };
 }
 
-async function updateUserProfile(userId, { fullName, avatarColor, statusMessage }) {
+async function updateUserProfile(userId, { fullName, avatarColor, statusMessage, avatarUrl }) {
   const cleanName = (fullName || '').trim();
   if (!cleanName) {
     throw new Error('Full name cannot be blank.');
@@ -328,16 +330,31 @@ async function updateUserProfile(userId, { fullName, avatarColor, statusMessage 
   const initials = getInitials(cleanName);
   const cleanColor = (avatarColor || '#4f46e5').trim();
   const cleanStatus = statusMessage !== undefined ? statusMessage.trim() : '';
+  const cleanAvatarUrl = avatarUrl !== undefined ? (typeof avatarUrl === 'string' ? avatarUrl.trim() : '') : null;
 
-  const [updated] = await sql`
-    UPDATE users
-    SET full_name = ${cleanName},
-        avatar_initials = ${initials},
-        avatar_color = ${cleanColor},
-        status_message = ${cleanStatus}
-    WHERE id = ${userId}
-    RETURNING id, full_name, email, avatar_initials, status, avatar_color, status_message, created_at
-  `;
+  let updated;
+  if (cleanAvatarUrl !== null) {
+    [updated] = await sql`
+      UPDATE users
+      SET full_name = ${cleanName},
+          avatar_initials = ${initials},
+          avatar_color = ${cleanColor},
+          status_message = ${cleanStatus},
+          avatar_url = ${cleanAvatarUrl}
+      WHERE id = ${userId}
+      RETURNING id, full_name, email, avatar_initials, status, avatar_color, status_message, avatar_url, created_at
+    `;
+  } else {
+    [updated] = await sql`
+      UPDATE users
+      SET full_name = ${cleanName},
+          avatar_initials = ${initials},
+          avatar_color = ${cleanColor},
+          status_message = ${cleanStatus}
+      WHERE id = ${userId}
+      RETURNING id, full_name, email, avatar_initials, status, avatar_color, status_message, avatar_url, created_at
+    `;
+  }
 
   if (!updated) {
     throw new Error('User account not found.');
@@ -351,6 +368,7 @@ async function updateUserProfile(userId, { fullName, avatarColor, statusMessage 
     status: updated.status,
     avatarColor: updated.avatar_color || '#4f46e5',
     statusMessage: updated.status_message || '',
+    avatarUrl: updated.avatar_url || '',
     createdAt: updated.created_at
   };
 }
