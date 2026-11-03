@@ -418,6 +418,12 @@ async function loadOverview() {
       renderMemberHomespace(container, myAssignedDeliverables, members, activities, currentUserId, personalNotes);
     }
 
+    // Show Workspace Settings & Controls button in header only for Leaders & Co-Leaders
+    const settingsBtn = document.getElementById('homespaceSettingsBtn');
+    if (settingsBtn) {
+      settingsBtn.style.display = isLeader ? 'inline-flex' : 'none';
+    }
+
     // Render Expandable Workspace Settings & Controls Drawer
     renderHomespaceSettingsDrawer();
     updateSidebarProfileCard();
@@ -891,6 +897,12 @@ function toggleHomespaceSettingsDrawer(forceOpen = null) {
 }
 
 function focusHomespaceSettingsDrawer() {
+  const userRole = (currentGroupDetails && currentGroupDetails.role) ? currentGroupDetails.role.toLowerCase() : 'member';
+  const isLeader = userRole === 'leader' || userRole === 'co_leader';
+  if (!isLeader) {
+    showToast('Workspace settings are accessible to Leaders and Co-Leaders.', 'info');
+    return;
+  }
   toggleHomespaceSettingsDrawer(true);
 }
 
@@ -925,6 +937,67 @@ function updateSidebarProfileCard() {
   }
 }
 
+let currentHsSettingsTab = 'workspace';
+
+function switchHsSettingsTab(tabName) {
+  currentHsSettingsTab = tabName === 'permissions' ? 'permissions' : 'workspace';
+  const tabWs = document.getElementById('hsTabBtnWorkspace');
+  const tabPerm = document.getElementById('hsTabBtnPermissions');
+  const paneWs = document.getElementById('hsTabPaneWorkspace');
+  const panePerm = document.getElementById('hsTabPanePermissions');
+
+  if (tabWs) {
+    tabWs.style.borderBottomColor = currentHsSettingsTab === 'workspace' ? 'var(--primary)' : 'transparent';
+    tabWs.style.color = currentHsSettingsTab === 'workspace' ? 'var(--primary)' : 'var(--muted-foreground)';
+  }
+  if (tabPerm) {
+    tabPerm.style.borderBottomColor = currentHsSettingsTab === 'permissions' ? 'var(--primary)' : 'transparent';
+    tabPerm.style.color = currentHsSettingsTab === 'permissions' ? 'var(--primary)' : 'var(--muted-foreground)';
+  }
+  if (paneWs) paneWs.style.display = currentHsSettingsTab === 'workspace' ? 'flex' : 'none';
+  if (panePerm) panePerm.style.display = currentHsSettingsTab === 'permissions' ? 'flex' : 'none';
+}
+
+function openRegenerateJoinCodeModal() {
+  const modal = document.getElementById('regenerateJoinCodeModal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeRegenerateJoinCodeModal() {
+  const modal = document.getElementById('regenerateJoinCodeModal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function executeRegenerateJoinCode() {
+  closeRegenerateJoinCodeModal();
+  try {
+    const res = await apiFetch(`/api/groups/${currentGroupId}/reset-join-code`, {
+      method: 'POST'
+    });
+    const newCode = res.data?.joinCode || (res.data?.workspace?.join_code);
+    if (newCode) {
+      currentGroupDetails.join_code = newCode;
+      if (res.data?.workspace?.settings) {
+        currentGroupDetails.settings = res.data.workspace.settings;
+      }
+      const display = document.getElementById('displayJoinCode');
+      if (display) display.textContent = newCode;
+      const leaderDisplay = document.getElementById('leaderJoinCodeDisplay');
+      if (leaderDisplay) leaderDisplay.textContent = newCode;
+      const modalDisplay = document.getElementById('modalJoinCodeDisplay');
+      if (modalDisplay) modalDisplay.textContent = newCode;
+      const hsDisplay = document.getElementById('hsInviteCodeDisplay');
+      if (hsDisplay) {
+        hsDisplay.textContent = isInviteCodeRevealed ? newCode : 'GS-••••••';
+      }
+      showToast('Invite code regenerated! Previous code remains valid for 24 hours.', 'success');
+      renderHomespaceSettingsDrawer();
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
 function renderHomespaceSettingsDrawer() {
   const container = document.getElementById('homespaceSettingsDrawerContainer');
   if (!container || !currentGroupDetails) return;
@@ -933,7 +1006,6 @@ function renderHomespaceSettingsDrawer() {
   const isPrimaryLeader = userRole === 'leader';
   const isCoLeader = userRole === 'co_leader';
   const settings = currentGroupDetails.settings || {};
-  const currentUserId = currentUser ? currentUser.id : null;
   const requireApproval = settings.requireApproval !== false;
   const allowDiscussions = settings.allowMemberDiscussions !== false;
   const restrictExpenses = settings.restrictExpensesToLeaders === true;
@@ -956,73 +1028,115 @@ function renderHomespaceSettingsDrawer() {
             <h3 id="hsSettingsModalTitle" style="margin:0; font-size:16px; font-weight:700; color:var(--foreground);">Workspace Settings &amp; Controls</h3>
             <span class="status ${roleBadgeClass}" style="font-size:11px; font-weight:700;">${roleLabel}</span>
           </div>
-          <p style="margin:2px 0 0; font-size:12px; color:var(--muted-foreground);">Workspace preferences, invite code, and team permissions</p>
+          <p style="margin:2px 0 0; font-size:12px; color:var(--muted-foreground);">Configure team rules, join codes, and workspace governance</p>
         </div>
       </div>
       <button type="button" class="modal-close" onclick="toggleHomespaceSettingsDrawer(false)" aria-label="Close workspace settings" style="font-size:18px; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; border:none; background:transparent; cursor:pointer; color:var(--muted-foreground); transition:all 0.2s;">&#10005;</button>
     </div>
 
+    <!-- Segmented Tab Navigation -->
+    <div class="hs-settings-tabs" style="display:flex; gap:8px; padding:12px 24px 0; border-bottom:1px solid var(--border); background:var(--card); flex-shrink:0;">
+      <button type="button" class="hs-settings-tab ${currentHsSettingsTab === 'workspace' ? 'active' : ''}" id="hsTabBtnWorkspace" onclick="switchHsSettingsTab('workspace')" style="padding:10px 16px; font-size:13px; font-weight:600; border:none; background:transparent; border-bottom:2px solid ${currentHsSettingsTab === 'workspace' ? 'var(--primary)' : 'transparent'}; color:${currentHsSettingsTab === 'workspace' ? 'var(--primary)' : 'var(--muted-foreground)'}; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        Workspace &amp; Join Code
+      </button>
+      <button type="button" class="hs-settings-tab ${currentHsSettingsTab === 'permissions' ? 'active' : ''}" id="hsTabBtnPermissions" onclick="switchHsSettingsTab('permissions')" style="padding:10px 16px; font-size:13px; font-weight:600; border:none; background:transparent; border-bottom:2px solid ${currentHsSettingsTab === 'permissions' ? 'var(--primary)' : 'transparent'}; color:${currentHsSettingsTab === 'permissions' ? 'var(--primary)' : 'var(--muted-foreground)'}; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        Permissions &amp; Roles
+      </button>
+    </div>
+
     <!-- Modal Content Body -->
     <div class="homespace-settings-accordion open" id="homespaceSettingsAccordion" style="padding:22px 24px; display:flex; flex-direction:column; gap:18px; overflow-y:auto; flex:1; min-height:0; -webkit-overflow-scrolling:touch;">
       
-      <!-- Section 1: Workspace Details & Discrete Invite Code -->
-      <div class="hs-drawer-card">
-        <div class="hs-card-header">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-            <h4>Workspace &amp; Discrete Invite</h4>
+      <!-- TAB 1: Workspace & Join Code -->
+      <div id="hsTabPaneWorkspace" style="display:${currentHsSettingsTab === 'workspace' ? 'flex' : 'none'}; flex-direction:column; gap:18px;">
+        <!-- Card 1: Workspace Name & Masked Discrete Invite -->
+        <div class="hs-drawer-card">
+          <div class="hs-card-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              <h4>Workspace &amp; Discrete Invite</h4>
+            </div>
+            <span style="font-size:11px; font-weight:600; color:var(--primary); background:var(--accent); padding:2px 8px; border-radius:6px;">Access Control</span>
           </div>
-          <span style="font-size:11px; font-weight:600; color:var(--primary); background:var(--accent); padding:2px 8px; border-radius:6px;">Access Control</span>
-        </div>
 
-        <!-- Workspace Name -->
-        <div style="margin-bottom:14px;">
-          <label style="display:block; font-size:12px; font-weight:600; color:var(--foreground); margin-bottom:4px;">Workspace Name</label>
-          ${isPrimaryLeader ? `
-            <div style="display:flex; gap:8px;">
-              <input type="text" id="hsDrawerWsNameInput" class="form-control" value="${escapeHtml(currentGroupDetails.name)}" style="font-size:13px; padding:8px 12px; flex:1; border-radius:8px;">
-              <button type="button" class="btn-green" style="padding:8px 16px; font-size:12px; font-weight:600; border-radius:8px;" onclick="saveWorkspaceName(document.getElementById('hsDrawerWsNameInput').value)">Save</button>
-            </div>
-          ` : `
-            <div style="padding:8px 12px; background:var(--card); border:1px solid var(--border); border-radius:8px; font-size:13px; font-weight:600; color:var(--foreground);">
-              ${escapeHtml(currentGroupDetails.name)}
-            </div>
-          `}
-        </div>
+          <!-- Workspace Name -->
+          <div style="margin-bottom:14px;">
+            <label style="display:block; font-size:12px; font-weight:600; color:var(--foreground); margin-bottom:4px;">Workspace Name</label>
+            ${isPrimaryLeader ? `
+              <div style="display:flex; gap:8px;">
+                <input type="text" id="hsDrawerWsNameInput" class="form-control" value="${escapeHtml(currentGroupDetails.name)}" style="font-size:13px; padding:8px 12px; flex:1; border-radius:8px;">
+                <button type="button" class="btn-green" style="padding:8px 16px; font-size:12px; font-weight:600; border-radius:8px;" onclick="saveWorkspaceName(document.getElementById('hsDrawerWsNameInput').value)">Save</button>
+              </div>
+            ` : `
+              <div style="padding:8px 12px; background:var(--card); border:1px solid var(--border); border-radius:8px; font-size:13px; font-weight:600; color:var(--foreground);">
+                ${escapeHtml(currentGroupDetails.name)}
+              </div>
+            `}
+          </div>
 
-        <!-- Discrete Masked Invite Code Display -->
-        <div>
-          <label style="display:block; font-size:12px; font-weight:600; color:var(--foreground); margin-bottom:4px;">Workspace Invite Code</label>
-          <p style="font-size:11px; color:var(--muted-foreground); margin:0 0 8px 0;">Masked for privacy during screen sharing. Use button to reveal or copy.</p>
-          
-          <div class="hs-invite-code-container">
-            <div class="hs-invite-code-box">
-              <span class="hs-invite-code-label">CODE:</span>
-              <strong id="hsInviteCodeDisplay" class="hs-invite-code-value ${isInviteCodeRevealed ? 'revealed' : ''}">${isInviteCodeRevealed ? escapeHtml(currentGroupDetails.join_code) : 'GS-••••••'}</strong>
-            </div>
-            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-              <button type="button" id="hsToggleCodeBtn" class="btn-outline hs-code-action-btn" onclick="toggleInviteCodeVisibility()" aria-label="Toggle invite code mask">
-                <svg id="hsEyeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  ${isInviteCodeRevealed ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>' : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'}
-                </svg>
-                <span id="hsToggleCodeText">${isInviteCodeRevealed ? 'Hide Code' : 'Show Code'}</span>
-              </button>
-              <button type="button" class="btn-outline hs-code-action-btn" onclick="copyHomespaceInviteCode()" aria-label="Copy invite code to clipboard">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                Copy
-              </button>
-              ${isPrimaryLeader ? `
-                <button type="button" class="btn-outline hs-code-action-btn" onclick="resetWorkspaceInviteCode()" aria-label="Reset workspace invite code">
-                  Reset
+          <!-- Discrete Masked Invite Code Display -->
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; color:var(--foreground); margin-bottom:4px;">Workspace Invite Code</label>
+            <p style="font-size:11px; color:var(--muted-foreground); margin:0 0 8px 0;">Masked for privacy during screen sharing. Use button to reveal or copy.</p>
+            
+            <div class="hs-invite-code-container">
+              <div class="hs-invite-code-box">
+                <span class="hs-invite-code-label">CODE:</span>
+                <strong id="hsInviteCodeDisplay" class="hs-invite-code-value ${isInviteCodeRevealed ? 'revealed' : ''}">${isInviteCodeRevealed ? escapeHtml(currentGroupDetails.join_code) : 'GS-••••••'}</strong>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <button type="button" id="hsToggleCodeBtn" class="btn-outline hs-code-action-btn" onclick="toggleInviteCodeVisibility()" aria-label="Toggle invite code mask">
+                  <svg id="hsEyeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    ${isInviteCodeRevealed ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>' : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'}
+                  </svg>
+                  <span id="hsToggleCodeText">${isInviteCodeRevealed ? 'Hide Code' : 'Show Code'}</span>
                 </button>
-              ` : ''}
+                <button type="button" class="btn-outline hs-code-action-btn" onclick="copyHomespaceInviteCode()" aria-label="Copy invite code to clipboard">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  Copy
+                </button>
+                ${isPrimaryLeader ? `
+                  <button type="button" class="btn-outline hs-code-action-btn" onclick="openRegenerateJoinCodeModal()" aria-label="Regenerate workspace invite code">
+                    Reset
+                  </button>
+                ` : ''}
+              </div>
             </div>
+
+            <!-- 24-Hour Grace Period Notice if active -->
+            ${settings && settings.graceJoinCode && settings.graceJoinCode.code && new Date(settings.graceJoinCode.expiresAt) > new Date() ? `
+              <div style="margin-top:10px; padding:8px 12px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.25); border-radius:8px; font-size:11.5px; color:var(--foreground); display:flex; align-items:center; gap:6px;">
+                <span>🛡️ Previous code <strong>${escapeHtml(settings.graceJoinCode.code)}</strong> is active until ${new Date(settings.graceJoinCode.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} (24h grace period).</span>
+              </div>
+            ` : ''}
           </div>
         </div>
+
+        ${isPrimaryLeader ? `
+          <!-- Danger Zone: Delete Workspace -->
+          <div class="hs-danger-zone-footer">
+            <div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span class="status pending" style="background:rgba(239,68,68,0.12); color:#ef4444; font-size:11px; font-weight:700;">DANGER ZONE</span>
+                <strong style="font-size:12px; color:var(--foreground);">Workspace Dissolution</strong>
+              </div>
+              <p style="margin:4px 0 0; font-size:12px; color:var(--muted-foreground);">
+                Permanently delete this workspace, including all tasks, notebooks, and shared expenses.
+              </p>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <button type="button" class="btn-outline open-delete-workspace-btn" style="padding:6px 14px; font-size:12px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:8px; cursor:pointer;" onclick="confirmDeleteWorkspace()">
+                Delete Workspace
+              </button>
+            </div>
+          </div>
+        ` : ''}
       </div>
 
-      ${isPrimaryLeader ? `
-        <!-- Section 2: Member Permission Constraints (Leader Only) -->
+      <!-- TAB 2: Permissions & Roles -->
+      <div id="hsTabPanePermissions" style="display:${currentHsSettingsTab === 'permissions' ? 'flex' : 'none'}; flex-direction:column; gap:18px;">
         <div class="hs-drawer-card">
           <div class="hs-card-header">
             <div style="display:flex; align-items:center; gap:8px;">
@@ -1033,89 +1147,38 @@ function renderHomespaceSettingsDrawer() {
           </div>
           <div style="display:flex; flex-direction:column; gap:10px;">
             <label style="display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--foreground); cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.15s;" onmouseover="this.style.background='var(--card)'" onmouseout="this.style.background='transparent'">
-              <input type="checkbox" id="hsConstraintApproval" ${requireApproval ? 'checked' : ''} style="width:16px; height:16px; margin-top:2px; cursor:pointer;">
+              <input type="checkbox" id="hsConstraintApproval" ${requireApproval ? 'checked' : ''} style="width:16px; height:16px; margin-top:2px; cursor:pointer;" ${!isPrimaryLeader ? 'disabled' : ''}>
               <div>
                 <span style="font-weight:600; display:block;">Require leader approval before member tasks are marked Done</span>
                 <span style="font-size:11px; color:var(--muted-foreground);">Workers mark completion, but tasks require final Leader sign-off.</span>
               </div>
             </label>
             <label style="display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--foreground); cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.15s;" onmouseover="this.style.background='var(--card)'" onmouseout="this.style.background='transparent'">
-              <input type="checkbox" id="hsConstraintDiscussions" ${allowDiscussions ? 'checked' : ''} style="width:16px; height:16px; margin-top:2px; cursor:pointer;">
+              <input type="checkbox" id="hsConstraintDiscussions" ${allowDiscussions ? 'checked' : ''} style="width:16px; height:16px; margin-top:2px; cursor:pointer;" ${!isPrimaryLeader ? 'disabled' : ''}>
               <div>
                 <span style="font-weight:600; display:block;">Allow members to create new discussion topics</span>
                 <span style="font-size:11px; color:var(--muted-foreground);">Permit non-leaders to initiate new conversation threads.</span>
               </div>
             </label>
             <label style="display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--foreground); cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.15s;" onmouseover="this.style.background='var(--card)'" onmouseout="this.style.background='transparent'">
-              <input type="checkbox" id="hsConstraintExpenses" ${restrictExpenses ? 'checked' : ''} style="width:16px; height:16px; margin-top:2px; cursor:pointer;">
+              <input type="checkbox" id="hsConstraintExpenses" ${restrictExpenses ? 'checked' : ''} style="width:16px; height:16px; margin-top:2px; cursor:pointer;" ${!isPrimaryLeader ? 'disabled' : ''}>
               <div>
                 <span style="font-weight:600; display:block;">Restrict expense ledger entries to workspace leaders only</span>
                 <span style="font-size:11px; color:var(--muted-foreground);">Keep group financial budgeting strictly under leader supervision.</span>
               </div>
             </label>
           </div>
-          <div style="margin-top:12px; display:flex; justify-content:flex-end;">
-            <button type="button" class="btn-green" style="font-size:12px; padding:7px 16px; font-weight:600; border-radius:8px;" onclick="saveMemberConstraints('hsConstraintApproval', 'hsConstraintDiscussions', 'hsConstraintExpenses')">
-              Save Permission Constraints
-            </button>
-          </div>
-        </div>
-      ` : ''}
-
-      <!-- Section 3: Discrete Personal Info Bar (User Profile & Controls) -->
-      <div class="hs-personal-bar">
-        <div style="display:flex; align-items:center; gap:12px; min-width:0;">
-          <div class="chat-avatar" id="hsUserAvatar" style="width:38px; height:38px; font-size:14px; flex-shrink:0;">
-            ${currentUser ? escapeHtml(currentUser.avatarInitials || 'GS') : 'GS'}
-          </div>
-          <div style="min-width:0;">
-            <div id="hsUserFullName" style="font-size:13px; font-weight:700; color:var(--foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-              ${currentUser ? escapeHtml(currentUser.fullName) : 'User'}
-            </div>
-            <div style="display:flex; align-items:center; gap:6px; margin-top:2px;">
-              <span class="status online" style="font-size:10.5px; padding:1px 6px;">Online</span>
-              <span style="font-size:11px; color:var(--muted-foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${currentUser ? escapeHtml(currentUser.email) : ''}</span>
-            </div>
-          </div>
-        </div>
-
-        <div style="display:flex; align-items:center; gap:8px;">
-          <button type="button" class="btn-outline hs-control-btn" data-theme-toggle aria-label="Toggle theme" title="Toggle theme" onclick="window.gsToggleTheme && window.gsToggleTheme()" style="min-height:34px; padding:6px 12px; font-size:12px;">
-            <svg data-theme-moon width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
-            <svg data-theme-sun width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-            <span data-theme-moon>Dark Mode</span>
-            <span data-theme-sun style="display:none">Light Mode</span>
-          </button>
-          <button type="button" class="btn-outline hs-control-btn" style="color:var(--destructive); border-color:var(--border); min-height:34px; padding:6px 12px; font-size:12px;" onclick="logoutUser()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Sign Out
-          </button>
-        </div>
-      </div>
-
-      <!-- Section 4: Subtle Danger Zone Footer -->
-      <div class="hs-danger-zone-footer">
-        <div>
-          <div style="display:flex; align-items:center; gap:6px;">
-            <span class="status pending" style="background:rgba(239,68,68,0.12); color:#ef4444; font-size:11px; font-weight:700;">DANGER ZONE</span>
-            <strong style="font-size:12px; color:var(--foreground);">Account &amp; Workspace Safeguards</strong>
-          </div>
-          <p style="margin:4px 0 0; font-size:12px; color:var(--muted-foreground);">
-            Permanently delete your account. Requires 2x password verification to prevent accidental deletion.
-          </p>
-        </div>
-        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-          <button type="button" id="hsDeleteAccountBtn" class="btn-outline open-delete-account-modal" style="padding:6px 14px; font-size:12px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:8px; cursor:pointer;" onclick="openDeleteAccountModal()">
-            Delete Account
-          </button>
           ${isPrimaryLeader ? `
-            <button type="button" class="btn-outline open-delete-workspace-btn" style="padding:6px 14px; font-size:12px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:8px; cursor:pointer;" onclick="confirmDeleteWorkspace()">
-              Delete Workspace
-            </button>
-          ` : ''}
+            <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+              <button type="button" class="btn-green" style="font-size:12px; padding:7px 16px; font-weight:600; border-radius:8px;" onclick="saveMemberConstraints('hsConstraintApproval', 'hsConstraintDiscussions', 'hsConstraintExpenses')">
+                Save Permission Constraints
+              </button>
+            </div>
+          ` : `
+            <p style="margin:10px 0 0; font-size:11.5px; color:var(--muted-foreground);"><em>Only primary workspace leaders can adjust governance policies.</em></p>
+          `}
         </div>
       </div>
-
     </div>
   `;
 
@@ -1365,33 +1428,9 @@ async function saveWorkspaceName(newName, e) {
   }
 }
 
-async function resetWorkspaceInviteCode(e) {
+function resetWorkspaceInviteCode(e) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
-  if (!(await gsConfirm('Are you sure you want to regenerate the invite code? The previous invite code will immediately become invalid.', { title: 'Regenerate invite code?', confirmText: 'Regenerate', danger: true }))) {
-    return;
-  }
-  try {
-    const res = await apiFetch(`/api/groups/${currentGroupId}/reset-join-code`, {
-      method: 'POST'
-    });
-    const newCode = res.data?.joinCode || (res.data?.workspace?.join_code);
-    if (newCode) {
-      currentGroupDetails.join_code = newCode;
-      const display = document.getElementById('displayJoinCode');
-      if (display) display.textContent = newCode;
-      const leaderDisplay = document.getElementById('leaderJoinCodeDisplay');
-      if (leaderDisplay) leaderDisplay.textContent = newCode;
-      const modalDisplay = document.getElementById('modalJoinCodeDisplay');
-      if (modalDisplay) modalDisplay.textContent = newCode;
-      const hsDisplay = document.getElementById('hsInviteCodeDisplay');
-      if (hsDisplay) {
-        hsDisplay.textContent = isInviteCodeRevealed ? newCode : 'GS-••••••';
-      }
-    }
-    showToast(res.message || 'Invite code regenerated successfully.', 'success');
-  } catch (err) {
-    showToast(err.message, 'error');
-  }
+  openRegenerateJoinCodeModal();
 }
 
 async function saveMemberConstraints(apprId, discId, expId, e) {

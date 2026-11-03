@@ -20,7 +20,17 @@ const GroupModel = {
   },
 
   async findByJoinCode(code) {
-    const [group] = await sql`SELECT * FROM groups WHERE LOWER(join_code) = LOWER(${code})`;
+    const formatted = String(code || '').trim();
+    if (!formatted) return null;
+    const [group] = await sql`
+      SELECT * FROM groups 
+      WHERE LOWER(join_code) = LOWER(${formatted})
+         OR (
+           settings->'graceJoinCode'->>'code' IS NOT NULL
+           AND LOWER(settings->'graceJoinCode'->>'code') = LOWER(${formatted})
+           AND (settings->'graceJoinCode'->>'expiresAt')::timestamptz > NOW()
+         )
+    `;
     return group || null;
   },
 
@@ -141,7 +151,30 @@ const GroupModel = {
     return await this.findById(groupId);
   },
 
-  async updateJoinCode(groupId, joinCode) {
+  async updateJoinCode(groupId, joinCode, previousJoinCode = null, graceExpiresAt = null) {
+    let graceSettingsObj = null;
+    if (previousJoinCode && graceExpiresAt) {
+      graceSettingsObj = {
+        code: previousJoinCode,
+        expiresAt: typeof graceExpiresAt === 'string' ? graceExpiresAt : graceExpiresAt.toISOString()
+      };
+    }
+
+    if (graceSettingsObj) {
+      const [updated] = await sql`
+        UPDATE groups
+        SET join_code = ${joinCode},
+            settings = jsonb_set(
+              COALESCE(settings, '{}'::jsonb),
+              '{graceJoinCode}',
+              ${JSON.stringify(graceSettingsObj)}::jsonb
+            )
+        WHERE id = ${groupId}
+        RETURNING *
+      `;
+      return updated;
+    }
+
     const [updated] = await sql`
       UPDATE groups
       SET join_code = ${joinCode}

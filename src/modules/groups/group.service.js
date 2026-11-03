@@ -315,6 +315,10 @@ async function updateWorkspaceSettings({ groupId, name, settings, actorUserId, a
 }
 
 async function resetWorkspaceJoinCode({ groupId, actorUserId, actorFullName }) {
+  const currentGroup = await GroupModel.findById(Number(groupId));
+  const previousCode = currentGroup ? currentGroup.join_code : null;
+  const graceExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24-hour grace period
+
   let newJoinCode = generateJoinCode();
   let existing = await GroupModel.findByJoinCode(newJoinCode);
   while (existing) {
@@ -322,16 +326,21 @@ async function resetWorkspaceJoinCode({ groupId, actorUserId, actorFullName }) {
     existing = await GroupModel.findByJoinCode(newJoinCode);
   }
 
-  const updated = await GroupModel.updateJoinCode(groupId, newJoinCode);
+  const updated = await GroupModel.updateJoinCode(groupId, newJoinCode, previousCode, graceExpiresAt);
 
   await GroupModel.logActivity({
     groupId,
     userId: actorUserId,
     actionType: 'JOIN_CODE_RESET',
-    description: `${actorFullName || 'Leader'} reset the workspace invite code.`
+    description: `${actorFullName || 'Leader'} reset the workspace invite code with a 24h grace period.`
   });
 
-  return { joinCode: newJoinCode, workspace: updated };
+  return {
+    joinCode: newJoinCode,
+    workspace: updated,
+    previousCode,
+    graceExpiresAt: graceExpiresAt.toISOString()
+  };
 }
 
 async function deleteWorkspace({ groupId, actorUserId }) {
