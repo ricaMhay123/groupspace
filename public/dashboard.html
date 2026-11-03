@@ -577,23 +577,26 @@
 </div>
 
 <!-- Log Expense Modal -->
-<div class="modal-overlay" id="createExpenseModal">
+<div class="modal-overlay" id="createExpenseModal" role="dialog" aria-modal="true" aria-labelledby="createExpenseModalTitle">
   <div class="modal-card">
     <div class="modal-header">
-      <h3>Log Workspace Expense</h3>
-      <button class="modal-close" onclick="closeModal('createExpenseModal')">✕</button>
+      <div>
+        <h3 id="createExpenseModalTitle" style="margin:0; font-size:1.15rem; font-weight:700;">Log Workspace Expense</h3>
+        <p style="margin:2px 0 0 0; font-size:12px; color:var(--muted-foreground);">Record shared expenses and calculate net splits</p>
+      </div>
+      <button class="modal-close" onclick="closeModal('createExpenseModal')" aria-label="Close modal">✕</button>
     </div>
     <form id="createExpenseForm" onsubmit="handleCreateExpense(event)">
       <div class="form-group">
-        <label>Expense Title / Item *</label>
+        <label for="expTitle" style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Expense Title / Item *</label>
         <input type="text" id="expTitle" class="form-control" placeholder="e.g. Domain Registration & Hosting" required>
       </div>
       <div class="form-group">
-        <label for="expAmount">Amount (₱ PHP) *</label>
+        <label for="expAmount" style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Amount (₱ PHP) *</label>
         <input type="number" step="0.01" min="0.01" id="expAmount" class="form-control" placeholder="₱0.00" required oninput="renderExpenseSplitBreakdown()">
       </div>
       <div class="form-group">
-        <label for="expCategory">Category</label>
+        <label for="expCategory" style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Category</label>
         <select id="expCategory" class="form-control">
           <option value="Tools & Software">Tools & Software</option>
           <option value="Hardware / Supplies">Hardware / Supplies</option>
@@ -603,11 +606,11 @@
         </select>
       </div>
       <div class="form-group">
-        <label for="expPaidBy">Who Paid?</label>
+        <label for="expPaidBy" style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Who Paid?</label>
         <select id="expPaidBy" class="form-control"></select>
       </div>
       <div class="form-group">
-        <label for="expSplitType">Split Type</label>
+        <label for="expSplitType" style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Split Type</label>
         <select id="expSplitType" class="form-control" onchange="renderExpenseSplitBreakdown()">
           <option value="EQUAL">Equal Split Among All Members</option>
           <option value="SUBSET">Selected Members Only (Equal)</option>
@@ -616,16 +619,16 @@
           <option value="SHARES">Shares / Ratios (e.g. 1 share, 2 shares)</option>
         </select>
       </div>
-      <div class="form-group" id="expSplitSection" style="margin-top:12px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <label style="margin:0; font-weight:600; font-size:13px;">Split Breakdown</label>
+      <div class="form-group" id="expSplitSection" style="margin-top:4px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <label style="margin:0; font-weight:600; font-size:12.5px;">Split Breakdown</label>
           <span id="expSplitSummaryBadge" style="font-size:11px; font-weight:600; color:var(--muted-foreground);">Auto-calculating...</span>
         </div>
-        <div id="expSplitBreakdownContainer" style="background:var(--muted); border:1px solid var(--border); border-radius:10px; padding:10px; max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
+        <div id="expSplitBreakdownContainer" style="background:var(--muted); border:1px solid var(--border); border-radius:10px; padding:10px; max-height:160px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
           <!-- Dynamically populated -->
         </div>
       </div>
-      <div class="form-actions" style="margin-top:20px;">
+      <div class="form-actions" style="margin-top:16px;">
         <button type="button" class="btn-outline" onclick="closeModal('createExpenseModal')">Cancel</button>
         <button type="submit" class="btn-green">Add to Ledger</button>
       </div>
