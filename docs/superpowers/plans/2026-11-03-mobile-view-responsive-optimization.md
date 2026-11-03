@@ -59,9 +59,9 @@
 - Worktree location: `.worktrees/mobile-view-optimization`
 - Branch: `feat/mobile-view-optimization`
 
-- [ ] Run `git worktree add .worktrees/mobile-view-optimization -b feat/mobile-view-optimization`
-- [ ] Run baseline verification `node tests/test-localhost.js` inside worktree to confirm clean starting state
-- [ ] Verify `.worktrees/` is properly ignored in git
+- [x] Run `git worktree add .worktrees/mobile-view-optimization -b feat/mobile-view-optimization`
+- [x] Run baseline verification `node tests/test-localhost.js` inside worktree to confirm clean starting state
+- [x] Verify `.worktrees/` is properly ignored in git
 
 ---
 
@@ -71,11 +71,11 @@
 - Modify: `public/css/style.css` (inside `@media (max-width: 768px)`)
 - Test: `tests/test-mobile-responsive.js`
 
-- [ ] Write tests in `tests/test-mobile-responsive.js` asserting mobile navigation items have `min-height: 44px`, sidebar close button has `min-width: 44px; min-height: 44px;`, and mobile header actions stack cleanly.
-- [ ] Enforce `min-height: 44px` on all mobile hamburger triggers (`.mobile-hamburger-btn`, `.hamburger-btn`), close triggers (`.mobile-sidebar-close-btn`), and notification bell.
-- [ ] Add touch active states (`:active { transform: scale(0.98); background: var(--secondary); }`) to sidebar navigation links for responsive tactile feedback.
-- [ ] Refine mobile `.dashboard-header` with a sleek 2-row layout: Row 1 = Hamburger + Active Workspace Pill; Row 2 = Page Title + Primary Action button.
-- [ ] Run `node tests/test-mobile-responsive.js` and verify passing status.
+- [x] Write tests in `tests/test-mobile-responsive.js` asserting mobile navigation items have `min-height: 44px`, sidebar close button has `min-width: 44px; min-height: 44px;`, and mobile header actions stack cleanly.
+- [x] Enforce `min-height: 44px` on all mobile hamburger triggers (`.mobile-hamburger-btn`, `.hamburger-btn`), close triggers (`.mobile-sidebar-close-btn`), and notification bell.
+- [x] Add touch active states (`:active { transform: scale(0.98); background: var(--secondary); }`) to sidebar navigation links for responsive tactile feedback.
+- [x] Refine mobile `.dashboard-header` with a sleek 2-row layout: Row 1 = Hamburger + Active Workspace Pill; Row 2 = Page Title + Primary Action button.
+- [x] Run `node tests/test-mobile-responsive.js` and verify passing status.
 
 ---
 
@@ -85,11 +85,11 @@
 - Modify: `public/css/style.css` (inside `@media (max-width: 768px)`)
 - Test: `tests/test-mobile-responsive.js`
 
-- [ ] Write tests asserting `.dashboard-panel`, `.dashboard-card`, `.hs-drawer-card` enforce relaxed mobile padding (`padding: 16px 14px !important;`).
-- [ ] Update card container rules at `@media (max-width: 768px)` so padding drops from 24px/20px to 16px 14px, maximizing readable horizontal measure on 360px–390px screens.
-- [ ] Ensure Roster member rows stack cleanly on mobile: member avatar + name on left, role badge and remove button wrapped on right with ≥44px touch targets.
-- [ ] Add `overflow-x: clip;` to card containers so decorative push pins and washi tapes do not produce horizontal scroll leakage on narrow screens.
-- [ ] Run `node tests/test-mobile-responsive.js` and verify.
+- [x] Write tests asserting `.dashboard-panel`, `.dashboard-card`, `.hs-drawer-card` enforce relaxed mobile padding (`padding: 16px 14px !important;`).
+- [x] Update card container rules at `@media (max-width: 768px)` so padding drops from 24px/20px to 16px 14px, maximizing readable horizontal measure on 360px–390px screens.
+- [x] Ensure Roster member rows stack cleanly on mobile: member avatar + name on left, role badge and remove button wrapped on right with ≥44px touch targets.
+- [x] Add `overflow-x: clip;` to card containers so decorative push pins and washi tapes do not produce horizontal scroll leakage on narrow screens.
+- [x] Run `node tests/test-mobile-responsive.js` and verify.
 
 ---
 
@@ -99,11 +99,11 @@
 - Modify: `public/css/style.css` (inside `@media (max-width: 768px)`)
 - Test: `tests/test-mobile-responsive.js`
 
-- [ ] Write tests asserting all modal close buttons (`.modal-close`) and modal submit buttons have `min-height: 44px` on mobile.
-- [ ] Set all modal close buttons on mobile to `min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center;`.
-- [ ] Set `.modal-card` mobile width to `calc(100vw - 20px)` with `max-height: calc(100vh - 32px)` and internal scrollable body.
-- [ ] Ensure Kanban column headers have full-width touch drag/toggle indicators and card action buttons (Move, Done, Follow-up) maintain 44px touch area.
-- [ ] Run tests and verify.
+- [x] Write tests asserting all modal close buttons (`.modal-close`) and modal submit buttons have `min-height: 44px` on mobile.
+- [x] Set all modal close buttons on mobile to `min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center;`.
+- [x] Set `.modal-card` mobile width to `calc(100vw - 20px)` with `max-height: calc(100vh - 32px)` and internal scrollable body.
+- [x] Ensure Kanban column headers have full-width touch drag/toggle indicators and card action buttons (Move, Done, Follow-up) maintain 44px touch area.
+- [x] Run tests and verify.
 
 ---
 
@@ -113,11 +113,11 @@
 - Modify: `public/css/style.css` (inside `@media (max-width: 768px)`)
 - Test: `tests/test-calendar-redesign.js`
 
-- [ ] Write assertions for mobile calendar view selectors and scrollable category ribbon.
-- [ ] Make category filter chips horizontally scrollable on mobile: `.cal-filter-bar { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }`.
-- [ ] Ensure view switcher buttons (`Month`, `Week`, `Day`, `List`) have `min-height: 44px; flex: 1;`.
-- [ ] On screens ≤600px, optimize day cell rendering and ensure list view displays event dots with generous touch rows.
-- [ ] Run `node tests/test-calendar-redesign.js` and `node tests/test-mobile-responsive.js`.
+- [x] Write assertions for mobile calendar view selectors and scrollable category ribbon.
+- [x] Make category filter chips horizontally scrollable on mobile: `.cal-filter-bar { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }`.
+- [x] Ensure view switcher buttons (`Month`, `Week`, `Day`, `List`) have `min-height: 44px; flex: 1;`.
+- [x] On screens ≤600px, optimize day cell rendering and ensure list view displays event dots with generous touch rows.
+- [x] Run `node tests/test-calendar-redesign.js` and `node tests/test-mobile-responsive.js`.
 
 ---
 
@@ -127,11 +127,11 @@
 - Modify: `public/css/style.css` (inside `@media (max-width: 768px)`)
 - Test: `tests/test-direct-messaging-drawer.js`
 
-- [ ] Write assertions verifying DM slide drawer expands to 100vw on mobile with safe-area bottom padding.
-- [ ] Set `.dm-drawer { width: 100vw !important; max-width: 100vw !important; right: -100vw !important; }` and `.dm-drawer.open { right: 0 !important; }`.
-- [ ] Add `padding-bottom: max(16px, env(safe-area-inset-bottom))` to the mobile chat input bar so the iOS home bar does not obscure input fields.
-- [ ] Ensure chat send button and attachment button have `min-width: 44px; min-height: 44px;`.
-- [ ] Run `node tests/test-direct-messaging-drawer.js`.
+- [x] Write assertions verifying DM slide drawer expands to 100vw on mobile with safe-area bottom padding.
+- [x] Set `.dm-drawer { width: 100vw !important; max-width: 100vw !important; right: -100vw !important; }` and `.dm-drawer.open { right: 0 !important; }`.
+- [x] Add `padding-bottom: max(16px, env(safe-area-inset-bottom))` to the mobile chat input bar so the iOS home bar does not obscure input fields.
+- [x] Ensure chat send button and attachment button have `min-width: 44px; min-height: 44px;`.
+- [x] Run `node tests/test-direct-messaging-drawer.js`.
 
 ---
 
@@ -141,7 +141,8 @@
 - Run: `tests/test-localhost.js` (44 test suites + Impeccable Design Quality detector)
 - Compare: Desktop view styles in `public/css/style.css`
 
-- [ ] Run `git diff` against `main` to verify **ZERO lines outside `@media` blocks were changed**, strictly preserving desktop styling.
-- [ ] Run `node tests/test-localhost.js` to ensure all 44 test suites pass with 0 errors.
-- [ ] Run Impeccable Design Quality detector to ensure 0 anti-patterns and WCAG AA compliance.
-- [ ] Merge worktree branch to `main` and push to remote.
+- [x] Run `git diff` against `main` to verify **ZERO lines outside `@media` blocks were changed**, strictly preserving desktop styling.
+- [x] Run `node tests/test-localhost.js` to ensure all 44 test suites pass with 0 errors.
+- [x] Run Impeccable Design Quality detector to ensure 0 anti-patterns and WCAG AA compliance.
+- [x] Merge worktree branch to `main` and push to remote.
+
