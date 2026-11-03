@@ -2263,7 +2263,7 @@ function debounceNotesSearch() {
   }, 300);
 }
 
-async function handleCreateNote(e) {
+async function handleCreateNoteChoice(choice, e) {
   if (e && typeof e.preventDefault === 'function') {
     e.preventDefault();
   }
@@ -2274,19 +2274,29 @@ async function handleCreateNote(e) {
   const pinnedEl  = document.getElementById('notePinned');
   const folderEl  = document.getElementById('noteFolderSelect');
 
-  const content  = contentEl ? contentEl.value : '';
   const manualTitle = titleEl ? titleEl.value.trim() : '';
-  const title    = manualTitle || extractDashboardAutoTitle(content);
+  const title    = manualTitle || 'Untitled Document';
+  const content  = contentEl ? contentEl.value : '';
   const tags     = tagsEl ? tagsEl.value.trim() : '';
   const isPinned = pinnedEl ? pinnedEl.checked : false;
   const folderId = (folderEl && folderEl.value) ? Number(folderEl.value) : null;
 
-  // Find submit button to toggle loading state and prevent duplicate submissions
-  const submitBtn = e && e.target ? e.target.querySelector('button[type="submit"]') : null;
-  const originalText = submitBtn ? submitBtn.textContent : 'Save Page';
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Saving...';
+  if (!title) {
+    showToast('Please enter a document title.', 'warning');
+    if (titleEl) titleEl.focus();
+    return;
+  }
+
+  // Find target button to toggle loading state and prevent duplicate submissions
+  const saveBtn = document.getElementById('savePageBtn');
+  const openBtn = document.getElementById('openInFullEditorBtn');
+  const targetBtn = choice === 'open' ? openBtn : saveBtn;
+  const originalText = targetBtn ? targetBtn.textContent : '';
+
+  if (saveBtn) saveBtn.disabled = true;
+  if (openBtn) openBtn.disabled = true;
+  if (targetBtn) {
+    targetBtn.textContent = choice === 'open' ? 'Opening...' : 'Saving...';
   }
 
   try {
@@ -2300,22 +2310,32 @@ async function handleCreateNote(e) {
     const form = document.getElementById('createNoteForm');
     if (form) form.reset();
 
-    showToast(`Page "${title}" saved! Opening in editor...`, 'success');
-    await loadNotebook();
-
     const newNoteId = res && res.data ? res.data.id : null;
-    if (newNoteId) {
+
+    if (choice === 'save' || !newNoteId) {
+      showToast(`Document "${title}" saved to library!`, 'success');
+      await loadNotebook();
+    } else {
+      showToast(`Document "${title}" created! Opening editor...`, 'success');
       window.location.href = `/notebook.html?groupId=${currentGroupId}&noteId=${newNoteId}`;
     }
   } catch (err) {
-    console.error('Error saving notebook page:', err);
-    showToast(err.message || 'Failed to save notebook page.', 'error');
+    console.error('Error saving notebook document:', err);
+    showToast(err.message || 'Failed to save document.', 'error');
   } finally {
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = originalText;
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '💾 Save';
+    }
+    if (openBtn) {
+      openBtn.disabled = false;
+      openBtn.textContent = '✏️ Open in Full Editor →';
     }
   }
+}
+
+async function handleCreateNote(e) {
+  return handleCreateNoteChoice('open', e);
 }
 
 async function deleteNote(noteId, e) {

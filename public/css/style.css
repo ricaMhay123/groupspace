@@ -647,6 +647,22 @@ header .nav-buttons {
   margin-top: 24px;
 }
 
+.modal-actions-choice {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+
+.modal-actions-choice button {
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.modal-actions-choice button:hover {
+  transform: translateY(-1px);
+}
+
 /* Join Code Box */
 .join-code-box {
   background: var(--primary-light);

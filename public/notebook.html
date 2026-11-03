@@ -2230,6 +2230,30 @@
   </div>
 </div>
 
+<!-- New Document Pop-up Modal -->
+<div class="nb-modal-overlay" id="nbNewPageModal">
+  <div class="nb-modal-card" style="max-width:440px;">
+    <div class="nb-modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:18px;">📄</span>
+        <h3 style="margin:0;">New Document</h3>
+      </div>
+      <button type="button" class="btn-folder-icon" onclick="closeNbNewPageModal()" title="Close (Esc)">&#x2715;</button>
+    </div>
+    <form id="nbNewPageForm" onsubmit="handleNbNewPageChoice('open', event)">
+      <div style="margin-bottom:16px;">
+        <label for="nbNewPageTitleInput" style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--nb-text);">Document Title *</label>
+        <input type="text" id="nbNewPageTitleInput" class="form-control" placeholder="Enter document title (e.g. Project Architecture)..." required autofocus style="width:100%; font-size:14px; padding:10px 12px; border-radius:8px; border:1px solid var(--nb-border); background:var(--nb-bg); color:var(--nb-text);">
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="btn-nb btn-nb-outline" onclick="closeNbNewPageModal()" style="padding:6px 14px; font-size:13px;">Cancel</button>
+        <button type="button" id="nbSaveNewPageDirectBtn" class="btn-nb btn-nb-outline" onclick="handleNbNewPageChoice('save', event)" style="padding:6px 14px; font-size:13px; font-weight:600;">💾 Save</button>
+        <button type="submit" id="nbOpenFullEditorNewPageBtn" class="btn-nb btn-nb-green" style="padding:6px 16px; font-size:13px; font-weight:600;">✏️ Open in Full Editor →</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 
 <script src="/js/api.js"></script>
@@ -2860,13 +2884,111 @@ function clearEditor(folderId = null) {
   document.getElementById('nbSaveStatus').textContent = 'New document (custom title or auto-titles on save)';
 }
 
+let pendingNewPageFolderId = null;
+
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.add('open');
+    el.classList.add('active');
+  }
+}
+
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.remove('open');
+    el.classList.remove('active');
+  }
+}
+
+function closeNbNewPageModal() {
+  closeModal('nbNewPageModal');
+  pendingNewPageFolderId = null;
+}
+
 function newPage(folderId = null) {
   toggleNbMobileSidebar(false);
-  clearEditor(folderId);
-  const editor = document.getElementById('nbPageContent');
-  if (editor) editor.focus();
-  document.querySelectorAll('.nb-page-item').forEach(el => el.classList.remove('active'));
-  showToast('New document started! Enter a custom title or let the canvas auto-title on save.', 'info');
+  pendingNewPageFolderId = folderId;
+  const modal = document.getElementById('nbNewPageModal');
+  const input = document.getElementById('nbNewPageTitleInput');
+  if (modal) {
+    modal.classList.add('open');
+    if (input) {
+      input.value = '';
+      setTimeout(() => input.focus(), 60);
+    }
+  } else {
+    clearEditor(folderId);
+    const editor = document.getElementById('nbPageContent');
+    if (editor) editor.focus();
+    document.querySelectorAll('.nb-page-item').forEach(el => el.classList.remove('active'));
+    showToast('New document started! Enter a custom title or let the canvas auto-title on save.', 'info');
+  }
+}
+
+async function handleNbNewPageChoice(choice, e) {
+  if (e && typeof e.preventDefault === 'function') {
+    e.preventDefault();
+  }
+
+  const titleInput = document.getElementById('nbNewPageTitleInput');
+  const title = (titleInput ? titleInput.value.trim() : '') || 'Untitled Document';
+  const folderId = pendingNewPageFolderId;
+
+  if (choice === 'save') {
+    const saveBtn = document.getElementById('nbSaveNewPageDirectBtn');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+    }
+
+    try {
+      const endpoint = isPersonalMode
+        ? '/api/personal/notes'
+        : `/api/groups/${currentGroupId}/notes`;
+      const res = await apiFetch(endpoint, {
+        method: 'POST',
+        body: JSON.stringify({
+          title,
+          content: '<p></p>',
+          folderId: folderId || null
+        })
+      });
+
+      closeNbNewPageModal();
+      showToast(`Document "${title}" saved!`, 'success');
+      await loadPages();
+      if (res && res.data && res.data.id) {
+        selectPage(res.data.id);
+      }
+    } catch (err) {
+      console.error('Failed to create new document directly:', err);
+      showToast(err.message || 'Failed to save document.', 'error');
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Save';
+      }
+    }
+  } else {
+    closeNbNewPageModal();
+    clearEditor(folderId);
+    const titleEl = manualTitleInput || document.getElementById('nbPageTitle');
+    if (titleEl) {
+      titleEl.value = title;
+    }
+    const hdrTitle = document.getElementById('nbCurrentPageTitle');
+    if (hdrTitle) {
+      hdrTitle.textContent = title;
+    }
+    const editor = document.getElementById('nbPageContent');
+    if (editor) {
+      editor.focus();
+    }
+    document.querySelectorAll('.nb-page-item').forEach(el => el.classList.remove('active'));
+    showToast(`New document "${title}" started! Ready to write.`, 'info');
+  }
 }
 
 /**
@@ -3090,6 +3212,16 @@ function setupEditorListeners() {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
       saveCurrentPage();
+    }
+    if (e.key === 'Escape') {
+      const newPageModal = document.getElementById('nbNewPageModal');
+      if (newPageModal && newPageModal.classList.contains('open')) {
+        closeNbNewPageModal();
+      }
+      const shareModal = document.getElementById('sharePermissionsModal');
+      if (shareModal && shareModal.classList.contains('open')) {
+        closeSharePermissionsModal();
+      }
     }
   });
 }

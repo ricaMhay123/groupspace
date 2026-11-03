@@ -195,7 +195,8 @@ async function runLocalhostTests() {
       { script: 'tests/test-notebook-shape-format-and-homespace-polish.js', name: 'Notebook Shape Format & Homespace Polish' },
       { script: 'tests/test-user-profile-modal.js', name: 'Direct User Profile Modal & Customization' },
       { script: 'tests/test-personal-expense-donut-analytics.js', name: 'Personal Expense Donut Chart & Category Analytics' },
-      { script: 'tests/test-extended-desk-collage-landing.js', name: 'Extended Desk Collage Landing Page Overhaul' }
+      { script: 'tests/test-extended-desk-collage-landing.js', name: 'Extended Desk Collage Landing Page Overhaul' },
+      { script: 'tests/test-notebook-new-page-modal.js', name: 'Notebook New Page Simple Pop-up Modal' }
     ];
 
     for (const suite of testSuites) {

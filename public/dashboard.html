@@ -525,46 +525,34 @@
   </div>
 </div>
 
-<!-- Create Note Modal (Independent Page Title + Hybrid Auto-Titling) -->
+<!-- Create Note Modal (Simple Title + Save / Open in Full Editor / Cancel) -->
 <div class="modal-overlay" id="createNoteModal">
-  <div class="modal-card">
+  <div class="modal-card" style="max-width:460px;">
     <div class="modal-header">
-      <h3>Add Notebook Document</h3>
-      <button class="modal-close" onclick="closeModal('createNoteModal')">✕</button>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:18px;">📄</span>
+        <h3 style="margin:0;">New Document</h3>
+      </div>
+      <button type="button" class="modal-close" onclick="closeModal('createNoteModal')" title="Close (Esc)">✕</button>
     </div>
-    <form id="createNoteForm" onsubmit="handleCreateNote(event)">
-      <div class="form-group">
-        <label style="display:flex; justify-content:space-between; align-items:center;">
-          <span>Document Title</span>
-          <span style="font-size:11px; color:var(--gray); font-weight:400;">Optional — leave blank to auto-title</span>
-        </label>
-        <input type="text" id="noteTitle" name="pageTitle" data-alt-id="manualTitleInput" class="form-control" placeholder="Enter custom document title, or leave blank to auto-title from canvas...">
+    <form id="createNoteForm" onsubmit="handleCreateNoteChoice('open', event)">
+      <div class="form-group" style="margin-bottom:12px;">
+        <label for="noteTitle" style="font-weight:600; font-size:13px; color:var(--foreground);">Document Title *</label>
+        <input type="text" id="noteTitle" name="pageTitle" data-alt-id="manualTitleInput" class="form-control" placeholder="Enter document title (e.g. Project Architecture)..." required autofocus style="font-size:14px; padding:10px 12px;">
       </div>
-      <div class="form-group">
-        <label style="display:flex; justify-content:space-between; align-items:center;">
-          <span>Note Canvas</span>
-          <span style="font-size:11px; color:var(--primary); font-weight:600;">Hybrid auto-titles if Page Title is blank</span>
-        </label>
-        <textarea id="noteContent" name="pageContent" data-alt-id="pageContent" class="form-control" rows="6" placeholder="Start typing your note... If Page Title is left blank, the first phrase/sentence automatically becomes the title."></textarea>
-      </div>
-      <div class="form-group">
-        <label>Folder (Optional)</label>
-        <select id="noteFolderSelect" class="form-control">
-          <option value="">Uncategorized (Root)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Tags (comma separated)</label>
-        <input type="text" id="noteTags" name="pageTags" data-alt-id="pageTags" class="form-control" placeholder="specs, planning, backend">
-      </div>
-      <div class="form-group">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-          <input type="checkbox" id="notePinned" name="pinNote" data-alt-id="pinNote" style="accent-color:var(--primary);"> Pin this note to top
-        </label>
-      </div>
-      <div class="form-actions" style="margin-top:20px;">
-        <button type="button" class="btn-outline" onclick="closeModal('createNoteModal')">Cancel</button>
-        <button type="submit" id="savePageBtn" class="btn-green">Save Document</button>
+
+      <!-- Hidden fallbacks preserving existing dashboard scripts / folder selection -->
+      <select id="noteFolderSelect" class="form-control" style="display:none;">
+        <option value="">Uncategorized (Root)</option>
+      </select>
+      <textarea id="noteContent" name="pageContent" data-alt-id="pageContent" style="display:none;"></textarea>
+      <input type="hidden" id="noteTags" name="pageTags" data-alt-id="pageTags" value="">
+      <input type="checkbox" id="notePinned" name="pinNote" data-alt-id="pinNote" style="display:none;">
+
+      <div class="modal-actions-choice" style="display:flex; justify-content:flex-end; gap:8px; margin-top:22px; flex-wrap:wrap;">
+        <button type="button" class="btn-outline" onclick="closeModal('createNoteModal')" style="padding:7px 14px; font-size:13px; border-radius:8px;">Cancel</button>
+        <button type="button" id="savePageBtn" class="btn-outline" onclick="handleCreateNoteChoice('save', event)" style="padding:7px 14px; font-size:13px; border-radius:8px; font-weight:600;">💾 Save</button>
+        <button type="submit" id="openInFullEditorBtn" class="btn-green" style="padding:7px 16px; font-size:13px; border-radius:8px; font-weight:600;">✏️ Open in Full Editor →</button>
       </div>
     </form>
   </div>
