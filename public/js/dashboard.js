@@ -1969,6 +1969,10 @@ async function deleteDashboardFolder(folderId, e) {
 }
 
 function openCreateNoteModal() {
+  // Ensure the creation modal is clean without any injected toolbars
+  const rogueToolbars = document.querySelectorAll('#createNoteModal .notebook-rich-toolbar, #createNoteModal #notebookToolbarContainer');
+  rogueToolbars.forEach(el => el.remove());
+
   populateNoteFolderSelect();
   const select = document.getElementById('noteFolderSelect');
   if (select && activeDashboardFolderFilter !== 'ALL' && activeDashboardFolderFilter !== 'ROOT') {

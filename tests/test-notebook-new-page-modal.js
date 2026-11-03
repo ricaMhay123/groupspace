@@ -65,12 +65,21 @@ check(nbHtml.includes('closeNbNewPageModal'), 'nbNewPageModal includes closeNbNe
 check(nbHtml.includes('handleNbNewPageChoice'), 'notebook.html implements handleNbNewPageChoice()');
 check(nbHtml.includes("modal.classList.add('open')") && nbHtml.includes('function newPage'), 'newPage() triggers the modal');
 
-// ── 3. STYLESHEET TOKENS ──
-console.log('\n🎨 3. CSS Tokens & Transitions:');
+// ── 3. STYLESHEET TOKENS & TOOLBAR SUPPRESSION ──
+console.log('\n🎨 3. CSS Tokens & Toolbar Suppression:');
 const cssPath = path.join(__dirname, '..', 'public', 'css', 'style.css');
 const css = fs.readFileSync(cssPath, 'utf8');
 
 check(css.includes('.modal-actions-choice'), 'style.css defines .modal-actions-choice layout');
+check(css.includes('#createNoteModal .notebook-rich-toolbar') && css.includes('display: none !important'), 'style.css suppresses ribbon toolbar inside #createNoteModal');
+
+// ── 4. SCRIPT GUARD VERIFICATION ──
+console.log('\n🛡️ 4. Script Toolbar Injection Guards:');
+const nbJsPath = path.join(__dirname, '..', 'public', 'js', 'notebook.js');
+const nbJs = fs.readFileSync(nbJsPath, 'utf8');
+
+check(nbJs.includes("closest('#createNoteModal')"), 'notebook.js guards against injecting toolbars into #createNoteModal');
+check(!nbJs.includes("document.getElementById('noteContent');\n    if (!editorEl) return;\n    \n    container = document.createElement('div');"), 'notebook.js no longer treats #noteContent as fallback editor');
 
 console.log('\n================================================================');
 console.log(`📊 RESULTS: Passed: ${passed} | Failed: ${failed}`);

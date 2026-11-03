@@ -154,9 +154,13 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
 
   // If container doesn't exist, create and inject it above the content editor
   if (!container) {
-    const editorEl = (editorTargetId && document.getElementById(editorTargetId)) || document.getElementById('pageContent') || document.getElementById('noteContent');
+    const editorEl = (editorTargetId && document.getElementById(editorTargetId)) || document.getElementById('pageContent');
     if (!editorEl) return;
     
+    // Safety guard: Never inject rich toolbar into simple creation modals or hidden elements
+    if (editorEl.closest && (editorEl.closest('#createNoteModal') || editorEl.closest('.modal') || editorEl.closest('.modal-card') || editorEl.closest('.nb-modal-card'))) return;
+    if (editorEl.style && editorEl.style.display === 'none') return;
+
     container = document.createElement('div');
     container.id = targetContainerId;
     container.className = 'notebook-rich-toolbar';
@@ -868,12 +872,16 @@ async function exportNotebook(format, noteId, title = 'Notebook_Page', rawConten
   }
 }
 
-// Auto-initialize toolbar when DOM is ready
+// Auto-initialize toolbar when DOM is ready (only if dedicated toolbar container or pageContent exists)
 // (Note: modal save is handled by handleCreateNote in dashboard.js)
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    renderNotebookRichTextToolbar();
+    if (document.getElementById('notebookToolbarContainer') || document.getElementById('pageContent')) {
+      renderNotebookRichTextToolbar();
+    }
   });
 } else {
-  renderNotebookRichTextToolbar();
+  if (document.getElementById('notebookToolbarContainer') || document.getElementById('pageContent')) {
+    renderNotebookRichTextToolbar();
+  }
 }

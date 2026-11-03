@@ -738,6 +738,20 @@ header .nav-buttons {
   transform: translateY(-1px);
 }
 
+/* Ensure New Document creation modal is clean without any toolbar clutter */
+#createNoteModal .notebook-rich-toolbar,
+#createNoteModal .notebook-toolbar,
+#createNoteModal .nb-word-ribbon-bar,
+#createNoteModal [data-ribbon-section],
+#createNoteModal #notebookToolbarContainer,
+#nbNewPageModal .notebook-rich-toolbar,
+#nbNewPageModal .notebook-toolbar,
+#nbNewPageModal .nb-word-ribbon-bar,
+#nbNewPageModal [data-ribbon-section],
+#nbNewPageModal #notebookToolbarContainer {
+  display: none !important;
+}
+
 /* Join Code Box */
 .join-code-box {
   background: var(--primary-light);
