@@ -19,6 +19,15 @@ function isValidPassword(password) {
 }
 
 /**
+ * Validates username format (3 to 30 characters, alphanumeric, underscores, hyphens, periods; no spaces).
+ */
+function isValidUsername(username) {
+  if (typeof username !== 'string') return false;
+  const re = /^[a-zA-Z0-9_.-]{3,30}$/;
+  return re.test(username.trim());
+}
+
+/**
  * Sanitizes input text to prevent simple script injection.
  */
 function sanitizeText(str) {
@@ -59,6 +68,7 @@ function isValidAmount(amount) {
 module.exports = {
   isValidEmail,
   isValidPassword,
+  isValidUsername,
   sanitizeText,
   generateJoinCode,
   formatJoinCode,

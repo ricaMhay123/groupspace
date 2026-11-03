@@ -197,7 +197,8 @@ async function runLocalhostTests() {
       { script: 'tests/test-personal-expense-donut-analytics.js', name: 'Personal Expense Donut Chart & Category Analytics' },
       { script: 'tests/test-extended-desk-collage-landing.js', name: 'Extended Desk Collage Landing Page Overhaul' },
       { script: 'tests/test-notebook-new-page-modal.js', name: 'Notebook New Page Simple Pop-up Modal' },
-      { script: 'tests/test-workspace-roster-status.js', name: 'Workspace Roster Status Messages & DM Icon Removal' }
+      { script: 'tests/test-workspace-roster-status.js', name: 'Workspace Roster Status Messages & DM Icon Removal' },
+      { script: 'tests/test-username-registration.js', name: 'Unique Username Registration & Case-Insensitive Uniqueness' }
     ];
 
     for (const suite of testSuites) {

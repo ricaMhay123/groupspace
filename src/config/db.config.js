@@ -23,7 +23,8 @@ async function initDb() {
     await sql`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
-        full_name TEXT NOT NULL,
+        username TEXT UNIQUE,
+        full_name TEXT,
         email TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
         avatar_initials VARCHAR(10),
@@ -315,6 +316,16 @@ async function initDb() {
     try { await sql`CREATE INDEX IF NOT EXISTS idx_direct_messages_receiver_read ON direct_messages (receiver_id, is_read)`; } catch (e) {}
 
     // Execute table column migrations to ensure all required columns exist in pre-existing tables
+    try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT`; } catch (e) {}
+    try {
+      await sql`
+        UPDATE users 
+        SET username = LOWER(REGEXP_REPLACE(COALESCE(full_name, split_part(email, '@', 1)), '\s+', '', 'g')) 
+        WHERE username IS NULL OR username = ''
+      `;
+    } catch (e) {}
+    try { await sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_lower ON users (LOWER(username))`; } catch (e) {}
+    try { await sql`ALTER TABLE users ALTER COLUMN full_name DROP NOT NULL`; } catch (e) {}
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name TEXT`; } catch (e) {}
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT`; } catch (e) {}
     try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT`; } catch (e) {}

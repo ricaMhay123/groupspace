@@ -64,8 +64,10 @@
 
           <form id="registerForm" class="d-flex flex-column gap-3">
             <div>
-              <label class="form-label text-dark fw-medium fs-7 mb-1">Full Name</label>
-              <input type="text" id="fullName" class="form-control" placeholder="e.g. Alex Johnson" required>
+              <label class="form-label text-dark fw-medium fs-7 mb-1" for="username">Username</label>
+              <div id="usernameError" class="text-danger fw-semibold fs-7 mb-1 d-none"></div>
+              <input type="text" id="username" name="username" class="form-control" placeholder="e.g. alexjohnson" required autocomplete="username" autocapitalize="none">
+              <div id="usernameStatus" class="fs-7 mt-1 d-none"></div>
             </div>
 
             <div>

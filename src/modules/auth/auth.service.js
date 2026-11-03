@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const sql = require('../../config/db.config');
 const { JWT_SECRET } = require('../../middleware/auth.middleware');
-const { isValidEmail, isValidPassword, sanitizeText } = require('../../utils/validation.util');
+const { isValidEmail, isValidPassword, isValidUsername, sanitizeText } = require('../../utils/validation.util');
 const { sendOtpEmail, sendWelcomeEmail } = require('../../utils/email.util');
 
 function getInitials(name) {
@@ -19,7 +19,7 @@ function getInitials(name) {
 /**
  * Generates and emails a 6-digit verification code before registration.
  */
-async function requestVerificationCode(email, type = 'SIGNUP') {
+async function requestVerificationCode(email, type = 'SIGNUP', username = null) {
   const cleanEmail = (email || '').trim().toLowerCase();
 
   if (!isValidEmail(cleanEmail)) {
@@ -27,6 +27,22 @@ async function requestVerificationCode(email, type = 'SIGNUP') {
   }
 
   if (type === 'SIGNUP') {
+    // If username is provided, check if it's already taken
+    if (username) {
+      const cleanUsername = String(username).trim().toLowerCase();
+      const [existingUserByUsername] = await sql`
+        SELECT id FROM users 
+        WHERE LOWER(username) = ${cleanUsername} 
+           OR LOWER(full_name) = ${cleanUsername}
+        LIMIT 1
+      `;
+      if (existingUserByUsername) {
+        const err = new Error('This username is already taken. Please choose another username.');
+        err.field = 'username';
+        throw err;
+      }
+    }
+
     // Check if user already exists
     const [existing] = await sql`SELECT id FROM users WHERE email = ${cleanEmail}`;
     if (existing) {
@@ -106,21 +122,34 @@ async function verifyCode(email, code, type = 'SIGNUP') {
 }
 
 /**
- * Registers a new user. Validates code if verification code is provided.
+ * Registers a new user with a unique username. Validates code if verification code is provided.
  */
-async function registerUser({ fullName, email, password, verificationCode, otpCode }) {
-  const cleanName = sanitizeText(fullName);
+async function registerUser({ username, fullName, email, password, verificationCode, otpCode }) {
+  const chosenName = (username || fullName || '').trim();
+  const cleanUsername = sanitizeText(username || (fullName ? fullName.trim().replace(/\s+/g, '_').toLowerCase() : ''));
+  const cleanFullName = sanitizeText(fullName || username);
   const cleanEmail = (email || '').trim().toLowerCase();
   const codeToVerify = verificationCode || otpCode;
 
-  if (!cleanName || cleanName.length < 2) {
-    throw new Error('Full name must be at least 2 characters.');
+  if (!cleanUsername || cleanUsername.length < 2) {
+    const err = new Error('Username must be at least 2 characters.');
+    err.field = 'username';
+    throw err;
+  }
+  if (!isValidUsername(cleanUsername) && cleanUsername.length < 3) {
+    const err = new Error('Username must be at least 3 characters.');
+    err.field = 'username';
+    throw err;
   }
   if (!isValidEmail(cleanEmail)) {
-    throw new Error('Please provide a valid email address.');
+    const err = new Error('Please provide a valid email address.');
+    err.field = 'email';
+    throw err;
   }
   if (!isValidPassword(password)) {
-    throw new Error('Password must be at least 6 characters.');
+    const err = new Error('Password must be at least 6 characters.');
+    err.field = 'password';
+    throw err;
   }
 
   // Verification code is REQUIRED — never allow skipping email verification
@@ -128,6 +157,19 @@ async function registerUser({ fullName, email, password, verificationCode, otpCo
     throw new Error('Email verification code is required. Please complete the verification step first.');
   }
   await verifyCode(cleanEmail, codeToVerify, 'SIGNUP');
+
+  // Check if username already exists across all users (case-insensitive)
+  const [existingUserByUsername] = await sql`
+    SELECT id FROM users 
+    WHERE LOWER(username) = ${cleanUsername.toLowerCase()} 
+       OR LOWER(full_name) = ${cleanUsername.toLowerCase()}
+    LIMIT 1
+  `;
+  if (existingUserByUsername) {
+    const err = new Error('This username is already taken. Please choose another username.');
+    err.field = 'username';
+    throw err;
+  }
 
   // Check if user already exists
   const [existing] = await sql`SELECT id FROM users WHERE email = ${cleanEmail}`;
@@ -139,12 +181,12 @@ async function registerUser({ fullName, email, password, verificationCode, otpCo
 
   const salt = await bcrypt.genSalt(10);
   const passwordHash = await bcrypt.hash(password, salt);
-  const initials = getInitials(cleanName);
+  const initials = getInitials(cleanFullName || cleanUsername);
 
   const [newUser] = await sql`
-    INSERT INTO users (full_name, email, password_hash, avatar_initials, status)
-    VALUES (${cleanName}, ${cleanEmail}, ${passwordHash}, ${initials}, 'online')
-    RETURNING id, full_name, email, avatar_initials, status, created_at
+    INSERT INTO users (username, full_name, email, password_hash, avatar_initials, status)
+    VALUES (${cleanUsername}, ${cleanFullName}, ${cleanEmail}, ${passwordHash}, ${initials}, 'online')
+    RETURNING id, username, full_name, email, avatar_initials, status, created_at
   `;
 
   const userId = Number(newUser.id);
@@ -153,14 +195,15 @@ async function registerUser({ fullName, email, password, verificationCode, otpCo
   await sql`DELETE FROM email_verifications WHERE email = ${cleanEmail} AND type = 'SIGNUP'`;
 
   // Send Welcome confirmation email asynchronously
-  sendWelcomeEmail({ to: cleanEmail, fullName: cleanName }).catch(err => console.error('Welcome email error:', err));
+  sendWelcomeEmail({ to: cleanEmail, fullName: cleanFullName, username: cleanUsername }).catch(err => console.error('Welcome email error:', err));
 
   const token = jwt.sign({ userId: Number(userId), email: cleanEmail }, JWT_SECRET, { expiresIn: '7d' });
 
   return {
     user: {
       id: userId,
-      fullName: newUser.full_name,
+      username: newUser.username || cleanUsername,
+      fullName: newUser.full_name || cleanFullName,
       email: newUser.email,
       avatarInitials: newUser.avatar_initials,
       status: 'online'
@@ -169,16 +212,22 @@ async function registerUser({ fullName, email, password, verificationCode, otpCo
   };
 }
 
-async function loginUser({ email, password }) {
-  const cleanEmail = (email || '').trim().toLowerCase();
+async function loginUser({ email, username, password }) {
+  const identifier = (email || username || '').trim();
+  const cleanEmail = identifier.toLowerCase();
 
   if (!cleanEmail || !password) {
-    throw new Error('Email and password are required.');
+    throw new Error('Email/username and password are required.');
   }
 
-  const [user] = await sql`SELECT * FROM users WHERE email = ${cleanEmail}`;
+  const [user] = await sql`
+    SELECT * FROM users 
+    WHERE email = ${cleanEmail} 
+       OR LOWER(username) = ${cleanEmail}
+    LIMIT 1
+  `;
   if (!user) {
-    const err = new Error('No account found with this Gmail address.');
+    const err = new Error('No account found with these credentials.');
     err.field = 'email';
     err.status = 401;
     throw err;
@@ -258,7 +307,8 @@ async function loginUser({ email, password }) {
   return {
     user: {
       id: Number(user.id),
-      fullName: user.full_name,
+      username: user.username || user.full_name,
+      fullName: user.full_name || user.username,
       email: user.email,
       avatarInitials: user.avatar_initials,
       avatarColor: user.avatar_color || '#4f46e5',
@@ -302,16 +352,18 @@ async function resetPasswordWithOtp({ email, otpCode, newPassword }) {
 
 async function getUserProfile(userId) {
   const [user] = await sql`
-    SELECT id, full_name, email, avatar_initials, status, avatar_color, status_message, avatar_url, created_at
+    SELECT id, username, full_name, email, avatar_initials, status, avatar_color, status_message, avatar_url, created_at
     FROM users
     WHERE id = ${userId}
   `;
   if (!user) {
     throw new Error('User not found.');
   }
+  const displayName = user.username || user.full_name;
   return {
     id: Number(user.id),
-    fullName: user.full_name,
+    username: displayName,
+    fullName: user.full_name || displayName,
     email: user.email,
     avatarInitials: user.avatar_initials,
     status: user.status,
@@ -322,11 +374,26 @@ async function getUserProfile(userId) {
   };
 }
 
-async function updateUserProfile(userId, { fullName, avatarColor, statusMessage, avatarUrl }) {
-  const cleanName = (fullName || '').trim();
-  if (!cleanName) {
-    throw new Error('Full name cannot be blank.');
+async function updateUserProfile(userId, { username, fullName, avatarColor, statusMessage, avatarUrl }) {
+  const rawName = (username || fullName || '').trim();
+  if (!rawName) {
+    throw new Error('Username / display name cannot be blank.');
   }
+  const cleanName = sanitizeText(rawName);
+
+  // If changing username/name, ensure it is unique among all other users
+  const [existingUser] = await sql`
+    SELECT id FROM users 
+    WHERE (LOWER(username) = ${cleanName.toLowerCase()} OR LOWER(full_name) = ${cleanName.toLowerCase()})
+      AND id != ${userId}
+    LIMIT 1
+  `;
+  if (existingUser) {
+    const err = new Error('This username is already taken by another user.');
+    err.field = 'username';
+    throw err;
+  }
+
   const initials = getInitials(cleanName);
   const cleanColor = (avatarColor || '#4f46e5').trim();
   const cleanStatus = statusMessage !== undefined ? statusMessage.trim() : '';
@@ -336,23 +403,25 @@ async function updateUserProfile(userId, { fullName, avatarColor, statusMessage,
   if (cleanAvatarUrl !== null) {
     [updated] = await sql`
       UPDATE users
-      SET full_name = ${cleanName},
+      SET username = ${cleanName},
+          full_name = ${cleanName},
           avatar_initials = ${initials},
           avatar_color = ${cleanColor},
           status_message = ${cleanStatus},
           avatar_url = ${cleanAvatarUrl}
       WHERE id = ${userId}
-      RETURNING id, full_name, email, avatar_initials, status, avatar_color, status_message, avatar_url, created_at
+      RETURNING id, username, full_name, email, avatar_initials, status, avatar_color, status_message, avatar_url, created_at
     `;
   } else {
     [updated] = await sql`
       UPDATE users
-      SET full_name = ${cleanName},
+      SET username = ${cleanName},
+          full_name = ${cleanName},
           avatar_initials = ${initials},
           avatar_color = ${cleanColor},
           status_message = ${cleanStatus}
       WHERE id = ${userId}
-      RETURNING id, full_name, email, avatar_initials, status, avatar_color, status_message, avatar_url, created_at
+      RETURNING id, username, full_name, email, avatar_initials, status, avatar_color, status_message, avatar_url, created_at
     `;
   }
 
@@ -360,9 +429,11 @@ async function updateUserProfile(userId, { fullName, avatarColor, statusMessage,
     throw new Error('User account not found.');
   }
 
+  const displayName = updated.username || updated.full_name;
   return {
     id: Number(updated.id),
-    fullName: updated.full_name,
+    username: displayName,
+    fullName: updated.full_name || displayName,
     email: updated.email,
     avatarInitials: updated.avatar_initials,
     status: updated.status,
@@ -376,6 +447,45 @@ async function updateUserProfile(userId, { fullName, avatarColor, statusMessage,
 async function updateStatus(userId, status) {
   await sql`UPDATE users SET status = ${status} WHERE id = ${userId}`;
   return { success: true, status };
+}
+
+/**
+ * Checks if a username meets format requirements and is not already taken.
+ * Case-insensitive query against the users table.
+ */
+async function checkUsernameAvailability(username) {
+  const cleanUsername = (username || '').trim();
+
+  if (!cleanUsername) {
+    return { available: false, status: 'empty', message: '' };
+  }
+  if (!isValidUsername(cleanUsername)) {
+    return {
+      available: false,
+      status: 'invalid',
+      message: 'Username must be 3-30 characters with letters, numbers, underscores, hyphens, or periods (no spaces).'
+    };
+  }
+
+  const [existing] = await sql`
+    SELECT id FROM users 
+    WHERE LOWER(username) = ${cleanUsername.toLowerCase()} 
+       OR LOWER(full_name) = ${cleanUsername.toLowerCase()}
+    LIMIT 1
+  `;
+  if (existing) {
+    return {
+      available: false,
+      status: 'taken',
+      message: 'This username is already taken. Please choose another username.'
+    };
+  }
+
+  return {
+    available: true,
+    status: 'available',
+    message: 'Username is available.'
+  };
 }
 
 /**
@@ -463,6 +573,7 @@ module.exports = {
   getUserProfile,
   updateUserProfile,
   updateStatus,
+  checkUsernameAvailability,
   checkEmailAvailability,
   deleteAccount
 };

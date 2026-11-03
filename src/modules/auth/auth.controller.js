@@ -7,8 +7,8 @@ const { HTTP_STATUS } = require('../../config/constants');
 
 async function sendVerificationCode(req, res) {
   try {
-    const { email, type = 'SIGNUP' } = req.body;
-    const result = await authService.requestVerificationCode(email, type);
+    const { email, username, fullName, type = 'SIGNUP' } = req.body;
+    const result = await authService.requestVerificationCode(email, type, username || fullName);
     return res.status(HTTP_STATUS.OK).json({
       success: true,
       message: result.message,
@@ -42,8 +42,15 @@ async function verifyCode(req, res) {
 
 async function register(req, res) {
   try {
-    const { fullName, email, password, verificationCode, otpCode } = req.body;
-    const result = await authService.registerUser({ fullName, email, password, verificationCode, otpCode });
+    const { username, fullName, email, password, verificationCode, otpCode } = req.body;
+    const result = await authService.registerUser({ 
+      username: username || fullName, 
+      fullName: fullName || username, 
+      email, 
+      password, 
+      verificationCode, 
+      otpCode 
+    });
 
     res.cookie('token', result.token, {
       httpOnly: true,
@@ -103,8 +110,8 @@ async function resetPassword(req, res) {
 
 async function login(req, res) {
   try {
-    const { email, password } = req.body;
-    const result = await authService.loginUser({ email, password });
+    const { email, username, password } = req.body;
+    const result = await authService.loginUser({ email, username, password });
 
     res.cookie('token', result.token, {
       httpOnly: true,
@@ -158,6 +165,20 @@ async function logout(req, res) {
     success: true,
     message: 'Logged out successfully.'
   });
+}
+
+async function checkUsername(req, res) {
+  try {
+    const { username } = req.query;
+    const result = await authService.checkUsernameAvailability(username);
+    return res.status(HTTP_STATUS.OK).json(result);
+  } catch (error) {
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      available: false,
+      status: 'error',
+      message: 'Could not check username. Please try again.'
+    });
+  }
 }
 
 async function checkEmail(req, res) {
@@ -248,8 +269,14 @@ async function heartbeat(req, res) {
 
 async function updateMe(req, res) {
   try {
-    const { fullName, avatarColor, statusMessage, avatarUrl } = req.body;
-    const user = await authService.updateUserProfile(req.user.id, { fullName, avatarColor, statusMessage, avatarUrl });
+    const { username, fullName, avatarColor, statusMessage, avatarUrl } = req.body;
+    const user = await authService.updateUserProfile(req.user.id, { 
+      username: username || fullName,
+      fullName: fullName || username, 
+      avatarColor, 
+      statusMessage, 
+      avatarUrl 
+    });
     return res.status(HTTP_STATUS.OK).json({
       success: true,
       message: 'Profile updated successfully.',
@@ -273,6 +300,7 @@ module.exports = {
   getMe,
   updateMe,
   logout,
+  checkUsername,
   checkEmail,
   testEmail,
   debugEnv,
