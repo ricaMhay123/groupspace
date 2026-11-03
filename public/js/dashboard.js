@@ -541,23 +541,30 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
   const rosterHtml = members.map(m => {
     const isSelf = Number(m.user_id) === Number(currentUserId);
     const roleLabel = m.role === 'co_leader' ? 'Co-Leader' : (m.role === 'leader' ? 'Leader' : 'Member');
+    const avatarBg = m.avatar_color || '#4f46e5';
+    const avatarContent = m.avatar_url
+      ? `<img src="${escapeHtml(m.avatar_url)}" alt="${escapeHtml(m.full_name)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;">`
+      : escapeHtml(m.avatar_initials || 'GS');
+
+    const statusMessageHtml = m.status_message && m.status_message.trim()
+      ? `<div class="user-status-msg" style="font-size:11px; color:var(--primary); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:240px;" title="${escapeHtml(m.status_message.trim())}">
+          ${escapeHtml(m.status_message.trim())}
+        </div>`
+      : `<div class="user-status-msg" style="font-size:10.5px; color:var(--muted-foreground, #94a3b8); margin-top:2px; font-style:italic;">No status message</div>`;
+
     return `
       <li style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid var(--border); gap:12px;">
-        <div style="display:flex; align-items:center; gap:10px; min-width:0; cursor:${isSelf ? 'default' : 'pointer'};" ${!isSelf ? `onclick="openDirectMessageDrawer(${m.user_id}, '${escapeHtml(m.full_name).replace(/'/g, "\\'")}', '${escapeHtml(m.avatar_initials || 'GS')}', '${m.status || 'offline'}')"` : ''} title="${isSelf ? '' : `Direct message ${escapeHtml(m.full_name)}`}">
-          <div class="chat-avatar" style="width:32px; height:32px; font-size:12px; flex-shrink:0;">${escapeHtml(m.avatar_initials || 'GS')}</div>
+        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+          <div class="chat-avatar" style="width:32px; height:32px; font-size:12px; flex-shrink:0; background:${avatarBg}; color:#ffffff; font-weight:700; overflow:hidden;">${avatarContent}</div>
           <div style="min-width:0;">
             <div style="font-weight:600; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
               ${escapeHtml(m.full_name)} ${isSelf ? '<span style="font-size:11px; color:var(--gray); font-weight:normal;">(You)</span>' : ''}
             </div>
             <div style="color:var(--gray); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(m.email)}</div>
+            ${statusMessageHtml}
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-          ${!isSelf ? `
-            <button type="button" class="btn-outline" style="padding:4px 8px; font-size:11.5px; display:inline-flex; align-items:center; gap:4px; border-radius:6px; cursor:pointer;" onclick="openDirectMessageDrawer(${m.user_id}, '${escapeHtml(m.full_name).replace(/'/g, "\\'")}', '${escapeHtml(m.avatar_initials || 'GS')}', '${m.status || 'offline'}')" title="Direct message">
-              💬
-            </button>
-          ` : ''}
           ${isSelf ? `
             <span class="status online" style="font-size:11px; font-weight:700;">${roleLabel}</span>
           ` : isPrimaryLeader ? `
@@ -685,13 +692,21 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
     ? '<p style="color:var(--gray); font-size:12px; margin:0;">No group leader assigned.</p>'
     : leaders.map(l => {
       const isCoLeader = l.role === 'co_leader';
+      const avatarBg = l.avatar_color || '#4f46e5';
+      const avatarContent = l.avatar_url
+        ? `<img src="${escapeHtml(l.avatar_url)}" alt="${escapeHtml(l.full_name)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;">`
+        : escapeHtml(l.avatar_initials || 'GS');
+      const statusMessageHtml = l.status_message && l.status_message.trim()
+        ? `<div class="user-status-msg" style="font-size:11px; color:var(--primary); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(l.status_message.trim())}">${escapeHtml(l.status_message.trim())}</div>`
+        : `<div class="user-status-msg" style="font-size:10.5px; color:var(--muted-foreground, #94a3b8); margin-top:2px; font-style:italic;">No status message</div>`;
       return `
       <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 10px; background:${isCoLeader ? 'rgba(99,102,241,0.05)' : 'rgba(79,70,229,0.06)'}; border:1px solid ${isCoLeader ? 'rgba(99,102,241,0.18)' : 'rgba(79,70,229,0.18)'}; border-radius:8px; margin-bottom:6px;">
         <div style="display:flex; align-items:center; gap:8px; min-width:0;">
-          <div class="chat-avatar" style="width:32px; height:32px; font-size:12px; flex-shrink:0;">${escapeHtml(l.avatar_initials || 'GS')}</div>
+          <div class="chat-avatar" style="width:32px; height:32px; font-size:12px; flex-shrink:0; background:${avatarBg}; color:#ffffff; font-weight:700; overflow:hidden;">${avatarContent}</div>
           <div style="min-width:0;">
             <div style="font-weight:700; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(l.full_name)}</div>
             <div style="color:var(--gray); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(l.email)}</div>
+            ${statusMessageHtml}
           </div>
         </div>
         <span style="font-size:11px; font-weight:700; color:var(--primary); background:#eef2ff; padding:2px 8px; border-radius:6px;">${isCoLeader ? 'Co-Leader' : 'Leader'}</span>
@@ -701,14 +716,23 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
 
   const fellowsHtml = fellowMembers.map(m => {
     const isSelf = Number(m.user_id) === Number(currentUserId);
+    const avatarBg = m.avatar_color || '#4f46e5';
+    const avatarContent = m.avatar_url
+      ? `<img src="${escapeHtml(m.avatar_url)}" alt="${escapeHtml(m.full_name)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;">`
+      : escapeHtml(m.avatar_initials || 'GS');
+    const statusMessageHtml = m.status_message && m.status_message.trim()
+      ? `<div class="user-status-msg" style="font-size:11px; color:var(--primary); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(m.status_message.trim())}">${escapeHtml(m.status_message.trim())}</div>`
+      : `<div class="user-status-msg" style="font-size:10.5px; color:var(--muted-foreground, #94a3b8); margin-top:2px; font-style:italic;">No status message</div>`;
     return `
       <li style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px solid var(--border); gap:8px;">
         <div style="display:flex; align-items:center; gap:8px; min-width:0;">
-          <div class="chat-avatar" style="width:32px; height:32px; font-size:12px; flex-shrink:0;">${escapeHtml(m.avatar_initials || 'GS')}</div>
+          <div class="chat-avatar" style="width:32px; height:32px; font-size:12px; flex-shrink:0; background:${avatarBg}; color:#ffffff; font-weight:700; overflow:hidden;">${avatarContent}</div>
           <div style="min-width:0;">
             <div style="font-weight:600; font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
               ${escapeHtml(m.full_name)} ${isSelf ? '<span style="font-size:11px; color:var(--gray); font-weight:normal;">(You)</span>' : ''}
             </div>
+            <div style="color:var(--gray); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(m.email)}</div>
+            ${statusMessageHtml}
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:6px;">

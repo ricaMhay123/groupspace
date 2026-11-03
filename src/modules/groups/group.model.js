@@ -52,6 +52,9 @@ const GroupModel = {
         u.full_name, 
         u.email, 
         u.avatar_initials,
+        u.avatar_color,
+        u.avatar_url,
+        u.status_message,
         CASE 
           WHEN u.last_active_at IS NOT NULL AND u.last_active_at >= NOW() - INTERVAL '2 minutes' THEN 'online'
           ELSE 'offline'
