@@ -943,7 +943,7 @@ function renderHomespaceSettingsDrawer() {
 
   container.innerHTML = `
     <!-- Floating Centered Modal Header -->
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--border); background:var(--card); position:sticky; top:0; z-index:10; border-top-left-radius:16px; border-top-right-radius:16px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--border); background:var(--card); flex-shrink:0; border-top-left-radius:16px; border-top-right-radius:16px;">
       <div style="display:flex; align-items:center; gap:12px;">
         <div style="width:36px; height:36px; border-radius:10px; background:var(--secondary); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--primary); flex-shrink:0;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -963,7 +963,7 @@ function renderHomespaceSettingsDrawer() {
     </div>
 
     <!-- Modal Content Body -->
-    <div class="homespace-settings-accordion open" id="homespaceSettingsAccordion" style="padding:22px 24px; display:flex; flex-direction:column; gap:18px;">
+    <div class="homespace-settings-accordion open" id="homespaceSettingsAccordion" style="padding:22px 24px; display:flex; flex-direction:column; gap:18px; overflow-y:auto; flex:1; min-height:0; -webkit-overflow-scrolling:touch;">
       
       <!-- Section 1: Workspace Details & Discrete Invite Code -->
       <div class="hs-drawer-card">

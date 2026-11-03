@@ -2957,27 +2957,13 @@ body {
 
 .homespace-settings-accordion {
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  transition: box-shadow 0.25s ease, border-color 0.25s ease;
-  overflow: hidden;
-}
-
-.homespace-settings-accordion:hover {
-  border-color: #94a3b8;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-}
-
-.dark .homespace-settings-accordion {
-  background: var(--card);
-  border-color: var(--border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-}
-
-.dark .homespace-settings-accordion:hover {
-  border-color: #475569;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  border: none;
+  border-radius: 0 0 16px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  min-height: 0;
 }
 
 /* Accordion Header Trigger */
@@ -4720,14 +4706,14 @@ html.dark .settle-chip:hover:not(.active) {
   transform: translate(-50%, -50%) scale(0.96);
   width: 680px;
   max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 48px);
+  max-height: min(85vh, 720px);
   margin-top: 0;
   background: var(--card, #ffffff);
   border: 1px solid var(--border, #cbd5e1);
   border-radius: 16px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
   z-index: 9999;
-  overflow-y: auto;
+  overflow: hidden;
   opacity: 0;
   pointer-events: none;
   visibility: hidden;
@@ -4745,6 +4731,21 @@ html.dark .settle-chip:hover:not(.active) {
   background: var(--card, #1e293b);
   border-color: var(--border, #334155);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+/* Custom scrollbar for Workspace Settings modal */
+.homespace-settings-accordion::-webkit-scrollbar {
+  width: 7px;
+}
+.homespace-settings-accordion::-webkit-scrollbar-track {
+  background: transparent;
+}
+.homespace-settings-accordion::-webkit-scrollbar-thumb {
+  background: var(--border, #cbd5e1);
+  border-radius: 4px;
+}
+.homespace-settings-accordion::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground, #94a3b8);
 }
 
 
