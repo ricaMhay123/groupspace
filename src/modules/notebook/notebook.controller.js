@@ -271,6 +271,9 @@ async function deleteFolder(req, res) {
 async function createPage(req, res) {
   try {
     let notebookId = req.params.id || req.params.notebookId || req.body.notebookId || req.query.notebookId;
+    if (notebookId === 'null' || notebookId === 'undefined') {
+      notebookId = null;
+    }
     let groupId = req.body.groupId || req.body.workspaceId || req.body.workspace_id
       || req.query.groupId || req.query.workspaceId || req.query.workspace_id
       || req.params.groupId;

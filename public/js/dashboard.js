@@ -1986,60 +1986,144 @@ async function parseUploadedDocument(file) {
   const nameParts = file.name.split('.');
   const ext = (nameParts.length > 1 ? nameParts.pop() : '').toLowerCase();
 
-  // 1. Microsoft Word Document (.docx)
-  if (ext === 'docx') {
-    if (typeof mammoth === 'undefined' || !mammoth.convertToHtml) {
-      throw new Error('Mammoth.js library is not loaded. Cannot parse .docx document.');
+  // Helper to dynamically load script if missing
+  async function ensureScript(globalVar, cdnUrl) {
+    if (typeof window[globalVar] !== 'undefined') return true;
+    try {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = cdnUrl;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+      return typeof window[globalVar] !== 'undefined';
+    } catch (e) {
+      console.warn('[DashboardDocImport] Could not load ' + globalVar + ' from CDN:', e);
+      return false;
     }
-    const arrayBuffer = await file.arrayBuffer();
-    const result = await mammoth.convertToHtml({ arrayBuffer });
-    return {
-      html: result.value || '<p>(Empty Document)</p>',
-      messages: result.messages || []
-    };
+  }
+
+  // 1. Microsoft Word Document (.docx / .doc)
+  if (ext === 'docx' || ext === 'doc') {
+    await ensureScript('mammoth', 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js');
+    if (typeof mammoth !== 'undefined' && mammoth.convertToHtml) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.convertToHtml({ arrayBuffer });
+        if (result && result.value && result.value.trim()) {
+          return {
+            html: result.value,
+            messages: result.messages || []
+          };
+        }
+      } catch (mammothErr) {
+        console.warn('[DashboardDocImport] Mammoth error, using binary/text fallback:', mammothErr);
+      }
+    }
+
+    // Fallback: Extract clean printable text if Mammoth fails or file is legacy .doc
+    try {
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let text = '';
+      let chunk = '';
+      for (let i = 0; i < bytes.length; i++) {
+        const b = bytes[i];
+        if ((b >= 32 && b <= 126) || b === 10 || b === 13) {
+          chunk += String.fromCharCode(b);
+          if (chunk.length > 400) {
+            text += chunk;
+            chunk = '';
+          }
+        } else if (chunk.length > 3) {
+          text += chunk + '\n';
+          chunk = '';
+        } else {
+          chunk = '';
+        }
+      }
+      text += chunk;
+      const lines = text.split(/\r?\n/)
+        .map(l => l.trim())
+        .filter(l => l.length > 8 && !/[^\x20-\x7E\t]/.test(l));
+      if (lines.length > 0) {
+        return {
+          html: lines.map(l => '<p>' + escapeHtml(l) + '</p>').join(''),
+          rawText: lines.join('\n')
+        };
+      }
+    } catch (fallbackErr) {
+      console.warn('[DashboardDocImport] Word fallback error:', fallbackErr);
+    }
+    throw new Error('Could not parse Word document. Please ensure it is a valid .docx file.');
   }
 
   // 2. Adobe PDF Document (.pdf)
   if (ext === 'pdf') {
-    if (typeof pdfjsLib === 'undefined' || !pdfjsLib.getDocument) {
-      throw new Error('PDF.js library is not loaded. Cannot parse .pdf document.');
-    }
-    if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    }
-    const arrayBuffer = await file.arrayBuffer();
-    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-    const pdfDoc = await loadingTask.promise;
-    let fullHtml = '';
+    await ensureScript('pdfjsLib', 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+    if (typeof pdfjsLib !== 'undefined' && pdfjsLib.getDocument) {
+      try {
+        if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+        const arrayBuffer = await file.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false });
+        const pdfDoc = await loadingTask.promise;
+        let fullHtml = '';
 
-    for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-      const page = await pdfDoc.getPage(pageNum);
-      const textContent = await page.getTextContent();
-      let pageText = '';
-      let currentLine = '';
-      for (const item of textContent.items) {
-        if (item.hasEOL) {
-          currentLine += item.str;
-          if (currentLine.trim()) {
-            pageText += `<p>${escapeHtml(currentLine.trim())}</p>`;
+        for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+          const page = await pdfDoc.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          let pageText = '';
+          let currentLine = '';
+          for (const item of textContent.items) {
+            if (item.hasEOL) {
+              currentLine += item.str;
+              if (currentLine.trim()) {
+                pageText += '<p>' + escapeHtml(currentLine.trim()) + '</p>';
+              }
+              currentLine = '';
+            } else {
+              currentLine += (currentLine ? ' ' : '') + item.str;
+            }
           }
-          currentLine = '';
-        } else {
-          currentLine += (currentLine ? ' ' : '') + item.str;
+          if (currentLine.trim()) {
+            pageText += '<p>' + escapeHtml(currentLine.trim()) + '</p>';
+          }
+          if (!pageText && textContent.items.length > 0) {
+            pageText = '<p>' + escapeHtml(textContent.items.map(it => it.str).join(' ').trim()) + '</p>';
+          }
+          fullHtml += pageText || '<p><br></p>';
+        }
+
+        if (fullHtml && fullHtml.trim()) {
+          return {
+            html: fullHtml
+          };
+        }
+      } catch (pdfErr) {
+        console.warn('[DashboardDocImport] PDF.js error, trying stream fallback:', pdfErr);
+      }
+    }
+
+    // PDF text stream fallback
+    try {
+      const buffer = await file.arrayBuffer();
+      const text = new TextDecoder('latin1').decode(buffer);
+      const matches = text.match(/\(([^)]+)\)\s*Tj/g) || text.match(/BT[\s\S]*?ET/g);
+      if (matches && matches.length > 0) {
+        const extracted = matches.map(m => m.replace(/[\(\)Tj]/g, '').trim()).filter(Boolean);
+        if (extracted.length > 0) {
+          return {
+            html: extracted.map(line => '<p>' + escapeHtml(line) + '</p>').join(''),
+            rawText: extracted.join('\n')
+          };
         }
       }
-      if (currentLine.trim()) {
-        pageText += `<p>${escapeHtml(currentLine.trim())}</p>`;
-      }
-      if (!pageText && textContent.items.length > 0) {
-        pageText = `<p>${escapeHtml(textContent.items.map(it => it.str).join(' ').trim())}</p>`;
-      }
-      fullHtml += pageText || '<p><br></p>';
-    }
+    } catch (e) {}
 
-    return {
-      html: fullHtml || '<p>(Empty PDF Document)</p>'
-    };
+    throw new Error('Could not parse PDF document. Please ensure the file is not password-protected.');
   }
 
   // 3. Fallback for .txt, .md, .markdown
@@ -2050,13 +2134,13 @@ async function parseUploadedDocument(file) {
       const paragraphs = raw.split(/\r?\n\r?\n/).map(para => {
         const trimmed = para.trim();
         if (!trimmed) return '';
-        if (trimmed.startsWith('### ')) return `<h3>${escapeHtml(trimmed.slice(4))}</h3>`;
-        if (trimmed.startsWith('## ')) return `<h2>${escapeHtml(trimmed.slice(3))}</h2>`;
-        if (trimmed.startsWith('# ')) return `<h1>${escapeHtml(trimmed.slice(2))}</h1>`;
-        return `<p>${escapeHtml(trimmed).replace(/\r?\n/g, '<br>')}</p>`;
+        if (trimmed.startsWith('### ')) return '<h3>' + escapeHtml(trimmed.slice(4)) + '</h3>';
+        if (trimmed.startsWith('## ')) return '<h2>' + escapeHtml(trimmed.slice(3)) + '</h2>';
+        if (trimmed.startsWith('# ')) return '<h1>' + escapeHtml(trimmed.slice(2)) + '</h1>';
+        return '<p>' + escapeHtml(trimmed).replace(/\r?\n/g, '<br>') + '</p>';
       }).filter(Boolean).join('');
       resolve({
-        html: paragraphs || `<p>${escapeHtml(raw)}</p>`,
+        html: paragraphs || '<p>' + escapeHtml(raw) + '</p>',
         rawText: raw
       });
     };
@@ -2070,14 +2154,22 @@ async function handleDashboardImportDocument(event) {
   if (!file) return;
 
   try {
-    showToast(`Parsing "${file.name}"...`, 'info');
+    if (!currentGroupId) {
+      currentGroupId = window.currentGroupId || localStorage.getItem('groupspace_active_group_id');
+    }
+    if (!currentGroupId) {
+      showToast('Please select or open a workspace before importing a document.', 'error');
+      return;
+    }
+
+    showToast('Parsing "' + file.name + '"...', 'info');
     const parsed = await parseUploadedDocument(file);
     const content = parsed.html || '<p>(Empty Document)</p>';
     const baseTitle = file.name.replace(/\.[^/.]+$/, '').trim() || 'Imported Document';
-    const autoTitle = extractDashboardAutoTitle(content) || baseTitle;
+    const autoTitle = (baseTitle !== 'Imported Document' && baseTitle.length > 1) ? baseTitle : (extractDashboardAutoTitle(content) || baseTitle);
     const folderId = (activeDashboardFolderFilter !== 'ALL' && activeDashboardFolderFilter !== 'ROOT') ? Number(activeDashboardFolderFilter) : null;
 
-    const res = await apiFetch(`/api/groups/${currentGroupId}/notes`, {
+    const res = await apiFetch('/api/groups/' + currentGroupId + '/notes', {
       method: 'POST',
       body: JSON.stringify({
         title: autoTitle,
@@ -2086,11 +2178,11 @@ async function handleDashboardImportDocument(event) {
         tags: 'imported'
       })
     });
-    showToast(`Imported "${autoTitle}"!`, 'success');
+    showToast('Imported "' + autoTitle + '"!', 'success');
     event.target.value = '';
     await loadNotebook();
     if (res && res.data && res.data.id) {
-      window.location.href = `/notebook.html?groupId=${currentGroupId}&noteId=${res.data.id}`;
+      window.location.href = '/notebook.html?groupId=' + currentGroupId + '&noteId=' + res.data.id;
     }
   } catch (err) {
     console.error('[DashboardImport] Error:', err);
@@ -2242,9 +2334,9 @@ function renderDashboardNotesGrid(notes) {
           <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px;">
             <span>By ${escapeHtml(n.author_name || 'Member')}</span>
             <div style="display:flex; align-items:center; gap:6px;">
-              <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.txt</button>
-              <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.pdf</button>
-              <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id}, '${escapeHtml(displayTitle)}', '${escapeHtml(n.content || '')}')" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.docx</button>
+              <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id})" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.txt</button>
+              <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id})" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.pdf</button>
+              <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id})" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.docx</button>
               ${canManagePerms ? `<span style="cursor:pointer; color:#ef4444; margin-left:4px; font-size:11px; font-weight:600;" title="Delete Note" onclick="deleteNote(${n.id}, event)">Delete</span>` : ''}
             </div>
           </div>
@@ -4008,7 +4100,7 @@ async function handlePersonalImportDocument(event) {
     const parsed = await parseUploadedDocument(file);
     const content = parsed.html || '<p>(Empty Document)</p>';
     const baseTitle = file.name.replace(/\.[^/.]+$/, '').trim() || 'Private Note';
-    const autoTitle = extractDashboardAutoTitle(content) || baseTitle;
+    const autoTitle = (baseTitle !== 'Private Note' && baseTitle !== 'Imported Document' && baseTitle.length > 1) ? baseTitle : (extractDashboardAutoTitle(content) || baseTitle);
     const folderId = (activePersonalFolderFilter !== 'ALL' && activePersonalFolderFilter !== 'ROOT') ? Number(activePersonalFolderFilter) : null;
 
     const res = await apiFetch('/api/personal', {
@@ -4157,9 +4249,9 @@ function renderPersonalNotesGrid(items) {
         <div onclick="event.stopPropagation();" class="note-card-actions-bar">
           <div class="note-export-group">
             <span style="font-size:0.72rem; color:var(--muted-foreground); margin-right:4px;">Export:</span>
-            <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id}, '${escapeHtml(displayTitle).replace(/'/g, "\\'")}', '${escapeHtml(n.content || '').replace(/'/g, "\\'")}')">TXT</button>
-            <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id}, '${escapeHtml(displayTitle).replace(/'/g, "\\'")}', '${escapeHtml(n.content || '').replace(/'/g, "\\'")}')">PDF</button>
-            <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id}, '${escapeHtml(displayTitle).replace(/'/g, "\\'")}', '${escapeHtml(n.content || '').replace(/'/g, "\\'")}')">DOCX</button>
+            <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id})">TXT</button>
+            <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id})">PDF</button>
+            <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id})">DOCX</button>
           </div>
           <button type="button" class="btn-note-delete" title="Delete Private Note" onclick="deletePersonalItem(${n.id}, event)">
             Delete

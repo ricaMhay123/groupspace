@@ -109,9 +109,9 @@ async function loadNotebookPages(groupId = null) {
               <span>By ${escapeHtml(author)}</span>
               <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                 ${canManagePerms && typeof openDashboardShareModal === 'function' ? `<button type="button" title="Share / Page Permissions" class="btn-export-badge" onclick="openDashboardShareModal(${safeId})" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #0f172a); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">Share</button>` : ''}
-                <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #0f172a); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.txt</button>
-                <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #0f172a); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.pdf</button>
-                <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${safeId}, '${escapeHtml(title)}', '${escapeHtml(content)}')" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #0f172a); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.docx</button>
+                <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${safeId})" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #0f172a); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.txt</button>
+                <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${safeId})" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #0f172a); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.pdf</button>
+                <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${safeId})" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #0f172a); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.docx</button>
                 <span style="cursor:pointer; color:#ef4444; margin-left:4px; font-size:11px; font-weight:600;" title="Delete Note" onclick="deleteNote(${safeId}, event)">Delete</span>
               </div>
             </div>
@@ -745,35 +745,53 @@ function embeddedExportEditor(format, editorTargetId = null) {
  * 3. RENDER EXPORT BUTTONS & HANDLERS:
  * Exports active note or page to .txt, .pdf, or .docx.
  */
-async function exportNotebook(format, noteId, title = 'Notebook_Page', rawContent = '') {
-  let content = String(rawContent || '').replace(/^<!--GS_SHAPES_JSON:.*?-->/, '');
+async function exportNotebook(format, noteId, title = '', rawContent = '') {
+  let content = rawContent;
   let pageTitle = title;
+
+  // Resolve note from in-memory cache if noteId provided
+  if (noteId) {
+    const safeNoteId = Number(noteId);
+    const cached = (window.dashboardNotebookNotesCache && window.dashboardNotebookNotesCache.find(x => Number(x.id) === safeNoteId))
+      || (window.personalNotesCache && window.personalNotesCache.find(x => Number(x.id) === safeNoteId))
+      || (typeof pages !== 'undefined' && Array.isArray(pages) && pages.find(x => Number(x.id) === safeNoteId))
+      || (window.pages && Array.isArray(window.pages) && window.pages.find(x => Number(x.id) === safeNoteId));
+
+    if (cached) {
+      if (!pageTitle || pageTitle === 'Notebook_Page') {
+        pageTitle = cached.title || (typeof extractDashboardAutoTitle === 'function' ? extractDashboardAutoTitle(cached.content) : extractAutoTitleClient(cached.content));
+      }
+      if (!content) {
+        content = cached.content || '';
+      }
+    }
+  }
 
   // If content is empty, try grabbing from DOM
   if (!content) {
-    const editor = document.getElementById('pageContent') || document.getElementById('noteContent');
+    const editor = document.getElementById('nbPageContent') || document.getElementById('pageContent') || document.getElementById('noteContent');
     content = editor ? (editor.value || editor.innerHTML || '') : '';
-    content = content.replace(/^<!--GS_SHAPES_JSON:.*?-->/, '');
   }
+  content = String(content || '').replace(/^<!--GS_SHAPES_JSON:.*?-->/, '');
+
   if (!pageTitle || pageTitle === 'Notebook_Page') {
-    const titleEl = document.getElementById('pageTitle') || document.getElementById('noteTitle');
-    pageTitle = (titleEl && titleEl.value.trim()) ? titleEl.value.trim() : extractAutoTitleClient(content);
+    const titleEl = document.getElementById('nbPageTitle') || document.getElementById('pageTitle') || document.getElementById('noteTitle');
+    pageTitle = (titleEl && titleEl.value.trim()) ? titleEl.value.trim() : (extractAutoTitleClient(content) || 'Notebook_Page');
   }
 
-  const safeTitle = (pageTitle || 'Document').replace(/[^a-z0-9_-]/gi, '_');
+  const safeTitle = (pageTitle || 'Document').replace(/[^a-z0-9_-]/gi, '_') || 'Notebook_Page';
 
-  switch (format.toLowerCase()) {
+  switch (String(format || '').toLowerCase()) {
     case 'txt': {
-      // 1. .txt Export: Strip tags and download Blob
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = content;
-      const plainText = `${pageTitle}\n${'='.repeat(pageTitle.length)}\n\n${tempDiv.textContent || tempDiv.innerText || content}`;
+      const plainText = pageTitle + '\n' + '='.repeat(Math.max(pageTitle.length, 12)) + '\n\n' + (tempDiv.textContent || tempDiv.innerText || content);
       
       const blob = new Blob([plainText], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${safeTitle}.txt`;
+      a.download = safeTitle + '.txt';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -783,12 +801,10 @@ async function exportNotebook(format, noteId, title = 'Notebook_Page', rawConten
     }
 
     case 'pdf': {
-      // 2. .pdf Export: html2pdf.js
       if (typeof html2pdf === 'undefined') {
         if (typeof showToast === 'function') {
           showToast('Loading PDF generator...', 'info');
         }
-        // Load dynamically if missing
         const script = document.createElement('script');
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
         script.onload = () => exportNotebook('pdf', noteId, title, rawContent);
@@ -796,7 +812,7 @@ async function exportNotebook(format, noteId, title = 'Notebook_Page', rawConten
         return;
       }
 
-      const font = document.getElementById('nbFontFamily')?.value || 'Arial';
+      const font = document.getElementById('nbFontFamily')?.value || 'Arial, sans-serif';
       const lineHeight = document.getElementById('nbLineHeight')?.value || '1.5';
 
       const pdfContainer = document.createElement('div');
@@ -805,14 +821,12 @@ async function exportNotebook(format, noteId, title = 'Notebook_Page', rawConten
       pdfContainer.style.lineHeight = lineHeight;
       pdfContainer.style.color = '#111';
       pdfContainer.style.background = '#fff';
-      pdfContainer.innerHTML = `
-        <h1 style="border-bottom:2px solid #333; padding-bottom:8px; font-size:22px;">${pageTitle}</h1>
-        <div style="margin-top:16px; font-size:14px; white-space:pre-wrap;">${content}</div>
-      `;
+      pdfContainer.innerHTML = '<h1 style="border-bottom:2px solid #333; padding-bottom:8px; font-size:22px;">' + escapeHtml(pageTitle) + '</h1>' +
+        '<div style="margin-top:16px; font-size:14px; white-space:pre-wrap;">' + content + '</div>';
 
       html2pdf().from(pdfContainer).set({
         margin: [10, 10, 10, 10],
-        filename: `${safeTitle}.pdf`,
+        filename: safeTitle + '.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -826,40 +840,61 @@ async function exportNotebook(format, noteId, title = 'Notebook_Page', rawConten
     }
 
     case 'docx': {
-      // 3. .docx Export: POST to backend endpoint
       try {
         if (typeof showToast === 'function') showToast('Generating Word document...', 'info');
 
         const font = document.getElementById('nbFontFamily')?.value || 'Arial';
         const lineHeight = document.getElementById('nbLineHeight')?.value || 1.5;
+        const token = localStorage.getItem('groupspace_token');
+        const baseUrl = (typeof getApiBaseUrl === 'function') ? getApiBaseUrl() : '';
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
 
-        const response = await fetch('/api/notebooks/export/docx', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'same-origin',
-          body: JSON.stringify({
-            title: pageTitle,
-            htmlContent: `<h2>${pageTitle}</h2><p>${content.replace(/\n/g, '<br/>')}</p>`,
-            font: font.replace(/['",]/g, ''),
-            lineHeight: parseFloat(lineHeight)
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error('Server DOCX generation failed.');
+        let response;
+        try {
+          response = await fetch(baseUrl + '/api/notebooks/export/docx', {
+            method: 'POST',
+            headers,
+            credentials: 'include',
+            body: JSON.stringify({
+              title: pageTitle,
+              htmlContent: '<h2>' + escapeHtml(pageTitle) + '</h2><div>' + content + '</div>',
+              font: String(font).replace(/['",]/g, ''),
+              lineHeight: parseFloat(lineHeight)
+            })
+          });
+        } catch (fetchErr) {
+          console.warn('[NotebookExport] Backend docx endpoint error, using client doc fallback:', fetchErr);
         }
 
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${safeTitle}.docx`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        if (typeof showToast === 'function') showToast('Downloaded .docx document', 'success');
+        if (response && response.ok) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = safeTitle + '.docx';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          if (typeof showToast === 'function') showToast('Downloaded .docx document', 'success');
+        } else {
+          // Fallback: Client-side Word-compatible HTML Document download
+          const wordHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
+'<head><meta charset="utf-8"><title>' + escapeHtml(pageTitle) + '</title>' +
+'<style>body{font-family:' + font + '; line-height:' + lineHeight + '; color:#0f172a; margin:20mm 20mm;} h1{font-size:24pt;} p{margin:1em 0;}</style>' +
+'</head><body><h1>' + escapeHtml(pageTitle) + '</h1><div>' + content + '</div></body></html>';
+          const blob = new Blob(['\ufeff' + wordHtml], { type: 'application/msword' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = safeTitle + '.doc';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          if (typeof showToast === 'function') showToast('Downloaded Word document (.doc)', 'success');
+        }
       } catch (err) {
         console.error('DOCX export error:', err);
         if (typeof showToast === 'function') showToast(err.message || 'DOCX export failed', 'error');

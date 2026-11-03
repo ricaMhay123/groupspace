@@ -1863,7 +1863,7 @@
                 <option value="π">π Pi</option>
                 <option value="∞">∞ Infinity</option>
               </select>
-              <input type="file" id="nbFileInput" accept=".docx,.pdf,.txt,.md,.markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,text/plain,text/markdown" style="display:none;" onchange="handleImportFile(event)">
+              <input type="file" id="nbFileInput" accept=".docx,.doc,.pdf,.txt,.md,.markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/pdf,text/plain,text/markdown" style="display:none;" onchange="handleImportFile(event)">
             </div>
           </div>
           <div class="nb-ribbon-group-footer">Text &amp; Symbols &#8600;</div>
@@ -4781,60 +4781,144 @@ async function parseUploadedDocument(file) {
   const nameParts = file.name.split('.');
   const ext = (nameParts.length > 1 ? nameParts.pop() : '').toLowerCase();
 
-  // 1. Microsoft Word Document (.docx)
-  if (ext === 'docx') {
-    if (typeof mammoth === 'undefined' || !mammoth.convertToHtml) {
-      throw new Error('Mammoth.js library is not loaded. Cannot parse .docx document.');
+  // Helper to dynamically load script if missing
+  async function ensureScript(globalVar, cdnUrl) {
+    if (typeof window[globalVar] !== 'undefined') return true;
+    try {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = cdnUrl;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+      return typeof window[globalVar] !== 'undefined';
+    } catch (e) {
+      console.warn('[DocImport] Could not load ' + globalVar + ' from CDN:', e);
+      return false;
     }
-    const arrayBuffer = await file.arrayBuffer();
-    const result = await mammoth.convertToHtml({ arrayBuffer });
-    return {
-      html: result.value || '<p>(Empty Document)</p>',
-      messages: result.messages || []
-    };
+  }
+
+  // 1. Microsoft Word Document (.docx / .doc)
+  if (ext === 'docx' || ext === 'doc') {
+    await ensureScript('mammoth', 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js');
+    if (typeof mammoth !== 'undefined' && mammoth.convertToHtml) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.convertToHtml({ arrayBuffer });
+        if (result && result.value && result.value.trim()) {
+          return {
+            html: result.value,
+            messages: result.messages || []
+          };
+        }
+      } catch (mammothErr) {
+        console.warn('[DocImport] Mammoth parsing error, trying binary/text fallback:', mammothErr);
+      }
+    }
+
+    // Fallback: Extract clean printable text if Mammoth fails or file is legacy .doc
+    try {
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let text = '';
+      let chunk = '';
+      for (let i = 0; i < bytes.length; i++) {
+        const b = bytes[i];
+        if ((b >= 32 && b <= 126) || b === 10 || b === 13) {
+          chunk += String.fromCharCode(b);
+          if (chunk.length > 400) {
+            text += chunk;
+            chunk = '';
+          }
+        } else if (chunk.length > 3) {
+          text += chunk + '\n';
+          chunk = '';
+        } else {
+          chunk = '';
+        }
+      }
+      text += chunk;
+      const lines = text.split(/\r?\n/)
+        .map(l => l.trim())
+        .filter(l => l.length > 8 && !/[^\x20-\x7E\t]/.test(l));
+      if (lines.length > 0) {
+        return {
+          html: lines.map(l => '<p>' + escapeHtml(l) + '</p>').join(''),
+          rawText: lines.join('\n')
+        };
+      }
+    } catch (fallbackErr) {
+      console.warn('[DocImport] Word fallback error:', fallbackErr);
+    }
+    throw new Error('Could not parse Word document. Please ensure it is a valid .docx file.');
   }
 
   // 2. Adobe PDF Document (.pdf)
   if (ext === 'pdf') {
-    if (typeof pdfjsLib === 'undefined' || !pdfjsLib.getDocument) {
-      throw new Error('PDF.js library is not loaded. Cannot parse .pdf document.');
-    }
-    if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    }
-    const arrayBuffer = await file.arrayBuffer();
-    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-    const pdfDoc = await loadingTask.promise;
-    let fullHtml = '';
+    await ensureScript('pdfjsLib', 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+    if (typeof pdfjsLib !== 'undefined' && pdfjsLib.getDocument) {
+      try {
+        if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+        const arrayBuffer = await file.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false });
+        const pdfDoc = await loadingTask.promise;
+        let fullHtml = '';
 
-    for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-      const page = await pdfDoc.getPage(pageNum);
-      const textContent = await page.getTextContent();
-      let pageText = '';
-      let currentLine = '';
-      for (const item of textContent.items) {
-        if (item.hasEOL) {
-          currentLine += item.str;
-          if (currentLine.trim()) {
-            pageText += `<p>${escapeHtml(currentLine.trim())}</p>`;
+        for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+          const page = await pdfDoc.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          let pageText = '';
+          let currentLine = '';
+          for (const item of textContent.items) {
+            if (item.hasEOL) {
+              currentLine += item.str;
+              if (currentLine.trim()) {
+                pageText += '<p>' + escapeHtml(currentLine.trim()) + '</p>';
+              }
+              currentLine = '';
+            } else {
+              currentLine += (currentLine ? ' ' : '') + item.str;
+            }
           }
-          currentLine = '';
-        } else {
-          currentLine += (currentLine ? ' ' : '') + item.str;
+          if (currentLine.trim()) {
+            pageText += '<p>' + escapeHtml(currentLine.trim()) + '</p>';
+          }
+          if (!pageText && textContent.items.length > 0) {
+            pageText = '<p>' + escapeHtml(textContent.items.map(it => it.str).join(' ').trim()) + '</p>';
+          }
+          fullHtml += pageText || '<p><br></p>';
+        }
+
+        if (fullHtml && fullHtml.trim()) {
+          return {
+            html: fullHtml
+          };
+        }
+      } catch (pdfErr) {
+        console.warn('[DocImport] PDF.js parsing error, trying stream fallback:', pdfErr);
+      }
+    }
+
+    // PDF text stream fallback
+    try {
+      const buffer = await file.arrayBuffer();
+      const text = new TextDecoder('latin1').decode(buffer);
+      const matches = text.match(/\(([^)]+)\)\s*Tj/g) || text.match(/BT[\s\S]*?ET/g);
+      if (matches && matches.length > 0) {
+        const extracted = matches.map(m => m.replace(/[\(\)Tj]/g, '').trim()).filter(Boolean);
+        if (extracted.length > 0) {
+          return {
+            html: extracted.map(line => '<p>' + escapeHtml(line) + '</p>').join(''),
+            rawText: extracted.join('\n')
+          };
         }
       }
-      if (currentLine.trim()) {
-        pageText += `<p>${escapeHtml(currentLine.trim())}</p>`;
-      }
-      if (!pageText && textContent.items.length > 0) {
-        pageText = `<p>${escapeHtml(textContent.items.map(it => it.str).join(' ').trim())}</p>`;
-      }
-      fullHtml += pageText || '<p><br></p>';
-    }
+    } catch (e) {}
 
-    return {
-      html: fullHtml || '<p>(Empty PDF Document)</p>'
-    };
+    throw new Error('Could not parse PDF document. Please ensure the file is not password-protected.');
   }
 
   // 3. Fallback for .txt, .md, .markdown
@@ -4845,13 +4929,13 @@ async function parseUploadedDocument(file) {
       const paragraphs = raw.split(/\r?\n\r?\n/).map(para => {
         const trimmed = para.trim();
         if (!trimmed) return '';
-        if (trimmed.startsWith('### ')) return `<h3>${escapeHtml(trimmed.slice(4))}</h3>`;
-        if (trimmed.startsWith('## ')) return `<h2>${escapeHtml(trimmed.slice(3))}</h2>`;
-        if (trimmed.startsWith('# ')) return `<h1>${escapeHtml(trimmed.slice(2))}</h1>`;
-        return `<p>${escapeHtml(trimmed).replace(/\r?\n/g, '<br>')}</p>`;
+        if (trimmed.startsWith('### ')) return '<h3>' + escapeHtml(trimmed.slice(4)) + '</h3>';
+        if (trimmed.startsWith('## ')) return '<h2>' + escapeHtml(trimmed.slice(3)) + '</h2>';
+        if (trimmed.startsWith('# ')) return '<h1>' + escapeHtml(trimmed.slice(2)) + '</h1>';
+        return '<p>' + escapeHtml(trimmed).replace(/\r?\n/g, '<br>') + '</p>';
       }).filter(Boolean).join('');
       resolve({
-        html: paragraphs || `<p>${escapeHtml(raw)}</p>`,
+        html: paragraphs || '<p>' + escapeHtml(raw) + '</p>',
         rawText: raw
       });
     };
@@ -4865,21 +4949,59 @@ async function handleImportFile(event) {
   if (!file) return;
 
   try {
-    showToast(`Importing "${file.name}"...`, 'info');
+    showToast('Importing "' + file.name + '"... (parsing)', 'info');
     const parsed = await parseUploadedDocument(file);
     const editor = document.getElementById('nbPageContent');
     if (!editor) return;
 
+    const baseTitle = file.name.replace(/\.[^/.]+$/, '').trim() || 'Imported Document';
+
     // Prepare a brand new page in the target folder
     clearEditor(pendingImportFolderId);
     pendingImportFolderId = null;
+
+    // Explicitly set the title input so saveCurrentPage uses the imported file's name
+    const titleEl = manualTitleInput || document.getElementById('nbPageTitle');
+    if (titleEl) {
+      titleEl.value = baseTitle;
+    }
+    const hdrTitle = document.getElementById('notebookName');
+    if (hdrTitle) hdrTitle.textContent = baseTitle;
 
     editor.innerHTML = parsed.html || '<p>(Empty Document)</p>';
     currentShapes = [];
     renderAllShapes();
     updateWordCount();
 
-    showToast(`Imported "${file.name}" as a new document!`, 'success');
+    // Ensure we have a valid notebook ID or fallback to personal
+    if (!isPersonalMode && !currentNotebookId && currentGroupId) {
+      try {
+        const nbRes = await apiFetch('/api/notebooks/' + currentGroupId);
+        const notebooks = nbRes.data || [];
+        if (notebooks.length > 0) {
+          currentNotebookId = notebooks[0].id;
+        } else {
+          const created = await apiFetch('/api/notebooks', {
+            method: 'POST',
+            body: JSON.stringify({ groupId: currentGroupId, title: 'Workspace Notebook', visibility: 'shared' })
+          });
+          if (created && created.data) {
+            currentNotebookId = created.data.id;
+          }
+        }
+      } catch (nbErr) {
+        console.warn('[NotebookImport] Error resolving notebook:', nbErr);
+      }
+    } else if (!isPersonalMode && !currentNotebookId && !currentGroupId) {
+      const activeG = localStorage.getItem('groupspace_active_group_id');
+      if (activeG && activeG !== 'personal') {
+        currentGroupId = activeG;
+      } else {
+        isPersonalMode = true;
+      }
+    }
+
+    showToast('Imported "' + file.name + '" as a new document!', 'success');
     await saveCurrentPage();
   } catch (err) {
     console.error('[ImportFile] Error importing document:', err);
@@ -4936,7 +5058,7 @@ async function exportPage(format) {
     const canvasEl = document.getElementById('nbCanvas');
     const clone = canvasEl ? canvasEl.cloneNode(true) : document.createElement('div');
     clone.querySelectorAll('.shape-handle, .shape-delete-btn, .shape-rotate-handle, .shape-action-btn, .shape-resize-handle, .shape-rot-handle, .textbox-drag-bar').forEach(el => el.remove());
-    clone.style.cssText = `padding:28px; font-family:${font}; line-height:${lh}; color:#0f172a; background:#ffffff; position:relative; min-height:500px; box-shadow:none; border:none;`;
+    clone.style.cssText = 'padding:28px; font-family:' + font + '; line-height:' + lh + '; color:#0f172a; background:#ffffff; position:relative; min-height:500px; box-shadow:none; border:none;';
 
     html2pdf().from(clone).set({
       margin: [10, 10, 10, 10],
@@ -4948,41 +5070,61 @@ async function exportPage(format) {
     try {
       showToast('Generating Word (.docx)...', 'info');
       const token = localStorage.getItem('groupspace_token');
+      const baseUrl = (typeof getApiBaseUrl === 'function') ? getApiBaseUrl() : '';
       const headers = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (token) headers['Authorization'] = 'Bearer ' + token;
 
-      let finalHtml = `<div>${htmlContent}</div>`;
+      let finalHtml = '<div>' + htmlContent + '</div>';
       if (typeof currentShapes !== 'undefined' && currentShapes.length > 0) {
         const textboxItems = currentShapes
           .filter(s => (s.type === 'textbox' || s.type === 'callout') && s.text)
-          .map(s => `<div style="border:1px solid #cbd5e1; border-radius:6px; padding:10px; margin:12px 0; background:#f8fafc;">${s.text}</div>`)
+          .map(s => '<div style="border:1px solid #cbd5e1; border-radius:6px; padding:10px; margin:12px 0; background:#f8fafc;">' + s.text + '</div>')
           .join('');
         if (textboxItems) {
-          finalHtml += `<div style="margin-top:24px; padding-top:12px; border-top:1px dashed #cbd5e1;"><p><strong>Text Boxes &amp; Callouts:</strong></p>${textboxItems}</div>`;
+          finalHtml += '<div style="margin-top:24px; padding-top:12px; border-top:1px dashed #cbd5e1;"><p><strong>Text Boxes &amp; Callouts:</strong></p>' + textboxItems + '</div>';
         }
       }
 
-      const r = await fetch('/api/notebooks/export/docx', {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify({
-          groupId: currentGroupId,
-          notebookId: currentNotebookId || 0,
-          pageId: currentPageId || 0,
-          title,
-          htmlContent: finalHtml,
-          font: font.split(',')[0].replace(/'/g, '').trim(),
-          lineHeight: parseFloat(lh)
-        })
-      });
-      if (!r.ok) throw new Error('Server error generating DOCX');
-      const blob = await r.blob();
-      const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: safeName + '.docx' });
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      showToast('Downloaded .docx', 'success');
+      let r;
+      try {
+        r = await fetch(baseUrl + '/api/notebooks/export/docx', {
+          method: 'POST',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify({
+            groupId: currentGroupId,
+            notebookId: currentNotebookId || 0,
+            pageId: currentPageId || 0,
+            title,
+            htmlContent: finalHtml,
+            font: font.split(',')[0].replace(/'/g, '').trim(),
+            lineHeight: parseFloat(lh)
+          })
+        });
+      } catch (fetchErr) {
+        console.warn('[DocxExport] Backend export network error, falling back to client-side doc download:', fetchErr);
+      }
+
+      if (r && r.ok) {
+        const blob = await r.blob();
+        const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: safeName + '.docx' });
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast('Downloaded .docx', 'success');
+      } else {
+        // Fallback: Client-side Word-compatible HTML Document download
+        const wordHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
+'<head><meta charset="utf-8"><title>' + escapeHtml(title) + '</title>' +
+'<style>body{font-family:' + font + '; line-height:' + lh + '; color:#0f172a; margin:20mm 20mm;} h1{font-size:24pt;} p{margin:1em 0;}</style>' +
+'</head><body><h1>' + escapeHtml(title) + '</h1>' + finalHtml + '</body></html>';
+        const blob = new Blob(['\ufeff' + wordHtml], { type: 'application/msword' });
+        const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: safeName + '.doc' });
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast('Downloaded Word document (.doc)', 'success');
+      }
     } catch (err) {
       showToast(err.message || 'DOCX download failed', 'error');
     }
