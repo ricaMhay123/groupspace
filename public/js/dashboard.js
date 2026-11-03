@@ -942,200 +942,191 @@ function renderHomespaceSettingsDrawer() {
   const roleBadgeClass = (isPrimaryLeader || isCoLeader) ? 'online' : 'pending';
 
   container.innerHTML = `
-    <!-- Slide Drawer Header with Close Button -->
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); background:var(--card); position:sticky; top:0; z-index:10;">
-      <div style="display:flex; align-items:center; gap:8px;">
-        <h3 style="margin:0; font-size:16px; font-weight:700; color:var(--foreground);">Workspace Settings &amp; Controls</h3>
+    <!-- Floating Centered Modal Header -->
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--border); background:var(--card); position:sticky; top:0; z-index:10; border-top-left-radius:16px; border-top-right-radius:16px;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="width:36px; height:36px; border-radius:10px; background:var(--secondary); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--primary); flex-shrink:0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </div>
+        <div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <h3 id="hsSettingsModalTitle" style="margin:0; font-size:16px; font-weight:700; color:var(--foreground);">Workspace Settings &amp; Controls</h3>
+            <span class="status ${roleBadgeClass}" style="font-size:11px; font-weight:700;">${roleLabel}</span>
+          </div>
+          <p style="margin:2px 0 0; font-size:12px; color:var(--muted-foreground);">Workspace preferences, invite code, and team permissions</p>
+        </div>
       </div>
-      <button type="button" class="modal-close" onclick="toggleHomespaceSettingsDrawer(false)" aria-label="Close settings drawer" style="font-size:18px; width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; border:none; background:transparent; cursor:pointer;">&#10005;</button>
+      <button type="button" class="modal-close" onclick="toggleHomespaceSettingsDrawer(false)" aria-label="Close workspace settings" style="font-size:18px; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; border:none; background:transparent; cursor:pointer; color:var(--muted-foreground); transition:all 0.2s;">&#10005;</button>
     </div>
-    <div class="homespace-settings-accordion ${isHomespaceDrawerOpen ? 'open' : ''}" id="homespaceSettingsAccordion">
-      <!-- Accordion Header Trigger -->
-      <div class="hs-accordion-header" id="hsSettingsHeader" onclick="toggleHomespaceSettingsDrawer()" role="button" tabindex="0" aria-expanded="${isHomespaceDrawerOpen ? 'true' : 'false'}" aria-controls="hsSettingsContent">
-        <div style="display:flex; align-items:center; gap:12px; min-width:0;">
-          <div class="hs-accordion-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
+
+    <!-- Modal Content Body -->
+    <div class="homespace-settings-accordion open" id="homespaceSettingsAccordion" style="padding:22px 24px; display:flex; flex-direction:column; gap:18px;">
+      
+      <!-- Section 1: Workspace Details & Discrete Invite Code -->
+      <div class="hs-drawer-card">
+        <div class="hs-card-header">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <h4>Workspace &amp; Discrete Invite</h4>
           </div>
-          <div style="min-width:0;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <h3 class="hs-accordion-title">Workspace Settings & Controls</h3>
-              <span class="hs-accordion-tag">Homespace Panel</span>
-            </div>
-            <p class="hs-accordion-subtitle">User profile, theme toggle, masked invite code & workspace preferences</p>
-          </div>
+          <span style="font-size:11px; font-weight:600; color:var(--primary); background:var(--accent); padding:2px 8px; border-radius:6px;">Access Control</span>
         </div>
-        <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
-          <span class="hs-accordion-pill" id="hsDrawerStatusPill">${isHomespaceDrawerOpen ? 'Click to collapse' : 'Click to expand'}</span>
-          <div class="hs-accordion-chevron ${isHomespaceDrawerOpen ? 'rotated' : ''}" id="hsAccordionChevron">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
+
+        <!-- Workspace Name -->
+        <div style="margin-bottom:14px;">
+          <label style="display:block; font-size:12px; font-weight:600; color:var(--foreground); margin-bottom:4px;">Workspace Name</label>
+          ${isPrimaryLeader ? `
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="hsDrawerWsNameInput" class="form-control" value="${escapeHtml(currentGroupDetails.name)}" style="font-size:13px; padding:8px 12px; flex:1; border-radius:8px;">
+              <button type="button" class="btn-green" style="padding:8px 16px; font-size:12px; font-weight:600; border-radius:8px;" onclick="saveWorkspaceName(document.getElementById('hsDrawerWsNameInput').value)">Save</button>
+            </div>
+          ` : `
+            <div style="padding:8px 12px; background:var(--card); border:1px solid var(--border); border-radius:8px; font-size:13px; font-weight:600; color:var(--foreground);">
+              ${escapeHtml(currentGroupDetails.name)}
+            </div>
+          `}
+        </div>
+
+        <!-- Discrete Masked Invite Code Display -->
+        <div>
+          <label style="display:block; font-size:12px; font-weight:600; color:var(--foreground); margin-bottom:4px;">Workspace Invite Code</label>
+          <p style="font-size:11px; color:var(--muted-foreground); margin:0 0 8px 0;">Masked for privacy during screen sharing. Use button to reveal or copy.</p>
+          
+          <div class="hs-invite-code-container">
+            <div class="hs-invite-code-box">
+              <span class="hs-invite-code-label">CODE:</span>
+              <strong id="hsInviteCodeDisplay" class="hs-invite-code-value ${isInviteCodeRevealed ? 'revealed' : ''}">${isInviteCodeRevealed ? escapeHtml(currentGroupDetails.join_code) : 'GS-••••••'}</strong>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <button type="button" id="hsToggleCodeBtn" class="btn-outline hs-code-action-btn" onclick="toggleInviteCodeVisibility()" aria-label="Toggle invite code mask">
+                <svg id="hsEyeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  ${isInviteCodeRevealed ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>' : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'}
+                </svg>
+                <span id="hsToggleCodeText">${isInviteCodeRevealed ? 'Hide Code' : 'Show Code'}</span>
+              </button>
+              <button type="button" class="btn-outline hs-code-action-btn" onclick="copyHomespaceInviteCode()" aria-label="Copy invite code to clipboard">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy
+              </button>
+              ${isPrimaryLeader ? `
+                <button type="button" class="btn-outline hs-code-action-btn" onclick="resetWorkspaceInviteCode()" aria-label="Reset workspace invite code">
+                  Reset
+                </button>
+              ` : ''}
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Accordion Expandable Content -->
-      <div class="hs-accordion-content hs-accordion-animator" id="hsSettingsContent">
-        <div class="hs-accordion-animator-inner">
-        <div class="hs-drawer-grid">
-          <!-- Column 1: User Profile & Personal Quick Controls -->
-          <div class="hs-drawer-card">
-            <div class="hs-card-header">
-              <h4>User Profile & Controls</h4>
-              <span class="status ${roleBadgeClass}" style="font-size:11px; font-weight:700;">${roleLabel}</span>
+      ${isPrimaryLeader ? `
+        <!-- Section 2: Member Permission Constraints (Leader Only) -->
+        <div class="hs-drawer-card">
+          <div class="hs-card-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <h4>Member Permission Constraints</h4>
             </div>
-            <div style="display:flex; align-items:center; gap:14px; padding:12px; background:var(--secondary); border:1px solid var(--border); border-radius:12px; margin-bottom:16px;">
-              <div class="chat-avatar" id="hsUserAvatar" style="width:44px; height:44px; font-size:16px; flex-shrink:0;">
-                ${currentUser ? escapeHtml(currentUser.avatarInitials || 'GS') : 'GS'}
-              </div>
-              <div style="min-width:0; flex:1;">
-                <div id="hsUserFullName" style="font-size:14px; font-weight:700; color:var(--foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                  ${currentUser ? escapeHtml(currentUser.fullName) : 'User'}
-                </div>
-                <div style="font-size:12px; color:var(--muted-foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                  ${currentUser ? escapeHtml(currentUser.email) : ''}
-                </div>
-                <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
-                  <span class="status online" style="font-size:11px; padding:1px 6px;">Online</span>
-                  <span style="font-size:11px; color:var(--muted-foreground);">• Logged in</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Quick Action Buttons: Dark Mode & Sign Out -->
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
-              <button type="button" class="btn-outline hs-control-btn" data-theme-toggle aria-label="Toggle theme" title="Toggle theme" onclick="window.gsToggleTheme && window.gsToggleTheme()">
-                <svg data-theme-moon width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
-                <svg data-theme-sun width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                <span data-theme-moon>Dark Mode</span>
-                <span data-theme-sun style="display:none">Light Mode</span>
-              </button>
-              <button type="button" class="btn-outline hs-control-btn" style="color:var(--destructive); border-color:var(--border);" onclick="logoutUser()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                Sign Out
-              </button>
-            </div>
+            <span style="font-size:11px; font-weight:600; color:var(--muted-foreground);">Leader Governance</span>
           </div>
-
-          <!-- Column 2: Workspace Details & Discrete Invite Code -->
-          <div class="hs-drawer-card">
-            <div class="hs-card-header">
-              <h4>Workspace & Discrete Invite</h4>
-              <span style="font-size:12px; color:var(--muted-foreground);">Access Control</span>
-            </div>
-
-            <!-- Workspace Name Field -->
-            <div style="margin-bottom:14px;">
-              <label style="display:block; font-size:12px; font-weight:600; color:var(--foreground); margin-bottom:4px;">Active Workspace</label>
-              ${isPrimaryLeader ? `
-                <div style="display:flex; gap:8px;">
-                  <input type="text" id="hsDrawerWsNameInput" class="form-control" value="${escapeHtml(currentGroupDetails.name)}" style="font-size:13px; padding:7px 12px; flex:1;">
-                  <button type="button" class="btn-green" style="padding:7px 14px; font-size:12px; font-weight:600;" onclick="saveWorkspaceName(document.getElementById('hsDrawerWsNameInput').value)">Save</button>
-                </div>
-              ` : `
-                <div style="padding:8px 12px; background:var(--secondary); border:1px solid var(--border); border-radius:8px; font-size:13px; font-weight:600; color:var(--foreground);">
-                  ${escapeHtml(currentGroupDetails.name)}
-                </div>
-              `}
-            </div>
-
-            <!-- Discrete Masked Invite Code Display -->
-            <div>
-              <label style="display:block; font-size:12px; font-weight:600; color:var(--foreground); margin-bottom:4px;">Workspace Invite Code</label>
-              <p style="font-size:11px; color:var(--muted-foreground); margin:0 0 8px 0;">Masked for privacy during screen sharing. Use button to reveal or copy.</p>
-              
-              <div class="hs-invite-code-container">
-                <div class="hs-invite-code-box">
-                  <span class="hs-invite-code-label">CODE:</span>
-                  <strong id="hsInviteCodeDisplay" class="hs-invite-code-value">${isInviteCodeRevealed ? escapeHtml(currentGroupDetails.join_code) : 'GS-••••••'}</strong>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                  <button type="button" id="hsToggleCodeBtn" class="btn-outline hs-code-action-btn" onclick="toggleInviteCodeVisibility()" aria-label="Toggle invite code mask">
-                    <svg id="hsEyeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      ${isInviteCodeRevealed ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>' : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'}
-                    </svg>
-                    <span id="hsToggleCodeText">${isInviteCodeRevealed ? 'Hide Code' : 'Show Code'}</span>
-                  </button>
-                  <button type="button" class="btn-outline hs-code-action-btn" onclick="copyHomespaceInviteCode()" aria-label="Copy invite code to clipboard">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    Copy
-                  </button>
-                  ${isPrimaryLeader ? `
-                    <button type="button" class="btn-outline hs-code-action-btn" onclick="resetWorkspaceInviteCode()" aria-label="Reset workspace invite code">
-                      Reset
-                    </button>
-                  ` : ''}
-                </div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <label style="display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--foreground); cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.15s;" onmouseover="this.style.background='var(--card)'" onmouseout="this.style.background='transparent'">
+              <input type="checkbox" id="hsConstraintApproval" ${requireApproval ? 'checked' : ''} style="width:16px; height:16px; margin-top:2px; cursor:pointer;">
+              <div>
+                <span style="font-weight:600; display:block;">Require leader approval before member tasks are marked Done</span>
+                <span style="font-size:11px; color:var(--muted-foreground);">Workers mark completion, but tasks require final Leader sign-off.</span>
               </div>
-            </div>
+            </label>
+            <label style="display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--foreground); cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.15s;" onmouseover="this.style.background='var(--card)'" onmouseout="this.style.background='transparent'">
+              <input type="checkbox" id="hsConstraintDiscussions" ${allowDiscussions ? 'checked' : ''} style="width:16px; height:16px; margin-top:2px; cursor:pointer;">
+              <div>
+                <span style="font-weight:600; display:block;">Allow members to create new discussion topics</span>
+                <span style="font-size:11px; color:var(--muted-foreground);">Permit non-leaders to initiate new conversation threads.</span>
+              </div>
+            </label>
+            <label style="display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--foreground); cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.15s;" onmouseover="this.style.background='var(--card)'" onmouseout="this.style.background='transparent'">
+              <input type="checkbox" id="hsConstraintExpenses" ${restrictExpenses ? 'checked' : ''} style="width:16px; height:16px; margin-top:2px; cursor:pointer;">
+              <div>
+                <span style="font-weight:600; display:block;">Restrict expense ledger entries to workspace leaders only</span>
+                <span style="font-size:11px; color:var(--muted-foreground);">Keep group financial budgeting strictly under leader supervision.</span>
+              </div>
+            </label>
           </div>
-        </div>
-
-        ${isPrimaryLeader ? `
-          <!-- Permission Constraints Section for Primary Leader -->
-          <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
-            <div style="font-size:12px; font-weight:700; color:var(--foreground); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:10px;">
-              Member Permission Constraints
-            </div>
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--foreground); cursor:pointer;">
-                <input type="checkbox" id="hsConstraintApproval" ${requireApproval ? 'checked' : ''} style="width:16px; height:16px; cursor:pointer;">
-                <span>Require leader approval before member tasks are marked Done</span>
-              </label>
-              <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--foreground); cursor:pointer;">
-                <input type="checkbox" id="hsConstraintDiscussions" ${allowDiscussions ? 'checked' : ''} style="width:16px; height:16px; cursor:pointer;">
-                <span>Allow members to create new discussion topics</span>
-              </label>
-              <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--foreground); cursor:pointer;">
-                <input type="checkbox" id="hsConstraintExpenses" ${restrictExpenses ? 'checked' : ''} style="width:16px; height:16px; cursor:pointer;">
-                <span>Restrict expense ledger entries to workspace leaders only</span>
-              </label>
-            </div>
-            <button type="button" class="btn-green" style="margin-top:12px; font-size:12px; padding:6px 14px; font-weight:600;" onclick="saveMemberConstraints('hsConstraintApproval', 'hsConstraintDiscussions', 'hsConstraintExpenses')">
+          <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+            <button type="button" class="btn-green" style="font-size:12px; padding:7px 16px; font-weight:600; border-radius:8px;" onclick="saveMemberConstraints('hsConstraintApproval', 'hsConstraintDiscussions', 'hsConstraintExpenses')">
               Save Permission Constraints
             </button>
           </div>
-        ` : ''}
+        </div>
+      ` : ''}
 
-        <!-- Discrete Danger Zone Footer -->
-        <div class="hs-danger-zone-footer">
-          <div>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <span class="status pending" style="background:rgba(239,68,68,0.12); color:#ef4444; font-size:11px; font-weight:700;">DANGER ZONE</span>
-              <strong style="font-size:12px; color:var(--foreground);">Account & Workspace Safeguards</strong>
-            </div>
-            <p style="margin:4px 0 0; font-size:12px; color:var(--muted-foreground);">
-              Permanently delete your account. Requires 2x password verification to prevent accidental deletion.
-            </p>
+      <!-- Section 3: Discrete Personal Info Bar (User Profile & Controls) -->
+      <div class="hs-personal-bar">
+        <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+          <div class="chat-avatar" id="hsUserAvatar" style="width:38px; height:38px; font-size:14px; flex-shrink:0;">
+            ${currentUser ? escapeHtml(currentUser.avatarInitials || 'GS') : 'GS'}
           </div>
-          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-            <button type="button" id="hsDeleteAccountBtn" class="btn-outline open-delete-account-modal" style="padding:6px 14px; font-size:12px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:8px; cursor:pointer;" onclick="openDeleteAccountModal()">
-              Delete Account
-            </button>
-            ${isPrimaryLeader ? `
-              <button type="button" class="btn-outline open-delete-workspace-btn" style="padding:6px 14px; font-size:12px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:8px; cursor:pointer;" onclick="confirmDeleteWorkspace()">
-                Delete Workspace
-              </button>
-            ` : ''}
+          <div style="min-width:0;">
+            <div id="hsUserFullName" style="font-size:13px; font-weight:700; color:var(--foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+              ${currentUser ? escapeHtml(currentUser.fullName) : 'User'}
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; margin-top:2px;">
+              <span class="status online" style="font-size:10.5px; padding:1px 6px;">Online</span>
+              <span style="font-size:11px; color:var(--muted-foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${currentUser ? escapeHtml(currentUser.email) : ''}</span>
+            </div>
           </div>
         </div>
+
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button type="button" class="btn-outline hs-control-btn" data-theme-toggle aria-label="Toggle theme" title="Toggle theme" onclick="window.gsToggleTheme && window.gsToggleTheme()" style="min-height:34px; padding:6px 12px; font-size:12px;">
+            <svg data-theme-moon width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
+            <svg data-theme-sun width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <span data-theme-moon>Dark Mode</span>
+            <span data-theme-sun style="display:none">Light Mode</span>
+          </button>
+          <button type="button" class="btn-outline hs-control-btn" style="color:var(--destructive); border-color:var(--border); min-height:34px; padding:6px 12px; font-size:12px;" onclick="logoutUser()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sign Out
+          </button>
         </div>
       </div>
+
+      <!-- Section 4: Subtle Danger Zone Footer -->
+      <div class="hs-danger-zone-footer">
+        <div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span class="status pending" style="background:rgba(239,68,68,0.12); color:#ef4444; font-size:11px; font-weight:700;">DANGER ZONE</span>
+            <strong style="font-size:12px; color:var(--foreground);">Account &amp; Workspace Safeguards</strong>
+          </div>
+          <p style="margin:4px 0 0; font-size:12px; color:var(--muted-foreground);">
+            Permanently delete your account. Requires 2x password verification to prevent accidental deletion.
+          </p>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <button type="button" id="hsDeleteAccountBtn" class="btn-outline open-delete-account-modal" style="padding:6px 14px; font-size:12px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:8px; cursor:pointer;" onclick="openDeleteAccountModal()">
+            Delete Account
+          </button>
+          ${isPrimaryLeader ? `
+            <button type="button" class="btn-outline open-delete-workspace-btn" style="padding:6px 14px; font-size:12px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:8px; cursor:pointer;" onclick="confirmDeleteWorkspace()">
+              Delete Workspace
+            </button>
+          ` : ''}
+        </div>
+      </div>
+
     </div>
   `;
 
-  // Attach keydown listener for keyboard accessibility (Space/Enter to toggle)
-  const header = document.getElementById('hsSettingsHeader');
-  if (header) {
-    header.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleHomespaceSettingsDrawer();
+  // Attach Escape key listener for keyboard accessibility
+  if (!window._hsSettingsEscBound) {
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isHomespaceDrawerOpen) {
+        toggleHomespaceSettingsDrawer(false);
       }
     });
+    window._hsSettingsEscBound = true;
   }
 }
 

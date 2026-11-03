@@ -2952,7 +2952,7 @@ body {
    ========================================================= */
 
 .homespace-settings-drawer-wrapper {
-  margin-top: 24px;
+  margin-top: 0;
 }
 
 .homespace-settings-accordion {
@@ -3103,26 +3103,32 @@ body {
   overflow: hidden;
 }
 
-/* Drawer Internal Grid */
+/* Centered Modal Content Layout */
 .hs-drawer-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-@media (max-width: 840px) {
-  .hs-drawer-grid {
-    grid-template-columns: 1fr;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .hs-drawer-card {
-  background: var(--background);
+  background: var(--secondary);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 18px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
+}
+
+.hs-personal-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
 }
 
 .hs-card-header {
@@ -4691,17 +4697,17 @@ html.dark .settle-chip:hover:not(.active) {
 
 
 
-/* Slide-Out Workspace Settings & Controls Drawer */
+/* Centered Floating Workspace Settings & Controls Modal */
 .hs-settings-drawer-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 9998;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .hs-settings-drawer-overlay.open {
   opacity: 1;
@@ -4709,22 +4715,36 @@ html.dark .settle-chip:hover:not(.active) {
 }
 .homespace-settings-drawer-wrapper {
   position: fixed;
-  top: 0;
-  right: -520px;
-  width: 500px;
-  max-width: 95vw;
-  height: 100vh;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.96);
+  width: 680px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 48px);
+  margin-top: 0;
   background: var(--card, #ffffff);
-  border-left: 1px solid var(--border, #e2e8f0);
-  box-shadow: -10px 0 35px rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
   z-index: 9999;
   overflow-y: auto;
-  transition: right 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1), transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.24s;
   display: flex;
   flex-direction: column;
 }
 .homespace-settings-drawer-wrapper.open {
-  right: 0;
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  transform: translate(-50%, -50%) scale(1);
+}
+.dark .homespace-settings-drawer-wrapper {
+  background: var(--card, #1e293b);
+  border-color: var(--border, #334155);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
 }
 
 
