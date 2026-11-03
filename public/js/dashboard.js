@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (uFullNameEl) uFullNameEl.textContent = currentUser.fullName;
   const uAvatarEl = document.getElementById('userAvatar');
   if (uAvatarEl) uAvatarEl.textContent = currentUser.avatarInitials || 'GS';
+  updateSidebarProfileCard();
 
   // Load workspaces list
   await loadWorkspacesDropdown();
@@ -897,6 +898,7 @@ function updateSidebarProfileCard() {
   const avatarEl = document.getElementById('sidebarUserAvatar');
   const nameEl = document.getElementById('sidebarUserFullName');
   const roleEl = document.getElementById('sidebarUserRole');
+  const statusEl = document.getElementById('sidebarUserStatus');
 
   if (avatarEl && currentUser) {
     avatarEl.style.backgroundColor = currentUser.avatarColor;
@@ -913,6 +915,13 @@ function updateSidebarProfileCard() {
   if (roleEl && currentGroupDetails) {
     const r = (currentGroupDetails.role || 'member').toLowerCase();
     roleEl.textContent = r === 'leader' ? 'Leader' : (r === 'co_leader' ? 'Co-Leader' : 'Member');
+  }
+  if (statusEl && currentUser) {
+    const statusMsg = (currentUser.statusMessage && currentUser.statusMessage.trim())
+      ? currentUser.statusMessage.trim()
+      : '🟢 Active';
+    statusEl.textContent = statusMsg;
+    statusEl.title = statusMsg;
   }
 }
 

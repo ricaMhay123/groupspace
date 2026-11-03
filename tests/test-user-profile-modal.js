@@ -92,6 +92,10 @@ assert(dashHtml.includes('id="userProfileModal"'), 'dashboard.html mounts center
 assert(dashHtml.includes('id="profilePictureInput"'), 'dashboard.html includes #profilePictureInput');
 assert(dashHtml.includes('id="removeProfilePicBtn"'), 'dashboard.html includes #removeProfilePicBtn');
 assert(dashHtml.includes('id="sidebarProfileCard"'), 'dashboard.html retains #sidebarProfileCard');
+assert(dashHtml.includes('id="sidebarUserStatus"'), 'dashboard.html includes #sidebarUserStatus in sidebar profile card');
+const sidebarCardMatch = dashHtml.match(/<div[^>]*id="sidebarProfileCard"[\s\S]*?<\/div>\s*<\/aside>/);
+const sidebarCardHtml = sidebarCardMatch ? sidebarCardMatch[0] : '';
+assert(!sidebarCardHtml.includes('focusHomespaceSettingsDrawer') && !sidebarCardHtml.includes('&#9881;'), 'dashboard.html removed settings icon from #sidebarProfileCard');
 assert(dashHtml.includes('openUserProfileModal()'), 'dashboard.html triggers openUserProfileModal() from sidebar profile card');
 assert(dashJs.includes('function openUserProfileModal'), 'dashboard.js defines openUserProfileModal()');
 assert(dashJs.includes('function selectProfileAvatarColor'), 'dashboard.js defines selectProfileAvatarColor()');
@@ -99,6 +103,7 @@ assert(dashJs.includes('function handleProfilePictureSelected'), 'dashboard.js d
 assert(dashJs.includes('function handleSaveUserProfile'), 'dashboard.js defines handleSaveUserProfile()');
 assert(dashJs.includes('avatarEl.style.backgroundColor = currentUser.avatarColor'), 'dashboard.js applies avatarColor to #sidebarUserAvatar');
 assert(dashJs.includes('currentUser.avatarUrl'), 'dashboard.js renders currentUser.avatarUrl in sidebar when available');
+assert(dashJs.includes("document.getElementById('sidebarUserStatus')"), 'dashboard.js updates #sidebarUserStatus in updateSidebarProfileCard');
 
 // ── 5. CSS TOKENS & STYLING ──
 console.log('\n🎨 5. CSS Tokens & Transitions:');
