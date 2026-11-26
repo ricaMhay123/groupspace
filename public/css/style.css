@@ -1007,33 +1007,65 @@ body.dashboard-page {
 }
 
 .dashboard-sidebar {
-  width: 248px;
-  min-width: 248px;
+  width: 256px;
+  min-width: 256px;
   background: var(--sidebar);
   color: var(--text);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 20px 14px;
+  gap: 20px;
+  padding: 20px 16px 16px;
   height: 100vh;
   overflow-y: auto;
   border-right: 1px solid var(--border);
+}
+
+.dashboard-sidebar-top {
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 4px;
+  margin-bottom: 18px;
+}
+
+.dashboard-brand-link {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
 }
 
 .dashboard-brand h2 {
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--text) !important;
-  margin-bottom: 16px;
-  padding: 0 4px;
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
 }
 
 .group-selector-box {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 0 2px 16px;
+  margin-bottom: 14px;
+}
+
+.group-selector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .group-selector-box label {
@@ -1043,21 +1075,40 @@ body.dashboard-page {
   color: var(--muted-foreground);
   font-weight: 700;
   display: block;
-  margin-bottom: 6px;
+  margin: 0;
+}
+
+.sidebar-all-workspaces-link {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.sidebar-all-workspaces-link:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
 }
 
 .group-select {
   width: 100%;
-  background: var(--background);
+  background: var(--card);
   border: 1px solid var(--border);
   color: var(--text);
   border-radius: 8px;
-  padding: 7px 10px;
-  font-size: 0.82rem;
+  padding: 8px 10px;
+  font-size: 0.84rem;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.group-select:focus {
+  border-color: var(--ring);
 }
 
 .group-select option {
@@ -1071,7 +1122,7 @@ body.dashboard-page {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 #sidebarMenu li {
@@ -1094,7 +1145,7 @@ body.dashboard-page {
   background: var(--card);
   color: var(--foreground);
   border-color: var(--border);
-  box-shadow: 0 1px 2px rgba(20, 22, 27, 0.05);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
   font-weight: 600;
 }
 
@@ -2512,8 +2563,9 @@ h1, h2, h3, h4, h5, h6 {
 .dark .personal-item                       { background: var(--card) !important; border-color: var(--border) !important; }
 
 /* Sidebar */
-.dark .group-selector-box    { background: var(--muted) !important; border-color: var(--border) !important; }
-.dark .group-selector-box label { color: var(--ring) !important; }
+.dark .group-selector-box    { background: transparent !important; border-color: var(--border) !important; }
+.dark .group-selector-box label { color: var(--muted-foreground) !important; }
+.dark .sidebar-all-workspaces-link { color: #93b4ff !important; }
 .dark .group-select          { background: var(--card) !important; color: var(--foreground) !important; border-color: var(--border) !important; }
 .dark .group-select option   { background: var(--card) !important; color: var(--foreground) !important; }
 .dark #sidebarMenu li        { color: var(--muted-foreground) !important; }
@@ -5031,10 +5083,11 @@ html.dark .actions-dropdown-item:hover {
 
 .sidebar-profile-card {
   margin-top: auto;
-  padding: 10px 12px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  padding: 12px 6px 4px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -5043,8 +5096,65 @@ html.dark .actions-dropdown-item:hover {
   transition: var(--transition);
 }
 
-.sidebar-profile-card:hover {
-  border-color: var(--ring);
+.sidebar-profile-card:hover .sidebar-profile-name {
+  color: var(--primary);
+}
+
+.sidebar-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sidebar-profile-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.sidebar-profile-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+  transition: color 0.15s ease;
+}
+
+.sidebar-profile-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+.sidebar-profile-status {
+  color: var(--success);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dark .sidebar-profile-card:hover .sidebar-profile-name {
+  color: #93b4ff;
+}
+
+.dark .sidebar-profile-status {
+  color: #34d399;
 }
 
 .sidebar-profile-card .actions-dropdown-menu {
