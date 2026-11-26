@@ -398,6 +398,117 @@
     }
   }
 
+  function formatWorkspaceDescription(rawDesc) {
+    const cleaned = String(rawDesc || '').trim();
+    if (!cleaned || /^(n\/a|none|no description provided\.?)$/i.test(cleaned)) {
+      return '';
+    }
+    return cleaned;
+  }
+
+  function partitionWorkspaces(groups, currentUserId) {
+    const created = [];
+    const joined = [];
+    (groups || []).forEach(ws => {
+      const hasCreator = ws.created_by !== null && ws.created_by !== undefined;
+      const isOwned = hasCreator
+        ? Number(ws.created_by) === Number(currentUserId)
+        : String(ws.role || '').toLowerCase() === 'leader';
+      if (isOwned) {
+        created.push(ws);
+      } else {
+        joined.push(ws);
+      }
+    });
+    return { created, joined };
+  }
+
+  function formatWorkspaceRole(role) {
+    const r = String(role || 'member').toLowerCase();
+    if (r === 'co_leader') return 'Co-Leader';
+    if (r === 'leader') return 'Leader';
+    return 'Member';
+  }
+
+  function copyWorkspaceCode(event, joinCode) {
+    if (event && typeof event.stopPropagation === 'function') {
+      event.stopPropagation();
+    }
+    const code = String(joinCode || '').trim();
+    if (!code) return;
+
+    const notifyCopied = () => showToast(`Copied invite code ${code}`, 'success');
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(code).then(notifyCopied).catch(() => notifyCopied());
+      return;
+    }
+
+    const tmp = document.createElement('textarea');
+    tmp.value = code;
+    tmp.setAttribute('readonly', '');
+    tmp.style.position = 'fixed';
+    tmp.style.opacity = '0';
+    document.body.appendChild(tmp);
+    tmp.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(tmp);
+    notifyCopied();
+  }
+
+  function renderWorkspaceCard(ws, isOwned) {
+    const roleLabel = formatWorkspaceRole(ws.role);
+    const isLeader = roleLabel === 'Leader' || roleLabel === 'Co-Leader';
+    const desc = formatWorkspaceDescription(ws.description);
+    const membersCount = Number(ws.member_count || 0);
+    const pendingCount = Number(ws.pending_task_count || 0);
+    const safeCode = escapeHtml(ws.join_code || '');
+
+    return `
+      <div class="workspace-card" onclick="selectWorkspace(${ws.id})">
+        <div class="workspace-card-top">
+          <span class="workspace-icon">${escapeHtml(ws.category || 'Workspace')}</span>
+          <span class="workspace-role-pill ${isLeader ? 'is-leader' : ''}">${roleLabel}</span>
+        </div>
+        <h2>${escapeHtml(ws.name)}</h2>
+        ${desc ? `<p class="workspace-card-desc">${escapeHtml(desc)}</p>` : ''}
+        <div class="workspace-meta-line">
+          ${membersCount} member${membersCount === 1 ? '' : 's'} &middot; ${pendingCount} pending task${pendingCount === 1 ? '' : 's'}
+        </div>
+        ${isOwned && safeCode ? `
+          <div class="workspace-code-row">
+            <span>Code: <code>${safeCode}</code></span>
+            <button type="button" class="btn-copy-code" onclick="copyWorkspaceCode(event, '${safeCode.replace(/'/g, "\\'")}')">Copy</button>
+          </div>
+        ` : ''}
+        <div class="workspace-card-footer">
+          <span class="workspace-open-cta">Open &rarr;</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderWorkspaceSection(title, items, isOwned) {
+    if (!items || items.length === 0) return '';
+    return `
+      <section class="workspace-section">
+        <div class="workspace-section-header">
+          <span class="workspace-section-title">${escapeHtml(title)} (${items.length})</span>
+        </div>
+        <div class="workspace-grid">
+          ${items.map(ws => renderWorkspaceCard(ws, isOwned)).join('')}
+        </div>
+      </section>
+    `;
+  }
+
+  function renderWorkspaceSectionsHtml(groups, user) {
+    const { created, joined } = partitionWorkspaces(groups, user ? user.id : null);
+    return [
+      renderWorkspaceSection('Created by You', created, true),
+      renderWorkspaceSection('Joined Workspaces', joined, false)
+    ].filter(Boolean).join('');
+  }
+
   async function loadWorkspaces() {
     try {
       const user = await checkAuth();
@@ -423,24 +534,7 @@
         return;
       }
 
-      container.innerHTML = res.data.map(ws => `
-        <div class="workspace-card" onclick="selectWorkspace(${ws.id})">
-          <div class="workspace-icon">${escapeHtml(ws.category || 'Workspace')}</div>
-          <h2>${escapeHtml(ws.name)}</h2>
-          <p style="color:var(--gray); font-size:14px; margin-bottom:12px;">${escapeHtml(ws.description || 'No description provided.')}</p>
-          
-          <div class="workspace-info">
-            <p><strong>Role:</strong> <span style="color:var(--primary); font-weight:700;">${ws.role === 'co_leader' ? 'Co-Leader' : (ws.role === 'leader' ? 'Leader' : escapeHtml(ws.role))}</span></p>
-            <p><strong>Members:</strong> ${ws.member_count} active collaborators</p>
-            <p><strong>Pending Tasks:</strong> ${ws.pending_task_count} incomplete</p>
-            <p><strong>Invite Code:</strong> <code>${escapeHtml(ws.join_code)}</code></p>
-          </div>
-
-          <a href="dashboard.html?groupId=${ws.id}" class="btn-green" style="display:block; text-align:center; margin-top:15px;" onclick="event.stopPropagation(); selectWorkspace(${ws.id});">
-            Enter Workspace →
-          </a>
-        </div>
-      `).join('');
+      container.innerHTML = renderWorkspaceSectionsHtml(res.data, user);
     } catch (err) {
       showToast(err.message, 'error');
     }
