@@ -1367,7 +1367,64 @@ html.dark .landing-signin-link {
   .landing-nav-links {
     display: none;
   }
-  
+
+  .landing-nav-inner {
+    padding-left: 16px;
+    padding-right: 16px;
+    gap: 10px;
+  }
+
+  .landing-logo {
+    gap: 0;
+    min-width: 0;
+    flex-shrink: 0;
+  }
+
+  .landing-logo-link {
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .logo-icon {
+    font-size: 1.15rem;
+  }
+
+  .logo-text {
+    font-size: 0.95rem;
+  }
+
+  .landing-nav-right {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .theme-toggle-btn {
+    padding: 8px;
+    flex-shrink: 0;
+  }
+
+  .landing-auth-btns {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .landing-signin-link,
+  .landing-signup-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
+
+  .landing-signin-link {
+    padding: 8px 8px;
+  }
+
+  .landing-signup-btn {
+    padding: 8px 11px;
+  }
+
   .hero-heading {
     font-size: 2.1rem;
   }
