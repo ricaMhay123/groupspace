@@ -648,7 +648,7 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
 
   const approvalsBodyHtml = totalApprovals === 0
     ? `
-      <div style="text-align:center; padding:32px 16px; color:var(--muted-foreground);">
+      <div style="text-align:center; padding:20px 16px; color:var(--muted-foreground);">
         <h4 style="margin:0 0 4px 0; font-size:14px; font-weight:700; color:var(--foreground);">All Approvals Clear</h4>
         <p style="margin:0; font-size:12.5px;">No task submissions or role requests are awaiting leader review.</p>
       </div>
@@ -704,15 +704,30 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
 
   container.innerHTML = `
     <div class="hs-action-grid">
-      <div class="dashboard-panel">
-        <div class="panel-header">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <h3 style="margin:0;">Approvals Queue</h3>
-            <span class="col-badge" style="font-weight:700;">${totalApprovals}</span>
+      <div class="hs-stack">
+        <div class="dashboard-panel">
+          <div class="panel-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h3 style="margin:0;">Approvals Queue</h3>
+              <span class="col-badge" style="font-weight:700;">${totalApprovals}</span>
+            </div>
+            <button type="button" class="btn-outline btn-sm" onclick="switchTab('tasks')">Review Board →</button>
           </div>
-          <button type="button" class="btn-outline btn-sm" onclick="switchTab('tasks')">Review Board →</button>
+          ${approvalsBodyHtml}
         </div>
-        ${approvalsBodyHtml}
+
+        <div class="dashboard-panel">
+          <div class="panel-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h3 style="margin:0;">Workspace Roster & Roles</h3>
+              <span class="status online" style="font-size:11px; font-weight:700;">LEADER</span>
+            </div>
+            <span style="font-size:12px; color:var(--muted-foreground);">${members.length} members</span>
+          </div>
+          <ul class="task-list" style="margin:0; padding:0; list-style:none;">
+            ${rosterHtml}
+          </ul>
+        </div>
       </div>
 
       <div class="hs-stack">
@@ -727,19 +742,6 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="dashboard-panel">
-      <div class="panel-header">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <h3 style="margin:0;">Workspace Roster & Roles</h3>
-          <span class="status online" style="font-size:11px; font-weight:700;">LEADER</span>
-        </div>
-        <span style="font-size:12px; color:var(--muted-foreground);">${members.length} members</span>
-      </div>
-      <ul class="task-list" style="margin:0; padding:0; list-style:none;">
-        ${rosterHtml}
-      </ul>
     </div>
   `;
 }
@@ -779,7 +781,7 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
 
   const deliverablesHtml = myAssignedDeliverables.length === 0
     ? `
-      <div style="text-align:center; padding:32px 16px; color:var(--muted-foreground);">
+      <div style="text-align:center; padding:20px 16px; color:var(--muted-foreground);">
         <h4 style="margin:0 0 4px 0; font-size:14px; font-weight:700; color:var(--foreground);">All Caught Up</h4>
         <p style="margin:0; font-size:12.5px;">You have no active deliverables assigned right now.</p>
       </div>
@@ -853,15 +855,31 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
 
   container.innerHTML = `
     <div class="hs-action-grid">
-      <div class="dashboard-panel">
-        <div class="panel-header">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <h3 style="margin:0;">My Assigned Tasks</h3>
-            <span class="col-badge" style="font-weight:700;">${myAssignedDeliverables.length}</span>
+      <div class="hs-stack">
+        <div class="dashboard-panel">
+          <div class="panel-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h3 style="margin:0;">My Assigned Tasks</h3>
+              <span class="col-badge" style="font-weight:700;">${myAssignedDeliverables.length}</span>
+            </div>
+            <button type="button" class="btn-outline btn-sm" onclick="switchTab('tasks')">Full Board →</button>
           </div>
-          <button type="button" class="btn-outline btn-sm" onclick="switchTab('tasks')">Full Board →</button>
+          ${deliverablesHtml}
         </div>
-        ${deliverablesHtml}
+
+        <div class="dashboard-panel">
+          <div class="panel-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h3 style="margin:0;">Workspace Team & Leaders</h3>
+              <span class="status pending" style="font-size:11px;">MEMBER</span>
+            </div>
+            <span style="font-size:12px; color:var(--muted-foreground);">${members.length} members</span>
+          </div>
+          ${leadersHtml}
+          <ul class="task-list" style="margin:6px 0 0 0; padding:0; list-style:none;">
+            ${fellowsHtml}
+          </ul>
+        </div>
       </div>
 
       <div class="hs-stack">
@@ -876,20 +894,6 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="dashboard-panel">
-      <div class="panel-header">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <h3 style="margin:0;">Workspace Team & Leaders</h3>
-          <span class="status pending" style="font-size:11px;">MEMBER</span>
-        </div>
-        <span style="font-size:12px; color:var(--muted-foreground);">${members.length} members</span>
-      </div>
-      ${leadersHtml}
-      <ul class="task-list" style="margin:6px 0 0 0; padding:0; list-style:none;">
-        ${fellowsHtml}
-      </ul>
     </div>
   `;
 }
