@@ -41,6 +41,7 @@
       <p>Create a team workspace or open any space you belong to.</p>
     </div>
     <div class="workspace-actions">
+      <button type="button" onclick="openUserGuideModal()" class="secondary-btn">User Guide</button>
       <button onclick="openModal('joinModal')" class="secondary-btn">Join with Code</button>
       <button onclick="openModal('createModal')" class="primary-btn">+ Create Workspace</button>
     </div>
@@ -604,6 +605,7 @@
 
   document.addEventListener('DOMContentLoaded', loadWorkspaces);
 </script>
+<script src="/js/guide.js"></script>
 
 <!-- Bootstrap 5 JS Bundle (with Popper) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
