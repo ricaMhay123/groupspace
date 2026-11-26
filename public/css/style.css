@@ -5045,15 +5045,17 @@ textarea[data-ms-editor="false"]::-ms-reveal {
   border: none;
   width: 100%;
   text-align: left;
-  padding: 9px 12px;
+  padding: 8px 10px;
   font-size: 13px;
   font-weight: 500;
+  line-height: 1.35;
   color: var(--foreground);
   border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  white-space: nowrap;
   transition: background 0.15s ease, color 0.15s ease;
   font-family: inherit;
 }
@@ -5068,14 +5070,20 @@ textarea[data-ms-editor="false"]::-ms-reveal {
   height: 14px;
   flex-shrink: 0;
   color: var(--muted-foreground);
+  transition: color 0.15s ease;
 }
 
-.actions-dropdown-item span:first-child {
+.actions-dropdown-item:hover svg {
+  color: currentColor;
+}
+
+.actions-dropdown-icon {
   font-size: 14px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
+  width: 16px;
+  flex-shrink: 0;
 }
 
 html.dark .actions-dropdown-menu {
@@ -5169,15 +5177,25 @@ html.dark .actions-dropdown-item:hover {
   color: #34d399;
 }
 
+.sidebar-profile-card .actions-dropdown-container {
+  position: static;
+}
+
 .sidebar-profile-card .actions-dropdown-menu {
+  left: 0;
   right: 0;
-  min-width: 196px;
+  width: 100%;
+  min-width: 0;
   z-index: 250;
 }
 
 .actions-dropdown-menu.menu-up {
   top: auto;
   bottom: calc(100% + 6px);
+}
+
+.sidebar-profile-card .actions-dropdown-menu.menu-up {
+  bottom: calc(100% + 8px);
 }
 
 .btn-card-more {
@@ -5233,6 +5251,10 @@ html.dark .actions-dropdown-item:hover {
 
 .actions-dropdown-item-danger {
   color: var(--destructive);
+}
+
+.actions-dropdown-item-danger svg {
+  color: currentColor;
 }
 
 .actions-dropdown-item-danger:hover {

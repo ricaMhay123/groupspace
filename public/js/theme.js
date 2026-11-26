@@ -35,11 +35,15 @@
     document.querySelectorAll('[data-theme-sun]').forEach(el => {
       el.style.display = dark ? '' : 'none';
     });
-    // Update aria-label on all toggle buttons
+    // Update aria-label on all toggle buttons and sidebar menu label
     document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
       btn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
       btn.setAttribute('title', dark ? 'Switch to light mode' : 'Switch to dark mode');
     });
+    const sidebarThemeLabel = document.getElementById('sidebarThemeLabel');
+    if (sidebarThemeLabel) {
+      sidebarThemeLabel.textContent = dark ? 'Light Mode' : 'Dark Mode';
+    }
   }
 
   // Apply immediately on script load (before DOM is ready)
