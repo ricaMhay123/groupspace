@@ -2423,7 +2423,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @media (max-width: 640px) {
-  header { padding: 0 16px; }
+  header { padding: 0 16px; gap: 10px; }
+  header .logo { min-width: 0; flex-shrink: 0; }
+  header .logo h1 { font-size: 1.05rem; white-space: nowrap; }
+  header .nav-buttons { gap: 8px; flex-shrink: 0; }
+  header .nav-buttons .user-profile-chip { padding: 4px !important; margin-right: 0 !important; flex-shrink: 0; }
+  header .nav-buttons #userNameBadge { display: none; }
+  header .nav-buttons #userAvatarBadge { width: 28px !important; height: 28px !important; }
+  header .nav-buttons .login-btn { padding: 6px 12px !important; font-size: 0.8125rem; white-space: nowrap; }
   .workspace-page { padding: 24px 16px 48px; }
   .workspace-header h1 { font-size: 1.7rem; }
   .workspace-actions { flex-direction: column; align-items: stretch; }

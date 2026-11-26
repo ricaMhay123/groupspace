@@ -1261,6 +1261,67 @@
       background: transparent !important;
     }
     @media (max-width: 768px) {
+      .nb-sidebar-toggle-btn {
+        display: none !important;
+      }
+      .nb-header {
+        height: auto !important;
+        min-height: 46px;
+        padding: 8px 12px !important;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+      .nb-header-left {
+        width: 100%;
+        min-height: 44px;
+        padding-right: 48px;
+        gap: 8px;
+        flex-wrap: nowrap;
+        overflow: hidden;
+      }
+      .nb-header .mobile-hamburger-btn {
+        flex-shrink: 0;
+        min-width: 44px;
+        padding: 6px 8px;
+      }
+      .nb-header .nb-back-btn {
+        flex-shrink: 0;
+        white-space: nowrap;
+        min-height: 44px;
+        padding: 6px 10px;
+        display: inline-flex;
+        align-items: center;
+      }
+      .nb-doc-header-title {
+        flex: 1;
+        min-width: 0;
+        max-width: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .nb-header-actions {
+        width: 100%;
+        gap: 6px;
+        flex-wrap: nowrap;
+      }
+      .nb-header-actions .btn-nb {
+        flex: 1 1 0;
+        min-width: 0;
+        justify-content: center;
+        white-space: nowrap;
+        min-height: 44px;
+        padding: 6px 10px !important;
+        font-size: 12px !important;
+      }
+      .nb-header .btn-nb-theme {
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        width: 40px;
+        height: 44px;
+      }
       .nb-ribbon-tabs {
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -1487,6 +1548,11 @@
       margin-bottom: 0.85rem;
     }
     @media (max-width: 640px) {
+      .nb-brand-title,
+      .nb-brand-divider,
+      .nb-autosave-pill {
+        display: none !important;
+      }
       .nb-canvas-container {
         padding: 12px !important;
       }
