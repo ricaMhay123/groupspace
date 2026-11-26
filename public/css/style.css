@@ -428,7 +428,7 @@ header .nav-buttons {
 /* Workspace Card Grid */
 .workspace-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 310px), 1fr));
   gap: 24px;
   align-items: stretch;
 }
@@ -445,6 +445,7 @@ header .nav-buttons {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-width: 0;
   overflow: visible !important;
 }
 
@@ -495,6 +496,7 @@ header .nav-buttons {
   color: var(--text) !important;
   margin-bottom: 8px;
   line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .workspace-card-desc {
@@ -506,6 +508,7 @@ header .nav-buttons {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  overflow-wrap: anywhere;
 }
 
 .workspace-meta-line {
@@ -570,31 +573,7 @@ header .nav-buttons {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-}
-
-.workspace-info {
-  margin: 14px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.workspace-info p {
-  font-size: 0.875rem;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.workspace-info code {
-  background: var(--primary-light);
-  color: var(--primary);
-  padding: 1px 7px;
-  border-radius: 5px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 1px;
+  text-decoration: none;
 }
 
 /* Empty State Card */
@@ -2296,12 +2275,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Responsive */
+@media (max-width: 768px) {
+  .workspace-page { padding: 28px 20px 56px; }
+  .workspace-header-bar { flex-direction: column; align-items: stretch; margin-bottom: 24px; padding-bottom: 20px; }
+  .workspace-actions { justify-content: flex-start; width: 100%; }
+}
+
 @media (max-width: 640px) {
   header { padding: 0 16px; }
   .workspace-page { padding: 24px 16px 48px; }
-  .workspace-header-bar { align-items: stretch; margin-bottom: 24px; padding-bottom: 20px; }
   .workspace-header h1 { font-size: 1.7rem; }
-  .workspace-actions { flex-direction: column; align-items: stretch; width: 100%; }
+  .workspace-actions { flex-direction: column; align-items: stretch; }
   .workspace-actions button { text-align: center; justify-content: center; }
   .workspace-card { padding: 20px; }
   .form-actions { flex-direction: column; }
@@ -2467,18 +2451,19 @@ h1, h2, h3, h4, h5, h6 {
 .dark .join-code-box code    { background: var(--border) !important; color: var(--ring) !important; }
 
 /* Workspace cards */
+.dark .workspace-header h1 span { color: #93b4ff !important; }
 .dark .workspace-card        { background: var(--card) !important; border-color: var(--border) !important; }
 .dark .workspace-card h2     { color: var(--foreground) !important; }
 .dark .workspace-empty-card  { background: var(--card) !important; border-color: var(--border) !important; }
 .dark .workspace-empty-card h2 { color: var(--foreground) !important; }
 .dark .workspace-empty-card p { color: var(--muted-foreground) !important; }
-.dark .workspace-info code   { background: var(--muted) !important; color: var(--ring) !important; }
+.dark .workspace-icon        { color: #93b4ff !important; }
 .dark .workspace-role-pill   { background: var(--muted) !important; color: var(--muted-foreground) !important; }
-.dark .workspace-role-pill.is-leader { background: var(--primary-light) !important; color: var(--ring) !important; }
+.dark .workspace-role-pill.is-leader { background: rgba(77, 115, 255, 0.18) !important; color: #93b4ff !important; }
 .dark .workspace-code-row    { background: var(--muted) !important; color: var(--muted-foreground) !important; }
-.dark .workspace-code-row code { color: var(--ring) !important; }
+.dark .workspace-code-row code { color: #93b4ff !important; }
 .dark .btn-copy-code         { background: var(--card) !important; color: var(--foreground) !important; border-color: var(--border) !important; }
-.dark .workspace-open-cta    { color: var(--ring) !important; }
+.dark .workspace-open-cta    { color: #93b4ff !important; }
 
 /* Secondary button & Follow-Up Button Harmony */
 .secondary-btn, .btn-outline {
