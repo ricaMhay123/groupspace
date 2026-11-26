@@ -1262,6 +1262,38 @@
     .nb-toolbar-group.ribbon-highlight {
       background: transparent !important;
     }
+    @media (max-width: 768px) {
+      .nb-ribbon-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        height: auto;
+        min-height: 34px;
+      }
+      .nb-ribbon-tabs::-webkit-scrollbar {
+        display: none;
+      }
+      .nb-ribbon-tab {
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+      .nb-ribbon-body {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        min-height: 0;
+        padding: 0.5rem 0.75rem;
+        gap: 0.75rem;
+      }
+      .nb-ribbon-body::-webkit-scrollbar {
+        display: none;
+      }
+      .nb-toolbar-group {
+        flex-shrink: 0;
+      }
+    }
     .nb-ribbon-group-content {
       display: flex;
       flex-direction: column;
@@ -1430,13 +1462,41 @@
       background: #0b1120;
     }
     .nb-canvas {
+      width: 100%;
       max-width: 816px;
-      min-height: 1056px;
-      padding: 56px 72px;
-      border-radius: 2px;
+      min-height: 900px;
+      margin: 1.5rem auto;
+      padding: 2.5rem 3rem;
+      background-color: var(--nb-canvas-bg, #ffffff);
+      color: var(--nb-canvas-text, #1e293b);
+      text-align: left !important;
+      line-height: 1.65;
+      font-size: 15px;
+      border-radius: 6px;
       border: 1px solid #d1d5db;
-      box-shadow: 0 3px 14px rgba(15, 23, 42, 0.08);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
       transform-origin: top center;
+    }
+    .nb-canvas-editor {
+      text-align: left !important;
+      line-height: 1.65;
+      font-size: 15px;
+    }
+    .nb-canvas-editor p,
+    .nb-canvas-editor div,
+    .nb-canvas-editor li {
+      text-align: left;
+      margin-bottom: 0.85rem;
+    }
+    @media (max-width: 640px) {
+      .nb-canvas-container {
+        padding: 12px !important;
+      }
+      .nb-canvas {
+        margin: 0.75rem auto;
+        padding: 1.25rem 1.25rem;
+        min-height: 480px;
+      }
     }
     .nb-status-bar {
       height: 28px;
@@ -2258,7 +2318,7 @@
 
 <script src="/js/api.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
+<script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 'use strict';
@@ -4801,7 +4861,8 @@ async function parseUploadedDocument(file) {
 
   // 1. Microsoft Word Document (.docx / .doc)
   if (ext === 'docx' || ext === 'doc') {
-    await ensureScript('mammoth', 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js');
+    await ensureScript('mammoth', 'https://unpkg.com/mammoth/mammoth.browser.min.js') ||
+      await ensureScript('mammoth', 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js');
     if (typeof mammoth !== 'undefined' && mammoth.convertToHtml) {
       try {
         const arrayBuffer = await file.arrayBuffer();
@@ -4854,8 +4915,38 @@ async function parseUploadedDocument(file) {
     throw new Error('Could not parse Word document. Please ensure it is a valid .docx file.');
   }
 
-  // 2. Adobe PDF Document (.pdf)
+  // 2. Adobe PDF Document (.pdf) — Read-only native browser iframe preview preserving original layout
   if (ext === 'pdf') {
+    let fileURL = '';
+    if (file.size <= 25 * 1024 * 1024) {
+      try {
+        fileURL = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ''));
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      } catch (readErr) {
+        console.warn('[DocImport] FileReader DataURL fallback to ObjectURL:', readErr);
+      }
+    }
+    if (!fileURL && typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
+      fileURL = URL.createObjectURL(file);
+    }
+    if (fileURL) {
+      return {
+        html: `
+          <div class="pdf-preview-wrapper" contenteditable="false">
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 8px;">
+              PDF Preview (Original layout preserved): <strong>${escapeHtml(file.name)}</strong>
+            </p>
+            <iframe src="${fileURL}" width="100%" height="750px" style="border: 1px solid #cbd5e1; border-radius: 4px;"></iframe>
+          </div>
+        `
+      };
+    }
+
+    // Fallback text extraction if browser preview URL could not be created
     await ensureScript('pdfjsLib', 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
     if (typeof pdfjsLib !== 'undefined' && pdfjsLib.getDocument) {
       try {
@@ -4863,65 +4954,39 @@ async function parseUploadedDocument(file) {
           pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }
         const arrayBuffer = await file.arrayBuffer();
-        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false });
-        const pdfDoc = await loadingTask.promise;
+        const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;
         let fullHtml = '';
-
         for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
           const page = await pdfDoc.getPage(pageNum);
           const textContent = await page.getTextContent();
-          let pageText = '';
-          let currentLine = '';
-          for (const item of textContent.items) {
-            if (item.hasEOL) {
-              currentLine += item.str;
-              if (currentLine.trim()) {
-                pageText += '<p>' + escapeHtml(currentLine.trim()) + '</p>';
-              }
-              currentLine = '';
-            } else {
-              currentLine += (currentLine ? ' ' : '') + item.str;
-            }
-          }
-          if (currentLine.trim()) {
-            pageText += '<p>' + escapeHtml(currentLine.trim()) + '</p>';
-          }
-          if (!pageText && textContent.items.length > 0) {
-            pageText = '<p>' + escapeHtml(textContent.items.map(it => it.str).join(' ').trim()) + '</p>';
-          }
-          fullHtml += pageText || '<p><br></p>';
+          fullHtml += '<p>' + escapeHtml(textContent.items.map(it => it.str).join(' ').trim()) + '</p>';
         }
-
-        if (fullHtml && fullHtml.trim()) {
-          return {
-            html: fullHtml
-          };
-        }
+        if (fullHtml.trim()) return { html: fullHtml };
       } catch (pdfErr) {
-        console.warn('[DocImport] PDF.js parsing error, trying stream fallback:', pdfErr);
+        console.warn('[DocImport] PDF fallback error:', pdfErr);
       }
     }
-
-    // PDF text stream fallback
-    try {
-      const buffer = await file.arrayBuffer();
-      const text = new TextDecoder('latin1').decode(buffer);
-      const matches = text.match(/\(([^)]+)\)\s*Tj/g) || text.match(/BT[\s\S]*?ET/g);
-      if (matches && matches.length > 0) {
-        const extracted = matches.map(m => m.replace(/[\(\)Tj]/g, '').trim()).filter(Boolean);
-        if (extracted.length > 0) {
-          return {
-            html: extracted.map(line => '<p>' + escapeHtml(line) + '</p>').join(''),
-            rawText: extracted.join('\n')
-          };
-        }
-      }
-    } catch (e) {}
-
-    throw new Error('Could not parse PDF document. Please ensure the file is not password-protected.');
+    throw new Error('Could not preview PDF document. Please ensure the file is a valid PDF.');
   }
 
-  // 3. Fallback for .txt, .md, .markdown
+  // 3. Plain Text (.txt) — Preserve line-by-line paragraph spacing
+  if (ext === 'txt') {
+    const text = typeof file.text === 'function'
+      ? await file.text()
+      : await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(String(e.target.result || ''));
+          reader.onerror = reject;
+          reader.readAsText(file);
+        });
+    const html = text
+      .split(/\r?\n/)
+      .map(line => `<p>${line ? escapeHtml(line) : '&nbsp;'}</p>`)
+      .join('');
+    return { html, rawText: text };
+  }
+
+  // 4. Markdown (.md, .markdown)
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {

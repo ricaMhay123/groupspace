@@ -2006,7 +2006,8 @@ async function parseUploadedDocument(file) {
 
   // 1. Microsoft Word Document (.docx / .doc)
   if (ext === 'docx' || ext === 'doc') {
-    await ensureScript('mammoth', 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js');
+    await ensureScript('mammoth', 'https://unpkg.com/mammoth/mammoth.browser.min.js') ||
+      await ensureScript('mammoth', 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js');
     if (typeof mammoth !== 'undefined' && mammoth.convertToHtml) {
       try {
         const arrayBuffer = await file.arrayBuffer();
@@ -2059,8 +2060,38 @@ async function parseUploadedDocument(file) {
     throw new Error('Could not parse Word document. Please ensure it is a valid .docx file.');
   }
 
-  // 2. Adobe PDF Document (.pdf)
+  // 2. Adobe PDF Document (.pdf) — Read-only native browser iframe preview preserving original layout
   if (ext === 'pdf') {
+    let fileURL = '';
+    if (file.size <= 25 * 1024 * 1024) {
+      try {
+        fileURL = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ''));
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      } catch (readErr) {
+        console.warn('[DashboardDocImport] FileReader DataURL fallback to ObjectURL:', readErr);
+      }
+    }
+    if (!fileURL && typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
+      fileURL = URL.createObjectURL(file);
+    }
+    if (fileURL) {
+      return {
+        html: `
+          <div class="pdf-preview-wrapper" contenteditable="false">
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 8px;">
+              PDF Preview (Original layout preserved): <strong>${escapeHtml(file.name)}</strong>
+            </p>
+            <iframe src="${fileURL}" width="100%" height="750px" style="border: 1px solid #cbd5e1; border-radius: 4px;"></iframe>
+          </div>
+        `
+      };
+    }
+
+    // Fallback text extraction if browser preview URL could not be created
     await ensureScript('pdfjsLib', 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
     if (typeof pdfjsLib !== 'undefined' && pdfjsLib.getDocument) {
       try {
@@ -2068,65 +2099,39 @@ async function parseUploadedDocument(file) {
           pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }
         const arrayBuffer = await file.arrayBuffer();
-        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false });
-        const pdfDoc = await loadingTask.promise;
+        const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;
         let fullHtml = '';
-
         for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
           const page = await pdfDoc.getPage(pageNum);
           const textContent = await page.getTextContent();
-          let pageText = '';
-          let currentLine = '';
-          for (const item of textContent.items) {
-            if (item.hasEOL) {
-              currentLine += item.str;
-              if (currentLine.trim()) {
-                pageText += '<p>' + escapeHtml(currentLine.trim()) + '</p>';
-              }
-              currentLine = '';
-            } else {
-              currentLine += (currentLine ? ' ' : '') + item.str;
-            }
-          }
-          if (currentLine.trim()) {
-            pageText += '<p>' + escapeHtml(currentLine.trim()) + '</p>';
-          }
-          if (!pageText && textContent.items.length > 0) {
-            pageText = '<p>' + escapeHtml(textContent.items.map(it => it.str).join(' ').trim()) + '</p>';
-          }
-          fullHtml += pageText || '<p><br></p>';
+          fullHtml += '<p>' + escapeHtml(textContent.items.map(it => it.str).join(' ').trim()) + '</p>';
         }
-
-        if (fullHtml && fullHtml.trim()) {
-          return {
-            html: fullHtml
-          };
-        }
+        if (fullHtml.trim()) return { html: fullHtml };
       } catch (pdfErr) {
-        console.warn('[DashboardDocImport] PDF.js error, trying stream fallback:', pdfErr);
+        console.warn('[DashboardDocImport] PDF fallback error:', pdfErr);
       }
     }
-
-    // PDF text stream fallback
-    try {
-      const buffer = await file.arrayBuffer();
-      const text = new TextDecoder('latin1').decode(buffer);
-      const matches = text.match(/\(([^)]+)\)\s*Tj/g) || text.match(/BT[\s\S]*?ET/g);
-      if (matches && matches.length > 0) {
-        const extracted = matches.map(m => m.replace(/[\(\)Tj]/g, '').trim()).filter(Boolean);
-        if (extracted.length > 0) {
-          return {
-            html: extracted.map(line => '<p>' + escapeHtml(line) + '</p>').join(''),
-            rawText: extracted.join('\n')
-          };
-        }
-      }
-    } catch (e) {}
-
-    throw new Error('Could not parse PDF document. Please ensure the file is not password-protected.');
+    throw new Error('Could not preview PDF document. Please ensure the file is a valid PDF.');
   }
 
-  // 3. Fallback for .txt, .md, .markdown
+  // 3. Plain Text (.txt) — Preserve line-by-line paragraph spacing
+  if (ext === 'txt') {
+    const text = typeof file.text === 'function'
+      ? await file.text()
+      : await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(String(e.target.result || ''));
+          reader.onerror = reject;
+          reader.readAsText(file);
+        });
+    const html = text
+      .split(/\r?\n/)
+      .map(line => `<p>${line ? escapeHtml(line) : '&nbsp;'}</p>`)
+      .join('');
+    return { html, rawText: text };
+  }
+
+  // 4. Markdown (.md, .markdown)
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {

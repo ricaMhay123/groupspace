@@ -5637,3 +5637,60 @@ html.dark .paperclip-card::after,
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='40' viewBox='0 0 24 40' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 12v18a5 5 0 0 0 10 0V8a7 7 0 0 0-14 0v21a3 3 0 0 0 6 0V12'/%3E%3C/svg%3E");
   filter: drop-shadow(1px 2px 4px rgba(0, 0, 0, 0.45));
 }
+
+/* The editable document sheet inside your notebook */
+.notebook-editor-sheet {
+  width: 100%;
+  max-width: 816px;          /* Standard A4/Letter reading width */
+  min-height: 900px;
+  margin: 1.5rem auto;       /* Centers the page itself, NOT the text */
+  padding: 2.5rem 3rem;      /* Generous document margins */
+  background-color: #ffffff;
+  color: #1e293b;
+  text-align: left !important; /* Overrides any global center alignment */
+  line-height: 1.65;
+  font-size: 15px;
+  border-radius: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* Ensure paragraphs and imported elements stay left-aligned and spaced */
+.notebook-editor-sheet p,
+.notebook-editor-sheet div,
+.notebook-editor-sheet li {
+  text-align: left;
+  margin-bottom: 0.85rem;
+}
+
+/* Mobile padding adjustment so text doesn't feel squeezed on phones */
+@media (max-width: 640px) {
+  .notebook-editor-sheet {
+    margin: 0.75rem auto;
+    padding: 1.25rem 1.25rem;
+  }
+}
+
+/* Desktop & Mobile Ribbon Container */
+.ribbon-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #334155;
+}
+
+/* On mobile: keep toolbar on a single horizontally-scrollable row */
+@media (max-width: 768px) {
+  .ribbon-toolbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Hides bulky scrollbar on Firefox */
+  }
+  .ribbon-toolbar::-webkit-scrollbar {
+    display: none;         /* Hides bulky scrollbar on Chrome/Safari */
+  }
+  .ribbon-group {
+    flex-shrink: 0;        /* Prevents buttons from squishing */
+  }
+}
