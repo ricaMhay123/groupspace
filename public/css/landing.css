@@ -5,10 +5,10 @@
 
 /* ── Global Page Paper Background ── */
 #landingBody {
-  background-color: #fcfbf7 !important;
+  background-color: #f8fafc !important;
   background-image: 
-    repeating-linear-gradient(0deg, rgba(59, 130, 246, 0.055) 0px, rgba(59, 130, 246, 0.055) 1px, transparent 1px, transparent 20px),
-    repeating-linear-gradient(90deg, rgba(59, 130, 246, 0.055) 0px, rgba(59, 130, 246, 0.055) 1px, transparent 1px, transparent 20px) !important;
+    repeating-linear-gradient(0deg, rgba(59, 130, 246, 0.045) 0px, rgba(59, 130, 246, 0.045) 1px, transparent 1px, transparent 20px),
+    repeating-linear-gradient(90deg, rgba(59, 130, 246, 0.045) 0px, rgba(59, 130, 246, 0.045) 1px, transparent 1px, transparent 20px) !important;
   background-size: 20px 20px !important;
   color: #0f172a;
   min-height: 100vh;
@@ -25,7 +25,7 @@
 }
 
 .notebook-margin-guide {
-  border-left: 2px solid rgba(239, 68, 68, 0.4) !important;
+  border-left: 2px solid rgba(239, 68, 68, 0.35) !important;
 }
 
 /* ── Clean Stationery Header ── */
@@ -33,16 +33,16 @@
   position: sticky;
   top: 0;
   z-index: 200;
-  background: rgba(252, 251, 247, 0.92);
+  background: rgba(248, 250, 252, 0.92);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(203, 213, 225, 0.7);
+  border-bottom: 1px solid #e2e8f0;
   transition: background 0.25s ease, box-shadow 0.25s ease;
 }
 
 .landing-header.scrolled {
-  background: rgba(252, 251, 247, 0.98);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  background: rgba(248, 250, 252, 0.98);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
 }
 
 .landing-nav-inner {
@@ -357,17 +357,17 @@
   filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.22));
 }
 
-/* Card 2: Golden Kraft Tan Washi Tape (Reference Photo 2 Top-Right, 50% on desk, 50% on card) */
+/* Card 2: Crisp Slate Washi Tape */
 .feature-card:nth-child(2)::before {
   top: -13px;
   left: 52%;
   transform: translateX(-50%) rotate(2deg);
   width: 76px;
   height: 26px;
-  background-color: rgba(229, 193, 133, 0.85);
-  border-left: 2px dashed rgba(180, 135, 75, 0.85);
-  border-right: 2px dashed rgba(180, 135, 75, 0.85);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  background-color: rgba(226, 232, 240, 0.85);
+  border-left: 2px dashed rgba(148, 163, 184, 0.7);
+  border-right: 2px dashed rgba(148, 163, 184, 0.7);
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.06);
   border-radius: 1px;
 }
 
@@ -384,17 +384,17 @@
   filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.22));
 }
 
-/* Card 4: Diagonal Corner Parchment Washi Tape (Reference Photo 2 Bottom-Left, overhangs corner) */
+/* Card 4: Diagonal Corner Slate Washi Tape */
 .feature-card:nth-child(4)::before {
   top: -6px;
   right: -10px;
   transform: rotate(40deg);
   width: 68px;
   height: 22px;
-  background-color: rgba(247, 243, 233, 0.88);
-  border-left: 2px dashed rgba(215, 205, 185, 0.85);
-  border-right: 2px dashed rgba(215, 205, 185, 0.85);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  background-color: rgba(241, 245, 249, 0.9);
+  border-left: 2px dashed rgba(148, 163, 184, 0.7);
+  border-right: 2px dashed rgba(148, 163, 184, 0.7);
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.06);
   border-radius: 1px;
 }
 
@@ -425,64 +425,64 @@
   border-radius: 1px;
 }
 
-/* Card 1: Soft Canary Yellow Sticky Note (Discussions) */
+/* Card 1: Clean White Surface with Crisp Cobalt Kicker (Discussions) */
 .feature-card:nth-child(1) {
-  background-color: #fefce8 !important;
-  border: 1px solid #fef08a !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
   transform: rotate(-1.2deg);
 }
 .feature-card:nth-child(1) .feature-kicker {
-  color: #a16207 !important;
+  color: #2563eb !important;
 }
 
-/* Card 2: Soft Sky Blue Sticky Note (Tasks) */
+/* Card 2: Clean White Surface (Tasks) */
 .feature-card:nth-child(2) {
-  background-color: #f0f9ff !important;
-  border: 1px solid #bae6fd !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
   transform: rotate(0.9deg);
 }
 .feature-card:nth-child(2) .feature-kicker {
   color: #0369a1 !important;
 }
 
-/* Card 3: Soft Sage Mint Sticky Note (Documents) */
+/* Card 3: Clean White Surface (Documents) */
 .feature-card:nth-child(3) {
-  background-color: #f0fdf4 !important;
-  border: 1px solid #bbf7d0 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
   transform: rotate(-0.7deg);
 }
 .feature-card:nth-child(3) .feature-kicker {
   color: #15803d !important;
 }
 
-/* Card 4: Soft Peach Apricot Sticky Note (Schedule) */
+/* Card 4: Clean White Surface (Schedule) */
 .feature-card:nth-child(4) {
-  background-color: #fff7ed !important;
-  border: 1px solid #fed7aa !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
   transform: rotate(1.1deg);
 }
 .feature-card:nth-child(4) .feature-kicker {
-  color: #c2410c !important;
+  color: #2563eb !important;
 }
 
-/* Card 5: Soft Lavender Lilac Sticky Note (Team) */
+/* Card 5: Clean White Surface (Team) */
 .feature-card:nth-child(5) {
-  background-color: #faf5ff !important;
-  border: 1px solid #e9d5ff !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
   transform: rotate(-0.9deg);
 }
 .feature-card:nth-child(5) .feature-kicker {
-  color: #7e22ce !important;
+  color: #4f46e5 !important;
 }
 
-/* Card 6: Soft Blush Rose Sticky Note (Finance) */
+/* Card 6: Clean White Surface (Finance) */
 .feature-card:nth-child(6) {
-  background-color: #fff1f2 !important;
-  border: 1px solid #fecdd3 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
   transform: rotate(0.8deg);
 }
 .feature-card:nth-child(6) .feature-kicker {
-  color: #be123c !important;
+  color: #0d7a53 !important;
 }
 
 /* Hover: Flatten smoothly to 0deg with tactile paper lift */
@@ -613,10 +613,10 @@
   transform: translateX(-50%) rotate(-1deg);
   width: 110px;
   height: 22px;
-  background-color: rgba(245, 235, 215, 0.8);
-  border-left: 2px dashed rgba(215, 200, 175, 0.85);
-  border-right: 2px dashed rgba(215, 200, 175, 0.85);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  background-color: rgba(226, 232, 240, 0.8);
+  border-left: 2px dashed rgba(148, 163, 184, 0.7);
+  border-right: 2px dashed rgba(148, 163, 184, 0.7);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
   border-radius: 2px;
   pointer-events: none !important;
   z-index: 12;
@@ -698,14 +698,14 @@
   margin-bottom: 18px;
 }
 
-/* Post-It Note Callout inside Card 2 */
+/* Callout Note inside Card 2 */
 .post-it-note {
-  background: #fef9c3;
-  border: 1px solid #fde047;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
   border-radius: 8px;
   padding: 12px 14px;
   margin: 0 0 18px 0;
-  box-shadow: 1px 3px 6px rgba(0, 0, 0, 0.04);
+  box-shadow: 1px 3px 6px rgba(15, 23, 42, 0.04);
   transform: rotate(-1deg);
 }
 
@@ -714,7 +714,7 @@
   font-style: italic;
   font-size: 13px;
   line-height: 1.45;
-  color: #854d0e;
+  color: #1e3a8a;
   margin: 0;
 }
 
@@ -764,9 +764,9 @@
 }
 
 .pill-structure {
-  background: #fef3c7;
-  color: #b45309;
-  border: 1px solid #fde68a;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
 }
 
 .pill-optimized {
@@ -955,21 +955,20 @@
 }
 
 .memo-card-kraft {
-  background: #d7c4b0;
-  background-image: repeating-linear-gradient(0deg, rgba(130, 105, 80, 0.06) 0px, rgba(130, 105, 80, 0.06) 1px, transparent 1px, transparent 18px);
-  border: 1px solid #c2ad97;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
   transform: rotate(-1deg);
 }
 
 .memo-card-yellow {
-  background: #fef9c3;
-  border: 1px solid #fde047;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
   transform: rotate(1.2deg);
 }
 
 .memo-card-pink {
-  background: #fce7f3;
-  border: 1px solid #fbcfe8;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   transform: rotate(-0.7deg);
 }
 
@@ -979,9 +978,9 @@
   right: 14px;
   width: 70px;
   height: 20px;
-  background: rgba(245, 235, 215, 0.85);
-  border-left: 2px dashed rgba(215, 200, 175, 0.85);
-  border-right: 2px dashed rgba(215, 200, 175, 0.85);
+  background: rgba(226, 232, 240, 0.82);
+  border-left: 2px dashed rgba(148, 163, 184, 0.75);
+  border-right: 2px dashed rgba(148, 163, 184, 0.75);
   transform: rotate(5deg);
   pointer-events: none !important;
 }
@@ -995,9 +994,9 @@
   display: block;
 }
 
-.memo-card-kraft .memo-badge { color: #583e26; }
-.memo-card-yellow .memo-badge { color: #854d0e; }
-.memo-card-pink .memo-badge { color: #9d174d; }
+.memo-card-kraft .memo-badge { color: #334155; }
+.memo-card-yellow .memo-badge { color: #1d4ed8; }
+.memo-card-pink .memo-badge { color: #0f172a; }
 
 .memo-card h4 {
   font-size: 1.15rem;
@@ -1183,8 +1182,8 @@ html.dark .feature-card {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
 }
 
-.dark .feature-card:nth-child(1), html.dark .feature-card:nth-child(1) { border-color: #ca8a04 !important; }
-.dark .feature-card:nth-child(1) .feature-kicker, html.dark .feature-card:nth-child(1) .feature-kicker { color: #fde047 !important; }
+.dark .feature-card:nth-child(1), html.dark .feature-card:nth-child(1) { border-color: #3b82f6 !important; }
+.dark .feature-card:nth-child(1) .feature-kicker, html.dark .feature-card:nth-child(1) .feature-kicker { color: #60a5fa !important; }
 
 .dark .feature-card:nth-child(2), html.dark .feature-card:nth-child(2) { border-color: #0284c7 !important; }
 .dark .feature-card:nth-child(2) .feature-kicker, html.dark .feature-card:nth-child(2) .feature-kicker { color: #7dd3fc !important; }

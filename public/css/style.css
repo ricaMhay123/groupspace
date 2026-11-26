@@ -5,32 +5,32 @@
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  /* Light Mode (Studio Daylight) — Crisp ink (#16181d) on floating white panels (#ffffff) over warm-stone ground (#f7f6f3) */
-  --background: #f7f6f3;
+  /* Light Mode (Crisp Daylight) — Crisp ink (#0f172a) on white panels (#ffffff) over cool-slate ground (#f8fafc) */
+  --background: #f8fafc;
   --card: #ffffff;
-  --foreground: #16181d;
-  --card-foreground: #16181d;
+  --foreground: #0f172a;
+  --card-foreground: #0f172a;
   --popover: #ffffff;
-  --popover-foreground: #16181d;
-  --border: #e5e4df;
+  --popover-foreground: #0f172a;
+  --border: #e2e8f0;
   --input: #ffffff;
-  --muted: #f1f0ec;
-  --muted-foreground: #5a5f6b;
-  --gray: #525763;
+  --muted: #f1f5f9;
+  --muted-foreground: #475569;
+  --gray: #475569;
   --ring: #2e5bff;
   --accent: #eef2ff;
   --accent-foreground: #2148d9;
   --primary: #2e5bff;
   --primary-foreground: #ffffff;
-  --secondary: #ecebe6;
-  --secondary-foreground: #16181d;
-  --sidebar: #f1f0ec;
-  --sidebar-foreground: #16181d;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --sidebar: #f1f5f9;
+  --sidebar-foreground: #0f172a;
   --sidebar-primary: #ffffff;
-  --sidebar-primary-foreground: #16181d;
-  --sidebar-accent: #e7e5df;
-  --sidebar-accent-foreground: #16181d;
-  --sidebar-border: #e5e4df;
+  --sidebar-primary-foreground: #0f172a;
+  --sidebar-accent: #e2e8f0;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
   --sidebar-ring: #2e5bff;
   --destructive: #c82838;
   --destructive-foreground: #ffffff;
@@ -53,11 +53,11 @@
   --shadow-offset-y: 2px;
 
   /* Toolbar & Control Variables (Light Mode) */
-  --toolbar-bg: #f7f6f3;
+  --toolbar-bg: #f8fafc;
   --toolbar-surface: #ffffff;
-  --toolbar-text: #16181d;
-  --toolbar-border: #e5e4df;
-  --toolbar-hover: #ecebe6;
+  --toolbar-text: #0f172a;
+  --toolbar-border: #e2e8f0;
+  --toolbar-hover: #e2e8f0;
 
   /* Legacy aliases — keeps existing components working */
   --primary-hover: #2148d9;
@@ -68,15 +68,15 @@
   --danger: var(--destructive);
   --bg: var(--background);
   --bg-white: var(--card);
-  --text: #16181d;
-  --text-dark: #16181d;
-  --text-muted: #5a5f6b;
-  --card-hover-shadow: 0 6px 20px rgba(20, 22, 27, 0.06);
+  --text: #0f172a;
+  --text-dark: #0f172a;
+  --text-muted: #475569;
+  --card-hover-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
   --radius-sm: 0.5rem;
   --transition: all 0.18s ease;
   --primary-blue: var(--primary);
   --primary-hover-blue: #2148d9;
-  --border-subtle: #e5e4df;
+  --border-subtle: #e2e8f0;
   --bg-main: var(--background);
 }
 
@@ -3599,8 +3599,8 @@ body {
 }
 
 .doc-generic {
-  background: #fef3c7;
-  color: #d97706;
+  background: #f1f5f9;
+  color: #334155;
 }
 
 .dark .doc-pdf {

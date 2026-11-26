@@ -136,7 +136,7 @@ check('Extended desk sections (clipboard workflow, memo board, receipt demo)', (
 
 // 6. CSS Stationery Styling & Dark Mode Harmony
 check('CSS graph paper pattern, responsive grid, and dark mode harmony', () => {
-  assert(landingCss.includes('#fcfbf7'), 'CSS must define #fcfbf7 paper background');
+  assert(landingCss.includes('#f8fafc'), 'CSS must define #f8fafc paper background');
   assert(landingCss.includes('repeating-linear-gradient'), 'CSS must define repeating blue graph grid pattern');
   assert(landingCss.includes('.dark') || landingCss.includes('html.dark'), 'CSS must define dark mode stationery rules');
   assert(landingCss.includes('@media (max-width: 768px)'), 'CSS must define mobile responsive media query');
