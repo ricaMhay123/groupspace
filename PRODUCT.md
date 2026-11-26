@@ -23,16 +23,16 @@ Accessed on desktop and mobile web viewports. Used during live team syncs, class
 - Team workspace roles: Leader, Co-Leader, Member with explicit leadership request workflows.
 - Rich-text notebook editor with strict tab isolation ([Home], [Insert], [Draw], [Layout]), dynamic table generator, flowchart shapes, and export engines.
 - Personal Space isolated with `is_private = TRUE` ensuring complete confidentiality.
-- Theme-harmonized Light Mode and Dark Mode with full keyboard and mobile navigation drawer support.
+- Theme-harmonized Light Mode (primary daylight studio experience) and composed Dark Mode parity with full keyboard and mobile navigation drawer support.
 
 ## Brand Commitments
 - Name: GroupSpace
-- Modern, clean, and high-contrast typography without gimmicks or distracting AI visual tropes.
+- Studio craft benchmark alongside Notion, Linear, and Craft light mode: minimal crisp clarity, floating white sheets on a soft warm-stone canvas, quiet hairline dividers, and consistent `4px`-stepped desktop/mobile spacing.
+- Light-first for bright classrooms and campus syncs, with composed Obsidian Dark Mode parity.
 - Responsive accessibility with WCAG AA compliance (≥ 4.5:1 text contrast) and minimum 11px text floor.
 
 ## Product Principles
 1. **Immediate Clarity**: Clean visual hierarchy and intuitive scanability across all devices.
 2. **Strict Privacy Boundaries**: Full collaboration in shared spaces; complete isolation in personal spaces.
-3. **Harmonious & Accessible Craft**: High-contrast typography, natural elevation, and predictable interactive states.
+3. **Harmonious & Accessible Craft**: High-contrast typography, floating surface separation, consistent button grammar, and predictable desktop/mobile gutters.
 4. **Lightweight Reliability**: Zero heavy frameworks; fast, snappy, and lightweight DOM operations.
-

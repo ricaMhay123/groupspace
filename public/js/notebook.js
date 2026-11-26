@@ -176,14 +176,14 @@ function renderNotebookRichTextToolbar(targetContainerId = 'notebookToolbarConta
   const targetArg = editorTargetId ? `'${editorTargetId}'` : 'null';
 
   container.innerHTML = `
-    <div class="notebook-toolbar notebook-rich-toolbar" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:8px 12px; background:var(--toolbar-bg, #f8fafc); color:var(--toolbar-text, #0f172a); border:1px solid var(--toolbar-border, #cbd5e1); border-radius:8px; margin-bottom:10px;">
+    <div class="notebook-toolbar notebook-rich-toolbar" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:8px 12px; background:var(--toolbar-bg, #f7f6f3); color:var(--toolbar-text, #16181d); border:1px solid var(--toolbar-border, #e5e4df); border-radius:8px; margin-bottom:10px;">
       <!-- MS Word Style Ribbon Options: File / Home / Insert / Draw / Layout -->
-      <div class="nb-word-ribbon-bar" style="display:flex; align-items:center; gap:4px; width:100%; padding-bottom:6px; margin-bottom:2px; border-bottom:1px solid var(--toolbar-border, #cbd5e1);">
-        <button type="button" class="nb-ribbon-btn" data-ribbon="file" onclick="switchEmbeddedRibbonTab(this, 'file')" style="background:transparent; color:var(--toolbar-text, #0f172a); border:1px solid transparent; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">File</button>
-        <button type="button" class="nb-ribbon-btn active" data-ribbon="home" onclick="switchEmbeddedRibbonTab(this, 'home')" style="background:#2563eb; color:#ffffff; border:1px solid #38bdf8; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Home</button>
-        <button type="button" class="nb-ribbon-btn" data-ribbon="insert" onclick="switchEmbeddedRibbonTab(this, 'insert')" style="background:transparent; color:var(--toolbar-text, #0f172a); border:1px solid transparent; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Insert</button>
-        <button type="button" class="nb-ribbon-btn" data-ribbon="draw" onclick="switchEmbeddedRibbonTab(this, 'draw')" style="background:transparent; color:var(--toolbar-text, #0f172a); border:1px solid transparent; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Draw</button>
-        <button type="button" class="nb-ribbon-btn" data-ribbon="layout" onclick="switchEmbeddedRibbonTab(this, 'layout')" style="background:transparent; color:var(--toolbar-text, #0f172a); border:1px solid transparent; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Layout</button>
+      <div class="nb-word-ribbon-bar" style="display:flex; align-items:center; gap:4px; width:100%; padding-bottom:6px; margin-bottom:2px; border-bottom:1px solid var(--toolbar-border, #e5e4df);">
+        <button type="button" class="nb-ribbon-btn" data-ribbon="file" onclick="switchEmbeddedRibbonTab(this, 'file')" style="background:transparent; color:var(--toolbar-text, #16181d); border:1px solid transparent; border-radius:6px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">File</button>
+        <button type="button" class="nb-ribbon-btn active" data-ribbon="home" onclick="switchEmbeddedRibbonTab(this, 'home')" style="background:#2e5bff; color:#ffffff; border:1px solid transparent; border-radius:6px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Home</button>
+        <button type="button" class="nb-ribbon-btn" data-ribbon="insert" onclick="switchEmbeddedRibbonTab(this, 'insert')" style="background:transparent; color:var(--toolbar-text, #16181d); border:1px solid transparent; border-radius:6px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Insert</button>
+        <button type="button" class="nb-ribbon-btn" data-ribbon="draw" onclick="switchEmbeddedRibbonTab(this, 'draw')" style="background:transparent; color:var(--toolbar-text, #16181d); border:1px solid transparent; border-radius:6px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Draw</button>
+        <button type="button" class="nb-ribbon-btn" data-ribbon="layout" onclick="switchEmbeddedRibbonTab(this, 'layout')" style="background:transparent; color:var(--toolbar-text, #16181d); border:1px solid transparent; border-radius:6px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;">Layout</button>
         <span style="margin-left:auto; font-size:10.5px; color:var(--gray, #64748b); font-weight:600;">Auto-Title on Save</span>
       </div>
 
@@ -595,9 +595,9 @@ function switchEmbeddedRibbonTab(btnEl, tabName) {
   toolbar.querySelectorAll('.nb-ribbon-btn').forEach(b => {
     const isActive = b.getAttribute('data-ribbon') === activeTab;
     b.classList.toggle('active', isActive);
-    b.style.background = isActive ? '#2563eb' : 'transparent';
-    b.style.color = isActive ? '#ffffff' : 'var(--toolbar-text, #0f172a)';
-    b.style.borderColor = isActive ? '#38bdf8' : 'transparent';
+    b.style.background = isActive ? '#2e5bff' : 'transparent';
+    b.style.color = isActive ? '#ffffff' : 'var(--toolbar-text, #16181d)';
+    b.style.borderColor = 'transparent';
   });
   toolbar.querySelectorAll('[data-ribbon-section]').forEach(sec => {
     const sections = (sec.getAttribute('data-ribbon-section') || '').split(/\s+/);

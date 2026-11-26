@@ -1,23 +1,27 @@
 ---
 name: GroupSpace Design System
-description: Modern, accessible, high-contrast collaborative workspace system
+description: Minimal studio light-first workspace system (Craft / Linear / Notion parity) with composed obsidian dark mode
 colors:
-  primary: "#2563eb"
-  primary-hover: "#1d4ed8"
-  primary-light: "#eff6ff"
-  accent-green: "#059669"
+  primary: "#2e5bff"
+  primary-hover: "#2148d9"
+  primary-light: "#eef2ff"
+  accent-green: "#0d7a53"
   accent-amber: "#b45309"
-  accent-red: "#dc2626"
+  accent-red: "#c82838"
   surface-light: "#ffffff"
-  background-light: "#f8fafc"
-  border-light: "#cbd5e1"
-  text-light: "#0f172a"
-  text-muted-light: "#475569"
-  surface-dark: "#1e293b"
-  background-dark: "#0f172a"
-  border-dark: "#334155"
-  text-dark: "#ffffff"
-  text-muted-dark: "#94a3b8"
+  sidebar-light: "#f1f0ec"
+  background-light: "#f7f6f3"
+  secondary-light: "#ecebe6"
+  border-light: "#e5e4df"
+  text-light: "#16181d"
+  text-muted-light: "#5a5f6b"
+  surface-dark: "#191b20"
+  sidebar-dark: "#141519"
+  background-dark: "#111215"
+  secondary-dark: "#23262e"
+  border-dark: "#272a33"
+  text-dark: "#f4f5f7"
+  text-muted-dark: "#9ba1ae"
 typography:
   display:
     fontFamily: "'Bricolage Grotesque', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
@@ -51,8 +55,8 @@ typography:
     lineHeight: 1.4
 rounded:
   sm: "6px"
-  md: "10px"
-  lg: "14px"
+  md: "8px"
+  lg: "12px"
   pill: "9999px"
 spacing:
   xs: "4px"
@@ -65,12 +69,21 @@ components:
     backgroundColor: "{colors.primary}"
     textColor: "#ffffff"
     rounded: "{rounded.md}"
-    padding: "8px 18px"
+    padding: "8px 16px"
+    minHeight: "36px"
   button-primary-hover:
     backgroundColor: "{colors.primary-hover}"
+  button-secondary:
+    backgroundColor: "{colors.surface-light}"
+    textColor: "{colors.text-light}"
+    borderColor: "{colors.border-light}"
+    rounded: "{rounded.md}"
+    padding: "8px 14px"
+    minHeight: "36px"
   card:
     backgroundColor: "{colors.surface-light}"
     textColor: "{colors.text-light}"
+    borderColor: "{colors.border-light}"
     rounded: "{rounded.lg}"
     padding: "20px"
 ---
@@ -78,47 +91,35 @@ components:
 # Design System
 
 ## Overview
-GroupSpace's visual language is built around high-contrast typography, crisp geometric structure, and purposeful elevation. It bridges focused individual productivity with clear team coordination.
+GroupSpace pairs a sunlit warm-stone canvas (`#f7f6f3`) and inset rail (`#f1f0ec`) with floating crisp white panels (`#ffffff`) bounded by quiet hairline dividers (`#e5e4df`), inspired by Notion, Linear, and Craft light mode—complemented by an intentional obsidian dark mode (`#111215` / `#191b20`).
 
 ## Colors
-- **Primary / Brand**: Blue `#2563eb` provides clear interactive affordances and highlights.
-- **Accents**: 
-  - Success / Action: Emerald `#047857` (light) / `#10b981` (dark).
-  - Attention / Pending: Amber `#b45309` (light) / `#f59e0b` (dark).
-  - Destructive / Urgent: Crimson `#dc2626` (light) / `#ef4444` (dark).
+- **Primary Action / Interactive Highlight**: Studio Cobalt `#2e5bff` (`#2148d9` hover, `#eef2ff` light selection wash) in light mode; `#3b63ff` (`#4d73ff` ring) in dark mode.
+- **Accents & Statuses**:
+  - Success / Settled: `#0d7a53` (light) / `#34d399` (dark).
+  - Pending / Approval Needed: `#b45309` (light) / `#fbbf24` (dark).
+  - Destructive / Overdue: `#c82838` (light) / `#f87171` (dark).
 - **Surfaces**:
-  - Light Mode: Neutral slate background `#f8fafc`, pure white card containers `#ffffff`, and border `#cbd5e1`.
-  - Dark Mode: Slate background `#0f172a`, card containers `#1e293b`, and border `#334155`.
+  - Light Mode: Warm stone canvas `#f7f6f3`, recessed sidebar `#f1f0ec`, floating white panels `#ffffff`, hairline border `#e5e4df`.
+  - Dark Mode: Obsidian canvas `#111215`, recessed sidebar `#141519`, elevated dark panels `#191b20`, hairline border `#272a33`.
 
 ## Typography
-- Default font stack: `Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`.
-- Editorial and note canvas: Supports classic serif fonts (`Times New Roman`, `Georgia`, `Calibri`, `Arial`) with explicit font-size scales (12px to 36px).
-- Legibility floor: All functional UI text, labels, metadata, and badges are minimum `11px` (`0.6875rem`), with body text at `14px-15px`.
+- Primary UI stack: `Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`; display headers in `'Bricolage Grotesque'`; tabular numbers and codes in `'JetBrains Mono'`.
+- Legibility floor: All functional UI labels, metadata, and badges maintain WCAG AA contrast (≥ 4.5:1 body, ≥ 3:1 controls/large headings) and ≥ 11px minimum font size.
 
-## Layout
-- Desktop: Left navigation sidebar (`260px`) with fluid main content workspace.
-- Mobile: Left navigation transforms into an accessible off-canvas drawer (`transform: translateX(-100%)`) triggered by the top hamburger button (`☰`). Touch targets maintain minimum `44px` height.
-- Content measure: Maximum container widths prevent unreadable line lengths (`max-width: 1200px`).
+## Layout & Spacing Rhythm (`4px` Base)
+- **Desktop (`> 768px`)**:
+  - Left navigation sidebar: `248px` width, `20px 14px` padding.
+  - Sticky dashboard header: `20px 32px` padding.
+  - Main tab workspace (`.tab-view`): `24px 32px 40px` padding; panel grid `16px–20px` gaps; cards `18px–20px` internal padding.
+  - Public header: `60px` height, `0 32px` padding.
+- **Mobile (`≤ 768px`)**:
+  - `.dashboard-main` keeps `0` side padding (`padding: 0 0 32px`) so `.dashboard-header` (`14px 16px`) spans flush edge-to-edge.
+  - `.tab-view` uses a single `16px 16px 28px` gutter (eliminating double horizontal padding).
+  - Left navigation collapses into an accessible off-canvas drawer (`280px` max `85vw`) via `☰`. Primary interactive buttons and inputs enforce `44px` minimum mobile hit height without stretching compact icon triggers (`⋯`, zoom steppers).
 
-## Elevation & Depth
-- Cards and containers declare elevation once: subtle border (`1px solid var(--border)`) paired with soft, low-contrast shadows (`0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)`).
-- Zero-offset chromatic halos and harsh artificial glowing borders are prohibited.
-
-## Shapes
-- Cards and panels: `12px` to `14px` border-radius.
-- Interactive controls (buttons, inputs, selects): `8px` to `10px` border-radius.
-- Badges and status pills: `9999px` full-rounded pills.
-
-## Components
-- **Buttons**:
-  - `.btn-green`: Primary action button with high-contrast text.
-  - `.btn-outline`: Secondary action button with subtle border and smooth hover fill.
-  - `.personal-tab-btn`: Tab pill control with active container background.
-- **Modals**: Centered overlays with backdrop blur (`rgba(15, 23, 42, 0.6)`), accessible close triggers, and responsive max-width.
-- **Toolbar Ribbons**: MS Word-style categorized tabs ([Home], [Insert], [Draw], [Layout]) with strict active tab isolation.
-
-## Do's and Don'ts
-- **DO**: Maintain WCAG AA text contrast ratio (≥ 4.5:1 for body and labels, ≥ 3:1 for large headings).
-- **DO**: Keep micro-labels and badges at or above the 11px floor.
-- **DON'T**: Use thick one-sided border stripes (`border-left: 4px`) on rounded cards.
-- **DON'T**: Apply zero-offset colored glow halos on dark surfaces.
+## Buttons & Elevation
+- **Cards**: Floating white panels rely on subtle `1px solid var(--border)` hairline borders paired with soft offset elevation (`0 1px 3px rgba(20, 22, 27, 0.04)`). No decorative colored side stripes or glowing zero-offset halos.
+- **Primary CTA (`.btn-primary`, `.btn-green`)**: Solid cobalt fill (`#2e5bff`), `#ffffff` text, `8px` radius, `36px` desktop min-height, `8px 16px` padding.
+- **Secondary / Outline (`.btn-outline`, `.secondary-btn`)**: Surface fill (`#ffffff` light / `#191b20` dark), hairline border, subtle wash on hover, `8px` radius, `36px` desktop min-height, `8px 14px` padding.
+- **Browser Chrome**: Theme selection highlights (`::selection`), `2px solid var(--ring)` keyboard focus outlines, and scrollbar colors are derived directly from the palette.

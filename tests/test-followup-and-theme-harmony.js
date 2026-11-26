@@ -30,14 +30,14 @@ assert(taskController.includes("rawDecision === 'accepted' ? 'accept'"), 'task.c
 console.log('✓ 2. Action button e.preventDefault() and task route compatibility verified');
 
 // 3. Verify Dark & Light (Normal) Mode UI Harmony in CSS & Notebook
-assert(styleCss.includes('--background: #f8fafc;') && styleCss.includes('--card: #ffffff;'), 'Light mode (:root) must use #f8fafc / #ffffff containers');
-assert(styleCss.includes('--foreground: #0f172a;') && styleCss.includes('--text: #0f172a;'), 'Light mode (:root) must use #0f172a dark text');
-assert(styleCss.includes('--border: #cbd5e1;'), 'Light mode (:root) must use #cbd5e1 subtle slate borders');
-assert(styleCss.includes('--background:       #0f172a;') && styleCss.includes('--foreground:       #ffffff;'), 'Dark mode (.dark) must use #0f172a slate background and #ffffff crisp white text');
-assert(notebookHtml.includes('--nb-tb-bg: #f8fafc;') && notebookHtml.includes('--nb-tb-text: #0f172a;'), 'notebook.html Light Mode toolbar variables must use #f8fafc and #0f172a');
-assert(notebookHtml.includes('--nb-tb-bg: #0f172a;') && notebookHtml.includes('--nb-tb-text: #ffffff;'), 'notebook.html Dark Mode toolbar variables must use #0f172a and #ffffff');
-assert(notebookJs.includes('var(--toolbar-bg, #f8fafc)') && notebookJs.includes('var(--toolbar-text, #0f172a)'), 'notebook.js embedded toolbar must use theme-harmonized CSS variables');
-console.log('✓ 3. Light Mode (#0f172a on #ffffff/#f8fafc with #cbd5e1 border) & Dark Mode (#ffffff on #0f172a) UI harmony verified');
+assert(styleCss.includes('--background: #f7f6f3;') && styleCss.includes('--card: #ffffff;'), 'Light mode (:root) must use #f7f6f3 / #ffffff containers');
+assert(styleCss.includes('--foreground: #16181d;') && styleCss.includes('--text: #16181d;'), 'Light mode (:root) must use #16181d dark text');
+assert(styleCss.includes('--border: #e5e4df;'), 'Light mode (:root) must use #e5e4df hairline borders');
+assert(styleCss.includes('--background:       #111215;') && styleCss.includes('--foreground:       #f4f5f7;'), 'Dark mode (.dark) must use #111215 background and #f4f5f7 crisp light text');
+assert(notebookHtml.includes('--nb-tb-bg: #f7f6f3;') && notebookHtml.includes('--nb-tb-text: #16181d;'), 'notebook.html Light Mode toolbar variables must use #f7f6f3 and #16181d');
+assert(notebookHtml.includes('--nb-tb-bg: #141519;') && notebookHtml.includes('--nb-tb-text: #f4f5f7;'), 'notebook.html Dark Mode toolbar variables must use #141519 and #f4f5f7');
+assert(notebookJs.includes('var(--toolbar-bg, #f7f6f3)') && notebookJs.includes('var(--toolbar-text, #16181d)'), 'notebook.js embedded toolbar must use theme-harmonized CSS variables');
+console.log('✓ 3. Light Mode (#16181d on #ffffff/#f7f6f3 with #e5e4df border) & Dark Mode (#f4f5f7 on #111215) UI harmony verified');
 
 // 4. Verify Personal Space Sub-Tabs button styling and harmony
 const dashboardHtml = fs.readFileSync(path.join(__dirname, '../public/dashboard.html'), 'utf8');
