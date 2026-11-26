@@ -606,6 +606,30 @@ async function deleteHomespaceScratchpadNote(noteId, e) {
   }
 }
 
+/**
+ * Renders a standardized Homespace task action row with title-first hierarchy.
+ */
+function renderHomespaceTaskRow({ title, priority, metaHtml, actionsHtml, background = 'var(--card)' }) {
+  const priorityRaw = String(priority || 'MEDIUM').toUpperCase();
+  const priorityBadgeClass = priorityRaw === 'URGENT' ? 'HIGH' : priorityRaw;
+  return `
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border:1px solid var(--border); background:${background}; border-radius:10px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:200px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
+          <strong style="font-size:14.5px; font-weight:700; color:var(--foreground); letter-spacing:-0.01em;">${escapeHtml(title)}</strong>
+          <span class="priority-badge ${escapeHtml(priorityBadgeClass)}">${escapeHtml(priorityRaw)}</span>
+        </div>
+        <div style="font-size:12.5px; color:var(--muted-foreground); display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          ${metaHtml}
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        ${actionsHtml}
+      </div>
+    </div>
+  `;
+}
+
 function renderLeaderHomespace(container, pendingTasks, members, activities, currentUserId, feedData = {}) {
   const leadershipReqs = Array.isArray(feedData?.leadershipRequests) ? feedData.leadershipRequests : [];
   const totalApprovals = pendingTasks.length + leadershipReqs.length;
@@ -627,24 +651,20 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
     </div>
   `).join('');
 
-  const taskApprovalsHtml = pendingTasks.map(t => `
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border:1px solid var(--border); background:var(--background); border-radius:10px; flex-wrap:wrap;">
-      <div style="flex:1; min-width:200px;">
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-          <span class="tag tag-${(t.priority || 'medium').toLowerCase()}" style="font-size:11px; font-weight:700; padding:2px 8px;">${escapeHtml(t.priority || 'MEDIUM')}</span>
-          <strong style="font-size:14px; color:var(--foreground);">${escapeHtml(t.title)}</strong>
-        </div>
-        <div style="font-size:12px; color:var(--muted-foreground); display:flex; gap:12px; flex-wrap:wrap;">
-          <span>Assignee: <strong>${escapeHtml(t.assignee_name || 'Unassigned')}</strong></span>
-          <span>Due: ${t.due_date ? formatDate(t.due_date) : 'No due date'}</span>
-        </div>
-      </div>
-      <div style="display:flex; align-items:center; gap:8px;">
-        <button type="button" class="btn-green btn-sm" onclick="approveTaskInline(${t.id}, event)">Approve</button>
-        <button type="button" class="btn-outline btn-sm" style="color:var(--destructive);" onclick="rejectTaskInline(${t.id}, '${escapeHtml(t.title).replace(/'/g, "\\'")}', event)">Reject</button>
-      </div>
-    </div>
-  `).join('');
+  const taskApprovalsHtml = pendingTasks.map(t => renderHomespaceTaskRow({
+    title: t.title,
+    priority: t.priority,
+    background: 'var(--background)',
+    metaHtml: `
+      <span>Submitted by <strong style="color:var(--foreground);">${escapeHtml(t.assignee_name || 'Unassigned')}</strong></span>
+      <span aria-hidden="true">&middot;</span>
+      <span>${t.due_date ? 'Due ' + formatDate(t.due_date) : 'No due date'}</span>
+    `,
+    actionsHtml: `
+      <button type="button" class="btn-green btn-sm" onclick="approveTaskInline(${t.id}, event)">Approve</button>
+      <button type="button" class="btn-outline btn-sm" style="color:var(--destructive);" onclick="rejectTaskInline(${t.id}, '${escapeHtml(t.title).replace(/'/g, "\\'")}', event)">Reject</button>
+    `
+  })).join('');
 
   const approvalsBodyHtml = totalApprovals === 0
     ? `
@@ -754,29 +774,30 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
 
   const renderTaskRow = (t, isPending) => {
     const statusLower = (t.status || 'TODO').toLowerCase();
+    const statusLabel = isPending
+      ? 'Awaiting Leader Review'
+      : statusLower === 'in_progress'
+        ? 'In Progress'
+        : statusLower === 'done'
+          ? 'Done'
+          : 'To Do';
     const actionBtn = isPending
       ? `<button type="button" class="btn-outline btn-sm" onclick="switchTab('tasks')">View →</button>`
       : statusLower === 'in_progress'
         ? `<button type="button" class="btn-green btn-sm" onclick="updateTaskStatus(${t.id}, 'PENDING_APPROVAL')">Submit for Review</button>`
         : `<button type="button" class="btn-green btn-sm" onclick="updateTaskStatus(${t.id}, 'IN_PROGRESS')">Start Task</button>`;
 
-    return `
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border:1px solid var(--border); background:${isPending ? 'var(--muted)' : 'var(--card)'}; border-radius:10px; flex-wrap:wrap;">
-        <div style="flex:1; min-width:200px;">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-            <span class="tag tag-${(t.priority || 'medium').toLowerCase()}" style="font-size:11px; font-weight:700; padding:2px 8px;">${escapeHtml(t.priority || 'MEDIUM')}</span>
-            <strong style="font-size:14px; color:var(--foreground);">${escapeHtml(t.title)}</strong>
-          </div>
-          <div style="font-size:12px; color:var(--muted-foreground); display:flex; gap:12px; flex-wrap:wrap;">
-            <span>Status: <strong style="color:${isPending ? 'var(--warning)' : 'var(--foreground)'};">${isPending ? 'Awaiting Leader Review' : escapeHtml((t.status || 'TODO').replace(/_/g, ' '))}</strong></span>
-            <span>Due: ${t.due_date ? formatDate(t.due_date) : 'No due date'}</span>
-          </div>
-        </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          ${actionBtn}
-        </div>
-      </div>
-    `;
+    return renderHomespaceTaskRow({
+      title: t.title,
+      priority: t.priority,
+      background: isPending ? 'var(--muted)' : 'var(--card)',
+      metaHtml: `
+        <span style="font-weight:600; color:${isPending ? 'var(--warning)' : 'var(--foreground)'};">${escapeHtml(statusLabel)}</span>
+        <span aria-hidden="true">&middot;</span>
+        <span>${t.due_date ? 'Due ' + formatDate(t.due_date) : 'No due date'}</span>
+      `,
+      actionsHtml: actionBtn
+    });
   };
 
   const deliverablesHtml = myAssignedDeliverables.length === 0
