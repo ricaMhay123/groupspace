@@ -2073,58 +2073,49 @@ async function parseUploadedDocument(file) {
     throw new Error('Could not parse Word document. Please ensure it is a valid .docx file.');
   }
 
-  // 2. Adobe PDF Document (.pdf) — Read-only native browser iframe preview preserving original layout
+  // 2. Adobe PDF Document (.pdf) — Emit pdf.js <canvas> page stack for main document sheet
   if (ext === 'pdf') {
-    let fileURL = '';
+    await ensureScript('pdfjsLib', 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+    if (typeof pdfjsLib === 'undefined' || !pdfjsLib.getDocument) {
+      throw new Error('Could not load pdf.js to render PDF pages.');
+    }
+    if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer.slice(0), isEvalSupported: false }).promise;
+
+    let pdfDataUrl = '';
     if (file.size <= 25 * 1024 * 1024) {
       try {
-        fileURL = await new Promise((resolve, reject) => {
+        pdfDataUrl = await new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(String(reader.result || ''));
           reader.onerror = reject;
           reader.readAsDataURL(file);
         });
       } catch (readErr) {
-        console.warn('[DashboardDocImport] FileReader DataURL fallback to ObjectURL:', readErr);
+        console.warn('[DashboardDocImport] Could not encode PDF DataURL for persistence:', readErr);
       }
-    }
-    if (!fileURL && typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
-      fileURL = URL.createObjectURL(file);
-    }
-    if (fileURL) {
-      return {
-        html: `
-          <div class="pdf-preview-wrapper" contenteditable="false">
-            <p style="font-size: 13px; color: #64748b; margin-bottom: 8px;">
-              PDF Preview (Original layout preserved): <strong>${escapeHtml(file.name)}</strong>
-            </p>
-            <iframe src="${fileURL}" width="100%" height="750px" style="border: 1px solid #cbd5e1; border-radius: 4px;"></iframe>
-          </div>
-        `
-      };
     }
 
-    // Fallback text extraction if browser preview URL could not be created
-    await ensureScript('pdfjsLib', 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
-    if (typeof pdfjsLib !== 'undefined' && pdfjsLib.getDocument) {
-      try {
-        if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        }
-        const arrayBuffer = await file.arrayBuffer();
-        const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;
-        let fullHtml = '';
-        for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-          const page = await pdfDoc.getPage(pageNum);
-          const textContent = await page.getTextContent();
-          fullHtml += '<p>' + escapeHtml(textContent.items.map(it => it.str).join(' ').trim()) + '</p>';
-        }
-        if (fullHtml.trim()) return { html: fullHtml };
-      } catch (pdfErr) {
-        console.warn('[DashboardDocImport] PDF fallback error:', pdfErr);
-      }
-    }
-    throw new Error('Could not preview PDF document. Please ensure the file is a valid PDF.');
+    const canvasesHtml = Array.from({ length: pdfDoc.numPages }, (_, idx) =>
+      `<canvas class="nb-pdf-page-canvas" data-pdf-page="${idx + 1}"></canvas>`
+    ).join('');
+
+    return {
+      html: `
+        <div class="pdf-preview-wrapper" contenteditable="false" data-pdf-name="${escapeHtml(file.name)}"${pdfDataUrl ? ` data-pdf-src="${pdfDataUrl}"` : ''}>
+          <p style="font-size: 13px; color: #64748b; margin-bottom: 8px;">
+            PDF Preview (${pdfDoc.numPages} page${pdfDoc.numPages === 1 ? '' : 's'}): <strong>${escapeHtml(file.name)}</strong>
+          </p>
+          <div class="pdf-canvas-stack">
+            ${canvasesHtml}
+          </div>
+        </div><p><br></p>
+      `
+    };
   }
 
   // 3. Plain Text (.txt) — Preserve line-by-line paragraph spacing
