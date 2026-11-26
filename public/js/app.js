@@ -32,14 +32,27 @@
     return `<h4>${title} (${items.length})</h4>${items.map(render).join('')}`;
   }
 
+  function getNotifPref(key) {
+    let uid = 'default';
+    if (window.currentUser && window.currentUser.id) {
+      uid = window.currentUser.id;
+    } else {
+      try {
+        const stored = JSON.parse(localStorage.getItem('groupspace_user') || 'null');
+        if (stored && stored.id) uid = stored.id;
+      } catch (e) {}
+    }
+    return localStorage.getItem(`groupspace_pref_${uid}_${key}`) !== 'false';
+  }
+
   function renderFeed(data) {
     const body = $('feedBody');
     if (!body) return;
 
     const leadershipRequests = data.leadershipRequests || [];
-    const approvals = data.pendingApprovals || [];
-    const help = data.helpRequests || [];
-    const mentions = data.mentions || [];
+    const approvals = getNotifPref('notif_approvals') ? (data.pendingApprovals || []) : [];
+    const help = getNotifPref('notif_help') ? (data.helpRequests || []) : [];
+    const mentions = getNotifPref('notif_mentions') ? (data.mentions || []) : [];
 
     const html =
       section('Leadership Requests', leadershipRequests, r => `

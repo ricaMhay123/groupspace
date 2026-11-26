@@ -1260,6 +1260,39 @@ function renderHomespaceSettingsDrawer() {
 }
 
 // ================= WORKSPACE SETTINGS MODAL ================= //
+function setPreferenceTheme(targetDark) {
+  const isCurrentlyDark = document.documentElement.classList.contains('dark');
+  if (Boolean(targetDark) !== isCurrentlyDark && typeof window.gsToggleTheme === 'function') {
+    window.gsToggleTheme();
+  }
+  const lightBtn = document.getElementById('prefThemeLightBtn');
+  const darkBtn = document.getElementById('prefThemeDarkBtn');
+  if (lightBtn) lightBtn.className = targetDark ? 'btn-outline btn-sm' : 'btn-green btn-sm';
+  if (darkBtn) darkBtn.className = targetDark ? 'btn-green btn-sm' : 'btn-outline btn-sm';
+}
+
+async function leaveCurrentWorkspace() {
+  if (!currentGroupId || !currentGroupDetails) return;
+  const wsName = currentGroupDetails.name || 'this workspace';
+  const confirmed = window.gsConfirm
+    ? await window.gsConfirm(
+        `Leave "${wsName}"? You will need a new invite code to rejoin later.`,
+        { title: 'Leave Workspace', confirmText: 'Leave Workspace', danger: true }
+      )
+    : confirm(`Leave "${wsName}"? You will need a new invite code to rejoin later.`);
+  if (!confirmed) return;
+
+  try {
+    const res = await apiFetch(`/api/groups/${currentGroupId}/leave`, { method: 'POST' });
+    closeModal('workspaceSettingsModal');
+    showToast((res && res.message) || `You left "${wsName}".`, 'success');
+    localStorage.removeItem('groupspace_active_group_id');
+    window.location.href = 'workspaces.html';
+  } catch (err) {
+    showToast(err.message || 'Could not leave workspace.', 'error');
+  }
+}
+
 function openWorkspaceSettingsModal() {
   const modalBody = document.getElementById('workspaceSettingsModalBody');
   const modalTitle = document.getElementById('workspaceSettingsModalTitle');
@@ -1269,172 +1302,109 @@ function openWorkspaceSettingsModal() {
   const userRole = (groupCtx.role || 'member').toLowerCase();
   const isPrimaryLeader = userRole === 'leader';
   const isCoLeader = userRole === 'co_leader';
-  const settings = groupCtx.settings || {};
-  const currentUserId = currentUser ? currentUser.id : null;
+  const isLeaderOrCoLeader = isPrimaryLeader || isCoLeader;
+  const roleLabel = isPrimaryLeader ? 'Leader' : (isCoLeader ? 'Co-Leader' : 'Member');
+  const roleBadgeClass = isLeaderOrCoLeader ? 'online' : 'pending';
+  const currentUserId = currentUser ? currentUser.id : 'default';
 
-  if (isPrimaryLeader) {
-    if (modalTitle) modalTitle.innerHTML = 'Leader Workspace Settings';
-    const requireApproval = settings.requireApproval !== false;
-    const allowDiscussions = settings.allowMemberDiscussions !== false;
-    const restrictExpenses = settings.restrictExpensesToLeaders === true;
+  const prefApprovals = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_approvals`) !== 'false';
+  const prefMentions = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_mentions`) !== 'false';
+  const prefHelp = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_help`) !== 'false';
+  const isDarkActive = document.documentElement.classList.contains('dark');
 
-    modalBody.innerHTML = `
-      <div style="display:flex; flex-direction:column; gap:16px;">
-        <!-- Workspace Name -->
-        <div>
-          <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px; color:var(--text);">Workspace Name</label>
-          <div style="display:flex; gap:8px;">
-            <input type="text" id="modalWsNameInput" class="form-control" value="${escapeHtml(currentGroupDetails.name)}" style="font-size:13px; padding:8px 12px; flex:1;">
-            <button type="button" class="btn-green" style="padding:8px 14px; font-size:12px; font-weight:600;" onclick="saveWorkspaceName(document.getElementById('modalWsNameInput').value)">Save Name</button>
-          </div>
+  const avatarBg = (currentUser && currentUser.avatarColor) || '#4f46e5';
+  const avatarInner = (currentUser && currentUser.avatarUrl)
+    ? `<img src="${escapeHtml(currentUser.avatarUrl)}" alt="${escapeHtml(currentUser.fullName || 'User')}">`
+    : escapeHtml((currentUser && currentUser.avatarInitials) || 'GS');
+
+  if (modalTitle) modalTitle.innerHTML = 'Preferences &amp; Account';
+
+  modalBody.innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:18px;">
+      <!-- Membership & Account -->
+      <div>
+        <div style="font-size:11.5px; font-weight:700; color:var(--muted-foreground); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">
+          My Membership &amp; Account
         </div>
-
-        <!-- Reset Invite Code -->
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:var(--muted,#f8fafc); border:1px solid var(--border); border-radius:10px; gap:12px; flex-wrap:wrap;">
-          <div>
-            <div style="font-size:12px; font-weight:600; color:var(--text);">Invite Code</div>
-            <div style="font-size:11px; color:var(--gray);">Regenerate the team invite code if leaked.</div>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <strong style="color:var(--primary); font-size:14px; letter-spacing:1px; background:#eef2ff; padding:4px 10px; border-radius:6px; border:1px solid #c7d2fe;" id="modalJoinCodeDisplay">${escapeHtml(currentGroupDetails.join_code)}</strong>
-            <button type="button" class="btn-outline" style="padding:6px 12px; font-size:12px; font-weight:600; border-radius:6px;" onclick="resetWorkspaceInviteCode()">Reset Code</button>
-          </div>
-        </div>
-
-        <!-- Constraints -->
-        <div style="border-top:1px solid var(--border); padding-top:14px;">
-          <div style="font-size:12px; font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">
-            Member Permission Constraints
-          </div>
-          <div style="display:flex; flex-direction:column; gap:10px;">
-            <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); cursor:pointer;">
-              <input type="checkbox" id="modalConstraintApproval" ${requireApproval ? 'checked' : ''} style="width:16px; height:16px; cursor:pointer;">
-              <span>Require leader approval before member tasks are marked Done</span>
-            </label>
-            <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); cursor:pointer;">
-              <input type="checkbox" id="modalConstraintDiscussions" ${allowDiscussions ? 'checked' : ''} style="width:16px; height:16px; cursor:pointer;">
-              <span>Allow members to create new discussion topics</span>
-            </label>
-            <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); cursor:pointer;">
-              <input type="checkbox" id="modalConstraintExpenses" ${restrictExpenses ? 'checked' : ''} style="width:16px; height:16px; cursor:pointer;">
-              <span>Restrict expense ledger entries to workspace leaders only</span>
-            </label>
-          </div>
-          <button type="button" class="btn-green" style="margin-top:12px; font-size:12px; padding:6px 14px; font-weight:600;" onclick="saveMemberConstraints('modalConstraintApproval', 'modalConstraintDiscussions', 'modalConstraintExpenses')">
-            Save Permission Constraints
-          </button>
-        </div>
-
-        <!-- Discrete Danger Zone Footer -->
-        <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-          <div>
-            <span style="font-size:12px; font-weight:600; color:var(--gray);">Danger Zone</span>
-            <p style="margin:2px 0 0; font-size:11px; color:var(--gray);">Permanently delete this workspace and all its data.</p>
-          </div>
-          <button type="button" class="btn-outline open-delete-workspace-btn" style="padding:4px 12px; font-size:11px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:6px; background:transparent; cursor:pointer;" onclick="closeModal('workspaceSettingsModal'); confirmDeleteWorkspace();">
-            Delete Workspace
-          </button>
-        </div>
-      </div>
-    `;
-  } else if (isCoLeader) {
-    if (modalTitle) modalTitle.innerHTML = 'Co-Leader Workspace Settings';
-    const requireApproval = settings.requireApproval !== false;
-    const allowDiscussions = settings.allowMemberDiscussions !== false;
-    const restrictExpenses = settings.restrictExpensesToLeaders === true;
-
-    modalBody.innerHTML = `
-      <div style="display:flex; flex-direction:column; gap:16px;">
-        <!-- Workspace Name -->
-        <div style="padding:12px 14px; background:var(--muted,#f8fafc); border:1px solid var(--border); border-radius:10px;">
-          <div style="font-size:12px; font-weight:600; color:var(--text);">Workspace</div>
-          <div style="font-size:14px; font-weight:700; color:var(--primary); margin-top:2px;">${escapeHtml(currentGroupDetails.name)}</div>
-        </div>
-
-        <!-- Reset Invite Code -->
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:var(--muted,#f8fafc); border:1px solid var(--border); border-radius:10px; gap:12px; flex-wrap:wrap;">
-          <div>
-            <div style="font-size:12px; font-weight:600; color:var(--text);">Invite Code</div>
-            <div style="font-size:11px; color:var(--gray);">Share with teammates to join workspace.</div>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <strong style="color:var(--primary); font-size:14px; letter-spacing:1px; background:#eef2ff; padding:4px 10px; border-radius:6px; border:1px solid #c7d2fe;">${escapeHtml(currentGroupDetails.join_code)}</strong>
-          </div>
-        </div>
-
-        <!-- Constraints Summary -->
-        <div style="border-top:1px solid var(--border); padding-top:14px;">
-          <div style="font-size:12px; font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">
-            Active Permission Constraints
-          </div>
-          <div style="display:flex; flex-direction:column; gap:8px; font-size:13px; color:var(--text);">
-            <div>• Leader Approval Required: <strong>${requireApproval ? 'Yes' : 'No'}</strong></div>
-            <div>• Member Discussion Creation: <strong>${allowDiscussions ? 'Allowed' : 'Restricted'}</strong></div>
-            <div>• Expense Ledger: <strong>${restrictExpenses ? 'Leaders & Co-Leaders Only' : 'All Members'}</strong></div>
-          </div>
-          <p style="font-size:11px; color:var(--gray); margin-top:12px;">Primary Leader holds sole authorization to modify settings and delete workspace.</p>
-        </div>
-      </div>
-    `;
-  } else {
-    if (modalTitle) modalTitle.innerHTML = 'Member Settings & Preferences';
-    const prefApprovals = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_approvals`) !== 'false';
-    const prefMentions = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_mentions`) !== 'false';
-    const prefHelp = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_help`) !== 'false';
-
-    modalBody.innerHTML = `
-      <div style="display:flex; flex-direction:column; gap:16px;">
-        <!-- Profile Display -->
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; background:var(--muted,#f8fafc); border:1px solid var(--border); border-radius:10px; flex-wrap:wrap;">
-          <div style="display:flex; align-items:center; gap:12px; min-width:0;">
-            <div class="chat-avatar" style="width:42px; height:42px; font-size:15px; flex-shrink:0;">${currentUser ? (currentUser.avatarInitials || 'GS') : 'GS'}</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; background:var(--muted); border:1px solid var(--border); border-radius:10px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:12px; min-width:0; flex:1;">
+            <div class="chat-avatar" style="width:40px; height:40px; font-size:14px; background:${escapeHtml(avatarBg)};">${avatarInner}</div>
             <div style="min-width:0;">
-              <div style="font-weight:700; font-size:14px; color:var(--text);">${currentUser ? escapeHtml(currentUser.fullName) : 'User'}</div>
-              <div style="color:var(--gray); font-size:12px;">${currentUser ? escapeHtml(currentUser.email) : ''}</div>
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span style="font-weight:700; font-size:14px; color:var(--foreground);">${currentUser ? escapeHtml(currentUser.fullName) : 'User'}</span>
+                <span class="status ${roleBadgeClass}" style="font-size:11px;">${roleLabel}</span>
+              </div>
+              <div style="color:var(--muted-foreground); font-size:12px; overflow:hidden; text-overflow:ellipsis;">${currentUser ? escapeHtml(currentUser.email) : ''}</div>
             </div>
           </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span class="status pending" style="font-size:11px;">Member</span>
-            <button type="button" class="btn-outline" style="padding:4px 10px; font-size:11px; font-weight:600; border-radius:6px; color:var(--primary); border-color:var(--primary); background:transparent; cursor:pointer;" onclick="closeModal('workspaceSettingsModal'); openRequestLeadershipModal();">
+          <button type="button" class="btn-outline btn-sm" onclick="closeModal('workspaceSettingsModal'); openUserProfileModal();">
+            Edit Profile
+          </button>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; flex-wrap:wrap;">
+          ${isLeaderOrCoLeader ? `
+            <button type="button" class="btn-outline btn-sm" onclick="closeModal('workspaceSettingsModal'); focusHomespaceSettingsDrawer();">
+              Team Settings &amp; Rules &rarr;
+            </button>
+          ` : `
+            <button type="button" class="btn-outline btn-sm" style="color:var(--primary); border-color:var(--primary);" onclick="closeModal('workspaceSettingsModal'); openRequestLeadershipModal();">
               Request Leadership Role
             </button>
-          </div>
-        </div>
-
-        <!-- Notification Drawer Toggles -->
-        <div>
-          <div style="font-size:12px; font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">
-            Notification Drawer Alerts
-          </div>
-          <div style="display:flex; flex-direction:column; gap:8px;">
-            <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); cursor:pointer;">
-              <input type="checkbox" ${prefApprovals ? 'checked' : ''} onchange="saveMemberPref('notif_approvals', this.checked)">
-              <span>Task review & approval updates</span>
-            </label>
-            <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); cursor:pointer;">
-              <input type="checkbox" ${prefMentions ? 'checked' : ''} onchange="saveMemberPref('notif_mentions', this.checked)">
-              <span>@Mention notifications & topic replies</span>
-            </label>
-            <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); cursor:pointer;">
-              <input type="checkbox" ${prefHelp ? 'checked' : ''} onchange="saveMemberPref('notif_help', this.checked)">
-              <span>Peer-assist & help request alerts</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Discrete Danger Zone Footer -->
-        <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-          <div>
-            <span style="font-size:12px; font-weight:600; color:var(--gray);">Danger Zone</span>
-            <p style="margin:2px 0 0; font-size:11px; color:var(--gray);">Permanently delete your account with double password verification.</p>
-          </div>
-          <button type="button" class="btn-outline open-delete-account-modal" style="padding:4px 12px; font-size:11px; font-weight:600; color:#ef4444; border-color:rgba(239,68,68,0.35); border-radius:6px; background:transparent; cursor:pointer;" onclick="closeModal('workspaceSettingsModal'); openDeleteAccountModal();">
-            Delete Account
+          `}
+          <button type="button" class="btn-outline btn-sm" style="color:var(--destructive); border-color:rgba(220,38,38,0.35);" onclick="leaveCurrentWorkspace()">
+            Leave Workspace
           </button>
         </div>
       </div>
-    `;
-  }
+
+      <!-- Appearance -->
+      <div style="border-top:1px solid var(--border); padding-top:14px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <div>
+            <div style="font-size:12px; font-weight:700; color:var(--foreground);">Appearance</div>
+            <div style="font-size:11.5px; color:var(--muted-foreground);">Choose your preferred theme across GroupSpace.</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button type="button" id="prefThemeLightBtn" class="${isDarkActive ? 'btn-outline' : 'btn-green'} btn-sm" onclick="setPreferenceTheme(false)">Light</button>
+            <button type="button" id="prefThemeDarkBtn" class="${isDarkActive ? 'btn-green' : 'btn-outline'} btn-sm" onclick="setPreferenceTheme(true)">Dark</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notification Drawer Alerts -->
+      <div style="border-top:1px solid var(--border); padding-top:14px;">
+        <div style="font-size:11.5px; font-weight:700; color:var(--muted-foreground); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px;">
+          Notification Drawer Alerts
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--foreground); cursor:pointer;">
+            <input type="checkbox" ${prefApprovals ? 'checked' : ''} onchange="saveMemberPref('notif_approvals', this.checked)">
+            <span>Task review &amp; approval updates</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--foreground); cursor:pointer;">
+            <input type="checkbox" ${prefMentions ? 'checked' : ''} onchange="saveMemberPref('notif_mentions', this.checked)">
+            <span>@Mention notifications &amp; topic replies</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--foreground); cursor:pointer;">
+            <input type="checkbox" ${prefHelp ? 'checked' : ''} onchange="saveMemberPref('notif_help', this.checked)">
+            <span>Peer-assist &amp; help request alerts</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Account Danger Zone -->
+      <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div>
+          <span style="font-size:12px; font-weight:700; color:var(--foreground);">Account Deletion</span>
+          <p style="margin:2px 0 0; font-size:11.5px; color:var(--muted-foreground);">Permanently delete your GroupSpace account.</p>
+        </div>
+        <button type="button" class="btn-outline open-delete-account-modal" style="padding:6px 12px; font-size:12px; font-weight:600; color:var(--destructive); border-color:rgba(220,38,38,0.35); border-radius:8px; background:transparent; cursor:pointer;" onclick="closeModal('workspaceSettingsModal'); openDeleteAccountModal();">
+          Delete Account
+        </button>
+      </div>
+    </div>
+  `;
 
   openModal('workspaceSettingsModal');
 }
@@ -1526,6 +1496,9 @@ async function confirmDeleteWorkspace(e) {
 function saveMemberPref(key, value) {
   const currentUserId = currentUser ? currentUser.id : 'default';
   localStorage.setItem(`groupspace_pref_${currentUserId}_${key}`, String(value));
+  if (typeof window.refreshAppFeed === 'function') {
+    window.refreshAppFeed();
+  }
   showToast('Preference saved.', 'success');
 }
 
