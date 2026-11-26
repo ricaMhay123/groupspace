@@ -21,7 +21,7 @@
   position: relative;
   max-width: 1240px;
   margin: 0 auto;
-  padding: 0 24px 80px 44px;
+  padding: 0 24px 40px 44px;
 }
 
 .notebook-margin-guide {
@@ -1081,10 +1081,19 @@
 }
 
 /* ── Stationery Footer ── */
-.desk-footer {
-  border-top: 1px solid rgba(203, 213, 225, 0.8);
-  padding: 36px 0 20px;
+.desk-footer,
+.dark .desk-footer,
+html.dark .desk-footer {
+  background: transparent !important;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 24px;
+  padding: 28px 0 8px;
   text-align: center;
+}
+
+.dark .desk-footer,
+html.dark .desk-footer {
+  border-top-color: #334155 !important;
 }
 
 .footer-inner {
@@ -1093,20 +1102,32 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
-  font-size: 12.5px;
-  color: #64748b;
+  font-size: 13px;
+  color: #475569;
+}
+
+.dark .footer-inner,
+html.dark .footer-inner {
+  color: #94a3b8;
 }
 
 .footer-nav {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 16px;
 }
 
 .footer-nav a {
-  color: #475569;
+  color: #334155;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.15s;
+}
+
+.dark .footer-nav a,
+html.dark .footer-nav a {
+  color: #cbd5e1;
 }
 
 .footer-nav a:hover {
