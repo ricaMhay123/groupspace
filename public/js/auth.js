@@ -196,6 +196,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const forgotStep2Form = document.getElementById('forgotStep2Form');
   const forgotResendBtn = document.getElementById('forgotResendBtn');
 
+  // If visitor opens login/register with an active valid session, go to Workspaces first
+  if (loginForm || registerForm) {
+    const existingToken = localStorage.getItem('groupspace_token');
+    if (existingToken) {
+      fetch(getApiBaseUrl() + '/api/auth/me', {
+        credentials: 'include',
+        headers: { Authorization: 'Bearer ' + existingToken }
+      }).then(res => {
+        if (res.ok) {
+          window.location.replace('workspaces.html');
+        } else if (res.status === 401) {
+          localStorage.removeItem('groupspace_token');
+          localStorage.removeItem('groupspace_user');
+          localStorage.removeItem('groupspace_active_group_id');
+        }
+      }).catch(() => {});
+    }
+  }
+
   // ==========================================
   // 1. LOGIN HANDLER
   // ==========================================
@@ -302,6 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('groupspace_token', data.data.token);
         localStorage.setItem('groupspace_user', JSON.stringify(data.data.user));
+        localStorage.removeItem('groupspace_active_group_id');
 
         showAlert(alertBox, 'Login successful! Redirecting...', 'success');
 
@@ -617,6 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('groupspace_token', data.data.token);
         localStorage.setItem('groupspace_user', JSON.stringify(data.data.user));
+        localStorage.removeItem('groupspace_active_group_id');
 
         if (verifyAlert) {
           showAlert(verifyAlert, '🎉 Account verified! Welcome email sent. Redirecting...', 'success');

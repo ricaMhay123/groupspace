@@ -43,6 +43,17 @@ function startPresenceHeartbeat() {
 // ================= WORKSPACE SWITCHER ================= //
 async function loadWorkspacesDropdown() {
   try {
+    // Check explicit URL workspace selection before auto-entering any dashboard
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlGroupId = urlParams.get('groupId') || urlParams.get('workspaceId') || urlParams.get('workspace_id');
+    const storedGroupId = localStorage.getItem('groupspace_active_group_id');
+    const isPersonalReturn = urlParams.get('tab') === 'personal' && Boolean(storedGroupId);
+
+    if (!urlGroupId && !isPersonalReturn) {
+      window.location.replace('workspaces.html');
+      return;
+    }
+
     const res = await apiFetch('/api/groups');
     const switcher = document.getElementById('groupSwitcher');
     switcher.innerHTML = '';
@@ -53,15 +64,11 @@ async function loadWorkspacesDropdown() {
       return;
     }
 
-    // Check URL param or localStorage (support groupId, workspaceId, workspace_id)
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlGroupId = urlParams.get('groupId') || urlParams.get('workspaceId') || urlParams.get('workspace_id');
-    const storedGroupId = localStorage.getItem('groupspace_active_group_id');
-
     let selectedId = urlGroupId || storedGroupId;
     const exists = res.data.find(g => String(g.id) === String(selectedId));
     if (!exists) {
-      selectedId = res.data[0].id;
+      window.location.replace('workspaces.html');
+      return;
     }
 
     res.data.forEach(g => {
@@ -155,6 +162,11 @@ async function switchWorkspace(groupId) {
   currentGroupId = Number(groupId);
   window.currentGroupId = currentGroupId;
   localStorage.setItem('groupspace_active_group_id', currentGroupId);
+  if (window.history && typeof window.history.replaceState === 'function') {
+    const url = new URL(window.location.href);
+    url.searchParams.set('groupId', currentGroupId);
+    window.history.replaceState({}, '', url.toString());
+  }
 
   // Reset discussions state to prevent leaking previous workspace topic/comments
   activeTopicId = null;

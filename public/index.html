@@ -416,7 +416,16 @@
       if (token) {
         const navBtn = document.getElementById("authNavButtons");
         if (navBtn) {
-          navBtn.innerHTML = `<a href="/dashboard.html" class="landing-signup-btn">Open Dashboard →</a>`;
+          navBtn.innerHTML = `<a href="/workspaces.html" class="landing-signup-btn">Open Workspaces →</a>`;
+        }
+        const heroPrimaryBtn = document.querySelector('#heroCTA a[href="/register.html"]');
+        if (heroPrimaryBtn) {
+          heroPrimaryBtn.href = "/workspaces.html";
+          heroPrimaryBtn.textContent = "Open Workspaces →";
+        }
+        const mobileAuth = document.querySelector("#mobileMenu .mobile-menu-auth");
+        if (mobileAuth) {
+          mobileAuth.innerHTML = `<a href="/workspaces.html" class="mobile-menu-signup" onclick="closeMobileMenu()">Open Workspaces →</a>`;
         }
       }
 
