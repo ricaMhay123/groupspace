@@ -338,10 +338,10 @@ function switchTab(tabName) {
     overview: '+ Quick Task',
     tasks: '+ Create Task',
     calendar: '+ Add Event',
-    notebook: '+ New Page',
+    notebook: '+ New Document',
     expenses: '+ Log Expense',
     discussions: '+ New Topic',
-    personal: '+ Add Item'
+    personal: personalSubTab === 'TASK' ? '+ Add To-Do' : (personalSubTab === 'EXPENSE' ? '+ Log Expense' : '+ New Note')
   };
 
   document.getElementById('viewTitle').textContent = titleMap[tabName] || 'Dashboard';
@@ -353,12 +353,15 @@ function switchTab(tabName) {
 
 function handlePrimaryAction(e) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
-  if (currentTab === 'tasks' || currentTab === 'overview') openModal('createTaskModal');
+  if (currentTab === 'tasks' || currentTab === 'overview') openCreateTaskModal(e);
   else if (currentTab === 'calendar') openAddEventModal();
-  else if (currentTab === 'notebook') openModal('createNoteModal');
+  else if (currentTab === 'notebook') openCreateNoteModal();
   else if (currentTab === 'expenses') openModal('createExpenseModal');
   else if (currentTab === 'discussions') openModal('createTopicModal');
-  else if (currentTab === 'personal') openPersonalAddModal();
+  else if (currentTab === 'personal') {
+    if (personalSubTab === 'NOTE') togglePersonalQuickCapture();
+    else openPersonalAddModal();
+  }
 }
 
 function refreshCurrentView() {
@@ -427,8 +430,17 @@ async function loadOverview() {
     // Render Expandable Workspace Settings & Controls Drawer
     renderHomespaceSettingsDrawer();
     updateSidebarProfileCard();
+    if (typeof updateLeaderBacklogBadge === 'function') {
+      updateLeaderBacklogBadge(pendingApprovalCount, isLeader);
+    }
   } catch (err) {
     showToast(err.message, 'error');
+    container.innerHTML = `
+      <div class="dashboard-panel" style="padding:28px; text-align:center;">
+        <p style="color:var(--muted-foreground); margin:0 0 12px 0;">Unable to load Homespace right now. ${escapeHtml(err.message || '')}</p>
+        <button type="button" class="btn-outline" onclick="loadOverview()">Retry</button>
+      </div>
+    `;
   }
 }
 
@@ -1197,12 +1209,13 @@ function renderHomespaceSettingsDrawer() {
 function openWorkspaceSettingsModal() {
   const modalBody = document.getElementById('workspaceSettingsModalBody');
   const modalTitle = document.getElementById('workspaceSettingsModalTitle');
-  if (!modalBody || !currentGroupDetails) return;
+  if (!modalBody) return;
 
-  const userRole = (currentGroupDetails.role || 'member').toLowerCase();
+  const groupCtx = currentGroupDetails || { name: 'Workspace', role: 'member', settings: {} };
+  const userRole = (groupCtx.role || 'member').toLowerCase();
   const isPrimaryLeader = userRole === 'leader';
   const isCoLeader = userRole === 'co_leader';
-  const settings = currentGroupDetails.settings || {};
+  const settings = groupCtx.settings || {};
   const currentUserId = currentUser ? currentUser.id : null;
 
   if (isPrimaryLeader) {
@@ -2312,37 +2325,49 @@ function renderDashboardNotesGrid(notes) {
     const canEdit = isLeaderRole || creatorId === currUid || permitted.includes(currUid);
     const canManagePerms = isLeaderRole || creatorId === currUid;
 
+    const folderObj = dashboardNotebookFolders.find(f => Number(f.id) === Number(n.folder_id));
+    const folderName = folderObj ? folderObj.name : '';
+
     return `
       <div id="note-card-${n.id}" data-note-id="${n.id}" data-note-title="${escapeHtml(displayTitle)}" class="note-card ${n.is_pinned ? 'pinned' : ''}" style="cursor:pointer;" onclick="window.location.href='/notebook.html?groupId=' + currentGroupId + '&noteId=' + ${n.id}" title="Click to open in Full Editor">
         <div>
           <h4 style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
             <span>${escapeHtml(displayTitle)}</span>
-            <span style="font-size:11px; padding:2px 8px; background:${canEdit ? 'rgba(82,214,138,0.15)' : 'rgba(148,163,184,0.18)'}; color:${canEdit ? '#52D68A' : '#94a3b8'}; border-radius:12px; font-weight:600; white-space:nowrap;">
+            <span class="note-perm-badge ${canEdit ? 'is-edit' : 'is-readonly'}">
               ${canEdit ? 'Edit' : 'Read-Only'}
             </span>
           </h4>
+          ${folderName ? `<div style="font-size:11.5px; color:var(--primary); margin-bottom:6px; font-weight:600;">${escapeHtml(folderName)}</div>` : ''}
           <p style="white-space:pre-wrap;">${escapeHtml(cleanPreview.slice(0, 220))}${cleanPreview.length > 220 ? '…' : ''}</p>
         </div>
-        <div onclick="event.stopPropagation();">
-          <div style="margin-top:8px; display:flex; align-items:center; justify-content:space-between; gap:6px; flex-wrap:wrap;">
-            <select onchange="moveDashboardNoteToFolder(${n.id}, this.value)" style="font-size:11px; padding:2px 6px; border-radius:6px; background:var(--card); color:var(--text); border:1px solid var(--border); cursor:pointer;" title="Move to folder">
-              <option value="">Uncategorized</option>
-              ${dashboardNotebookFolders.map(f => `<option value="${f.id}" ${Number(n.folder_id) === Number(f.id) ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}
-            </select>
-            ${canManagePerms ? `<button type="button" class="btn-outline" onclick="openDashboardShareModal(${n.id})" style="background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;" title="Share / Page Permissions">Share / Permissions</button>` : ''}
-          </div>
+        <div onclick="event.stopPropagation();" class="note-card-actions-bar">
           ${n.tags ? `
-            <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
+            <div style="margin-bottom:8px; display:flex; gap:6px; flex-wrap:wrap; width:100%;">
               ${n.tags.split(',').filter(t => t.trim()).map(t => `<span style="font-size:11px; padding:2px 8px; background:var(--muted, #f1f5f9); border:1px solid var(--border); border-radius:6px; color:var(--primary); font-weight:600;">#${escapeHtml(t.trim())}</span>`).join('')}
             </div>
           ` : ''}
-          <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px;">
+          <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; gap:8px; width:100%; margin-top:8px;">
             <span>By ${escapeHtml(n.author_name || 'Member')}</span>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id})" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.txt</button>
-              <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id})" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.pdf</button>
-              <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id})" style="background:var(--muted, #f1f5f9); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">.docx</button>
-              ${canManagePerms ? `<span style="cursor:pointer; color:#ef4444; margin-left:4px; font-size:11px; font-weight:600;" title="Delete Note" onclick="deleteNote(${n.id}, event)">Delete</span>` : ''}
+            <div class="actions-dropdown-container">
+              <button type="button" class="btn-card-more" aria-label="Note actions" aria-haspopup="true" aria-expanded="false" onclick="toggleActionsDropdown('noteCardMenu-${n.id}', event)" title="More actions">⋯</button>
+              <div id="noteCardMenu-${n.id}" class="actions-dropdown-menu menu-up">
+                <button type="button" class="actions-dropdown-item" onclick="closeAllActionDropdowns(); window.location.href='/notebook.html?groupId=' + currentGroupId + '&noteId=' + ${n.id};">
+                  <span>Open in Full Editor</span>
+                </button>
+                <div class="actions-dropdown-select-wrap" onclick="event.stopPropagation();">
+                  <label for="moveDashNote-${n.id}">Folder</label>
+                  <select id="moveDashNote-${n.id}" onchange="moveDashboardNoteToFolder(${n.id}, this.value); closeAllActionDropdowns();" title="Move to folder">
+                    <option value="">Uncategorized</option>
+                    ${dashboardNotebookFolders.map(f => `<option value="${f.id}" ${Number(n.folder_id) === Number(f.id) ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}
+                  </select>
+                </div>
+                ${canManagePerms ? `<button type="button" class="actions-dropdown-item" onclick="closeAllActionDropdowns(); openDashboardShareModal(${n.id});"><span>Share / Permissions</span></button>` : ''}
+                <div class="actions-dropdown-divider"></div>
+                <button type="button" class="actions-dropdown-item" onclick="closeAllActionDropdowns(); exportNotebook('pdf', ${n.id});"><span>Export PDF (.pdf)</span></button>
+                <button type="button" class="actions-dropdown-item" onclick="closeAllActionDropdowns(); exportNotebook('docx', ${n.id});"><span>Export Word (.docx)</span></button>
+                <button type="button" class="actions-dropdown-item" onclick="closeAllActionDropdowns(); exportNotebook('txt', ${n.id});"><span>Export Text (.txt)</span></button>
+                ${canManagePerms ? `<div class="actions-dropdown-divider"></div><button type="button" class="actions-dropdown-item actions-dropdown-item-danger" onclick="closeAllActionDropdowns(); deleteNote(${n.id}, event);"><span>Delete</span></button>` : ''}
+              </div>
             </div>
           </div>
         </div>
@@ -3886,11 +3911,26 @@ let personalNotebookNotesCache = [];
 let activePersonalFolderFilter = 'ALL';
 let personalSearchDebounceTimer = null;
 
+function renderSlimQuickCaptureToolbar(containerId, editorId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const fullEditorUrl = `notebook.html?personal=1${currentGroupId ? '&groupId=' + currentGroupId : ''}`;
+  const execCmd = (cmd) => `(() => { const el = document.getElementById('${editorId}'); if (el) { el.focus(); document.execCommand('${cmd}', false, null); } })()`;
+  container.innerHTML = `
+    <div class="quick-capture-slim-toolbar" role="toolbar" aria-label="Quick Note Formatting">
+      <button type="button" class="btn-slim-fmt" onclick="${execCmd('bold')}" title="Bold (Ctrl+B)"><strong>B</strong></button>
+      <button type="button" class="btn-slim-fmt" onclick="${execCmd('italic')}" title="Italic (Ctrl+I)"><em>I</em></button>
+      <button type="button" class="btn-slim-fmt" onclick="${execCmd('insertUnorderedList')}" title="Bullet List">• List</button>
+      <a href="${fullEditorUrl}" target="_blank" rel="noopener noreferrer" class="btn-slim-fmt btn-slim-link" style="margin-left:auto;">Open Full Editor ↗</a>
+    </div>
+  `;
+}
+
 function ensurePersonalNotebookToolbars() {
+  if (document.getElementById('personalNotebookToolbarContainer')) {
+    renderSlimQuickCaptureToolbar('personalNotebookToolbarContainer', 'personalNotebookCanvas');
+  }
   if (typeof renderNotebookRichTextToolbar === 'function') {
-    if (document.getElementById('personalNotebookToolbarContainer')) {
-      renderNotebookRichTextToolbar('personalNotebookToolbarContainer', 'personalNotebookCanvas');
-    }
     const modalToolbar = document.getElementById('personalModalToolbarContainer');
     if (modalToolbar) {
       if (personalSubTab === 'NOTE') {
@@ -3916,14 +3956,9 @@ function switchPersonalSubTab(type) {
     wsEl.style.display = type === 'NOTE' ? 'block' : 'none';
   }
 
-  const addBtn = document.getElementById('personalAddBtn');
-  if (addBtn) {
-    if (type === 'NOTE') {
-      addBtn.style.display = 'none';
-    } else {
-      addBtn.style.display = 'inline-flex';
-      addBtn.textContent = type === 'TASK' ? '+ Add To-Do' : '+ Log Expense';
-    }
+  const primaryBtn = document.getElementById('primaryActionBtn');
+  if (primaryBtn && currentTab === 'personal') {
+    primaryBtn.textContent = type === 'TASK' ? '+ Add To-Do' : (type === 'EXPENSE' ? '+ Log Expense' : '+ New Note');
   }
 
   const headingMap = {
@@ -4135,16 +4170,14 @@ async function handlePersonalImportDocument(event) {
 
 function togglePersonalQuickCapture(forceState) {
   const drawer = document.getElementById('personalQuickCaptureDrawer');
-  const btn = document.getElementById('togglePersonalQuickCaptureBtn');
+  const primaryBtn = document.getElementById('primaryActionBtn');
   if (!drawer) return;
 
   const shouldOpen = (typeof forceState === 'boolean') ? forceState : (drawer.style.display === 'none' || !drawer.style.display);
   if (shouldOpen) {
     drawer.style.display = 'block';
-    if (btn) {
-      btn.innerHTML = '✕ Close Drawer';
-      btn.classList.remove('btn-green');
-      btn.classList.add('btn-outline');
+    if (primaryBtn && currentTab === 'personal' && personalSubTab === 'NOTE') {
+      primaryBtn.textContent = '✕ Close Drawer';
     }
     ensurePersonalNotebookToolbars();
     const titleInput = document.getElementById('personalNotebookTitleInput');
@@ -4153,10 +4186,8 @@ function togglePersonalQuickCapture(forceState) {
     }
   } else {
     drawer.style.display = 'none';
-    if (btn) {
-      btn.innerHTML = '+ New Note';
-      btn.classList.remove('btn-outline');
-      btn.classList.add('btn-green');
+    if (primaryBtn && currentTab === 'personal' && personalSubTab === 'NOTE') {
+      primaryBtn.textContent = '+ New Note';
     }
   }
 }
@@ -4240,11 +4271,6 @@ function renderPersonalNotesGrid(items) {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
               ${escapeHtml(folderName)}
             </span>
-            <select onchange="movePersonalNoteToFolder(${n.id}, this.value)" onclick="event.stopPropagation();" style="font-size:11px; padding:2px 6px; border-radius:6px; background:var(--card); color:var(--text); border:1px solid var(--border); cursor:pointer;" title="Move to private folder">
-              <option value="">Move...</option>
-              <option value="">Uncategorized</option>
-              ${personalNotebookFolders.map(f => `<option value="${f.id}" ${Number(n.folder_id) === Number(f.id) ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}
-            </select>
           </div>
           <h4 style="margin:0 0 8px 0; font-size:1.05rem; font-weight:700; color:var(--foreground);">
             ${escapeHtml(displayTitle)}
@@ -4252,15 +4278,30 @@ function renderPersonalNotesGrid(items) {
           <p style="white-space:pre-wrap; color:var(--muted-foreground); font-size:0.88rem; line-height:1.5;">${escapeHtml(cleanPreview.slice(0, 180))}${cleanPreview.length > 180 ? '…' : ''}</p>
         </div>
         <div onclick="event.stopPropagation();" class="note-card-actions-bar">
-          <div class="note-export-group">
-            <span style="font-size:0.72rem; color:var(--muted-foreground); margin-right:4px;">Export:</span>
-            <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${n.id})">TXT</button>
-            <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${n.id})">PDF</button>
-            <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${n.id})">DOCX</button>
+          <span style="font-size:0.75rem; color:var(--muted-foreground);">Private Note</span>
+          <div class="actions-dropdown-container">
+            <button type="button" class="btn-card-more" aria-label="Private note actions" aria-haspopup="true" aria-expanded="false" onclick="toggleActionsDropdown('personalNoteCardMenu-${n.id}', event)" title="More actions">⋯</button>
+            <div id="personalNoteCardMenu-${n.id}" class="actions-dropdown-menu menu-up">
+              <button type="button" class="actions-dropdown-item" onclick="closeAllActionDropdowns(); window.location.href='${fullEditorUrl}';">
+                <span>Open in Full Editor</span>
+              </button>
+              <div class="actions-dropdown-select-wrap" onclick="event.stopPropagation();">
+                <label for="movePersonalNote-${n.id}">Folder</label>
+                <select id="movePersonalNote-${n.id}" onchange="movePersonalNoteToFolder(${n.id}, this.value); closeAllActionDropdowns();" title="Move to private folder">
+                  <option value="">Uncategorized</option>
+                  ${personalNotebookFolders.map(f => `<option value="${f.id}" ${Number(n.folder_id) === Number(f.id) ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}
+                </select>
+              </div>
+              <div class="actions-dropdown-divider"></div>
+              <button type="button" class="actions-dropdown-item" onclick="closeAllActionDropdowns(); exportNotebook('pdf', ${n.id});"><span>Export PDF (.pdf)</span></button>
+              <button type="button" class="actions-dropdown-item" onclick="closeAllActionDropdowns(); exportNotebook('docx', ${n.id});"><span>Export Word (.docx)</span></button>
+              <button type="button" class="actions-dropdown-item" onclick="closeAllActionDropdowns(); exportNotebook('txt', ${n.id});"><span>Export Text (.txt)</span></button>
+              <div class="actions-dropdown-divider"></div>
+              <button type="button" class="actions-dropdown-item actions-dropdown-item-danger" onclick="closeAllActionDropdowns(); deletePersonalItem(${n.id}, event);">
+                <span>Delete</span>
+              </button>
+            </div>
           </div>
-          <button type="button" class="btn-note-delete" title="Delete Private Note" onclick="deletePersonalItem(${n.id}, event)">
-            Delete
-          </button>
         </div>
       </div>
     `;
@@ -4401,12 +4442,18 @@ async function deletePersonalItem(id, e) {
 // ================= MODAL HELPERS ================= //
 function openModal(id) {
   const el = document.getElementById(id);
-  if (el) el.classList.add('active');
+  if (el) {
+    el.classList.add('active');
+    el.setAttribute('aria-hidden', 'false');
+  }
 }
 
 function closeModal(id) {
   const el = document.getElementById(id);
-  if (el) el.classList.remove('active');
+  if (el) {
+    el.classList.remove('active');
+    el.setAttribute('aria-hidden', 'true');
+  }
 }
 
 function formatDate(isoStr) {
@@ -4929,13 +4976,22 @@ function toggleActionsDropdown(menuId, event) {
   const wasActive = menu.classList.contains('active');
   closeAllActionDropdowns();
   if (!wasActive) {
+    if (menuId === 'sidebarAccountMenu') {
+      const themeLabel = document.getElementById('sidebarThemeLabel');
+      if (themeLabel) {
+        themeLabel.textContent = document.documentElement.classList.contains('dark') ? 'Light Mode' : 'Dark Mode';
+      }
+    }
     menu.classList.add('active');
+    const card = menu.closest('.note-card');
+    if (card) card.classList.add('has-open-menu');
     const btn = menu.previousElementSibling;
     if (btn) btn.setAttribute('aria-expanded', 'true');
   }
 }
 
 function closeAllActionDropdowns() {
+  document.querySelectorAll('.note-card.has-open-menu').forEach(c => c.classList.remove('has-open-menu'));
   document.querySelectorAll('.actions-dropdown-menu.active').forEach(m => {
     m.classList.remove('active');
     const btn = m.previousElementSibling;
@@ -4950,11 +5006,25 @@ document.addEventListener('click', (e) => {
   if (!e.target.closest('.actions-dropdown-container')) {
     closeAllActionDropdowns();
   }
+  if (e.target && e.target.classList && e.target.classList.contains('modal-overlay') && e.target.classList.contains('active') && e.target.id) {
+    closeModal(e.target.id);
+  }
 });
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeAllActionDropdowns();
+    const activeModals = document.querySelectorAll('.modal-overlay.active');
+    if (activeModals.length > 0) {
+      const topModal = activeModals[activeModals.length - 1];
+      if (topModal && topModal.id) {
+        closeModal(topModal.id);
+        return;
+      }
+    }
+    if (typeof isDmDrawerOpen !== 'undefined' && isDmDrawerOpen && typeof toggleDmDrawer === 'function') {
+      toggleDmDrawer(false);
+    }
   }
 });
 
@@ -5129,8 +5199,8 @@ async function handleSaveUserProfile(e) {
       localStorage.setItem('groupspace_user', JSON.stringify(currentUser));
       updateSidebarProfileCard();
       // If leader/member homespace is mounted, re-render to reflect new name/avatar
-      if (typeof loadOverviewData === 'function' && currentTab === 'overview') {
-        loadOverviewData();
+      if (typeof loadOverview === 'function' && currentTab === 'overview') {
+        loadOverview();
       }
     }
     showToast('Profile updated successfully!', 'success');

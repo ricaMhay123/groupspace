@@ -47,10 +47,11 @@ try {
 
 // 2. Action Consolidation
 try {
-  assert(dashboardHtml.includes('id="togglePersonalQuickCaptureBtn"'), 'Missing #togglePersonalQuickCaptureBtn');
-  assert(dashboardHtml.includes('+ New Note'), 'Missing + New Note primary action button');
+  assert(dashboardHtml.includes('id="primaryActionBtn"'), 'Missing #primaryActionBtn');
+  assert(!dashboardHtml.includes('id="togglePersonalQuickCaptureBtn"'), 'Duplicate #togglePersonalQuickCaptureBtn should be consolidated into #primaryActionBtn');
+  assert(dashboardJs.includes('+ New Note'), 'Missing + New Note primary action label in dashboard.js');
   assert(dashboardJs.includes('function togglePersonalQuickCapture'), 'Missing togglePersonalQuickCapture function in dashboard.js');
-  pass('Action Consolidation & Quick Note Trigger', 'Single + New Note CTA and toggle handler verified');
+  pass('Action Consolidation & Quick Note Trigger', 'Single #primaryActionBtn + New Note CTA and toggle handler verified');
 } catch (err) { fail('Action Consolidation & Quick Note Trigger', err); }
 
 // 3. Removal of SQL Schema Jargon

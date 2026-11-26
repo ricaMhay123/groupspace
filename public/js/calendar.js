@@ -23,23 +23,6 @@ function initCalendar(groupId) {
   }
 
   el.innerHTML = `
-    <!-- Top Calendar Bar: Title & Primary Action -->
-    <div class="cal-top-bar">
-      <div>
-        <h2 class="cal-main-heading">Team Calendar</h2>
-        <p class="cal-sub-heading">Events and estimated task deadlines for this workspace</p>
-      </div>
-      <div class="cal-top-actions">
-        <button type="button" onclick="openAddEventModal()" class="btn-primary" style="display:inline-flex; align-items:center; gap:6px;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          Add Event
-        </button>
-      </div>
-    </div>
-
     <!-- Interactive Category Filter Ribbon -->
     <div class="cal-filter-bar" role="toolbar" aria-label="Filter calendar by event type">
       <button type="button" class="cal-filter-chip ${activeCalendarFilter === 'ALL' ? 'active' : ''}" onclick="setCalendarFilter('ALL')">

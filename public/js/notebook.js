@@ -105,14 +105,20 @@ async function loadNotebookPages(groupId = null) {
                 ${tags.split(',').map(t => `<span style="font-size:11px; padding:2px 8px; background:var(--muted, #f1f5f9); border:1px solid var(--border, #cbd5e1); border-radius:6px; color:var(--primary); font-weight:600;">#${escapeHtml(t.trim())}</span>`).join('')}
               </div>
             ` : ''}
-            <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px;">
+            <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:12px;">
               <span>By ${escapeHtml(author)}</span>
-              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                ${canManagePerms && typeof openDashboardShareModal === 'function' ? `<button type="button" title="Share / Page Permissions" class="btn-export-badge" onclick="openDashboardShareModal(${safeId})" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #0f172a); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">Share</button>` : ''}
-                <button type="button" title="Download Plain Text (.txt)" class="btn-export-badge" onclick="exportNotebook('txt', ${safeId})" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #0f172a); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.txt</button>
-                <button type="button" title="Download PDF (.pdf)" class="btn-export-badge" onclick="exportNotebook('pdf', ${safeId})" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #0f172a); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.pdf</button>
-                <button type="button" title="Download Word (.docx)" class="btn-export-badge" onclick="exportNotebook('docx', ${safeId})" style="background:var(--card, #ffffff); border:1px solid var(--border, #cbd5e1); color:var(--text, #0f172a); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:600; cursor:pointer;">.docx</button>
-                <span style="cursor:pointer; color:#ef4444; margin-left:4px; font-size:11px; font-weight:600;" title="Delete Note" onclick="deleteNote(${safeId}, event)">Delete</span>
+              <div class="actions-dropdown-container">
+                <button type="button" class="btn-card-more" aria-label="Note actions" aria-haspopup="true" aria-expanded="false" onclick="if (typeof toggleActionsDropdown === 'function') toggleActionsDropdown('nbPageCardMenu-${safeId}', event)" title="More actions">⋯</button>
+                <div id="nbPageCardMenu-${safeId}" class="actions-dropdown-menu menu-up">
+                  <button type="button" class="actions-dropdown-item" onclick="if (typeof closeAllActionDropdowns === 'function') closeAllActionDropdowns(); window.location.href='${editorUrl}';"><span>Open in Full Editor</span></button>
+                  ${canManagePerms && typeof openDashboardShareModal === 'function' ? `<button type="button" class="actions-dropdown-item" onclick="if (typeof closeAllActionDropdowns === 'function') closeAllActionDropdowns(); openDashboardShareModal(${safeId});"><span>Share / Permissions</span></button>` : ''}
+                  <div class="actions-dropdown-divider"></div>
+                  <button type="button" class="actions-dropdown-item" onclick="if (typeof closeAllActionDropdowns === 'function') closeAllActionDropdowns(); exportNotebook('pdf', ${safeId});"><span>Export PDF (.pdf)</span></button>
+                  <button type="button" class="actions-dropdown-item" onclick="if (typeof closeAllActionDropdowns === 'function') closeAllActionDropdowns(); exportNotebook('docx', ${safeId});"><span>Export Word (.docx)</span></button>
+                  <button type="button" class="actions-dropdown-item" onclick="if (typeof closeAllActionDropdowns === 'function') closeAllActionDropdowns(); exportNotebook('txt', ${safeId});"><span>Export Text (.txt)</span></button>
+                  <div class="actions-dropdown-divider"></div>
+                  <button type="button" class="actions-dropdown-item actions-dropdown-item-danger" onclick="if (typeof closeAllActionDropdowns === 'function') closeAllActionDropdowns(); deleteNote(${safeId}, event);"><span>Delete</span></button>
+                </div>
               </div>
             </div>
           </div>

@@ -54,8 +54,8 @@
         left: 0;
         right: 0;
         margin-bottom: 8px;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
+        background: var(--card, #ffffff);
+        border: 1px solid var(--border, #cbd5e1);
         border-radius: 12px;
         box-shadow: 0 12px 28px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
         max-height: 250px;
@@ -69,9 +69,9 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #64748b;
-        background: #f8fafc;
-        border-bottom: 1px solid #f1f5f9;
+        color: var(--muted-foreground, #475569);
+        background: var(--muted, #f8fafc);
+        border-bottom: 1px solid var(--border, #e2e8f0);
         border-radius: 12px 12px 0 0;
       }
       .mention-item {
@@ -80,19 +80,19 @@
         gap: 10px;
         padding: 8px 12px;
         cursor: pointer;
-        transition: background 0.15s ease;
+        transition: background 0.15s ease, color 0.15s ease;
         font-size: 13px;
-        color: #1e293b;
+        color: var(--foreground, #0f172a);
       }
       .mention-item:hover, .mention-item.active {
-        background: #eef2ff;
-        color: #3730a3;
+        background: var(--primary-light, #eff6ff);
+        color: var(--primary, #1d4ed8);
       }
       .mention-item-avatar {
         width: 26px;
         height: 26px;
         border-radius: 50%;
-        background: #6366f1;
+        background: #2563eb;
         color: #ffffff;
         font-size: 11px;
         font-weight: 700;
@@ -106,20 +106,20 @@
         border-radius: 6px;
       }
       .mention-item-avatar.task {
-        background: #f59e0b;
+        background: #b45309;
         border-radius: 6px;
       }
       .mention-item-avatar.notebook {
-        background: #10b981;
+        background: #047857;
         border-radius: 6px;
       }
       .mention-item-avatar.folder {
-        background: #0ea5e9;
+        background: #0284c7;
         border-radius: 6px;
       }
       .mention-item-tag {
         font-size: 11px;
-        color: #64748b;
+        color: var(--muted-foreground, #475569);
         margin-left: auto;
         flex-shrink: 0;
       }
@@ -135,7 +135,7 @@
       }
       .user-mention-pill {
         background: #e0e7ff;
-        color: #3730a3;
+        color: #1e3a8a;
         border: 1px solid #c7d2fe;
       }
       .topic-mention-pill {
@@ -157,6 +157,33 @@
         background: #eff6ff;
         color: #1e3a8a;
         border: 1px solid #bfdbfe;
+      }
+      .dark .mention-dropdown,
+      html.dark .mention-dropdown {
+        background: #1e293b;
+        border-color: #334155;
+        box-shadow: 0 12px 28px -5px rgba(0, 0, 0, 0.55);
+      }
+      .dark .mention-dropdown-header,
+      html.dark .mention-dropdown-header {
+        background: #0f172a;
+        border-bottom-color: #334155;
+        color: #cbd5e1;
+      }
+      .dark .mention-item,
+      html.dark .mention-item {
+        color: #f8fafc;
+      }
+      .dark .mention-item:hover,
+      .dark .mention-item.active,
+      html.dark .mention-item:hover,
+      html.dark .mention-item.active {
+        background: rgba(59, 130, 246, 0.22);
+        color: #ffffff;
+      }
+      .dark .mention-item-tag,
+      html.dark .mention-item-tag {
+        color: #94a3b8;
       }
     `;
     document.head.appendChild(style);

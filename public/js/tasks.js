@@ -453,7 +453,7 @@ async function offerTaskHelp(taskId) {
  * Update the Leader "Pending Approval" Backlog Badge
  */
 function updateLeaderBacklogBadge(pendingCount, isLeader) {
-  const tabBtn = document.querySelector('button[onclick*="tab-tasks"]');
+  const tabBtn = document.querySelector('#sidebarMenu li[onclick*="tasks"], button[onclick*="tab-tasks"]');
   if (tabBtn) {
     let badge = tabBtn.querySelector('.pending-backlog-badge');
     if (isLeader && pendingCount > 0) {

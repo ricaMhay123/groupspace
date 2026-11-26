@@ -53,8 +53,8 @@ const sidebarMatch = html.match(/<aside[^>]*class="[^"]*dashboard-sidebar[^"]*"[
 const sidebarContent = sidebarMatch ? sidebarMatch[1] : '';
 
 assert(!sidebarContent.includes('class="profile-card"'), 'Sidebar no longer contains floating profile status card');
-assert(!sidebarContent.includes('data-theme-toggle'), 'Sidebar no longer contains persistent theme toggle button');
-assert(!sidebarContent.includes('logoutUser()'), 'Sidebar no longer contains persistent sign out button');
+assert(sidebarContent.includes('id="sidebarAccountMenu"'), 'Sidebar tucks account utilities inside collapsible #sidebarAccountMenu');
+assert(sidebarContent.includes('id="sidebarLogoutBtn"') && sidebarContent.includes('id="sidebarThemeToggleBtn"'), 'Sidebar account menu exposes theme toggle and logout actions cleanly');
 assert(sidebarContent.includes('id="sidebarProfileCard"'), 'Sidebar includes user profile card below navigation');
 
 const headerMatch = html.match(/<div class="dashboard-header-actions">([\s\S]*?)<\/div>/);
