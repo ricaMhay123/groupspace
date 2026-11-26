@@ -98,12 +98,12 @@ assert(dashHtml.includes('id="sidebarUserFullName"'), 'Sidebar profile card disp
 assert(dashHtml.includes('id="sidebarUserRole"'), 'Sidebar profile card displays user workspace role');
 assert(dashJs.includes('function updateSidebarProfileCard'), 'dashboard.js defines updateSidebarProfileCard()');
 
-// ── 6. SCROLLABLE HOMESPACE PANELS ──
-console.log('\n📜 6. Scrollable Panels in Homespace:');
+// ── 6. ROLE-FOCUSED HOMESPACE ACTION CENTER ──
+console.log('\n📜 6. Role-Focused Homespace Action Center:');
 assert(dashJs.includes('class="activity-feed" style="max-height:260px; overflow-y:auto;"'), 'Activity feed is scrollable with max-height:260px');
-assert(dashJs.includes('max-height:260px; overflow-y:auto;'), 'Leader and Member Homespace panels enforce max-height:260px; overflow-y:auto');
-assert(dashJs.includes('max-height:230px; overflow-y:auto;'), 'Scratchpad notes list is scrollable with max-height:230px');
-assert(dashJs.includes('max-height:120px; overflow-y:auto;'), 'Workspace Roster & Roles enforces compact 2-person max-height:120px for balanced layout');
+assert(dashJs.includes('hs-action-grid') && dashJs.includes('Approvals Queue') && dashJs.includes('Notification Summary'), 'Leader Homespace presents Approvals Queue and Notification Summary');
+assert(!dashJs.includes('renderHomespaceScratchpadHtml(personalNotes, \'leaderHomespaceScratchpad\')'), 'Team Homespace keeps private scratchpad separate from overview');
+assert(dashJs.includes('My Assigned Tasks') && !dashJs.includes('max-height:120px; overflow-y:auto;'), 'Member Homespace highlights My Assigned Tasks and Roster removes the 120px scroll trap');
 
 console.log('\n================================================================');
 console.log(`📊 RESULTS: Passed: ${passed} | Failed: ${failed}`);

@@ -71,9 +71,9 @@ function runTests() {
     'Redundant workspace settings forms removed from homespace overview (delegated to Settings modal)'
   );
 
-  // Test 7: Standardized 32px avatar sizes in roster
+  // Test 7: Standardized 32px avatar sizes in shared roster helper
   assert(
-    hsCode.includes('width:32px; height:32px;'),
+    jsContent.includes('width:32px; height:32px;') && hsCode.includes('renderRosterAvatarHtml'),
     'Roster avatars standardized to consistent 32px dimensions'
   );
 
@@ -83,12 +83,12 @@ function runTests() {
     'Dashboard loading state uses semantic tokens'
   );
 
-  // Test 9: Activity feed typography is smaller, simpler, and matches Roster container
+  // Test 9: Activity feed typography uses unified scale without loud headings
   assert(
     cssContent.includes('.activity-item h4') &&
-    cssContent.includes('font-size: 13px !important') &&
-    cssContent.includes('font-weight: 500 !important'),
-    'Activity feed items are refined with 13px font-size and normal 500 weight (no loud headings)'
+    cssContent.includes('font-size: 0.875rem') &&
+    cssContent.includes('font-weight: 500'),
+    'Activity feed items are refined with 0.875rem font-size and normal 500 weight'
   );
 
   // Test 10: Activity icon badge satisfies 11px legibility floor

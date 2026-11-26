@@ -1149,6 +1149,9 @@ body.dashboard-page {
 
 /* ─── Dashboard Header ─── */
 .dashboard-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1269,7 +1272,7 @@ body.dashboard-page {
   box-shadow: 0 2px 4px rgba(220,38,38,0.3);
 }
 
-/* ─── Dashboard Grid (Balanced 2-col Command Center) ─── */
+/* ─── Dashboard Grid & Role-Focused Homespace Action Center ─── */
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1277,8 +1280,68 @@ body.dashboard-page {
   gap: 20px;
 }
 
-.dashboard-grid .dashboard-panel {
+.hs-action-grid {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  align-items: start;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.hs-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.dashboard-grid .dashboard-panel,
+.hs-action-grid .dashboard-panel {
   margin-bottom: 0;
+}
+
+.hs-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.hs-summary-tile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: left;
+}
+
+.hs-summary-tile:hover {
+  border-color: var(--ring);
+  background: var(--primary-light);
+}
+
+.hs-summary-tile-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+.hs-summary-tile-val {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 960px) {
+  .hs-action-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 900px) {

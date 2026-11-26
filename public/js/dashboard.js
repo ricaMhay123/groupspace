@@ -394,17 +394,23 @@ async function loadOverview() {
   if (!container || !currentGroupId) return;
 
   try {
-    const [tasksRes, expRes, actRes, personalRes] = await Promise.all([
+    const [tasksRes, expRes, actRes, feedRes] = await Promise.all([
       apiFetch(`/api/groups/${currentGroupId}/tasks`),
       apiFetch(`/api/groups/${currentGroupId}/expenses/summary`),
       apiFetch(`/api/groups/${currentGroupId}/discussions/activity`),
-      apiFetch('/api/personal?type=NOTE').catch(() => ({ data: [] }))
+      apiFetch(`/api/user/personal-feed?groupId=${encodeURIComponent(currentGroupId)}`).catch(() => ({ data: {} }))
     ]);
 
     const tasks = tasksRes.data || [];
     const activeTasks = tasks.filter(t => (t.status || '').toUpperCase() !== 'DONE').length;
     const pendingTasks = tasks.filter(t => (t.status || '').toLowerCase() === 'pending_approval');
+    const feedData = (feedRes && feedRes.data) ? feedRes.data : {};
+    const leadershipRequests = Array.isArray(feedData.leadershipRequests) ? feedData.leadershipRequests : [];
+
+    const userRole = (currentGroupDetails && currentGroupDetails.role) ? currentGroupDetails.role.toLowerCase() : 'member';
+    const isLeader = userRole === 'leader' || userRole === 'co_leader';
     const pendingApprovalCount = pendingTasks.length;
+    const statPendingCount = isLeader ? (pendingApprovalCount + leadershipRequests.length) : pendingApprovalCount;
 
     const statActive = document.getElementById('statActiveTasks');
     const statPending = document.getElementById('statPendingApproval');
@@ -412,25 +418,22 @@ async function loadOverview() {
     const statMember = document.getElementById('statMemberCount');
 
     if (statActive) statActive.textContent = activeTasks;
-    if (statPending) statPending.textContent = pendingApprovalCount;
+    if (statPending) statPending.textContent = statPendingCount;
     if (statTotal) statTotal.textContent = `₱${(expRes.data?.totalSpent || 0).toFixed(2)}`;
     if (statMember) statMember.textContent = (currentGroupDetails && currentGroupDetails.members) ? currentGroupDetails.members.length : 1;
 
-    const userRole = (currentGroupDetails && currentGroupDetails.role) ? currentGroupDetails.role.toLowerCase() : 'member';
-    const isLeader = userRole === 'leader' || userRole === 'co_leader';
     const currentUserId = currentUser ? currentUser.id : null;
     const members = (currentGroupDetails && currentGroupDetails.members) ? currentGroupDetails.members : [];
-    const activities = actRes.data || [];
-    const personalNotes = personalRes && personalRes.data ? personalRes.data : [];
+    const activities = dedupeActivityItems(actRes.data || []);
 
     if (isLeader) {
-      renderLeaderHomespace(container, pendingTasks, members, activities, currentUserId, personalNotes);
+      renderLeaderHomespace(container, pendingTasks, members, activities, currentUserId, feedData);
     } else {
-      const myAssignedDeliverables = tasks.filter(t => 
-        Number(t.assigned_to_user_id) === Number(currentUserId) && 
+      const myAssignedDeliverables = tasks.filter(t =>
+        Number(t.assigned_to_user_id) === Number(currentUserId) &&
         (t.status || '').toUpperCase() !== 'DONE'
       );
-      renderMemberHomespace(container, myAssignedDeliverables, members, activities, currentUserId, personalNotes);
+      renderMemberHomespace(container, myAssignedDeliverables, members, activities, currentUserId, feedData);
     }
 
     // Show Workspace Settings & Controls button in header only for Leaders & Co-Leaders
@@ -456,7 +459,72 @@ async function loadOverview() {
   }
 }
 
-// Minimalist Quick Scratchpad / Personal Notes widget helper
+/** Strips notebook serialized comment tags and HTML markup for plain preview text. */
+function stripNoteSerializationPrefix(raw) {
+  return String(raw || '').replace(/^<!--GS_SHAPES_JSON:.*?-->/s, '').replace(/<[^>]*>/g, '').trim();
+}
+
+/** Deduplicates identical adjacent or same-minute workspace activity events. */
+function dedupeActivityItems(activities) {
+  const list = Array.isArray(activities) ? activities : [];
+  const seen = new Set();
+  return list.filter(a => {
+    const minuteBucket = a.created_at ? String(a.created_at).slice(0, 16) : '';
+    const key = `${a.action_type || ''}|${(a.description || '').trim()}|${minuteBucket}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/** Renders standardized 32px avatar markup for roster lists. */
+function renderRosterAvatarHtml(member) {
+  const avatarBg = member.avatar_color || '#2e5bff';
+  const avatarContent = member.avatar_url
+    ? `<img src="${escapeHtml(member.avatar_url)}" alt="${escapeHtml(member.full_name)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;">`
+    : escapeHtml(member.avatar_initials || 'GS');
+  return `<div class="chat-avatar" style="width:32px; height:32px; font-size:12px; flex-shrink:0; background:${avatarBg}; color:#ffffff; font-weight:700; overflow:hidden;">${avatarContent}</div>`;
+}
+
+/** Renders member status line satisfying 11px minimum font floor. */
+function renderMemberStatusHtml(m) {
+  if (m.status_message && m.status_message.trim()) {
+    const cleanMsg = escapeHtml(m.status_message.trim());
+    return `<div class="user-status-msg" style="font-size:11px; color:var(--primary); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:240px;" title="${cleanMsg}">${cleanMsg}</div>`;
+  }
+  return `<div class="user-status-msg" style="font-size:11px; color:var(--muted-foreground); margin-top:2px;">No status</div>`;
+}
+
+/** Builds role-tailored notification summary tiles linked to the live Personal Feed drawer. */
+function buildHomespaceNotificationSummaryHtml(feedData, pendingCount, isLeader) {
+  const leadershipReqs = Array.isArray(feedData?.leadershipRequests) ? feedData.leadershipRequests.length : 0;
+  const blockedHelp = Array.isArray(feedData?.helpRequests) ? feedData.helpRequests.length : 0;
+  const mentions = Array.isArray(feedData?.mentions) ? feedData.mentions.length : 0;
+  const tiles = isLeader
+    ? [
+        { label: 'Task Reviews', count: pendingCount, highlight: pendingCount > 0 },
+        { label: 'Role Requests', count: leadershipReqs, highlight: leadershipReqs > 0 },
+        { label: 'Blocked / Help', count: blockedHelp, highlight: blockedHelp > 0 },
+        { label: 'Mentions', count: mentions, highlight: false }
+      ]
+    : [
+        { label: 'Mentions & Alerts', count: mentions, highlight: mentions > 0 },
+        { label: 'Help Needed', count: blockedHelp, highlight: blockedHelp > 0 }
+      ];
+
+  return `
+    <div class="hs-summary-grid">
+      ${tiles.map(t => `
+        <button type="button" class="hs-summary-tile" onclick="openPersonalFeedDrawer()">
+          <span class="hs-summary-tile-label">${t.label}</span>
+          <span class="hs-summary-tile-val" style="${t.highlight ? 'color:var(--warning);' : ''}">${t.count}</span>
+        </button>
+      `).join('')}
+    </div>
+  `;
+}
+
+// Minimalist Quick Scratchpad / Personal Notes helper (used cleanly in Personal contexts)
 function renderHomespaceScratchpadHtml(personalNotes, inputId) {
   const notes = Array.isArray(personalNotes) ? personalNotes.slice(0, 8) : [];
   return `
@@ -465,30 +533,31 @@ function renderHomespaceScratchpadHtml(personalNotes, inputId) {
         <div style="display:flex; align-items:center; gap:8px;">
           <h3 style="margin:0;">Quick Scratchpad</h3>
         </div>
-        <button onclick="switchTab('personal')" class="btn-outline" style="padding:6px 12px; font-size:12px; font-weight:600; border-radius:8px;">Open Space</button>
+        <button type="button" onclick="switchTab('personal')" class="btn-outline btn-sm">Open Space</button>
       </div>
-      <div style="padding:14px 16px;">
+      <div>
         <div style="display:flex; gap:8px; margin-bottom:12px;">
           <input type="text" id="${inputId}" class="form-control" placeholder="Quick personal reminder or note..." style="font-size:13px; padding:8px 12px; min-height:38px; flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();saveHomespaceScratchpad('${inputId}');}">
-          <button type="button" class="btn-green" style="padding:8px 16px; font-size:12px; font-weight:600; min-height:38px; white-space:nowrap;" onclick="saveHomespaceScratchpad('${inputId}')">Save</button>
+          <button type="button" class="btn-green btn-sm" onclick="saveHomespaceScratchpad('${inputId}')">Save</button>
         </div>
-        <div style="display:flex; flex-direction:column; gap:8px; max-height:230px; overflow-y:auto;">
+        <div style="display:flex; flex-direction:column; gap:8px;">
           ${notes.length === 0 ? `
             <div style="text-align:center; padding:18px 10px; color:var(--muted-foreground);">
               <p style="margin:0; font-size:12px;">Private reminders and personal notes saved here.</p>
             </div>
-          ` : notes.map(n => `
-            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:8px 10px; background:var(--muted, #f8fafc); border:1px solid var(--border); border-radius:8px;">
+          ` : notes.map(n => {
+            const titleClean = stripNoteSerializationPrefix(n.title) || 'Personal Note';
+            const bodyClean = stripNoteSerializationPrefix(n.content);
+            return `
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:8px 10px; background:var(--muted); border:1px solid var(--border); border-radius:8px;">
               <div style="flex:1; min-width:0;">
-                <div style="font-size:13px; font-weight:600; color:var(--foreground); word-break:break-word;">${escapeHtml(n.title || n.content || 'Personal Note')}</div>
-                ${n.content && n.content !== n.title ? `<div style="font-size:12px; color:var(--muted-foreground); margin-top:2px; word-break:break-word;">${escapeHtml(n.content)}</div>` : ''}
+                <div style="font-size:13px; font-weight:600; color:var(--foreground); word-break:break-word;">${escapeHtml(titleClean)}</div>
+                ${bodyClean && bodyClean !== titleClean ? `<div style="font-size:12px; color:var(--muted-foreground); margin-top:2px; word-break:break-word;">${escapeHtml(bodyClean)}</div>` : ''}
                 <div style="font-size:11px; color:var(--muted-foreground); margin-top:2px;">Private · ${formatDate(n.created_at)}</div>
               </div>
-              <button type="button" class="btn-outline" style="padding:2px 8px; font-size:11px; color:var(--muted-foreground); border-color:var(--border); border-radius:4px; cursor:pointer;" onclick="deleteHomespaceScratchpadNote(${n.id}, event)" title="Delete reminder">
-                ✕
-              </button>
-            </div>
-          `).join('')}
+              <button type="button" class="btn-outline btn-sm" style="min-height:28px; padding:2px 8px;" onclick="deleteHomespaceScratchpadNote(${n.id}, event)" title="Delete reminder">✕</button>
+            </div>`;
+          }).join('')}
         </div>
       </div>
     </div>
@@ -524,6 +593,10 @@ async function saveHomespaceScratchpad(inputId, e) {
 async function deleteHomespaceScratchpadNote(noteId, e) {
   if (e && typeof e.preventDefault === 'function') e.preventDefault();
   if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+  const confirmed = window.gsConfirm
+    ? await window.gsConfirm('Delete this private reminder?', { title: 'Delete Reminder', confirmText: 'Delete', danger: true })
+    : true;
+  if (!confirmed) return;
   try {
     await apiFetch(`/api/personal/${noteId}`, { method: 'DELETE' });
     showToast('Reminder deleted.', 'success');
@@ -533,80 +606,82 @@ async function deleteHomespaceScratchpadNote(noteId, e) {
   }
 }
 
-function renderLeaderHomespace(container, pendingTasks, members, activities, currentUserId, personalNotes) {
-  const pendingHtml = pendingTasks.length === 0
+function renderLeaderHomespace(container, pendingTasks, members, activities, currentUserId, feedData = {}) {
+  const leadershipReqs = Array.isArray(feedData?.leadershipRequests) ? feedData.leadershipRequests : [];
+  const totalApprovals = pendingTasks.length + leadershipReqs.length;
+
+  const leadershipReqHtml = leadershipReqs.map(r => `
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border:1px solid var(--border); background:var(--primary-light); border-radius:10px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:200px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+          <span class="note-perm-badge is-edit">Leadership Request</span>
+          <strong style="font-size:14px; color:var(--foreground);">${escapeHtml(r.requester_name || 'Member')}</strong>
+        </div>
+        <div style="font-size:12.5px; color:var(--muted-foreground);">${escapeHtml(r.message || 'Requested workspace leadership permissions.')}</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+        <button type="button" class="btn-green btn-sm" onclick="resolveLeadershipRequestFromFeed(${r.group_id}, ${r.id}, 'leader', event)">Approve Leader</button>
+        <button type="button" class="btn-outline btn-sm" onclick="resolveLeadershipRequestFromFeed(${r.group_id}, ${r.id}, 'co_leader', event)">Co-Leader</button>
+        <button type="button" class="btn-outline btn-sm" style="color:var(--destructive);" onclick="resolveLeadershipRequestFromFeed(${r.group_id}, ${r.id}, 'reject', event)">Reject</button>
+      </div>
+    </div>
+  `).join('');
+
+  const taskApprovalsHtml = pendingTasks.map(t => `
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border:1px solid var(--border); background:var(--background); border-radius:10px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:200px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+          <span class="tag tag-${(t.priority || 'medium').toLowerCase()}" style="font-size:11px; font-weight:700; padding:2px 8px;">${escapeHtml(t.priority || 'MEDIUM')}</span>
+          <strong style="font-size:14px; color:var(--foreground);">${escapeHtml(t.title)}</strong>
+        </div>
+        <div style="font-size:12px; color:var(--muted-foreground); display:flex; gap:12px; flex-wrap:wrap;">
+          <span>Assignee: <strong>${escapeHtml(t.assignee_name || 'Unassigned')}</strong></span>
+          <span>Due: ${t.due_date ? formatDate(t.due_date) : 'No due date'}</span>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button type="button" class="btn-green btn-sm" onclick="approveTaskInline(${t.id}, event)">Approve</button>
+        <button type="button" class="btn-outline btn-sm" style="color:var(--destructive);" onclick="rejectTaskInline(${t.id}, '${escapeHtml(t.title).replace(/'/g, "\\'")}', event)">Reject</button>
+      </div>
+    </div>
+  `).join('');
+
+  const approvalsBodyHtml = totalApprovals === 0
     ? `
-      <div style="text-align:center; padding:28px 20px; color:var(--gray);">
-        <h4 style="margin:0 0 4px 0; font-size:14px; font-weight:700; color:var(--text);">All Tasks Approved</h4>
-        <p style="margin:0; font-size:12px;">There are no tasks currently awaiting review.</p>
+      <div style="text-align:center; padding:32px 16px; color:var(--muted-foreground);">
+        <h4 style="margin:0 0 4px 0; font-size:14px; font-weight:700; color:var(--foreground);">All Approvals Clear</h4>
+        <p style="margin:0; font-size:12.5px;">No task submissions or role requests are awaiting leader review.</p>
       </div>
     `
-    : `
-      <div style="display:flex; flex-direction:column; gap:10px;">
-        ${pendingTasks.map(t => `
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 14px; border:1px solid rgba(245,158,11,0.25); background:rgba(245,158,11,0.04); border-radius:10px; flex-wrap:wrap;">
-            <div style="flex:1; min-width:200px;">
-              <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-                <span class="tag tag-${(t.priority || 'medium').toLowerCase()}" style="font-size:11px; font-weight:700; padding:2px 8px;">${escapeHtml(t.priority || 'MEDIUM')}</span>
-                <strong style="font-size:14px; color:var(--text);">${escapeHtml(t.title)}</strong>
-              </div>
-              <div style="font-size:12px; color:var(--gray); display:flex; gap:12px; flex-wrap:wrap;">
-                <span>Assignee: <strong>${escapeHtml(t.assignee_name || 'Unassigned')}</strong></span>
-                <span>Due: ${t.due_date ? formatDate(t.due_date) : 'No due date'}</span>
-              </div>
-            </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <button type="button" class="btn-green" style="padding:6px 14px; font-size:12px; font-weight:600; border-radius:8px; cursor:pointer;" onclick="approveTaskInline(${t.id}, event)">
-                Approve
-              </button>
-              <button type="button" class="btn-outline" style="padding:6px 14px; font-size:12px; font-weight:600; color:#dc2626; border-color:#fca5a5; border-radius:8px; cursor:pointer;" onclick="rejectTaskInline(${t.id}, '${escapeHtml(t.title).replace(/'/g, "\\'")}', event)">
-                Reject
-              </button>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
+    : `<div style="display:flex; flex-direction:column; gap:10px;">${leadershipReqHtml}${taskApprovalsHtml}</div>`;
 
   const isPrimaryLeader = (currentGroupDetails && currentGroupDetails.role === 'leader');
   const rosterHtml = members.map(m => {
     const isSelf = Number(m.user_id) === Number(currentUserId);
     const roleLabel = m.role === 'co_leader' ? 'Co-Leader' : (m.role === 'leader' ? 'Leader' : 'Member');
-    const avatarBg = m.avatar_color || '#4f46e5';
-    const avatarContent = m.avatar_url
-      ? `<img src="${escapeHtml(m.avatar_url)}" alt="${escapeHtml(m.full_name)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;">`
-      : escapeHtml(m.avatar_initials || 'GS');
-
-    const statusMessageHtml = m.status_message && m.status_message.trim()
-      ? `<div class="user-status-msg" style="font-size:11px; color:var(--primary); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:240px;" title="${escapeHtml(m.status_message.trim())}">
-          ${escapeHtml(m.status_message.trim())}
-        </div>`
-      : `<div class="user-status-msg" style="font-size:10.5px; color:var(--muted-foreground, #94a3b8); margin-top:2px; font-style:italic;">No status message</div>`;
 
     return `
-      <li style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid var(--border); gap:12px;">
+      <li style="display:flex; justify-content:space-between; align-items:center; padding:10px 4px; border-bottom:1px solid var(--border); gap:12px;">
         <div style="display:flex; align-items:center; gap:10px; min-width:0;">
-          <div class="chat-avatar" style="width:32px; height:32px; font-size:12px; flex-shrink:0; background:${avatarBg}; color:#ffffff; font-weight:700; overflow:hidden;">${avatarContent}</div>
+          ${renderRosterAvatarHtml(m)}
           <div style="min-width:0;">
-            <div style="font-weight:600; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-              ${escapeHtml(m.full_name)} ${isSelf ? '<span style="font-size:11px; color:var(--gray); font-weight:normal;">(You)</span>' : ''}
+            <div style="font-weight:600; font-size:13px; color:var(--foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+              ${escapeHtml(m.full_name)} ${isSelf ? '<span style="font-size:11px; color:var(--muted-foreground); font-weight:normal;">(You)</span>' : ''}
             </div>
-            <div style="color:var(--gray); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(m.email)}</div>
-            ${statusMessageHtml}
+            <div style="color:var(--muted-foreground); font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(m.email)}</div>
+            ${renderMemberStatusHtml(m)}
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
           ${isSelf ? `
             <span class="status online" style="font-size:11px; font-weight:700;">${roleLabel}</span>
           ` : isPrimaryLeader ? `
-            <select onchange="changeMemberRole(${m.user_id}, this.value)" style="font-size:11px; padding:3px 6px; border-radius:6px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer;">
+            <select aria-label="Role for ${escapeHtml(m.full_name)}" onchange="changeMemberRole(${m.user_id}, this.value)" style="font-size:12px; padding:4px 8px; border-radius:6px; border:1px solid var(--border); background:var(--card); color:var(--foreground); cursor:pointer;">
               <option value="leader" ${m.role === 'leader' ? 'selected' : ''}>Leader</option>
               <option value="co_leader" ${m.role === 'co_leader' ? 'selected' : ''}>Co-Leader</option>
               <option value="member" ${m.role === 'member' ? 'selected' : ''}>Member</option>
             </select>
-            <button type="button" class="btn-outline" style="padding:3px 8px; font-size:11px; color:#dc2626; border-color:#fca5a5; border-radius:6px; cursor:pointer;" onclick="removeMemberFromWorkspace(${m.user_id}, '${escapeHtml(m.full_name).replace(/'/g, "\\'")}')" title="Remove member">
-              Remove
-            </button>
+            <button type="button" class="btn-outline btn-sm" style="color:var(--destructive);" onclick="removeMemberFromWorkspace(${m.user_id}, '${escapeHtml(m.full_name).replace(/'/g, "\\'")}')" title="Remove member">Remove</button>
           ` : `
             <span class="status ${m.role === 'leader' || m.role === 'co_leader' ? 'online' : 'pending'}" style="font-size:11px; font-weight:600;">${roleLabel}</span>
           `}
@@ -616,8 +691,8 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
   }).join('');
 
   const activityFeedHtml = activities.length === 0
-    ? '<div style="text-align:center; padding:24px 16px; color:var(--gray);"><p style="margin:0; font-size:12px;">No recent workspace events yet.</p></div>'
-    : activities.slice(0, 5).map(a => `
+    ? '<div style="text-align:center; padding:20px 12px; color:var(--muted-foreground);"><p style="margin:0; font-size:12px;">No recent workspace updates yet.</p></div>'
+    : activities.slice(0, 6).map(a => `
       <div class="activity-item">
         <div class="activity-icon">${getActivityIcon(a.action_type)}</div>
         <div style="flex:1; min-width:0;">
@@ -628,147 +703,130 @@ function renderLeaderHomespace(container, pendingTasks, members, activities, cur
     `).join('');
 
   container.innerHTML = `
-    <div class="dashboard-grid">
-      <!-- Col 1: Pending Approvals & Quick Scratchpad -->
-      <div style="display:flex; flex-direction:column; gap:20px;">
-        <!-- Pending Task Approvals -->
-        <div class="dashboard-panel">
-          <div class="panel-header">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0;">Pending Task Approvals</h3>
-              <span class="col-badge" style="background:#fef3c7; color:#92400e; font-weight:700;">${pendingTasks.length}</span>
-            </div>
-            <span style="font-size:12px; color:var(--gray);">Dual-approval quality gate</span>
+    <div class="hs-action-grid">
+      <div class="dashboard-panel">
+        <div class="panel-header">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <h3 style="margin:0;">Approvals Queue</h3>
+            <span class="col-badge" style="font-weight:700;">${totalApprovals}</span>
           </div>
-          <div style="padding:14px 16px; max-height:260px; overflow-y:auto;">
-            ${pendingHtml}
-          </div>
+          <button type="button" class="btn-outline btn-sm" onclick="switchTab('tasks')">Review Board →</button>
         </div>
-
-        <!-- Minimalist Quick Scratchpad / Personal Notes -->
-        ${renderHomespaceScratchpadHtml(personalNotes, 'leaderHomespaceScratchpad')}
+        ${approvalsBodyHtml}
       </div>
 
-      <!-- Col 2: Workspace Roster & Roles & Recent Activity Feed -->
-      <div style="display:flex; flex-direction:column; gap:20px;">
-        <!-- Workspace Roster & Roles -->
+      <div class="hs-stack">
         <div class="dashboard-panel">
           <div class="panel-header">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0;">Workspace Roster & Roles</h3>
-              <span class="status online" style="font-size:11px; font-weight:700;">LEADER</span>
-            </div>
-            <span style="font-size:12px; color:var(--gray);">${members.length} members</span>
+            <h3 style="margin:0;">Notification Summary</h3>
+            <button type="button" class="btn-outline btn-sm" onclick="openPersonalFeedDrawer()">Open Inbox</button>
           </div>
-          <ul class="task-list" style="margin:0; padding:4px 0; list-style:none; max-height:120px; overflow-y:auto;">
-            ${rosterHtml}
-          </ul>
-        </div>
-
-        <!-- Live Activity Feed -->
-        <div class="dashboard-panel">
-          <div class="panel-header">
-            <h3>Recent Activity Feed</h3>
-            <span style="font-size:12px; color:var(--gray);">Live workspace events</span>
-          </div>
+          ${buildHomespaceNotificationSummaryHtml(feedData, pendingTasks.length, true)}
           <div class="activity-feed" style="max-height:260px; overflow-y:auto;">
             ${activityFeedHtml}
           </div>
         </div>
       </div>
     </div>
+
+    <div class="dashboard-panel">
+      <div class="panel-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <h3 style="margin:0;">Workspace Roster & Roles</h3>
+          <span class="status online" style="font-size:11px; font-weight:700;">LEADER</span>
+        </div>
+        <span style="font-size:12px; color:var(--muted-foreground);">${members.length} members</span>
+      </div>
+      <ul class="task-list" style="margin:0; padding:0; list-style:none;">
+        ${rosterHtml}
+      </ul>
+    </div>
   `;
 }
 
-function renderMemberHomespace(container, myAssignedDeliverables, members, activities, currentUserId, personalNotes) {
+function renderMemberHomespace(container, myAssignedDeliverables, members, activities, currentUserId, feedData = {}) {
   const leaders = members.filter(m => m.role === 'leader' || m.role === 'co_leader');
   const fellowMembers = members.filter(m => m.role !== 'leader' && m.role !== 'co_leader');
+  const activeDeliverables = myAssignedDeliverables.filter(t => (t.status || '').toLowerCase() !== 'pending_approval');
+  const reviewDeliverables = myAssignedDeliverables.filter(t => (t.status || '').toLowerCase() === 'pending_approval');
+
+  const renderTaskRow = (t, isPending) => {
+    const statusLower = (t.status || 'TODO').toLowerCase();
+    const actionBtn = isPending
+      ? `<button type="button" class="btn-outline btn-sm" onclick="switchTab('tasks')">View →</button>`
+      : statusLower === 'in_progress'
+        ? `<button type="button" class="btn-green btn-sm" onclick="updateTaskStatus(${t.id}, 'PENDING_APPROVAL')">Submit for Review</button>`
+        : `<button type="button" class="btn-green btn-sm" onclick="updateTaskStatus(${t.id}, 'IN_PROGRESS')">Start Task</button>`;
+
+    return `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border:1px solid var(--border); background:${isPending ? 'var(--muted)' : 'var(--card)'}; border-radius:10px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:200px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <span class="tag tag-${(t.priority || 'medium').toLowerCase()}" style="font-size:11px; font-weight:700; padding:2px 8px;">${escapeHtml(t.priority || 'MEDIUM')}</span>
+            <strong style="font-size:14px; color:var(--foreground);">${escapeHtml(t.title)}</strong>
+          </div>
+          <div style="font-size:12px; color:var(--muted-foreground); display:flex; gap:12px; flex-wrap:wrap;">
+            <span>Status: <strong style="color:${isPending ? 'var(--warning)' : 'var(--foreground)'};">${isPending ? 'Awaiting Leader Review' : escapeHtml((t.status || 'TODO').replace(/_/g, ' '))}</strong></span>
+            <span>Due: ${t.due_date ? formatDate(t.due_date) : 'No due date'}</span>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          ${actionBtn}
+        </div>
+      </div>
+    `;
+  };
 
   const deliverablesHtml = myAssignedDeliverables.length === 0
     ? `
-      <div style="text-align:center; padding:28px 20px; color:var(--gray);">
-        <h4 style="margin:0 0 4px 0; font-size:14px; font-weight:700; color:var(--text);">All Caught Up</h4>
-        <p style="margin:0; font-size:12px;">You have no active deliverables assigned to you right now.</p>
+      <div style="text-align:center; padding:32px 16px; color:var(--muted-foreground);">
+        <h4 style="margin:0 0 4px 0; font-size:14px; font-weight:700; color:var(--foreground);">All Caught Up</h4>
+        <p style="margin:0; font-size:12.5px;">You have no active deliverables assigned right now.</p>
       </div>
     `
     : `
       <div style="display:flex; flex-direction:column; gap:10px;">
-        ${myAssignedDeliverables.map(t => {
-          const statusDisplay = (t.status || 'TODO').replace(/_/g, ' ');
-          const isPending = (t.status || '').toLowerCase() === 'pending_approval';
-          return `
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 14px; border:1px solid ${isPending ? 'rgba(245,158,11,0.25)' : 'var(--border)'}; background:${isPending ? 'rgba(245,158,11,0.04)' : 'var(--card)'}; border-radius:10px; flex-wrap:wrap;">
-              <div style="flex:1; min-width:200px;">
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-                  <span class="tag tag-${(t.priority || 'medium').toLowerCase()}" style="font-size:11px; font-weight:700; padding:2px 8px;">${escapeHtml(t.priority || 'MEDIUM')}</span>
-                  <strong style="font-size:14px; color:var(--text);">${escapeHtml(t.title)}</strong>
-                </div>
-                <div style="font-size:12px; color:var(--gray); display:flex; gap:12px; flex-wrap:wrap;">
-                  <span>Status: <strong style="color:${isPending ? '#d97706' : 'var(--text)'};">${isPending ? 'Awaiting Review' : escapeHtml(statusDisplay)}</strong></span>
-                  <span>Due: ${t.due_date ? formatDate(t.due_date) : 'No due date'}</span>
-                </div>
-              </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <button type="button" class="btn-outline" style="padding:6px 12px; font-size:12px; font-weight:600; border-radius:8px; cursor:pointer;" onclick="switchTab('tasks')">
-                  View in Tasks →
-                </button>
-              </div>
-            </div>
-          `;
-        }).join('')}
+        ${activeDeliverables.map(t => renderTaskRow(t, false)).join('')}
+        ${reviewDeliverables.map(t => renderTaskRow(t, true)).join('')}
       </div>
     `;
 
   const leadersHtml = leaders.length === 0
-    ? '<p style="color:var(--gray); font-size:12px; margin:0;">No group leader assigned.</p>'
+    ? '<p style="color:var(--muted-foreground); font-size:12px; margin:0;">No group leader assigned.</p>'
     : leaders.map(l => {
       const isCoLeader = l.role === 'co_leader';
-      const avatarBg = l.avatar_color || '#4f46e5';
-      const avatarContent = l.avatar_url
-        ? `<img src="${escapeHtml(l.avatar_url)}" alt="${escapeHtml(l.full_name)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;">`
-        : escapeHtml(l.avatar_initials || 'GS');
-      const statusMessageHtml = l.status_message && l.status_message.trim()
-        ? `<div class="user-status-msg" style="font-size:11px; color:var(--primary); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(l.status_message.trim())}">${escapeHtml(l.status_message.trim())}</div>`
-        : `<div class="user-status-msg" style="font-size:10.5px; color:var(--muted-foreground, #94a3b8); margin-top:2px; font-style:italic;">No status message</div>`;
       return `
-      <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 10px; background:${isCoLeader ? 'rgba(99,102,241,0.05)' : 'rgba(79,70,229,0.06)'}; border:1px solid ${isCoLeader ? 'rgba(99,102,241,0.18)' : 'rgba(79,70,229,0.18)'}; border-radius:8px; margin-bottom:6px;">
-        <div style="display:flex; align-items:center; gap:8px; min-width:0;">
-          <div class="chat-avatar" style="width:32px; height:32px; font-size:12px; flex-shrink:0; background:${avatarBg}; color:#ffffff; font-weight:700; overflow:hidden;">${avatarContent}</div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:var(--muted); border:1px solid var(--border); border-radius:10px; margin-bottom:8px;">
+        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+          ${renderRosterAvatarHtml(l)}
           <div style="min-width:0;">
-            <div style="font-weight:700; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(l.full_name)}</div>
-            <div style="color:var(--gray); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(l.email)}</div>
-            ${statusMessageHtml}
+            <div style="font-weight:700; font-size:13px; color:var(--foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(l.full_name)}</div>
+            <div style="color:var(--muted-foreground); font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(l.email)}</div>
+            ${renderMemberStatusHtml(l)}
           </div>
         </div>
-        <span style="font-size:11px; font-weight:700; color:var(--primary); background:#eef2ff; padding:2px 8px; border-radius:6px;">${isCoLeader ? 'Co-Leader' : 'Leader'}</span>
+        <span class="note-perm-badge is-edit">${isCoLeader ? 'Co-Leader' : 'Leader'}</span>
       </div>
     `;
     }).join('');
 
   const fellowsHtml = fellowMembers.map(m => {
     const isSelf = Number(m.user_id) === Number(currentUserId);
-    const avatarBg = m.avatar_color || '#4f46e5';
-    const avatarContent = m.avatar_url
-      ? `<img src="${escapeHtml(m.avatar_url)}" alt="${escapeHtml(m.full_name)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;">`
-      : escapeHtml(m.avatar_initials || 'GS');
-    const statusMessageHtml = m.status_message && m.status_message.trim()
-      ? `<div class="user-status-msg" style="font-size:11px; color:var(--primary); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(m.status_message.trim())}">${escapeHtml(m.status_message.trim())}</div>`
-      : `<div class="user-status-msg" style="font-size:10.5px; color:var(--muted-foreground, #94a3b8); margin-top:2px; font-style:italic;">No status message</div>`;
     return `
-      <li style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px solid var(--border); gap:8px;">
-        <div style="display:flex; align-items:center; gap:8px; min-width:0;">
-          <div class="chat-avatar" style="width:32px; height:32px; font-size:12px; flex-shrink:0; background:${avatarBg}; color:#ffffff; font-weight:700; overflow:hidden;">${avatarContent}</div>
+      <li style="display:flex; justify-content:space-between; align-items:center; padding:10px 4px; border-bottom:1px solid var(--border); gap:8px;">
+        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+          ${renderRosterAvatarHtml(m)}
           <div style="min-width:0;">
-            <div style="font-weight:600; font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-              ${escapeHtml(m.full_name)} ${isSelf ? '<span style="font-size:11px; color:var(--gray); font-weight:normal;">(You)</span>' : ''}
+            <div style="font-weight:600; font-size:13px; color:var(--foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+              ${escapeHtml(m.full_name)} ${isSelf ? '<span style="font-size:11px; color:var(--muted-foreground); font-weight:normal;">(You)</span>' : ''}
             </div>
-            <div style="color:var(--gray); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(m.email)}</div>
-            ${statusMessageHtml}
+            <div style="color:var(--muted-foreground); font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(m.email)}</div>
+            ${renderMemberStatusHtml(m)}
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
           ${isSelf ? `
-            <select onchange="handleMemberSelfRoleDropdown(this)" style="font-size:11px; padding:2px 6px; border-radius:6px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer;" title="Role: Member (Click to request leadership)">
+            <select aria-label="Workspace role selector" onchange="handleMemberSelfRoleDropdown(this)" style="font-size:12px; padding:4px 8px; border-radius:6px; border:1px solid var(--border); background:var(--card); color:var(--foreground); cursor:pointer;" title="Role: Member (Click to request leadership)">
               <option value="member" selected>Member</option>
               <option value="leader">Leader</option>
               <option value="co_leader">Co-Leader</option>
@@ -782,8 +840,8 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
   }).join('');
 
   const activityFeedHtml = activities.length === 0
-    ? '<div style="text-align:center; padding:24px 16px; color:var(--gray);"><p style="margin:0; font-size:12px;">No recent workspace events yet.</p></div>'
-    : activities.slice(0, 5).map(a => `
+    ? '<div style="text-align:center; padding:20px 12px; color:var(--muted-foreground);"><p style="margin:0; font-size:12px;">No recent workspace updates yet.</p></div>'
+    : activities.slice(0, 6).map(a => `
       <div class="activity-item">
         <div class="activity-icon">${getActivityIcon(a.action_type)}</div>
         <div style="flex:1; min-width:0;">
@@ -794,64 +852,44 @@ function renderMemberHomespace(container, myAssignedDeliverables, members, activ
     `).join('');
 
   container.innerHTML = `
-    <div class="dashboard-grid">
-      <!-- Col 1: My Assigned Deliverables & Quick Scratchpad -->
-      <div style="display:flex; flex-direction:column; gap:20px;">
-        <!-- My Assigned Deliverables -->
-        <div class="dashboard-panel">
-          <div class="panel-header">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0;">My Assigned Deliverables</h3>
-              <span class="col-badge" style="background:#e0e7ff; color:#3730a3; font-weight:700;">${myAssignedDeliverables.length}</span>
-            </div>
-            <span style="font-size:12px; color:var(--gray);">Active assigned deliverables</span>
+    <div class="hs-action-grid">
+      <div class="dashboard-panel">
+        <div class="panel-header">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <h3 style="margin:0;">My Assigned Tasks</h3>
+            <span class="col-badge" style="font-weight:700;">${myAssignedDeliverables.length}</span>
           </div>
-          <div style="padding:14px 16px; max-height:260px; overflow-y:auto;">
-            ${deliverablesHtml}
-          </div>
+          <button type="button" class="btn-outline btn-sm" onclick="switchTab('tasks')">Full Board →</button>
         </div>
-
-        <!-- Minimalist Quick Scratchpad / Personal Notes -->
-        ${renderHomespaceScratchpadHtml(personalNotes, 'memberHomespaceScratchpad')}
+        ${deliverablesHtml}
       </div>
 
-      <!-- Col 2: Workspace Teammates & Recent Activity Feed -->
-      <div style="display:flex; flex-direction:column; gap:20px;">
-        <!-- Workspace Teammates (Highlighting Leader) -->
+      <div class="hs-stack">
         <div class="dashboard-panel">
           <div class="panel-header">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0;">Workspace Teammates</h3>
-              <span class="status pending" style="font-size:11px;">MEMBER</span>
-            </div>
-            <span style="font-size:12px; color:var(--gray);">${members.length} members</span>
+            <h3 style="margin:0;">Notification Summary</h3>
+            <button type="button" class="btn-outline btn-sm" onclick="openPersonalFeedDrawer()">Open Inbox</button>
           </div>
-          <div style="padding:12px 14px; max-height:260px; overflow-y:auto;">
-            <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:var(--gray); margin-bottom:8px;">
-              Workspace Leader
-            </div>
-            ${leadersHtml}
-
-            <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; color:var(--gray); margin:14px 0 6px 0;">
-              Team Members (${fellowMembers.length})
-            </div>
-            <ul class="task-list" style="margin:0; padding:0; list-style:none;">
-              ${fellowsHtml}
-            </ul>
-          </div>
-        </div>
-
-        <!-- Recent Activity Feed -->
-        <div class="dashboard-panel">
-          <div class="panel-header">
-            <h3>Recent Activity Feed</h3>
-            <span style="font-size:12px; color:var(--gray);">Live workspace events</span>
-          </div>
+          ${buildHomespaceNotificationSummaryHtml(feedData, reviewDeliverables.length, false)}
           <div class="activity-feed" style="max-height:260px; overflow-y:auto;">
             ${activityFeedHtml}
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="dashboard-panel">
+      <div class="panel-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <h3 style="margin:0;">Workspace Team & Leaders</h3>
+          <span class="status pending" style="font-size:11px;">MEMBER</span>
+        </div>
+        <span style="font-size:12px; color:var(--muted-foreground);">${members.length} members</span>
+      </div>
+      ${leadersHtml}
+      <ul class="task-list" style="margin:6px 0 0 0; padding:0; list-style:none;">
+        ${fellowsHtml}
+      </ul>
     </div>
   `;
 }
@@ -1819,6 +1857,7 @@ async function updateTaskStatus(taskId, status) {
     });
     showToast(`Task status updated.`, 'success');
     loadTasks();
+    if (currentTab === 'overview') loadOverview();
   } catch (err) {
     showToast(err.message, 'error');
   }
