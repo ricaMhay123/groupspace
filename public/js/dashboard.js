@@ -1381,8 +1381,6 @@ function openWorkspaceSettingsModal() {
     const prefApprovals = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_approvals`) !== 'false';
     const prefMentions = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_mentions`) !== 'false';
     const prefHelp = localStorage.getItem(`groupspace_pref_${currentUserId}_notif_help`) !== 'false';
-    const prefLanding = localStorage.getItem(`groupspace_pref_${currentUserId}_landing_view`) || 'overview';
-    const prefCompact = localStorage.getItem(`groupspace_pref_${currentUserId}_compact_view`) === 'true';
 
     modalBody.innerHTML = `
       <div style="display:flex; flex-direction:column; gap:16px;">
@@ -1420,30 +1418,6 @@ function openWorkspaceSettingsModal() {
             <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); cursor:pointer;">
               <input type="checkbox" ${prefHelp ? 'checked' : ''} onchange="saveMemberPref('notif_help', this.checked)">
               <span>Peer-assist & help request alerts</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Personal Preferences -->
-        <div style="border-top:1px solid var(--border); padding-top:14px;">
-          <div style="font-size:12px; font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">
-            Workspace Preferences
-          </div>
-          <div style="display:flex; flex-direction:column; gap:10px;">
-            <div>
-              <label style="display:block; font-size:12px; color:var(--gray); margin-bottom:4px;">Default Landing Tab</label>
-              <select class="form-control" style="font-size:12px; padding:6px 10px;" onchange="saveMemberPref('landing_view', this.value)">
-                <option value="overview" ${prefLanding === 'overview' ? 'selected' : ''}>Homespace</option>
-                <option value="tasks" ${prefLanding === 'tasks' ? 'selected' : ''}>Tasks</option>
-                <option value="calendar" ${prefLanding === 'calendar' ? 'selected' : ''}>Calendar</option>
-                <option value="notebook" ${prefLanding === 'notebook' ? 'selected' : ''}>Notebook</option>
-                <option value="expenses" ${prefLanding === 'expenses' ? 'selected' : ''}>Expenses</option>
-                <option value="discussions" ${prefLanding === 'discussions' ? 'selected' : ''}>Discussions</option>
-              </select>
-            </div>
-            <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); cursor:pointer;">
-              <input type="checkbox" ${prefCompact ? 'checked' : ''} onchange="saveMemberPref('compact_view', this.checked)">
-              <span>Enable compact view for Kanban cards</span>
             </label>
           </div>
         </div>
