@@ -321,6 +321,18 @@ header .nav-buttons {
   user-select: none;
 }
 
+.chat-avatar {
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--primary);
+  color: #ffffff;
+  font-weight: 700;
+}
+
 #profileAvatarPreview img,
 #userAvatarBadge img,
 #sidebarUserAvatar img,
