@@ -16,7 +16,7 @@
   --input: #ffffff;
   --muted: #f1f0ec;
   --muted-foreground: #5a5f6b;
-  --gray: #6b7180;
+  --gray: #525763;
   --ring: #2e5bff;
   --accent: #eef2ff;
   --accent-foreground: #2148d9;
@@ -551,13 +551,24 @@ header .nav-buttons {
 }
 
 .secondary-btn:hover, .btn-outline:hover {
-  border-color: var(--primary);
-  color: var(--primary);
+  border-color: var(--primary-hover);
+  color: var(--primary-hover);
   background: var(--primary-light);
 }
 
 .secondary-btn:active, .btn-outline:active {
   transform: scale(0.98);
+}
+
+.btn-sm,
+#homespaceSettingsBtn,
+#notebookMoreActionsBtn,
+#personalMoreActionsBtn,
+#topicPinTrayToggleBtn {
+  min-height: 32px;
+  padding: 6px 12px;
+  font-size: 0.8125rem;
+  border-radius: var(--radius-sm);
 }
 
 /* =========================================================
@@ -1002,8 +1013,8 @@ body.dashboard-page {
 
 .logout-btn:hover {
   background: #fef2f2;
-  border-color: #ef4444;
-  color: #dc2626;
+  border-color: var(--destructive);
+  color: var(--destructive);
 }
 
 .dashboard-main {
@@ -1026,9 +1037,10 @@ body.dashboard-page {
 }
 
 .dashboard-header h1 {
-  font-size: 1.4rem !important;
-  font-weight: 800 !important;
-  margin: 0 0 2px 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px 0;
 }
 
 .dashboard-header p {
@@ -1167,9 +1179,10 @@ body.dashboard-page {
   margin-bottom: 16px;
 }
 
+.panel-header h2,
 .panel-header h3 {
-  font-size: 1rem !important;
-  font-weight: 700 !important;
+  font-size: 1rem;
+  font-weight: 700;
   margin: 0;
 }
 
@@ -1215,22 +1228,22 @@ body.dashboard-page {
 .activity-item h4,
 .activity-item .act-text,
 .activity-item .activity-desc {
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  color: var(--text) !important;
-  line-height: 1.4 !important;
-  margin: 0 !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  line-height: 1.45;
+  margin: 0;
   word-break: break-word;
 }
 
 .activity-item p,
 .activity-item .act-time,
 .activity-item .activity-date {
-  font-size: 11px !important;
-  font-weight: 400 !important;
-  color: var(--gray) !important;
-  line-height: 1.3 !important;
-  margin: 2px 0 0 0 !important;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--muted-foreground);
+  line-height: 1.4;
+  margin: 2px 0 0 0;
 }
 
 .dark .activity-item h4,
@@ -1267,9 +1280,9 @@ body.dashboard-page {
 }
 
 .task-list li {
-  padding: 8px 0;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 0.88rem;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1936,7 +1949,7 @@ body.dashboard-page {
 /* ─── Warning Color Var ─── */
 :root {
   --warning: #b45309;
-  --gray: #64748b;
+  --gray: #525763;
 }
 
 /* =========================================================
@@ -3248,12 +3261,25 @@ body {
 .hs-accordion-chevron {
   width: 28px;
   height: 28px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--muted-foreground);
-  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hs-accordion-chevron,
+  .hs-accordion-animator,
+  .primary-btn,
+  .btn-primary,
+  .btn-green,
+  .secondary-btn,
+  .btn-outline {
+    transition: none !important;
+    transform: none !important;
+  }
 }
 
 .hs-accordion-chevron.rotated {
@@ -4754,8 +4780,15 @@ textarea[data-ms-editor="false"]::-ms-reveal {
 }
 
 .actions-dropdown-item:hover {
-  background: var(--primary-light, #eff6ff);
-  color: var(--primary, #2563eb);
+  background: var(--primary-light);
+  color: var(--primary-hover);
+}
+
+.actions-dropdown-item svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--muted-foreground);
 }
 
 .actions-dropdown-item span:first-child {
@@ -4767,18 +4800,36 @@ textarea[data-ms-editor="false"]::-ms-reveal {
 }
 
 html.dark .actions-dropdown-menu {
-  background: #1e293b;
-  border-color: #334155;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.45);
 }
 
 html.dark .actions-dropdown-item:hover {
-  background: rgba(37, 99, 235, 0.2);
-  color: #60a5fa;
+  background: var(--primary-light);
+  color: var(--ring);
 }
 
 .note-card.has-open-menu {
   z-index: 60 !important;
+}
+
+.sidebar-profile-card {
+  margin-top: auto;
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition);
+}
+
+.sidebar-profile-card:hover {
+  border-color: var(--ring);
 }
 
 .sidebar-profile-card .actions-dropdown-menu {
@@ -4811,8 +4862,8 @@ html.dark .actions-dropdown-item:hover {
 
 .btn-card-more:hover {
   background: var(--secondary);
-  border-color: var(--primary);
-  color: var(--primary);
+  border-color: var(--primary-hover);
+  color: var(--primary-hover);
 }
 
 .actions-dropdown-divider {
@@ -4844,12 +4895,12 @@ html.dark .actions-dropdown-item:hover {
 }
 
 .actions-dropdown-item-danger {
-  color: #dc2626;
+  color: var(--destructive);
 }
 
 .actions-dropdown-item-danger:hover {
-  background: rgba(220, 38, 38, 0.1) !important;
-  color: #dc2626 !important;
+  background: rgba(200, 40, 56, 0.1) !important;
+  color: var(--destructive) !important;
 }
 
 html.dark .actions-dropdown-item-danger {
@@ -4863,9 +4914,9 @@ html.dark .actions-dropdown-item-danger {
   gap: 6px;
   padding: 6px 8px;
   margin-bottom: 10px;
-  background: var(--muted, #f8fafc);
+  background: var(--muted);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
 .btn-slim-fmt {

@@ -25,7 +25,10 @@
   <aside class="dashboard-sidebar" id="dashboardSidebar">
     <div>
       <div class="dashboard-brand" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-        <a href="index.html" style="text-decoration:none;"><h2>👥 GroupSpace</h2></a>
+        <a href="index.html" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary); flex-shrink:0;" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>
+          <h2 style="margin:0;">GroupSpace</h2>
+        </a>
         <button type="button" class="mobile-sidebar-close-btn" aria-label="Close navigation menu" onclick="toggleMobileSidebar(false)">✕</button>
       </div>
 
@@ -57,12 +60,12 @@
     </div>
 
     <!-- User Profile Settings Card Below Navigation -->
-    <div class="sidebar-profile-card" id="sidebarProfileCard" style="margin-top:auto; padding:12px; background:var(--secondary); border:1px solid var(--border); border-radius:12px; display:flex; align-items:center; gap:10px; cursor:pointer; position:relative;" onclick="openUserProfileModal()" title="Click to customize your profile">
+    <div class="sidebar-profile-card" id="sidebarProfileCard" onclick="openUserProfileModal()" title="Click to customize your profile">
       <div class="chat-avatar" id="sidebarUserAvatar" style="width:34px; height:34px; font-size:12px; flex-shrink:0;">GS</div>
       <div style="min-width:0; flex:1;">
         <div id="sidebarUserFullName" style="font-size:12.5px; font-weight:700; color:var(--foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">User</div>
         <div id="sidebarUserRole" style="font-size:11px; color:var(--muted-foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Member</div>
-        <div id="sidebarUserStatus" style="font-size:11px; color:var(--primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">🟢 Active</div>
+        <div id="sidebarUserStatus" style="font-size:11px; color:var(--success); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">Active</div>
       </div>
       <div class="actions-dropdown-container" onclick="event.stopPropagation();">
         <button type="button" id="sidebarAccountMenuBtn" class="btn-card-more" aria-label="Account menu" aria-haspopup="true" aria-expanded="false" onclick="toggleActionsDropdown('sidebarAccountMenu', event)" title="Account, theme &amp; logout">⋯</button>
@@ -98,7 +101,7 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
           <span id="feedBadge" class="feed-badge" style="display:none;">0</span>
         </button>
-        <button id="homespaceSettingsBtn" type="button" aria-label="Workspace Settings & Controls" title="Workspace Settings & Controls" class="btn-outline" style="display:none; padding:8px 14px; font-size:13px; font-weight:600; align-items:center; border-radius:10px;" onclick="focusHomespaceSettingsDrawer()">Settings</button>
+        <button id="homespaceSettingsBtn" type="button" aria-label="Workspace Settings & Controls" title="Workspace Settings & Controls" class="btn-outline btn-sm" style="display:none; align-items:center;" onclick="focusHomespaceSettingsDrawer()">Settings</button>
         <button id="primaryActionBtn" class="btn-green" onclick="handlePrimaryAction()">+ Action</button>
       </div>
     </div>
@@ -138,11 +141,13 @@
 
     <!-- TAB 2: CALENDAR -->
     <section id="tab-calendar" class="tab-view" style="display:none;">
+      <h2 class="sr-only">Workspace Calendar</h2>
       <div id="calendarView" style="padding: 0 4px;"></div>
     </section>
 
     <!-- TAB 3: TASKS (KANBAN WITH DUAL-APPROVAL) -->
     <section id="tab-tasks" class="tab-view" style="display:none;">
+      <h2 class="sr-only">Tasks Board</h2>
       <p style="color:var(--gray); margin:0 0 18px 0; font-size:13px;">
         <strong>Dual-Approval Workflow:</strong> Workers submit finished tasks for approval. Workspace <strong>Leaders</strong> verify and grant final completion.
       </p>
@@ -188,25 +193,29 @@
 
     <!-- TAB 3: NOTEBOOK -->
     <section id="tab-notebook" class="tab-view" style="display:none;">
+      <h2 class="sr-only">Shared Workspace Notebook</h2>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:14px; flex-wrap:wrap;">
         <div class="dashboard-search" style="flex:1; min-width:220px;">
           <input type="text" id="noteSearchInput" aria-label="Search notebook pages and tags" placeholder="Search notebook pages and tags..." oninput="debounceNotesSearch()">
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
           <div class="actions-dropdown-container">
-            <button type="button" id="notebookMoreActionsBtn" class="btn-outline" onclick="toggleActionsDropdown('notebookActionsMenu', event)" aria-haspopup="true" aria-expanded="false" style="font-size:13px; padding:8px 14px; display:inline-flex; align-items:center; gap:6px;">
+            <button type="button" id="notebookMoreActionsBtn" class="btn-outline btn-sm" onclick="toggleActionsDropdown('notebookActionsMenu', event)" aria-haspopup="true" aria-expanded="false">
               <span>More</span>
               <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
             </button>
             <div id="notebookActionsMenu" class="actions-dropdown-menu">
               <button type="button" class="actions-dropdown-item" onclick="promptCreateDashboardFolder(); closeAllActionDropdowns();">
-                <span>📁</span> <span>+ New Folder</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                <span>+ New Folder</span>
               </button>
               <button type="button" class="actions-dropdown-item" onclick="document.getElementById('dashboardImportFileInput').click(); closeAllActionDropdowns();">
-                <span>📄</span> <span>Import Document</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                <span>Import Document</span>
               </button>
               <button type="button" class="actions-dropdown-item" onclick="window.open('notebook.html?groupId=' + currentGroupId, '_blank'); closeAllActionDropdowns();">
-                <span>⛶</span> <span>Full Editor</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+                <span>Full Editor</span>
               </button>
             </div>
           </div>
@@ -225,6 +234,7 @@
 
     <!-- TAB 4: EXPENSES -->
     <section id="tab-expenses" class="tab-view" style="display:none;">
+      <h2 class="sr-only">Workspace Expenses &amp; Settlements</h2>
       <div class="expense-summary-grid">
         <div class="summary-stat-box">
           <h3 class="stat-label">Total Workspace Expenditure</h3>
@@ -279,6 +289,7 @@
 
     <!-- TAB 5: DISCUSSIONS -->
     <section id="tab-discussions" class="tab-view" style="display:none;">
+      <h2 class="sr-only">Workspace Discussions</h2>
       <div class="dashboard-grid">
         <div class="dashboard-panel">
           <div class="panel-header">
@@ -296,8 +307,9 @@
                 <h3 id="activeTopicTitle" style="margin:0 0 4px 0;">Select a Topic</h3>
                 <div id="activeTopicMeta" style="font-size:12px; color:var(--gray);"></div>
               </div>
-              <button type="button" id="topicPinTrayToggleBtn" class="btn-outline" style="display:none; font-size:12px; padding:4px 10px; border-radius:6px; align-items:center; gap:4px;" onclick="toggleTopicPinnedTray()" title="Toggle pinned comments in this thread">
-                📌 <span id="topicPinnedCount">0 Pinned</span>
+              <button type="button" id="topicPinTrayToggleBtn" class="btn-outline btn-sm" style="display:none; align-items:center;" onclick="toggleTopicPinnedTray()" title="Toggle pinned comments in this thread">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3H8l2 6H7l5 12 5-12h-3l2-6z"/></svg>
+                <span id="topicPinnedCount">0 Pinned</span>
               </button>
             </div>
             <div id="activeTopicAttachments" style="margin-top:8px;"></div>
@@ -363,19 +375,22 @@
           </div>
           <div style="display:flex; gap:8px; align-items:center;">
             <div class="actions-dropdown-container">
-              <button type="button" id="personalMoreActionsBtn" class="btn-outline" onclick="toggleActionsDropdown('personalActionsMenu', event)" aria-haspopup="true" aria-expanded="false" style="font-size:13px; padding:8px 14px; display:inline-flex; align-items:center; gap:6px;">
+              <button type="button" id="personalMoreActionsBtn" class="btn-outline btn-sm" onclick="toggleActionsDropdown('personalActionsMenu', event)" aria-haspopup="true" aria-expanded="false">
                 <span>More</span>
                 <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
               </button>
               <div id="personalActionsMenu" class="actions-dropdown-menu">
                 <button type="button" class="actions-dropdown-item" onclick="promptCreatePersonalFolder(); closeAllActionDropdowns();">
-                  <span>📁</span> <span>+ New Folder</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                  <span>+ New Folder</span>
                 </button>
                 <button type="button" class="actions-dropdown-item" onclick="document.getElementById('personalImportFileInput').click(); closeAllActionDropdowns();">
-                  <span>📄</span> <span>Import Document</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                  <span>Import Document</span>
                 </button>
                 <button type="button" class="actions-dropdown-item" onclick="window.open('notebook.html?personal=1' + (currentGroupId ? '&groupId=' + currentGroupId : ''), '_blank'); closeAllActionDropdowns();">
-                  <span>⛶</span> <span>Full Editor</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+                  <span>Full Editor</span>
                 </button>
               </div>
             </div>
@@ -575,9 +590,9 @@
       <input type="checkbox" id="notePinned" name="pinNote" data-alt-id="pinNote" style="display:none;">
 
       <div class="modal-actions-choice" style="display:flex; justify-content:flex-end; gap:8px; margin-top:22px; flex-wrap:wrap;">
-        <button type="button" class="btn-outline" onclick="closeModal('createNoteModal')" style="padding:7px 14px; font-size:13px; border-radius:8px;">Cancel</button>
-        <button type="button" id="savePageBtn" class="btn-outline" onclick="handleCreateNoteChoice('save', event)" style="padding:7px 14px; font-size:13px; border-radius:8px; font-weight:600;">💾 Save</button>
-        <button type="submit" id="openInFullEditorBtn" class="btn-green" style="padding:7px 16px; font-size:13px; border-radius:8px; font-weight:600;">✏️ Open in Full Editor →</button>
+        <button type="button" class="btn-outline btn-sm" onclick="closeModal('createNoteModal')">Cancel</button>
+        <button type="button" id="savePageBtn" class="btn-outline btn-sm" onclick="handleCreateNoteChoice('save', event)">Save</button>
+        <button type="submit" id="openInFullEditorBtn" class="btn-green btn-sm">Open in Full Editor →</button>
       </div>
     </form>
   </div>
