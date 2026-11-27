@@ -301,7 +301,15 @@
     .nb-folder-actions {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 2px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+    }
+    .nb-folder-header:hover .nb-folder-actions,
+    .nb-folder-header:focus-within .nb-folder-actions {
+      opacity: 1;
+      pointer-events: auto;
     }
     .btn-folder-icon {
       border: none;
@@ -309,8 +317,13 @@
       color: var(--nb-text-muted);
       cursor: pointer;
       font-size: 11px;
-      padding: 2px 5px;
-      border-radius: 4px;
+      font-weight: 600;
+      padding: 3px 6px;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
       transition: all 0.15s;
     }
     .btn-folder-icon:hover {
@@ -358,6 +371,24 @@
     .nb-page-item.active {
       background: var(--nb-active-bg);
       border-color: var(--nb-active-border);
+    }
+    .nb-page-item > .btn-folder-icon {
+      opacity: 0;
+      pointer-events: none;
+      flex-shrink: 0;
+    }
+    .nb-page-item:hover > .btn-folder-icon,
+    .nb-page-item.active > .btn-folder-icon,
+    .nb-page-item:focus-within > .btn-folder-icon {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    @media (max-width: 768px) {
+      .nb-folder-actions,
+      .nb-page-item > .btn-folder-icon {
+        opacity: 1;
+        pointer-events: auto;
+      }
     }
     .nb-page-item-info {
       flex: 1;
@@ -822,36 +853,43 @@
       display: flex;
       flex-direction: column;
       border-radius: 6px;
-      overflow: hidden;
+      overflow: visible;
       box-sizing: border-box;
+      position: relative;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
     .textbox-drag-bar {
-      height: 18px;
-      background: rgba(37, 99, 235, 0.08);
+      position: absolute;
+      top: -20px;
+      left: -1px;
+      height: 20px;
+      background: #2563eb;
+      color: #ffffff;
       cursor: move;
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 6px;
       padding: 0 8px;
       font-size: 10px;
-      color: #2563eb;
       font-weight: 600;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
+      border-radius: 5px 5px 0 0;
       user-select: none;
       flex-shrink: 0;
-      border-bottom: 1px solid rgba(37, 99, 235, 0.15);
-      transition: background 0.15s ease;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+      z-index: 25;
+      white-space: nowrap;
     }
-    .textbox-drag-bar:hover {
-      background: rgba(37, 99, 235, 0.18);
+    .interactive-shape:hover .textbox-drag-bar,
+    .interactive-shape.selected .textbox-drag-bar {
+      opacity: 1;
+      pointer-events: auto;
     }
     html.dark .textbox-drag-bar {
-      background: rgba(56, 189, 248, 0.12);
-      color: #38bdf8;
-      border-bottom-color: rgba(56, 189, 248, 0.2);
-    }
-    html.dark .textbox-drag-bar:hover {
-      background: rgba(56, 189, 248, 0.24);
+      background: #38bdf8;
+      color: #0f172a;
     }
     .textbox-editable {
       flex: 1;
@@ -1060,12 +1098,12 @@
       }
     }
 
-    /* ── MS Word Online / Desktop Authentic Ribbon & Paper Styling ── */
+    /* ── Studio Daylight & Obsidian Top Header & Ultra-Slim 1-Line Toolbar ── */
     .nb-header {
-      background: #141d2f !important;
-      color: #ffffff !important;
-      border-bottom: 1px solid #1e293b !important;
-      height: 46px !important;
+      background: var(--nb-surface) !important;
+      color: var(--nb-text) !important;
+      border-bottom: 1px solid var(--nb-border) !important;
+      height: 50px !important;
       padding: 0 16px !important;
     }
     .nb-header-left {
@@ -1080,20 +1118,20 @@
       gap: 7px;
       font-size: 13.5px;
       font-weight: 700;
-      color: #38bdf8 !important;
+      color: var(--nb-primary) !important;
       text-decoration: none;
       white-space: nowrap;
     }
     .nb-brand-divider {
-      color: #475569;
+      color: var(--nb-border-hover);
       font-weight: 300;
       font-size: 16px;
       user-select: none;
     }
     .nb-doc-header-title {
-      font-size: 13px;
-      font-weight: 500;
-      color: #f8fafc !important;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--nb-text) !important;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -1103,79 +1141,79 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      background: rgba(255, 255, 255, 0.1);
-      color: #cbd5e1;
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: var(--nb-hover);
+      color: var(--nb-text-muted);
+      border: 1px solid var(--nb-border);
       padding: 3px 10px;
       border-radius: 999px;
       font-size: 11px;
       font-weight: 500;
       white-space: nowrap;
-      margin-left: 8px;
+      margin-left: 6px;
     }
     .nb-header .nb-back-btn {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      color: #e2e8f0;
-      padding: 4px 10px;
+      background: var(--nb-surface);
+      border: 1px solid var(--nb-border);
+      color: var(--nb-text);
+      padding: 5px 11px;
       font-size: 12px;
       border-radius: 6px;
     }
     .nb-header .nb-back-btn:hover {
-      background: rgba(255, 255, 255, 0.16);
-      color: #ffffff;
-      border-color: #38bdf8;
+      background: var(--nb-hover);
+      color: var(--nb-primary);
+      border-color: var(--nb-primary);
     }
     .nb-header .btn-nb-outline {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      color: #f8fafc;
+      background: var(--nb-surface);
+      border: 1px solid var(--nb-border);
+      color: var(--nb-text);
       padding: 5px 11px;
       font-size: 12px;
       border-radius: 6px;
     }
     .nb-header .btn-nb-outline:hover {
-      background: rgba(255, 255, 255, 0.16);
-      color: #ffffff;
-      border-color: #38bdf8;
+      background: var(--nb-hover);
+      color: var(--nb-primary);
+      border-color: var(--nb-primary);
     }
     .btn-nb-share-primary {
-      background: #2563eb !important;
+      background: var(--nb-primary) !important;
       color: #ffffff !important;
-      border: 1px solid #3b82f6 !important;
+      border: 1px solid var(--nb-primary) !important;
       padding: 5px 14px !important;
       font-size: 12px !important;
       font-weight: 600 !important;
       border-radius: 6px !important;
     }
     .btn-nb-share-primary:hover {
-      background: #1d4ed8 !important;
+      background: var(--nb-primary-hover) !important;
     }
     .nb-header .btn-nb-theme {
-      width: 30px;
-      height: 30px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      color: #cbd5e1;
+      width: 32px;
+      height: 32px;
+      background: var(--nb-surface);
+      border: 1px solid var(--nb-border);
+      color: var(--nb-text-muted);
       border-radius: 6px;
     }
     .nb-sidebar-toggle-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      background: rgba(255, 255, 255, 0.08);
-      color: #e2e8f0;
+      border: 1px solid var(--nb-border);
+      background: var(--nb-surface);
+      color: var(--nb-text);
       cursor: pointer;
       font-size: 14px;
       transition: all 0.15s;
     }
     .nb-sidebar-toggle-btn:hover {
-      background: rgba(255, 255, 255, 0.18);
-      border-color: #38bdf8;
+      background: var(--nb-hover);
+      border-color: var(--nb-primary);
     }
     .nb-sidebar.desktop-collapsed {
       width: 0 !important;
@@ -1184,7 +1222,7 @@
       overflow: hidden !important;
     }
 
-    /* ── MS Word Ribbon Tabs Strip ── */
+    /* ── Ribbon Tabs Strip ── */
     .nb-toolbar {
       display: flex;
       flex-direction: column;
@@ -1193,29 +1231,29 @@
       gap: 0 !important;
       background: var(--nb-surface, #ffffff) !important;
       border-bottom: 1px solid var(--nb-border, #cbd5e1) !important;
-      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
     }
     .nb-ribbon-tabs {
       display: flex;
       align-items: center;
       gap: 2px;
       width: 100%;
-      padding: 0 14px !important;
+      padding: 0 12px !important;
       margin-bottom: 0 !important;
       background: var(--nb-surface, #ffffff);
       border-bottom: 1px solid var(--nb-border, #e2e8f0);
-      height: 34px;
+      height: 32px;
     }
     .nb-ribbon-tab {
       position: relative;
       background: transparent !important;
       color: var(--nb-text-muted, #475569) !important;
       border: none !important;
-      border-bottom: 2.5px solid transparent !important;
+      border-bottom: 2px solid transparent !important;
       border-radius: 0 !important;
-      padding: 6px 14px !important;
-      height: 34px;
-      font-size: 12.5px !important;
+      padding: 4px 12px !important;
+      height: 32px;
+      font-size: 12px !important;
       font-weight: 500 !important;
       cursor: pointer;
       transition: all 0.15s;
@@ -1225,37 +1263,42 @@
       background: rgba(37, 99, 235, 0.05) !important;
     }
     .nb-ribbon-tab.active {
-      color: #2563eb !important;
+      color: var(--nb-primary, #2563eb) !important;
       background: transparent !important;
       font-weight: 700 !important;
-      border-bottom: 2.5px solid #2563eb !important;
+      border-bottom: 2px solid var(--nb-primary, #2563eb) !important;
     }
     html.dark .nb-ribbon-tab.active {
-      color: #38bdf8 !important;
-      border-bottom-color: #38bdf8 !important;
+      color: #60a5fa !important;
+      border-bottom-color: #60a5fa !important;
     }
 
-    /* ── MS Word Ribbon Body & Compartments ── */
+    /* ── Ultra-Slim 1-Line Google Docs-Style Toolbar Body ── */
     .nb-ribbon-body {
       display: flex;
-      flex-wrap: wrap;
-      align-items: stretch;
+      flex-wrap: nowrap;
+      align-items: center;
       gap: 0;
-      padding: 6px 12px 4px 12px;
-      min-height: 86px;
-      background: var(--nb-tb-bg, #ffffff);
+      padding: 5px 10px;
+      min-height: 40px;
+      background: var(--nb-tb-bg, #f8fafc);
+      overflow-x: auto;
+      scrollbar-width: thin;
     }
     .nb-toolbar-group {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: stretch;
+      display: inline-flex;
+      flex-direction: row;
+      align-items: center;
       gap: 4px;
-      padding: 2px 14px 2px 14px !important;
+      padding: 0 10px !important;
       border-right: 1px solid var(--nb-border, #e2e8f0) !important;
       border-radius: 0 !important;
       background: transparent !important;
-      min-height: 74px;
+      min-height: 28px;
+      flex-shrink: 0;
+    }
+    .nb-toolbar-group:last-of-type {
+      border-right: none !important;
     }
     .nb-toolbar-group.ribbon-highlight {
       background: transparent !important;
@@ -1354,36 +1397,33 @@
       }
     }
     .nb-ribbon-group-content {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 5px;
-      flex: 1;
+      display: inline-flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 4px;
     }
     .nb-ribbon-row {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 4px;
       flex-wrap: nowrap;
     }
     .nb-ribbon-group-footer {
-      text-align: center;
-      font-size: 10px;
-      font-weight: 500;
-      color: var(--nb-text-subtle, #64748b);
-      letter-spacing: 0.2px;
-      padding-top: 2px;
-      user-select: none;
-      white-space: nowrap;
+      display: none !important;
     }
     .nb-toolbar .btn-toolbar-fmt {
-      min-width: 26px;
-      height: 26px;
-      padding: 0 6px;
+      min-width: 28px;
+      height: 28px;
+      padding: 0 7px;
       font-size: 12px;
-      border-radius: 4px;
+      border-radius: 5px;
       border: 1px solid transparent;
       background: transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      white-space: nowrap;
     }
     .nb-toolbar .btn-toolbar-fmt:hover:not(:disabled),
     .nb-toolbar .btn-toolbar-fmt.active:not(:disabled) {
@@ -1393,89 +1433,40 @@
       transform: none;
     }
     .nb-toolbar select {
-      height: 26px;
-      padding: 2px 6px;
+      height: 28px;
+      padding: 2px 8px;
       font-size: 12px;
-      border-radius: 4px;
+      border-radius: 5px;
     }
 
-    /* ── MS Word Style Gallery Cards (Normal, No Spacing, Heading 1, Heading 2, Title) ── */
+    /* ── Style Gallery Cards (Hidden in 1-Line Docs Mode in favor of #nbHeadingStyles) ── */
     .nb-style-gallery {
-      display: flex;
-      align-items: stretch;
-      gap: 6px;
+      display: none !important;
     }
     .nb-style-card {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: flex-start;
-      width: 78px;
-      height: 54px;
-      padding: 5px 8px;
-      border: 1px solid var(--nb-border, #cbd5e1);
-      border-radius: 4px;
-      background: var(--nb-tb-surface, #ffffff);
-      cursor: pointer;
-      transition: all 0.15s ease;
-      text-align: left;
-      overflow: hidden;
-    }
-    .nb-style-card:hover {
-      border-color: #38bdf8;
-      background: rgba(56, 189, 248, 0.05);
-    }
-    .nb-style-card.active {
-      border: 2px solid #0284c7;
-      background: rgba(2, 132, 199, 0.04);
-    }
-    .nb-style-card-name {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--nb-tb-text, #0f172a);
-      white-space: nowrap;
-      line-height: 1.2;
-    }
-    .nb-style-card-name.h1-preview {
-      color: #1d4ed8;
-      font-size: 12.5px;
-      font-weight: 700;
-    }
-    .nb-style-card-name.h2-preview {
-      color: #2563eb;
-      font-size: 11.5px;
-      font-weight: 700;
-    }
-    .nb-style-card-name.title-preview {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--nb-tb-text, #0f172a);
-    }
-    .nb-style-card-sample {
-      font-size: 9.5px;
-      color: var(--nb-text-subtle, #64748b);
+      display: none;
     }
 
-    /* ── Tall Stacked Action / Export Cards (for File Tab & Ribbon) ── */
+    /* ── Compact Action / Export Buttons (File Tab) ── */
     .nb-tall-cards-row {
-      display: flex;
-      align-items: stretch;
-      gap: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
     .nb-tall-card-btn {
-      display: flex;
-      flex-direction: column;
+      display: inline-flex;
+      flex-direction: row;
       align-items: center;
       justify-content: center;
-      gap: 4px;
-      min-width: 68px;
-      height: 54px;
-      padding: 6px 10px;
+      gap: 6px;
+      min-width: 0;
+      height: 28px;
+      padding: 0 10px;
       border-radius: 5px;
       border: 1px solid var(--nb-border, #cbd5e1);
       background: var(--nb-tb-surface, #ffffff);
       color: var(--nb-tb-text, #0f172a);
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.15s ease;
@@ -1766,44 +1757,44 @@
           <div class="nb-ribbon-group-content">
             <div class="nb-tall-cards-row">
               <button type="button" class="nb-tall-card-btn pdf-card btn-export-sm" onclick="exportPage('pdf')" title="Export Document as PDF (.pdf)">
-                <span class="card-icon">&#128196;</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 <span>Export PDF</span>
               </button>
               <button type="button" class="nb-tall-card-btn txt-card btn-export-sm" onclick="exportPage('txt')" title="Save as Plain Text (.txt)">
-                <span class="card-icon">&#11015;</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 <span>Save TXT</span>
               </button>
               <button type="button" class="nb-tall-card-btn docx-card btn-export-sm" onclick="exportPage('docx')" title="Export as Microsoft Word (.docx)">
-                <span class="card-icon">&#128216;</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                 <span>Export DOCX</span>
               </button>
             </div>
           </div>
-          <div class="nb-ribbon-group-footer">Export &#8600;</div>
+          <div class="nb-ribbon-group-footer">Export</div>
         </div>
 
         <div class="nb-toolbar-group" data-ribbon-group="file" style="display:none;">
           <div class="nb-ribbon-group-content">
             <div class="nb-tall-cards-row">
               <button type="button" class="nb-tall-card-btn nb-edit-ctrl" onclick="newPage()" title="Create New Blank Document">
-                <span class="card-icon">&#10133;</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 <span>New Document</span>
               </button>
               <button type="button" class="nb-tall-card-btn nb-edit-ctrl" onclick="saveCurrentPage()" title="Save Current Document (Ctrl+S)">
-                <span class="card-icon">&#128190;</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                 <span>Save Document</span>
               </button>
               <button type="button" class="nb-tall-card-btn nb-edit-ctrl" onclick="triggerImportDocument(null)" title="Import .docx, .pdf, .txt, or .md Document">
-                <span class="card-icon">&#128194;</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                 <span>Import File</span>
               </button>
               <button type="button" class="nb-tall-card-btn" onclick="window.print()" title="Print Document">
-                <span class="card-icon">&#128424;</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                 <span>Print</span>
               </button>
             </div>
           </div>
-          <div class="nb-ribbon-group-footer">Document &#8600;</div>
+          <div class="nb-ribbon-group-footer">Document</div>
         </div>
 
         <div class="nb-toolbar-group" data-ribbon-group="file" style="display:none;">
@@ -1818,7 +1809,7 @@
               <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="createNewFolderPrompt()" title="Create New Folder">+ New Folder</button>
             </div>
           </div>
-          <div class="nb-ribbon-group-footer">Organize &#8600;</div>
+          <div class="nb-ribbon-group-footer">Organize</div>
         </div>
 
         <!-- ==================== [HOME TAB] ==================== -->
@@ -1826,15 +1817,27 @@
         <div class="nb-toolbar-group" data-ribbon-group="home">
           <div class="nb-ribbon-group-content">
             <div class="nb-ribbon-row">
-              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Paste (Ctrl+V)" onclick="handleClipboardPaste()">&#128203; Paste</button>
-              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Cut (Ctrl+X)" onclick="execFmt('cut')">&#9986; Cut</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Paste (Ctrl+V)" onclick="handleClipboardPaste()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                <span>Paste</span>
+              </button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Cut (Ctrl+X)" onclick="execFmt('cut')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                <span>Cut</span>
+              </button>
             </div>
             <div class="nb-ribbon-row">
-              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Copy (Ctrl+C)" onclick="execFmt('copy')">&#128196; Copy</button>
-              <button type="button" id="nbFormatPainterBtn" class="btn-toolbar-fmt nb-edit-ctrl" title="Format Painter" onclick="toggleFormatPainter()">&#128396; Painter</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Copy (Ctrl+C)" onclick="execFmt('copy')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span>Copy</span>
+              </button>
+              <button type="button" id="nbFormatPainterBtn" class="btn-toolbar-fmt nb-edit-ctrl" title="Format Painter" onclick="toggleFormatPainter()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 3a3 3 0 0 0-3 3v4H6a2 2 0 0 0-2 2v3h16V6a3 3 0 0 0-2-3z"/><path d="M10 15v5a2 2 0 0 0 4 0v-5"/></svg>
+                <span>Painter</span>
+              </button>
             </div>
           </div>
-          <div class="nb-ribbon-group-footer">Clipboard &#8600;</div>
+          <div class="nb-ribbon-group-footer">Clipboard</div>
         </div>
 
         <!-- 2. Font Group (2-Row MS Word Layout) -->
@@ -1944,27 +1947,34 @@
                 <span class="nb-style-card-sample">AaBbCcDd</span>
               </button>
             </div>
-            <select id="nbHeadingStyles" class="nb-edit-ctrl" onchange="applyHeadingStyle(this.value)" style="display:none;">
-              <option value="p" selected>Normal</option>
-              <option value="h1">Heading 1</option>
-              <option value="h2">Heading 2</option>
-              <option value="title">Title</option>
-            </select>
+              <select id="nbHeadingStyles" class="nb-edit-ctrl" onchange="applyHeadingStyle(this.value)" title="Text Style" style="width:112px;">
+                <option value="p" selected>Normal text</option>
+                <option value="no-spacing">No Spacing</option>
+                <option value="h1">Heading 1</option>
+                <option value="h2">Heading 2</option>
+                <option value="title">Title</option>
+              </select>
           </div>
-          <div class="nb-ribbon-group-footer">Styles &#8600;</div>
+          <div class="nb-ribbon-group-footer">Styles</div>
         </div>
 
         <!-- 5. Editing Group -->
         <div class="nb-toolbar-group" data-ribbon-group="home">
           <div class="nb-ribbon-group-content">
             <div class="nb-ribbon-row">
-              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Find &amp; Replace Text" onclick="openFindReplacePrompt()">&#128269; Find &amp; Replace</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Find &amp; Replace Text" onclick="openFindReplacePrompt()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <span>Find &amp; Replace</span>
+              </button>
             </div>
             <div class="nb-ribbon-row">
-              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Select All Text" onclick="execFmt('selectAll')">&#9989; Select All</button>
+              <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" title="Select All Text" onclick="execFmt('selectAll')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <span>Select All</span>
+              </button>
             </div>
           </div>
-          <div class="nb-ribbon-group-footer">Editing &#8600;</div>
+          <div class="nb-ribbon-group-footer">Editing</div>
         </div>
 
         <!-- ==================== [INSERT TAB] ==================== -->
@@ -2049,10 +2059,10 @@
               <button type="button" id="insertTextBoxBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="insertTextBox()" title="Insert Draggable &amp; Rotatable Text Box">+ Text Box</button>
               <select id="nbWordArtSelect" class="nb-edit-ctrl" onchange="if(this.value){insertWordArt(this.value); this.value='';}" title="Insert WordArt Title">
                 <option value="" disabled selected>+ WordArt</option>
-                <option value="gradient">Gradient Modern</option>
-                <option value="neon">Neon Blue Glow</option>
-                <option value="3d">3D Emboss</option>
-                <option value="gold">Metallic Gold</option>
+                <option value="gradient">Editorial Royal</option>
+                <option value="neon">Architectural Shadow</option>
+                <option value="3d">Warm Amber Display</option>
+                <option value="gold">Classic Serif Display</option>
               </select>
             </div>
             <div class="nb-ribbon-row">
@@ -2093,16 +2103,28 @@
         <div class="nb-toolbar-group" data-ribbon-group="draw" style="display:none;">
           <div class="nb-ribbon-group-content">
             <div class="nb-ribbon-row">
-              <button type="button" id="nbInkPenBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('pen')" title="Pen tool">🖊️ Pen</button>
-              <button type="button" id="nbInkHighlighterBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('highlighter')" title="Highlighter tool">🖍️ Highlighter</button>
-              <button type="button" id="nbInkEraserBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('eraser')" title="Eraser tool">🧹 Eraser</button>
+              <button type="button" id="nbInkPenBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('pen')" title="Pen tool">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+                <span>Pen</span>
+              </button>
+              <button type="button" id="nbInkHighlighterBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('highlighter')" title="Highlighter tool">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>
+                <span>Highlighter</span>
+              </button>
+              <button type="button" id="nbInkEraserBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('eraser')" title="Eraser tool">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+                <span>Eraser</span>
+              </button>
             </div>
             <div class="nb-ribbon-row">
-              <button type="button" id="nbInkLassoBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('lasso')" title="Lasso select tool">✂️ Lasso Select</button>
+              <button type="button" id="nbInkLassoBtn" class="btn-toolbar-fmt nb-edit-ctrl" onclick="setInkingMode('lasso')" title="Lasso select tool">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="4 3"/></svg>
+                <span>Lasso Select</span>
+              </button>
               <button type="button" class="btn-toolbar-fmt nb-edit-ctrl" onclick="clearInkCanvas()" title="Clear all digital ink">Clear Ink</button>
             </div>
           </div>
-          <div class="nb-ribbon-group-footer">Drawing Tools &#8600;</div>
+          <div class="nb-ribbon-group-footer">Drawing Tools</div>
         </div>
 
         <div class="nb-toolbar-group" data-ribbon-group="draw" style="display:none;">
@@ -2767,14 +2789,21 @@ function renderPagesList() {
         <div class="nb-folder-block" data-folder-id="${folder.id}">
           <div class="nb-folder-header" onclick="toggleFolderCollapse(${folder.id})">
             <div class="nb-folder-title">
-              <span>${isCollapsed ? '+' : '−'}</span>
-              <span>${escapeHtml(folder.name)}</span>
-              <span style="font-size:10.5px; color:var(--nb-text-muted);">(${folderPages.length})</span>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; transform:rotate(${isCollapsed ? '0deg' : '90deg'}); transition:transform 0.15s ease;" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; color:var(--nb-primary);" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <span style="overflow:hidden; text-overflow:ellipsis;">${escapeHtml(folder.name)}</span>
+              <span style="font-size:10.5px; color:var(--nb-text-muted); font-weight:500;">(${folderPages.length})</span>
             </div>
             <div class="nb-folder-actions" onclick="event.stopPropagation();">
-              <button type="button" class="btn-folder-icon" title="New document in this folder" onclick="newPageInFolder(${folder.id})">+Doc</button>
-              <button type="button" class="btn-folder-icon" title="Import document into this folder" onclick="triggerImportDocument(${folder.id})">Import</button>
-              <button type="button" class="btn-folder-icon danger" title="Delete Folder" onclick="deleteFolderWithConfirm(${folder.id}, '${escapeHtml(folder.name).replace(/'/g, "\\'")}')">Delete</button>
+              <button type="button" class="btn-folder-icon" title="New document in this folder" aria-label="New document in folder" onclick="newPageInFolder(${folder.id})">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <button type="button" class="btn-folder-icon" title="Import document into this folder" aria-label="Import document into folder" onclick="triggerImportDocument(${folder.id})">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </button>
+              <button type="button" class="btn-folder-icon danger" title="Delete Folder" aria-label="Delete folder" onclick="deleteFolderWithConfirm(${folder.id}, '${escapeHtml(folder.name).replace(/'/g, "\\'")}')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
             </div>
           </div>
           <div class="nb-folder-children ${isCollapsed ? 'collapsed' : ''}">
@@ -2803,6 +2832,7 @@ function renderSidebarPageItem(p) {
   const isOwnerOrLeader = canCurrentUserManagePermissions(p);
   return `
     <div class="nb-page-item ${activeClass}" onclick="openPageById(${p.id})">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; color:var(--nb-text-muted); margin-top:1px;" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
       <div class="nb-page-item-info">
         <div class="nb-page-item-title">${escapeHtml(p.title || 'Untitled Document')}</div>
         <div class="nb-page-item-meta">
@@ -3640,6 +3670,10 @@ function applyHeadingStyle(val) {
   } else if (val === 'title') {
     document.execCommand('formatBlock', false, '<h1>');
     applyFontSize('32px');
+  } else if (val === 'no-spacing') {
+    document.execCommand('formatBlock', false, '<p>');
+    applyLineHeight('1.0');
+    applyParaSpacingDropdown('0_0');
   } else if (val === 'p') {
     document.execCommand('formatBlock', false, '<p>');
     applyFontSize('14px');
@@ -3684,13 +3718,13 @@ async function insertWordArt(style) {
 
   let artHtml = '';
   if (style === 'gradient') {
-    artHtml = `<span style="font-size:28px; font-weight:900; background:linear-gradient(45deg,#2563eb,#ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; display:inline-block; padding:4px 0;">${escapeHtml(text)}</span>&nbsp;`;
+    artHtml = `<div class="nb-wordart-block" style="margin:14px 0 10px; font-size:28px; font-weight:800; color:#1e40af; letter-spacing:-0.02em; line-height:1.2; border-left:4px solid #2563eb; padding-left:12px;">${escapeHtml(text)}</div><p><br></p>`;
   } else if (style === 'neon') {
-    artHtml = `<span style="font-size:28px; font-weight:900; color:#06b6d4; text-shadow:0 0 5px #06b6d4, 0 0 10px #06b6d4, 0 0 20px #0891b2; display:inline-block; padding:4px 0;">${escapeHtml(text)}</span>&nbsp;`;
+    artHtml = `<div class="nb-wordart-block" style="margin:14px 0 10px; font-size:28px; font-weight:800; color:#0f172a; letter-spacing:-0.02em; line-height:1.2; text-shadow:2px 2px 0 #cbd5e1;">${escapeHtml(text)}</div><p><br></p>`;
   } else if (style === '3d') {
-    artHtml = `<span style="font-size:28px; font-weight:900; color:#f59e0b; text-shadow:1px 1px 0 #d97706, 2px 2px 0 #b45309, 3px 3px 0 #92400e; display:inline-block; padding:4px 0;">${escapeHtml(text)}</span>&nbsp;`;
+    artHtml = `<div class="nb-wordart-block" style="margin:14px 0 10px; font-size:28px; font-weight:800; color:#b45309; letter-spacing:-0.01em; line-height:1.2; text-shadow:1px 1px 0 #fde68a, 2px 2px 0 #d97706;">${escapeHtml(text)}</div><p><br></p>`;
   } else {
-    artHtml = `<span style="font-size:26px; font-weight:800; color:#2563eb; letter-spacing:1px; display:inline-block;">${escapeHtml(text)}</span>&nbsp;`;
+    artHtml = `<div class="nb-wordart-block" style="margin:14px 0 10px; font-family:Georgia, 'Times New Roman', serif; font-size:28px; font-weight:700; color:#1e293b; letter-spacing:0.01em; line-height:1.25; border-bottom:1.5px solid #cbd5e1; padding-bottom:6px;">${escapeHtml(text)}</div><p><br></p>`;
   }
   document.execCommand('insertHTML', false, artHtml);
   updateWordCount();
@@ -4537,9 +4571,9 @@ function insertTextBox() {
   const canvas = document.getElementById('nbCanvas');
   const canvasW = canvas ? canvas.offsetWidth : 800;
 
-  const strokeWidth = Number(document.getElementById('nbStrokeWidth')?.value || 2);
-  const fillColor = document.getElementById('nbShapeFillColor')?.value || '#ffffff';
-  const strokeColor = document.getElementById('nbShapeStrokeColor')?.value || '#2563eb';
+  const strokeWidth = 1;
+  const fillColor = '#ffffff';
+  const strokeColor = '#cbd5e1';
 
   const w = 220, h = 110;
   const x = Math.max(30, Math.min(canvasW - w - 40, 60 + (currentShapes.length * 24) % 240));
