@@ -219,12 +219,16 @@
       display: flex;
       flex: 1;
       min-height: 0;
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
     }
 
     .nb-sidebar {
-      width: 280px;
-      min-width: 240px;
-      max-width: 310px;
+      width: var(--nb-sidebar-width, 260px);
+      min-width: 150px;
+      max-width: 420px;
+      flex-shrink: 0;
       background: var(--nb-sidebar-bg);
       border-right: 1px solid var(--nb-border);
       display: flex;
@@ -245,6 +249,10 @@
       text-transform: uppercase;
       letter-spacing: 0.8px;
       color: var(--nb-text-muted);
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .btn-sidebar-action {
       padding: 4px 8px;
@@ -431,7 +439,9 @@
     }
 
     .nb-editor-area {
-      flex: 1;
+      flex: 1 1 0%;
+      min-width: 0;
+      max-width: 100%;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -1221,12 +1231,46 @@
       border-right: none !important;
       overflow: hidden !important;
     }
+    .nb-sidebar-resizer {
+      width: 6px;
+      margin-left: -3px;
+      margin-right: -3px;
+      cursor: col-resize;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 65;
+      user-select: none;
+      touch-action: none;
+    }
+    .nb-sidebar-resizer::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 2px;
+      width: 2px;
+      background: transparent;
+      transition: background 0.15s ease;
+    }
+    .nb-sidebar-resizer:hover::after,
+    .nb-sidebar-resizer.is-resizing::after {
+      background: var(--nb-primary, #2e5bff);
+    }
+    .nb-sidebar.desktop-collapsed + .nb-sidebar-resizer {
+      display: none !important;
+    }
+    body.nb-resizing-sidebar {
+      cursor: col-resize !important;
+      user-select: none !important;
+    }
 
     /* ── Ribbon Tabs Strip ── */
     .nb-toolbar {
       display: flex;
       flex-direction: column;
       align-items: stretch;
+      width: 100%;
+      max-width: 100%;
       padding: 0 !important;
       gap: 0 !important;
       background: var(--nb-surface, #ffffff) !important;
@@ -1235,6 +1279,7 @@
     }
     .nb-ribbon-tabs {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 2px;
       width: 100%;
@@ -1242,7 +1287,8 @@
       margin-bottom: 0 !important;
       background: var(--nb-surface, #ffffff);
       border-bottom: 1px solid var(--nb-border, #e2e8f0);
-      height: 32px;
+      min-height: 32px;
+      height: auto;
     }
     .nb-ribbon-tab {
       position: relative;
@@ -1273,29 +1319,31 @@
       border-bottom-color: #60a5fa !important;
     }
 
-    /* ── Ultra-Slim 1-Line Google Docs-Style Toolbar Body ── */
+    /* ── Auto-Wrapping Toolbar Body (All Ribbon Buttons Accessible at 100% Zoom) ── */
     .nb-ribbon-body {
       display: flex;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 0;
-      padding: 5px 10px;
+      gap: 6px 4px;
+      padding: 6px 10px;
       min-height: 40px;
+      width: 100%;
+      max-width: 100%;
       background: var(--nb-tb-bg, #f8fafc);
-      overflow-x: auto;
-      scrollbar-width: thin;
+      overflow-x: visible;
     }
     .nb-toolbar-group {
       display: inline-flex;
       flex-direction: row;
+      flex-wrap: wrap;
       align-items: center;
       gap: 4px;
-      padding: 0 10px !important;
+      padding: 2px 10px !important;
       border-right: 1px solid var(--nb-border, #e2e8f0) !important;
       border-radius: 0 !important;
       background: transparent !important;
       min-height: 28px;
-      flex-shrink: 0;
+      max-width: 100%;
     }
     .nb-toolbar-group:last-of-type {
       border-right: none !important;
@@ -1304,7 +1352,8 @@
       background: transparent !important;
     }
     @media (max-width: 768px) {
-      .nb-sidebar-toggle-btn {
+      .nb-sidebar-toggle-btn,
+      .nb-sidebar-resizer {
         display: none !important;
       }
       .nb-header {
@@ -1399,14 +1448,17 @@
     .nb-ribbon-group-content {
       display: inline-flex;
       flex-direction: row;
+      flex-wrap: wrap;
       align-items: center;
       gap: 4px;
+      max-width: 100%;
     }
     .nb-ribbon-row {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
+      max-width: 100%;
     }
     .nb-ribbon-group-footer {
       display: none !important;
@@ -1451,7 +1503,9 @@
     .nb-tall-cards-row {
       display: inline-flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 6px;
+      max-width: 100%;
     }
     .nb-tall-card-btn {
       display: inline-flex;
@@ -1734,6 +1788,7 @@
       <button class="btn-nb btn-nb-outline" onclick="triggerImportDocument(null)">Import Document (.txt / .md)</button>
     </div>
   </aside>
+  <div id="nbSidebarResizer" class="nb-sidebar-resizer" role="separator" aria-orientation="vertical" aria-valuemin="150" aria-valuemax="420" aria-valuenow="260" aria-label="Resize Folders and Documents sidebar" title="Drag to resize sidebar (150px–420px, double-click to reset)"></div>
 
   <div class="nb-editor-area">
     <!-- High Contrast Dark Slate Toolbar (#0f172a) with Bright White Text/Icons (#ffffff) -->
@@ -2550,6 +2605,7 @@ function switchNotebookRibbonTab(tab) {
 document.addEventListener('DOMContentLoaded', async () => {
   manualTitleInput = document.getElementById('nbPageTitle');
   window.manualTitleInput = manualTitleInput;
+  initNotebookSidebarResizer();
   switchNotebookRibbonTab('home');
   currentUser = await checkAuth();
   if (!currentUser) return;
@@ -3642,6 +3698,69 @@ function sortParagraphs() {
 function toggleDesktopSidebar() {
   const sb = document.getElementById('nbSidebar');
   if (sb) sb.classList.toggle('desktop-collapsed');
+}
+
+function initNotebookSidebarResizer() {
+  const sidebar = document.getElementById('nbSidebar');
+  const resizer = document.getElementById('nbSidebarResizer');
+  if (!sidebar || !resizer) return;
+
+  const MIN_WIDTH = 150;
+  const MAX_WIDTH = 420;
+  const DEFAULT_WIDTH = 260;
+  const STORAGE_KEY = 'groupspace_nb_sidebar_width';
+
+  function applySidebarWidth(px) {
+    const clamped = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, Math.round(Number(px) || DEFAULT_WIDTH)));
+    sidebar.style.setProperty('--nb-sidebar-width', clamped + 'px');
+    resizer.setAttribute('aria-valuenow', String(clamped));
+    return clamped;
+  }
+
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    applySidebarWidth(saved);
+  }
+
+  let isDragging = false;
+
+  resizer.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    e.preventDefault();
+    isDragging = true;
+    resizer.classList.add('is-resizing');
+    document.body.classList.add('nb-resizing-sidebar');
+    if (resizer.setPointerCapture) {
+      try { resizer.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+  });
+
+  window.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    const layoutRect = sidebar.parentElement ? sidebar.parentElement.getBoundingClientRect() : { left: 0 };
+    const nextWidth = e.clientX - layoutRect.left;
+    applySidebarWidth(nextWidth);
+  });
+
+  function finishDrag(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    resizer.classList.remove('is-resizing');
+    document.body.classList.remove('nb-resizing-sidebar');
+    if (e && resizer.releasePointerCapture) {
+      try { resizer.releasePointerCapture(e.pointerId); } catch (_) {}
+    }
+    const currentWidth = parseInt(resizer.getAttribute('aria-valuenow'), 10) || DEFAULT_WIDTH;
+    try { localStorage.setItem(STORAGE_KEY, String(currentWidth)); } catch (_) {}
+  }
+
+  window.addEventListener('pointerup', finishDrag);
+  window.addEventListener('pointercancel', finishDrag);
+
+  resizer.addEventListener('dblclick', () => {
+    const resetW = applySidebarWidth(DEFAULT_WIDTH);
+    try { localStorage.setItem(STORAGE_KEY, String(resetW)); } catch (_) {}
+  });
 }
 
 let currentZoomPct = 100;
