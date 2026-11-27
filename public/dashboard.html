@@ -167,21 +167,6 @@
     <!-- TAB 3: TASKS (KANBAN WITH DUAL-APPROVAL) -->
     <section id="tab-tasks" class="tab-view" style="display:none;">
       <h2 class="sr-only">Tasks Board</h2>
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin:0 0 18px 0;">
-        <p style="color:var(--gray); margin:0; font-size:13px;">
-          <strong>Dual-Approval Workflow:</strong> Workers submit finished tasks for approval. Workspace <strong>Leaders</strong> verify and grant final completion.
-        </p>
-        <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-          <button type="button" id="exportTasksCsvBtn" class="btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:6px;" onclick="exportTasksReport('csv')" title="Export Task Board summary as CSV">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            <span>Export CSV</span>
-          </button>
-          <button type="button" id="exportTasksPdfBtn" class="btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:6px;" onclick="exportTasksReport('pdf')" title="Export Task Board summary as PDF report">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-            <span>Export PDF</span>
-          </button>
-        </div>
-      </div>
 
       <div class="kanban-board">
         <!-- Col 1: To Do -->
