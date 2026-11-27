@@ -11,7 +11,7 @@
     {
       id: 'workspaces',
       title: 'Workspaces & Roles',
-      shortTitle: 'Workspaces & Roles',
+      shortTitle: 'Workspaces',
       icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>',
       summary: 'Create or join team workspaces with invite codes and manage 3-tier role permissions.',
       dashboardAction: { label: 'Open Homespace Overview', tab: 'overview' },
@@ -51,7 +51,7 @@
     {
       id: 'tasks',
       title: 'Tasks & Peer-Assist',
-      shortTitle: 'Tasks & Kanban',
+      shortTitle: 'Tasks',
       icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="9"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>',
       summary: 'Run a 4-column Kanban board with Dual-Approval quality gates, roadblock flags, and peer help offers.',
       dashboardAction: { label: 'Go to Tasks Board', tab: 'tasks' },
@@ -91,7 +91,7 @@
     {
       id: 'notebook',
       title: 'Notebook & Word Editor',
-      shortTitle: 'Notebook Editor',
+      shortTitle: 'Notebook',
       icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>',
       summary: 'Write in the quick dashboard editor or launch the full 8-tab Microsoft Word-style document suite.',
       dashboardAction: { label: 'Open Team Notebook', tab: 'notebook' },
@@ -161,7 +161,7 @@
     {
       id: 'discussions',
       title: 'Discussions, @/# Mentions & Chat',
-      shortTitle: 'Discussions & Mentions',
+      shortTitle: 'Discussions',
       icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
       summary: 'Cross-reference people, tasks, topics, and notebook pages with live autocomplete pills.',
       dashboardAction: { label: 'Open Discussions', tab: 'discussions' },
@@ -191,7 +191,7 @@
     {
       id: 'personal',
       title: 'Personal Space & Account',
-      shortTitle: 'Personal Space',
+      shortTitle: 'Personal',
       icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>',
       summary: 'Manage your private notes, personal to-do checklist, expense analytics, and profile identity.',
       dashboardAction: { label: 'Open Personal Space', tab: 'personal' },

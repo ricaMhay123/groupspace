@@ -5919,20 +5919,29 @@ html.dark .note-perm-badge.is-readonly {
 
 .ug-tabs-strip {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   padding: 5px;
   background: var(--secondary);
   border: 1px solid var(--border);
   border-radius: 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.ug-tabs-strip::-webkit-scrollbar {
+  display: none;
 }
 
 .ug-tab-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  flex: 1 0 auto;
   gap: 6px;
-  padding: 7px 12px;
+  padding: 7px 11px;
   border-radius: 7px;
   border: 1px solid transparent;
   background: transparent;
@@ -6222,6 +6231,7 @@ html.dark .ug-card-tag {
     justify-content: center;
   }
   .ug-tab-btn {
+    flex: 0 0 auto;
     font-size: 0.78rem;
     padding: 6px 10px;
   }
