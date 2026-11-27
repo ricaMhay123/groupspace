@@ -143,13 +143,48 @@
       e.preventDefault();
       e.stopPropagation();
     }
+
+    const askConfirm = async (message, opts) => {
+      if (typeof window.gsConfirm === 'function') return window.gsConfirm(message, opts);
+      if (typeof gsConfirm === 'function') return gsConfirm(message, opts);
+      return window.confirm(message);
+    };
+    const details = (typeof currentGroupDetails !== 'undefined' && currentGroupDetails && Number(currentGroupDetails.id) === Number(groupId))
+      ? currentGroupDetails
+      : null;
+    const members = details && Array.isArray(details.members) ? details.members : [];
+
+    if (decision === 'leader') {
+      const ok = await askConfirm(
+        'Approve this request as Leader? Leadership will be transferred and you will become a Member, losing leader actions in this workspace.',
+        { title: 'Transfer leadership?', confirmText: 'Transfer Leadership', danger: true }
+      );
+      if (!ok) return;
+    } else if (decision === 'co_leader') {
+      const currentCo = members.find(m => m.role === 'co_leader');
+      const ok = await askConfirm(
+        currentCo
+          ? `${currentCo.full_name} is currently Co-Leader and will become a Member. Approve this request as the new Co-Leader?`
+          : 'Approve this request as Co-Leader? A workspace can only have 1 Co-Leader; any existing Co-Leader will become a Member.',
+        { title: 'Assign Co-Leader?', confirmText: 'Approve as Co-Leader' }
+      );
+      if (!ok) return;
+    }
+
     try {
       const res = await apiFetch(`/api/groups/${groupId}/leadership-requests/${requestId}`, {
         method: 'PATCH',
         body: JSON.stringify({ decision })
       });
+      const demoted = res && res.data && res.data.actorDemoted;
       if (typeof showToast === 'function') {
-        showToast(res.message || 'Leadership request resolved.', 'success');
+        showToast(demoted ? 'Leadership transferred. You are now a Member.' : (res.message || 'Leadership request resolved.'), 'success');
+      }
+      if (details && typeof currentGroupId !== 'undefined' && Number(currentGroupId) === Number(groupId)) {
+        try {
+          const gRes = await apiFetch(`/api/groups/${groupId}`);
+          currentGroupDetails = gRes.data;
+        } catch (refreshErr) { /* keep previous details on refresh failure */ }
       }
       loadFeed();
       if (typeof loadOverview === 'function') {

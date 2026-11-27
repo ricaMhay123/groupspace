@@ -116,8 +116,15 @@ async function getWorkspaceDetails(groupId, userId) {
   };
 }
 
-async function updateMemberRole({ groupId, targetUserId, newRole, actorUserId }) {
-  if (![ROLES.LEADER, ROLES.CO_LEADER, ROLES.MEMBER].includes(newRole)) {
+/**
+ * Single source of truth for role changes. Enforces exactly 1 Leader and at most 1 Co-Leader:
+ *  - 'leader'    → transfers leadership; the acting Leader becomes a Member.
+ *  - 'co_leader' → fills the Co-Leader seat; any existing Co-Leader becomes a Member.
+ *  - 'member'    → plain demotion (the Leader can never be demoted directly).
+ */
+async function applyRoleChange({ groupId, targetUserId, newRole, actorUserId }) {
+  const role = String(newRole || '').toLowerCase();
+  if (![ROLES.LEADER, ROLES.CO_LEADER, ROLES.MEMBER].includes(role)) {
     throw new Error('Invalid role specified.');
   }
 
@@ -125,25 +132,95 @@ async function updateMemberRole({ groupId, targetUserId, newRole, actorUserId })
   if (!targetMember) {
     throw new Error('Target user is not a member of this workspace.');
   }
+  const currentRole = String(targetMember.role || '').toLowerCase();
 
-  // Never demote the last primary leader
-  if (targetMember.role === ROLES.LEADER && newRole !== ROLES.LEADER) {
-    const allMembers = await GroupModel.findMembersByGroup(groupId);
-    if (allMembers.filter(m => m.role === ROLES.LEADER).length <= 1) {
-      throw new Error('A workspace must keep at least one Leader. Promote another Leader first.');
+  const members = await GroupModel.findMembersByGroup(groupId);
+  const nameOf = (uid) => {
+    const m = members.find(x => Number(x.user_id) === Number(uid));
+    return (m && m.full_name) || 'A member';
+  };
+
+  if (role === ROLES.LEADER) {
+    if (Number(targetUserId) === Number(actorUserId)) {
+      throw new Error('You are already the Leader of this workspace.');
     }
+    const actorMember = await GroupModel.findMember(groupId, actorUserId);
+    if (!actorMember || String(actorMember.role).toLowerCase() !== ROLES.LEADER) {
+      throw new Error('Only the current Leader can transfer leadership.');
+    }
+    await GroupModel.transferLeadership(groupId, actorUserId, targetUserId);
+    await GroupModel.logActivity({
+      groupId,
+      userId: actorUserId,
+      actionType: 'LEADERSHIP_TRANSFERRED',
+      description: `Leadership was transferred to ${nameOf(targetUserId)}. The previous Leader is now a Member.`
+    });
+    await GroupModel.createPersonalFeedNotification({
+      userId: targetUserId,
+      groupId,
+      authorUserId: actorUserId,
+      content: 'You are now the Leader of this workspace.',
+      type: 'leadership_decision'
+    });
+    return { success: true, newRole: role, actorDemoted: true, displacedUserId: null };
   }
 
-  await GroupModel.updateMemberRole(groupId, targetUserId, newRole);
+  if (role === ROLES.CO_LEADER) {
+    if (currentRole === ROLES.LEADER) {
+      throw new Error('The Leader cannot become Co-Leader. Transfer leadership to another member first.');
+    }
+    const displaced = members.find(m =>
+      String(m.role).toLowerCase() === ROLES.CO_LEADER && Number(m.user_id) !== Number(targetUserId)
+    );
+    await GroupModel.assignCoLeader(groupId, targetUserId);
+    await GroupModel.logActivity({
+      groupId,
+      userId: actorUserId,
+      actionType: 'ROLE_UPDATED',
+      description: displaced
+        ? `${nameOf(targetUserId)} is now Co-Leader (replacing ${nameOf(displaced.user_id)}, who is now a Member).`
+        : `${nameOf(targetUserId)} is now Co-Leader.`
+    });
+    await GroupModel.createPersonalFeedNotification({
+      userId: targetUserId,
+      groupId,
+      authorUserId: actorUserId,
+      content: 'You are now the Co-Leader of this workspace.',
+      type: 'leadership_decision'
+    });
+    if (displaced) {
+      await GroupModel.createPersonalFeedNotification({
+        userId: displaced.user_id,
+        groupId,
+        authorUserId: actorUserId,
+        content: 'A new Co-Leader was assigned. Your role is now Member.',
+        type: 'leadership_decision'
+      });
+    }
+    return {
+      success: true,
+      newRole: role,
+      actorDemoted: false,
+      displacedUserId: displaced ? Number(displaced.user_id) : null
+    };
+  }
 
+  // role === member
+  if (currentRole === ROLES.LEADER) {
+    throw new Error('The Leader cannot be demoted directly. Transfer leadership to another member first.');
+  }
+  await GroupModel.updateMemberRole(groupId, targetUserId, ROLES.MEMBER);
   await GroupModel.logActivity({
     groupId,
     userId: actorUserId,
     actionType: 'ROLE_UPDATED',
-    description: `A leader changed member role to ${newRole === ROLES.CO_LEADER ? 'Co-Leader' : newRole}.`
+    description: `${nameOf(targetUserId)} is now a Member.`
   });
+  return { success: true, newRole: role, actorDemoted: false, displacedUserId: null };
+}
 
-  return { success: true, newRole };
+async function updateMemberRole({ groupId, targetUserId, newRole, actorUserId }) {
+  return applyRoleChange({ groupId, targetUserId, newRole, actorUserId });
 }
 
 /**
@@ -198,17 +275,21 @@ async function resolveLeadershipRequest({ groupId, requestId, decision, actorUse
   else if (normalized === 'reject') { status = 'rejected'; }
   else { throw new Error('Invalid decision. Use leader, co_leader, or reject.'); }
 
+  let roleResult = null;
   if (newRole) {
     const member = await GroupModel.findMember(groupId, request.user_id);
-    if (member && member.role === ROLES.MEMBER) {
-      await GroupModel.updateMemberRole(groupId, request.user_id, newRole);
+    if (!member) {
+      throw new Error('This member is no longer part of the workspace.');
+    }
+    if (String(member.role).toLowerCase() === ROLES.MEMBER) {
+      roleResult = await applyRoleChange({ groupId, targetUserId: request.user_id, newRole, actorUserId });
     }
   }
   await GroupModel.resolveLeadershipRequest(requestId, status, actorUserId);
   await GroupModel.createPersonalFeedNotification({
     userId: request.user_id,
     groupId,
-    authorUserId,
+    authorUserId: actorUserId,
     content: newRole
       ? `Your leadership request was approved! You are now a ${newRole === ROLES.CO_LEADER ? 'Co-Leader' : 'Leader'}.`
       : 'Your leadership request was reviewed and not approved at this time.',
@@ -222,7 +303,13 @@ async function resolveLeadershipRequest({ groupId, requestId, decision, actorUse
       ? `A leader approved a leadership request as ${newRole === ROLES.CO_LEADER ? 'Co-Leader' : 'Leader'}.`
       : 'A leader rejected a leadership request.'
   });
-  return { requestId: Number(requestId), status, newRole };
+  return {
+    requestId: Number(requestId),
+    status,
+    newRole,
+    actorDemoted: !!(roleResult && roleResult.actorDemoted),
+    displacedUserId: roleResult ? roleResult.displacedUserId : null
+  };
 }
 
 async function leaveWorkspace({ groupId, userId, userFullName }) {
@@ -374,6 +461,7 @@ module.exports = {
   getUserWorkspaces,
   getWorkspaceDetails,
   updateMemberRole,
+  applyRoleChange,
   leaveWorkspace,
   removeMember,
   updateWorkspaceSettings,

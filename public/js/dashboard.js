@@ -1609,12 +1609,35 @@ async function changeMemberRole(userId, newRole) {
     openRequestLeadershipModal();
     return;
   }
+
+  const members = (currentGroupDetails && Array.isArray(currentGroupDetails.members)) ? currentGroupDetails.members : [];
+  const target = members.find(m => Number(m.user_id) === Number(userId));
+  const targetName = target ? target.full_name : 'this member';
+
+  if (newRole === 'leader') {
+    const ok = await gsConfirm(
+      `Transfer leadership to ${targetName}? You will become a Member and lose leader actions in this workspace.`,
+      { title: 'Transfer leadership?', confirmText: 'Transfer Leadership', danger: true }
+    );
+    if (!ok) { loadOverview(); return; }
+  } else if (newRole === 'co_leader') {
+    const currentCo = members.find(m => m.role === 'co_leader' && Number(m.user_id) !== Number(userId));
+    if (currentCo) {
+      const ok = await gsConfirm(
+        `${currentCo.full_name} is currently Co-Leader and will become a Member. Make ${targetName} the new Co-Leader?`,
+        { title: 'Replace Co-Leader?', confirmText: 'Replace Co-Leader' }
+      );
+      if (!ok) { loadOverview(); return; }
+    }
+  }
+
   try {
     const res = await apiFetch(`/api/groups/${currentGroupId}/members/${userId}/role`, {
       method: 'PATCH',
       body: JSON.stringify({ role: newRole })
     });
-    showToast(res.message || 'Member role updated successfully.', 'success');
+    const demoted = res && res.data && res.data.actorDemoted;
+    showToast(demoted ? `Leadership transferred to ${targetName}. You are now a Member.` : (res.message || 'Member role updated successfully.'), 'success');
     const gRes = await apiFetch(`/api/groups/${currentGroupId}`);
     currentGroupDetails = gRes.data;
     loadOverview();

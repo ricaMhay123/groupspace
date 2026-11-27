@@ -467,6 +467,29 @@ async function initDb() {
     try { await sql`ALTER TABLE group_members ALTER COLUMN role SET DEFAULT 'member'`; } catch (e) {}
     try { await sql`UPDATE group_members SET role = LOWER(role) WHERE role <> LOWER(role)`; } catch (e) {}
 
+    // Enforce exactly 1 Leader and at most 1 Co-Leader per workspace:
+    // keep the earliest-joined holder of each seat, demote every extra one to Member.
+    try {
+      await sql`
+        UPDATE group_members SET role = 'member'
+        WHERE id IN (
+          SELECT id FROM (
+            SELECT id, ROW_NUMBER() OVER (PARTITION BY group_id ORDER BY joined_at ASC NULLS LAST, id ASC) AS rn
+            FROM group_members WHERE role = 'leader'
+          ) ranked WHERE rn > 1
+        )
+      `;
+      await sql`
+        UPDATE group_members SET role = 'member'
+        WHERE id IN (
+          SELECT id FROM (
+            SELECT id, ROW_NUMBER() OVER (PARTITION BY group_id ORDER BY joined_at ASC NULLS LAST, id ASC) AS rn
+            FROM group_members WHERE role = 'co_leader'
+          ) ranked WHERE rn > 1
+        )
+      `;
+    } catch (e) { console.error('single leader/co-leader cleanup failed:', e.message); }
+
     // Workspace settings column
     try { await sql`ALTER TABLE groups ADD COLUMN IF NOT EXISTS settings JSONB DEFAULT '{}'`; } catch (e) {}
 

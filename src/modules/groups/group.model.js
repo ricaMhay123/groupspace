@@ -97,6 +97,39 @@ const GroupModel = {
     `;
   },
 
+  /**
+   * Atomically hands the single Leader seat to another member.
+   * The previous Leader becomes a regular Member.
+   */
+  async transferLeadership(groupId, fromUserId, toUserId) {
+    return await sql.transaction([
+      sql`
+        UPDATE group_members SET role = 'member'
+        WHERE group_id = ${groupId} AND user_id = ${fromUserId}
+      `,
+      sql`
+        UPDATE group_members SET role = 'leader'
+        WHERE group_id = ${groupId} AND user_id = ${toUserId}
+      `
+    ]);
+  },
+
+  /**
+   * Atomically fills the single Co-Leader seat, demoting any existing Co-Leader to Member.
+   */
+  async assignCoLeader(groupId, toUserId) {
+    return await sql.transaction([
+      sql`
+        UPDATE group_members SET role = 'member'
+        WHERE group_id = ${groupId} AND role = 'co_leader' AND user_id <> ${toUserId}
+      `,
+      sql`
+        UPDATE group_members SET role = 'co_leader'
+        WHERE group_id = ${groupId} AND user_id = ${toUserId}
+      `
+    ]);
+  },
+
   async removeMember(groupId, userId) {
     return await sql`
       DELETE FROM group_members
