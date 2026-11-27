@@ -218,7 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // 1. LOGIN HANDLER
   // ==========================================
-  const GMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@gmail\.com$/i;
 
   // Show an error for a specific field
   // fields: 'email'    → #emailError above email input,   email is-invalid only
@@ -273,10 +272,9 @@ document.addEventListener('DOMContentLoaded', () => {
       clearAllLoginErrors();
       hideAlert(alertBox);
 
-      // Frontend Gmail validation
-      if (!GMAIL_REGEX.test(email)) {
-        showLoginError('Only @gmail.com email addresses are accepted.', 'email');
-        return;
+      if (!email) {
+        showLoginError('Please enter your email or username.', 'email');
+        return;
       }
 
       if (submitBtn) {

@@ -214,16 +214,15 @@ async function registerUser({ username, fullName, email, password, verificationC
 
 async function loginUser({ email, username, password }) {
   const identifier = (email || username || '').trim();
-  const cleanEmail = identifier.toLowerCase();
 
-  if (!cleanEmail || !password) {
+  if (!identifier || !password) {
     throw new Error('Email/username and password are required.');
   }
 
   const [user] = await sql`
     SELECT * FROM users 
-    WHERE email = ${cleanEmail} 
-       OR LOWER(username) = ${cleanEmail}
+    WHERE LOWER(email) = LOWER(${identifier}) 
+       OR LOWER(username) = LOWER(${identifier})
     LIMIT 1
   `;
   if (!user) {
