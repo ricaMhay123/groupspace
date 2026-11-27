@@ -5841,17 +5841,48 @@ html.dark .note-perm-badge.is-readonly {
 }
 
 .ug-modal-header-actions {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
 .ug-fullpage-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
   text-decoration: none;
   white-space: nowrap;
   font-size: 12px;
-  padding: 6px 10px;
+  font-weight: 600;
+  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease, transform 0.14s ease;
+}
+
+.ug-fullpage-link:hover {
+  background: var(--secondary);
+  border-color: var(--border-hover, var(--muted-foreground));
+}
+
+.ug-modal-header-actions .modal-close {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted-foreground);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease, transform 0.14s ease;
+}
+
+.ug-modal-header-actions .modal-close:hover {
+  background: var(--secondary);
+  color: var(--foreground);
 }
 
 .ug-search-bar-wrap {
@@ -5888,23 +5919,20 @@ html.dark .note-perm-badge.is-readonly {
 
 .ug-tabs-strip {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--border);
-  scrollbar-width: none;
-}
-
-.ug-tabs-strip::-webkit-scrollbar {
-  display: none;
+  padding: 5px;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
 }
 
 .ug-tab-btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 8px 13px;
+  gap: 6px;
+  padding: 7px 12px;
   border-radius: 7px;
   border: 1px solid transparent;
   background: transparent;
@@ -5912,26 +5940,43 @@ html.dark .note-perm-badge.is-readonly {
   font-family: inherit;
   font-size: 0.8125rem;
   font-weight: 600;
+  line-height: 1.2;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, transform 0.14s ease;
   flex-shrink: 0;
 }
 
-.ug-tab-btn:hover {
-  background: var(--secondary);
+.ug-tab-btn:hover:not(.active) {
+  background: rgba(15, 23, 42, 0.05);
   color: var(--foreground);
 }
 
+html.dark .ug-tab-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ug-tab-btn:active {
+  transform: scale(0.98);
+}
+
+.ug-tab-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 .ug-tab-btn.active {
-  background: var(--primary-light);
+  background: var(--card);
   color: var(--primary);
-  border-color: rgba(46, 91, 255, 0.24);
+  border-color: var(--border);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
 }
 
 html.dark .ug-tab-btn.active {
+  background: var(--card);
   color: var(--ring);
-  border-color: rgba(77, 115, 255, 0.35);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
 }
 
 .ug-modal-body {
@@ -5944,22 +5989,39 @@ html.dark .ug-tab-btn.active {
   gap: 18px;
 }
 
+@keyframes ugFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .ug-category-section {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  animation: ugFadeIn 0.16s ease-out;
 }
 
 .ug-category-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 14px 16px;
+  gap: 20px;
+  padding: 14px 18px;
   background: var(--secondary);
   border: 1px solid var(--border);
   border-radius: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+}
+
+.ug-category-meta {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .ug-category-heading {
@@ -5975,6 +6037,7 @@ html.dark .ug-tab-btn.active {
 .ug-category-summary {
   font-size: 0.8125rem;
   color: var(--muted-foreground);
+  line-height: 1.45;
   margin: 4px 0 0;
 }
 
@@ -5982,23 +6045,32 @@ html.dark .ug-tab-btn.active {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 7px 14px;
-  border-radius: 7px;
+  gap: 6px;
+  min-height: 36px;
+  padding: 8px 15px;
+  border-radius: 8px;
   background: var(--primary);
   color: #ffffff !important;
   border: none;
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.16s ease, transform 0.14s ease, box-shadow 0.16s ease;
   flex-shrink: 0;
 }
 
 .ug-try-btn:hover {
   background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(46, 91, 255, 0.22);
+}
+
+.ug-try-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 .ug-cards-grid {
@@ -6019,9 +6091,9 @@ html.dark .ug-tab-btn.active {
 
 .ug-card-header {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 4px;
 }
 
 .ug-card-title {
@@ -6033,15 +6105,19 @@ html.dark .ug-tab-btn.active {
 }
 
 .ug-card-tag {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--muted-foreground);
-  background: var(--secondary);
-  border: 1px solid var(--border);
-  padding: 2px 8px;
-  border-radius: 6px;
-  white-space: nowrap;
-  flex-shrink: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--primary);
+  background: transparent;
+  border: none;
+  padding: 0;
+  line-height: 1.2;
+}
+
+html.dark .ug-card-tag {
+  color: var(--ring);
 }
 
 .ug-steps-list {
@@ -6118,10 +6194,36 @@ html.dark .ug-tab-btn.active {
   gap: 22px;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .ug-category-section {
+    animation: none;
+  }
+  .ug-tab-btn,
+  .ug-try-btn,
+  .ug-fullpage-link,
+  .ug-modal-header-actions .modal-close {
+    transition: none;
+  }
+}
+
 @media (max-width: 640px) {
   .ug-modal-card {
     padding: 16px !important;
     max-height: 92vh;
+  }
+  .ug-category-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px;
+  }
+  .ug-try-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .ug-tab-btn {
+    font-size: 0.78rem;
+    padding: 6px 10px;
   }
   .ug-page-container {
     padding: 24px 16px 48px;

@@ -252,8 +252,12 @@
       return `
         <button
           type="button"
+          role="tab"
+          data-guide-tab="${cat.id}"
+          tabindex="${isActive ? '0' : '-1'}"
           class="ug-tab-btn ${isActive ? 'active' : ''}"
           onclick="window.selectUserGuideCategory('${cat.id}')"
+          onkeydown="window.handleGuideTabKeydown(event)"
           aria-selected="${isActive ? 'true' : 'false'}"
         >
           ${cat.icon}
@@ -280,8 +284,8 @@
         const cardsHtml = cat.cards.map(card => `
           <article class="ug-card">
             <div class="ug-card-header">
-              <h4 class="ug-card-title">${escapeGuideHtml(card.title)}</h4>
               <span class="ug-card-tag">${escapeGuideHtml(card.tag)}</span>
+              <h4 class="ug-card-title">${escapeGuideHtml(card.title)}</h4>
             </div>
             <ol class="ug-steps-list">
               ${card.steps.map(step => `<li>${escapeGuideHtml(step)}</li>`).join('')}
@@ -292,7 +296,7 @@
         return `
           <section class="ug-category-section">
             <div class="ug-category-banner">
-              <div>
+              <div class="ug-category-meta">
                 <h3 class="ug-category-heading">${cat.icon}<span>${escapeGuideHtml(cat.title)}</span></h3>
                 <p class="ug-category-summary">${escapeGuideHtml(cat.summary)}</p>
               </div>
@@ -393,7 +397,7 @@
     }
   };
 
-  window.selectUserGuideCategory = function (categoryId) {
+  window.selectUserGuideCategory = function (categoryId, options) {
     activeGuideCategoryId = categoryId;
     currentGuideSearchQuery = '';
     const modalInput = document.getElementById('userGuideModalSearchInput');
@@ -401,6 +405,33 @@
     const pageInput = document.getElementById('userGuidePageSearchInput');
     if (pageInput) pageInput.value = '';
     renderUserGuideTargets();
+
+    const modalBody = document.getElementById('userGuideModalBody');
+    if (modalBody) modalBody.scrollTop = 0;
+
+    if (options && options.focusTab && options.tablistEl) {
+      const nextBtn = options.tablistEl.querySelector(`[data-guide-tab="${categoryId}"]`);
+      if (nextBtn) nextBtn.focus();
+    }
+  };
+
+  window.handleGuideTabKeydown = function (event) {
+    const key = event.key;
+    if (key !== 'ArrowRight' && key !== 'ArrowLeft' && key !== 'Home' && key !== 'End') return;
+    const btn = event.currentTarget;
+    const currentId = btn && btn.getAttribute('data-guide-tab');
+    const idx = GUIDE_CATEGORIES.findIndex(c => c.id === currentId);
+    if (idx === -1) return;
+
+    event.preventDefault();
+    let nextIdx = idx;
+    if (key === 'ArrowRight') nextIdx = (idx + 1) % GUIDE_CATEGORIES.length;
+    else if (key === 'ArrowLeft') nextIdx = (idx - 1 + GUIDE_CATEGORIES.length) % GUIDE_CATEGORIES.length;
+    else if (key === 'Home') nextIdx = 0;
+    else if (key === 'End') nextIdx = GUIDE_CATEGORIES.length - 1;
+
+    const tablistEl = btn.closest('[role="tablist"]');
+    window.selectUserGuideCategory(GUIDE_CATEGORIES[nextIdx].id, { focusTab: true, tablistEl });
   };
 
   window.filterUserGuide = function (query) {
