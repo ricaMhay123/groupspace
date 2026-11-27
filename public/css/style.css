@@ -1829,12 +1829,13 @@ body.dashboard-page {
   color: #38bdf8;
 }
 
-.settlement-arrow-icon {
-  display: inline-flex;
-  align-items: center;
+
+
+.settlement-owes-label {
+  font-size: 0.78rem;
+  font-weight: 600;
   color: var(--muted-foreground);
-  font-size: 0.85rem;
-  padding: 0 4px;
+  text-transform: lowercase;
 }
 
 .settlement-details-col {
@@ -1872,10 +1873,8 @@ body.dashboard-page {
   color: #f87171;
 }
 
-.settlement-amount {
-  font-size: 1.15rem;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
+
+  text-align: right;
   color: var(--foreground);
 }
 
@@ -1915,14 +1914,35 @@ body.dashboard-page {
 }
 
 /* ─── Expenses Table ─── */
-.expense-cat-badge {
-  padding: 3px 10px;
-  background: var(--muted);
-  border: 1px solid var(--border);
-  color: var(--foreground);
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
+
+
+.expense-cat-badge.ledger-badge-expense {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.25);
+  color: #1d4ed8;
+}
+
+.dark .expense-cat-badge.ledger-badge-expense {
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #7dd3fc;
+}
+
+.expense-cat-badge.ledger-badge-settlement {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #047857;
+}
+
+.dark .expense-cat-badge.ledger-badge-settlement {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(52, 211, 153, 0.35);
+  color: #34d399;
+}
+
+.ledger-amount-cell {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums !important;
 }
 
 .btn-table-action-delete {

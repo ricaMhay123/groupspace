@@ -15,11 +15,11 @@ async function addExpense({ groupId, title, amount, category, paidByUserId, spli
     throw new Error('Expense description/title is required.');
   }
 
-  if (!isValidAmount(amount)) {
+  const numAmount = roundToTwo(amount);
+  if (!isValidAmount(amount) || numAmount <= 0) {
     throw new Error('Please enter a valid positive expense amount.');
   }
 
-  const numAmount = roundToTwo(amount);
   const members = await GroupModel.findMembersByGroup(groupId);
 
   let splits = [];
@@ -45,10 +45,11 @@ async function addExpense({ groupId, title, amount, category, paidByUserId, spli
     participants = [...new Set(participants)];
     const count = participants.length || 1;
     const perPerson = roundToTwo(numAmount / count);
+    const remainder = roundToTwo(numAmount - roundToTwo(perPerson * count));
 
-    splits = participants.map(uid => ({
+    splits = participants.map((uid, idx) => ({
       userId: uid,
-      amount: perPerson
+      amount: idx === participants.length - 1 ? roundToTwo(perPerson + remainder) : perPerson
     }));
   }
 
@@ -102,7 +103,11 @@ async function recordSettlement({ groupId, fromUserId, toUserId, amount, notes, 
   if (!fromUserId || !toUserId) {
     throw new Error('Both payer and recipient are required for a settlement.');
   }
-  if (!isValidAmount(amount)) {
+  if (Number(fromUserId) === Number(toUserId)) {
+    throw new Error('Cannot record a settlement payment to yourself.');
+  }
+  const numAmount = roundToTwo(amount);
+  if (!isValidAmount(amount) || numAmount <= 0) {
     throw new Error('Please enter a valid positive settlement amount.');
   }
 
@@ -112,7 +117,6 @@ async function recordSettlement({ groupId, fromUserId, toUserId, amount, notes, 
 
   const fromName = fromMember ? fromMember.full_name : `Member #${fromUserId}`;
   const toName = toMember ? toMember.full_name : `Member #${toUserId}`;
-  const numAmount = roundToTwo(amount);
 
   return await addExpense({
     groupId,

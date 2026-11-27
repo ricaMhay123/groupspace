@@ -345,7 +345,7 @@ function switchTab(tabName) {
     tasks: '+ Create Task',
     calendar: '+ Add Event',
     notebook: '+ New Document',
-    expenses: '+ Log Expense',
+    expenses: '+ Add Expense',
     discussions: '+ New Topic',
     personal: personalSubTab === 'TASK' ? '+ Add To-Do' : (personalSubTab === 'EXPENSE' ? '+ Log Expense' : '+ New Note')
   };
@@ -353,6 +353,8 @@ function switchTab(tabName) {
   document.getElementById('viewTitle').textContent = titleMap[tabName] || 'Dashboard';
   document.getElementById('viewSubtitle').textContent = subtitleMap[tabName] || '';
   document.getElementById('primaryActionBtn').textContent = actionMap[tabName] || '+ Action';
+  const headerSettleBtn = document.getElementById('headerSettleUpBtn');
+  if (headerSettleBtn) headerSettleBtn.style.display = tabName === 'expenses' ? 'inline-flex' : 'none';
 
   refreshCurrentView();
 }
@@ -2615,17 +2617,19 @@ async function loadExpenses() {
     window.currentExpenses = expenses;
     window.currentExpenseSummary = summary;
 
-    document.getElementById('expTotalSpent').textContent = `₱${summary.totalSpent.toFixed(2)}`;
+    const roundCurrency = (val) => Math.round((Number(val) || 0) * 100) / 100;
+    document.getElementById('expTotalSpent').textContent = `₱${roundCurrency(summary.totalSpent).toFixed(2)}`;
     
     // Find current user balance
     const myBalance = summary.memberBalances.find(b => Number(b.userId) === Number(currentUser.id));
     const netEl = document.getElementById('expYourNet');
     if (myBalance) {
-      if (myBalance.net > 0) {
-        netEl.textContent = `+₱${myBalance.net.toFixed(2)} (Owed to you)`;
+      const myNet = roundCurrency(myBalance.net);
+      if (myNet > 0) {
+        netEl.textContent = `+₱${myNet.toFixed(2)} (Owed to you)`;
         netEl.style.color = '#047857';
-      } else if (myBalance.net < 0) {
-        netEl.textContent = `-₱${Math.abs(myBalance.net).toFixed(2)} (You owe)`;
+      } else if (myNet < 0) {
+        netEl.textContent = `-₱${Math.abs(myNet).toFixed(2)} (You owe)`;
         netEl.style.color = '#dc2626';
       } else {
         netEl.textContent = '₱0.00 (Settled)';
@@ -2660,18 +2664,17 @@ async function loadExpenses() {
           badgeHtml = '<span class="settlement-badge badge-outgoing">You owe</span>';
         }
 
-        const canSettle = isFromMe || isToMe || (typeof currentGroupRole === 'string' && ['ADMIN', 'LEADER', 'CO_LEADER', 'COLEADER'].includes(currentGroupRole.toUpperCase()));
-        const actionButtonHtml = canSettle
-          ? `<button type="button" class="btn-settle-action" onclick="openSettleUpModal(${s.fromUserId}, '${escapeHtml(s.fromName).replace(/'/g, "\\'")}', ${s.toUserId}, '${escapeHtml(s.toName).replace(/'/g, "\\'")}', ${s.amount}, event)" title="Settle in full or partial installments">
-               Settle Up ₱
-             </button>`
-          : '';
+        const settledAmt = roundCurrency(s.amount);
+        const actionButtonHtml = `<button type="button" class="btn-settle-action" onclick="openSettleUpModal(${s.fromUserId}, '${escapeHtml(s.fromName).replace(/'/g, "\\'")}', ${s.toUserId}, '${escapeHtml(s.toName).replace(/'/g, "\\'")}', ${settledAmt}, event)" title="Pre-fill settlement modal">
+               Settle
+             </button>`;
 
         return `
           <div class="settlement-card">
             <div class="settlement-main">
               <span class="settlement-avatar" title="${escapeHtml(s.fromName)}">${fromInitial}</span>
               <span class="settlement-user-chip ${isFromMe ? 'is-you' : ''}">${fromLabel}</span>
+              <span class="settlement-owes-label">owes</span>
               <span class="settlement-arrow-icon" aria-label="pays">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
               </span>
@@ -2680,7 +2683,7 @@ async function loadExpenses() {
               ${badgeHtml}
             </div>
             <div class="settlement-details-col">
-              <span class="settlement-amount">₱${s.amount.toFixed(2)}</span>
+              <span class="settlement-amount">₱${settledAmt.toFixed(2)}</span>
               ${actionButtonHtml}
             </div>
           </div>
@@ -2695,14 +2698,21 @@ async function loadExpenses() {
       return;
     }
 
-    tableBody.innerHTML = expenses.map(e => `
-      <tr>
+    tableBody.innerHTML = expenses.map(e => {
+      const isSettlement = String(e.category || '').trim().toLowerCase() === 'settlement'
+        || /^settlement:/i.test(String(e.title || '').trim());
+      const formattedAmt = roundCurrency(e.amount).toFixed(2);
+      const categoryBadgeHtml = isSettlement
+        ? '<span class="expense-cat-badge ledger-badge-settlement">Settlement</span>'
+        : `<span class="expense-cat-badge ledger-badge-expense">${escapeHtml(e.category || 'Expense')}</span>`;
+      return `
+      <tr class="${isSettlement ? 'ledger-row-settlement' : 'ledger-row-expense'}">
         <td>${escapeHtml(e.date || '')}</td>
         <td><strong>${escapeHtml(e.title)}</strong></td>
-        <td><span class="expense-cat-badge">${escapeHtml(e.category)}</span></td>
+        <td>${categoryBadgeHtml}</td>
         <td>${escapeHtml(e.payer_name)}</td>
         <td>
-          ${e.category === 'Settlement'
+          ${isSettlement
             ? '<span style="background:rgba(16,185,129,0.15); color:#047857; font-weight:700; font-size:11px; padding:2px 8px; border-radius:12px;">Settlement</span>'
             : (e.split_type === 'SUBSET'
                 ? `<span style="font-size:11px; color:var(--muted-foreground); font-weight:600;">Selected (${e.splits ? e.splits.length : 0})</span>`
@@ -2714,7 +2724,7 @@ async function loadExpenses() {
                             ? '<span style="font-size:11px; color:var(--muted-foreground); font-weight:600;">Shares</span>'
                             : `<span style="font-size:11px; color:var(--muted-foreground); font-weight:600;">All (${e.splits ? e.splits.length : 'Equal'})</span>`))))}
         </td>
-        <td style="color:var(--foreground); font-weight:700; font-variant-numeric:tabular-nums;">₱${Number(e.amount).toFixed(2)}</td>
+        <td class="ledger-amount-cell ${isSettlement ? 'amount-settlement' : 'amount-expense'}" style="text-align:right; color:${isSettlement ? '#047857' : 'var(--foreground)'}; font-weight:700; font-variant-numeric:tabular-nums;">₱${formattedAmt}</td>
         <td>
           <button type="button" class="btn-table-action-delete" onclick="deleteExpense(${e.id}, event)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
@@ -2722,7 +2732,8 @@ async function loadExpenses() {
           </button>
         </td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
 
   } catch (err) {
     showToast(err.message, 'error');
@@ -2778,8 +2789,11 @@ function renderExpenseSplitBreakdown() {
     `).join('');
     updateSubsetSplitTotal();
   } else if (splitType === 'EXACT') {
-    const defaultSplit = members.length > 0 ? (total / members.length).toFixed(2) : '0.00';
-    container.innerHTML = members.map(m => `
+    const baseSplit = members.length > 0 ? Math.round((total / members.length) * 100) / 100 : 0;
+    const remainder = members.length > 0 ? Math.round((total - baseSplit * members.length) * 100) / 100 : 0;
+    container.innerHTML = members.map((m, idx) => {
+      const memberSplit = (idx === members.length - 1 ? Math.round((baseSplit + remainder) * 100) / 100 : baseSplit).toFixed(2);
+      return `
       <div class="split-member-row">
         <div class="split-member-info">
           <span class="split-member-avatar">${escapeHtml(m.full_name.charAt(0).toUpperCase())}</span>
@@ -2787,10 +2801,11 @@ function renderExpenseSplitBreakdown() {
         </div>
         <div class="split-member-input-group">
           <span style="font-size:12px; font-weight:700; color:var(--muted-foreground);">₱</span>
-          <input type="number" step="0.01" min="0" class="split-member-input exp-exact-input" data-user-id="${m.user_id}" value="${defaultSplit}" oninput="updateExactSplitTotal()">
+          <input type="number" step="0.01" min="0" class="split-member-input exp-exact-input" data-user-id="${m.user_id}" value="${memberSplit}" oninput="updateExactSplitTotal()">
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
     updateExactSplitTotal();
   } else if (splitType === 'PERCENT') {
     const defaultPct = members.length > 0 ? (100 / members.length).toFixed(1) : '0';
@@ -2948,10 +2963,14 @@ window.updateSharesSplitTotal = updateSharesSplitTotal;
 async function handleCreateExpense(e) {
   e.preventDefault();
   const title = document.getElementById('expTitle').value.trim();
-  const amount = parseFloat(document.getElementById('expAmount').value);
+  const amount = Math.round((parseFloat(document.getElementById('expAmount').value) || 0) * 100) / 100;
   const category = document.getElementById('expCategory').value;
   const paidByUserId = document.getElementById('expPaidBy').value;
   const splitType = document.getElementById('expSplitType').value;
+  if (!Number.isFinite(amount) || amount <= 0) {
+    showToast('Please enter a valid expense amount greater than 0.', 'error');
+    return;
+  }
 
   let participantUserIds = [];
   let customSplits = [];
@@ -3063,17 +3082,40 @@ let activeSettlementTarget = {
   selectedAmount: 0
 };
 
+function openTopSettleUpModal(event) {
+  if (event && typeof event.preventDefault === 'function') event.preventDefault();
+  const settlements = (window.currentExpenseSummary && Array.isArray(window.currentExpenseSummary.settlements))
+    ? window.currentExpenseSummary.settlements
+    : [];
+  if (settlements.length === 0) {
+    showToast('All balances are already settled!', 'info');
+    return;
+  }
+  const myDebt = currentUser
+    ? settlements.find(s => Number(s.fromUserId) === Number(currentUser.id))
+      || settlements.find(s => Number(s.toUserId) === Number(currentUser.id))
+    : null;
+  const target = myDebt || settlements[0];
+  openSettleUpModal(target.fromUserId, target.fromName, target.toUserId, target.toName, target.amount, event);
+}
+window.openTopSettleUpModal = openTopSettleUpModal;
+
 function openSettleUpModal(fromUserId, fromName, toUserId, toName, fullAmount, event) {
   if (event && typeof event.preventDefault === 'function') event.preventDefault();
   if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
 
+  if (Number(fromUserId) === Number(toUserId)) {
+    showToast('Cannot record a settlement payment to yourself.', 'error');
+    return;
+  }
+  const cleanFull = Math.round((Number(fullAmount) || 0) * 100) / 100;
   activeSettlementTarget = {
     fromUserId: Number(fromUserId),
     fromName: fromName || 'Member',
     toUserId: Number(toUserId),
     toName: toName || 'Member',
-    fullAmount: Number(fullAmount) || 0,
-    selectedAmount: Number(fullAmount) || 0
+    fullAmount: cleanFull,
+    selectedAmount: cleanFull
   };
 
   const payerToRecip = document.getElementById('settlePayerToRecipient');
@@ -3114,7 +3156,7 @@ function handleSettleAmountInput() {
   const progressBar = document.getElementById('settleProgressBar');
   const submitBtn = document.getElementById('settleConfirmSubmitBtn');
 
-  const val = parseFloat(amtInput?.value) || 0;
+  const val = Math.round((parseFloat(amtInput?.value) || 0) * 100) / 100;
   activeSettlementTarget.selectedAmount = val;
 
   const full = activeSettlementTarget.fullAmount;
@@ -3142,8 +3184,12 @@ function handleSettleAmountInput() {
 async function handleConfirmSettlePayment(event) {
   if (event && typeof event.preventDefault === 'function') event.preventDefault();
 
-  const amt = activeSettlementTarget.selectedAmount;
-  if (!amt || amt <= 0) {
+  if (Number(activeSettlementTarget.fromUserId) === Number(activeSettlementTarget.toUserId)) {
+    showToast('Cannot record a settlement payment to yourself.', 'error');
+    return;
+  }
+  const amt = Math.round((Number(activeSettlementTarget.selectedAmount) || 0) * 100) / 100;
+  if (!Number.isFinite(amt) || amt <= 0) {
     showToast('Please enter a valid positive payment amount.', 'error');
     return;
   }
@@ -3174,10 +3220,19 @@ window.handleConfirmSettlePayment = handleConfirmSettlePayment;
 
 async function recordDirectSettlement(fromUserId, fromName, toUserId, toName, amount, event, notes = '') {
   if (event && typeof event.preventDefault === 'function') event.preventDefault();
+  if (Number(fromUserId) === Number(toUserId)) {
+    showToast('Cannot record a settlement payment to yourself.', 'error');
+    return;
+  }
+  const cleanAmount = Math.round((Number(amount) || 0) * 100) / 100;
+  if (!Number.isFinite(cleanAmount) || cleanAmount <= 0) {
+    showToast('Settlement amount must be greater than zero.', 'error');
+    return;
+  }
   const btn = event ? event.currentTarget : null;
   const originalText = btn ? btn.innerHTML : '';
 
-  const confirmMsg = `Record settlement payment of ₱${Number(amount).toFixed(2)} from ${fromName} to ${toName}?`;
+  const confirmMsg = `Record settlement payment of ₱${cleanAmount.toFixed(2)} from ${fromName} to ${toName}?`;
   if (!(await gsConfirm(confirmMsg, { title: 'Record settlement?', confirmText: 'Record' }))) return;
 
   if (btn) {
@@ -3191,7 +3246,7 @@ async function recordDirectSettlement(fromUserId, fromName, toUserId, toName, am
       body: JSON.stringify({
         fromUserId,
         toUserId,
-        amount,
+        amount: cleanAmount,
         notes: notes || undefined
       })
     });
@@ -3202,7 +3257,7 @@ async function recordDirectSettlement(fromUserId, fromName, toUserId, toName, am
       btn.style.color = '#ffffff';
     }
 
-    showToast(`Settlement of ₱${Number(amount).toFixed(2)} recorded!`, 'success');
+    showToast(`Settlement of ₱${cleanAmount.toFixed(2)} recorded!`, 'success');
     setTimeout(() => {
       loadExpenses();
     }, 600);

@@ -27,9 +27,15 @@ function calculateExpenseSummary(expenses = [], members = []) {
   let totalSpent = 0;
 
   expenses.forEach(exp => {
-    const amount = Number(exp.amount) || 0;
+    const amount = roundToTwo(exp.amount);
+    if (amount <= 0) return;
     const payerId = Number(exp.paid_by_user_id || exp.paid_by);
-    totalSpent += amount;
+    const isSettlement = String(exp.category || '').trim().toLowerCase() === 'settlement'
+      || /^settlement:/i.test(String(exp.title || '').trim());
+
+    if (!isSettlement) {
+      totalSpent = roundToTwo(totalSpent + amount);
+    }
 
     if (!memberMap.has(payerId)) {
       memberMap.set(payerId, {
@@ -47,9 +53,11 @@ function calculateExpenseSummary(expenses = [], members = []) {
 
     const splits = exp.splits || [];
     if (splits.length > 0) {
+      let splitSum = 0;
+      let lastParticipant = null;
       splits.forEach(split => {
         const participantId = Number(split.user_id);
-        const participantShare = Number(split.amount) || 0;
+        const participantShare = roundToTwo(split.amount);
 
         if (!memberMap.has(participantId)) {
           memberMap.set(participantId, {
@@ -63,15 +71,25 @@ function calculateExpenseSummary(expenses = [], members = []) {
         }
         const participant = memberMap.get(participantId);
         participant.share = roundToTwo(participant.share + participantShare);
+        splitSum = roundToTwo(splitSum + participantShare);
+        lastParticipant = participant;
       });
+
+      // Absorb any 1-2 cent rounding remainder so sum(shares) === amount (no 0.01 ghosts)
+      const remainder = roundToTwo(amount - splitSum);
+      if (lastParticipant && Math.abs(remainder) > 0 && Math.abs(remainder) <= 0.05) {
+        lastParticipant.share = roundToTwo(lastParticipant.share + remainder);
+      }
     } else {
       // If no explicit splits given, assume equal split among all current group members
       const activeMembers = Array.from(memberMap.values());
       const count = activeMembers.length || 1;
       const equalShare = roundToTwo(amount / count);
+      const remainder = roundToTwo(amount - roundToTwo(equalShare * count));
 
-      activeMembers.forEach(mem => {
-        mem.share = roundToTwo(mem.share + equalShare);
+      activeMembers.forEach((mem, idx) => {
+        const shareAmt = idx === activeMembers.length - 1 ? roundToTwo(equalShare + remainder) : equalShare;
+        mem.share = roundToTwo(mem.share + shareAmt);
       });
     }
   });
@@ -82,13 +100,14 @@ function calculateExpenseSummary(expenses = [], members = []) {
   const creditors = []; // net > 0 (are owed money)
 
   memberMap.forEach((data, id) => {
-    data.net = roundToTwo(data.paid - data.share);
+    const rawNet = roundToTwo(data.paid - data.share);
+    data.net = Math.abs(rawNet) <= 0.01 ? 0 : rawNet;
     memberBalances[id] = data;
 
-    if (data.net < -0.009) {
-      debtors.push({ userId: id, name: data.fullName, amount: Math.abs(data.net) });
-    } else if (data.net > 0.009) {
-      creditors.push({ userId: id, name: data.fullName, amount: data.net });
+    if (data.net < -0.01) {
+      debtors.push({ userId: id, name: data.fullName, amount: roundToTwo(Math.abs(data.net)) });
+    } else if (data.net > 0.01) {
+      creditors.push({ userId: id, name: data.fullName, amount: roundToTwo(data.net) });
     }
   });
 
@@ -118,24 +137,26 @@ function simplifyDebts(debtors, creditors) {
     const debtor = dList[dIdx];
     const creditor = cList[cIdx];
 
-    const settledAmount = Math.min(debtor.amount, creditor.amount);
-    if (settledAmount > 0.009) {
+    const settledAmount = roundToTwo(Math.min(debtor.amount, creditor.amount));
+    if (settledAmount > 0.01 && Number(debtor.userId) !== Number(creditor.userId)) {
       settlements.push({
         fromUserId: debtor.userId,
         fromName: debtor.name,
         toUserId: creditor.userId,
         toName: creditor.name,
-        amount: roundToTwo(settledAmount)
+        amount: settledAmount
       });
     }
 
     debtor.amount = roundToTwo(debtor.amount - settledAmount);
     creditor.amount = roundToTwo(creditor.amount - settledAmount);
 
-    if (debtor.amount <= 0.009) {
+    if (debtor.amount <= 0.01) {
+      debtor.amount = 0;
       dIdx++;
     }
-    if (creditor.amount <= 0.009) {
+    if (creditor.amount <= 0.01) {
+      creditor.amount = 0;
       cIdx++;
     }
   }
@@ -147,7 +168,8 @@ function simplifyDebts(debtors, creditors) {
  * Helper to round to 2 decimal places.
  */
 function roundToTwo(num) {
-  return Math.round((Number(num) + Number.EPSILON) * 100) / 100;
+  const val = Number(num) || 0;
+  return Math.round(val * 100) / 100;
 }
 
 module.exports = {
