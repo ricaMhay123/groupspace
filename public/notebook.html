@@ -234,6 +234,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transition: width 0.25s ease, min-width 0.25s ease, padding 0.25s ease, border-color 0.25s ease;
     }
     .nb-sidebar-header {
       padding: 12px 14px;
@@ -1229,11 +1230,56 @@
       background: var(--nb-hover);
       border-color: var(--nb-primary);
     }
+    .nb-sidebar-collapse-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px;
+      line-height: 1;
+    }
+    .nb-sidebar-reopen-btn {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      margin-right: 6px;
+      height: 24px;
+      border-radius: 6px;
+      border: 1px solid var(--nb-border);
+      background: var(--nb-surface);
+      color: var(--nb-text);
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .nb-sidebar-reopen-btn:hover {
+      background: var(--nb-hover);
+      border-color: var(--nb-primary);
+      color: var(--nb-primary);
+    }
+    .nb-layout.sidebar-collapsed .nb-sidebar-reopen-btn,
+    .nb-sidebar.sidebar-collapsed ~ .nb-editor-area .nb-sidebar-reopen-btn,
+    .nb-sidebar.desktop-collapsed ~ .nb-editor-area .nb-sidebar-reopen-btn {
+      display: inline-flex;
+    }
+    .nb-sidebar.sidebar-collapsed,
+    .nb-layout.sidebar-collapsed .nb-sidebar,
     .nb-sidebar.desktop-collapsed {
       width: 0 !important;
       min-width: 0 !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
       border-right: none !important;
       overflow: hidden !important;
+    }
+    .nb-layout.sidebar-collapsed .nb-canvas,
+    .nb-sidebar.sidebar-collapsed ~ .nb-editor-area .nb-canvas,
+    .nb-sidebar.desktop-collapsed ~ .nb-editor-area .nb-canvas,
+    body.sidebar-collapsed .nb-canvas {
+      max-width: 100% !important;
+      width: 100% !important;
     }
     .nb-sidebar-resizer {
       width: 6px;
@@ -1260,6 +1306,8 @@
     .nb-sidebar-resizer.is-resizing::after {
       background: var(--nb-primary, #2e5bff);
     }
+    .nb-sidebar.sidebar-collapsed + .nb-sidebar-resizer,
+    .nb-layout.sidebar-collapsed .nb-sidebar-resizer,
     .nb-sidebar.desktop-collapsed + .nb-sidebar-resizer {
       display: none !important;
     }
@@ -1357,8 +1405,16 @@
     }
     @media (max-width: 768px) {
       .nb-sidebar-toggle-btn,
+      .nb-sidebar-collapse-btn,
+      .nb-sidebar-reopen-btn,
       .nb-sidebar-resizer {
         display: none !important;
+      }
+      .nb-sidebar.sidebar-collapsed,
+      .nb-layout.sidebar-collapsed .nb-sidebar,
+      .nb-sidebar.desktop-collapsed {
+        width: 280px !important;
+        border-right: 1px solid var(--nb-border) !important;
       }
       .nb-header {
         height: auto !important;
@@ -1784,6 +1840,7 @@
       <h3>Folders &amp; Documents</h3>
       <div style="display:flex; align-items:center; gap:6px;">
         <button type="button" class="btn-sidebar-action" onclick="createNewFolderPrompt()" title="Create a new folder">+ Folder</button>
+        <button type="button" id="nbSidebarCollapseBtn" class="btn-sidebar-action nb-sidebar-collapse-btn" onclick="toggleDesktopSidebar()" aria-label="Collapse sidebar" aria-expanded="true" title="Collapse Folders &amp; Documents sidebar">&#9664;</button>
         <button type="button" class="mobile-hamburger-btn" style="min-width:36px; min-height:36px; padding:4px 8px; font-size:13px;" aria-label="Close folders drawer" onclick="toggleNbMobileSidebar(false)">✕</button>
       </div>
     </div>
@@ -1800,6 +1857,7 @@
     <div class="nb-toolbar" id="nbMainToolbar">
       <!-- Microsoft Word Style Ribbon Tabs: File / Home / Insert / Draw / Layout / View -->
       <div class="nb-ribbon-tabs" role="tablist" aria-label="Notebook Ribbon Tabs">
+        <button type="button" id="nbSidebarReopenBtn" class="nb-sidebar-reopen-btn" onclick="toggleDesktopSidebar()" aria-label="Expand sidebar" aria-expanded="false" title="Show Folders &amp; Documents sidebar">&#9776; Sidebar</button>
         <button type="button" class="nb-ribbon-tab" data-ribbon-tab="file" onclick="switchNotebookRibbonTab('file')">File</button>
         <button type="button" class="nb-ribbon-tab active" data-ribbon-tab="home" onclick="switchNotebookRibbonTab('home')">Home</button>
         <button type="button" class="nb-ribbon-tab" data-ribbon-tab="insert" onclick="switchNotebookRibbonTab('insert')">Insert</button>
@@ -3703,9 +3761,24 @@ function sortParagraphs() {
   }
 }
 
-function toggleDesktopSidebar() {
+function toggleDesktopSidebar(forceCollapsed) {
   const sb = document.getElementById('nbSidebar');
-  if (sb) sb.classList.toggle('desktop-collapsed');
+  const layout = document.querySelector('.nb-layout');
+  if (!sb) return;
+  const isCollapsed = typeof forceCollapsed === 'boolean'
+    ? forceCollapsed
+    : !sb.classList.contains('sidebar-collapsed');
+  sb.classList.toggle('sidebar-collapsed', isCollapsed);
+  sb.classList.toggle('desktop-collapsed', isCollapsed);
+  if (layout) layout.classList.toggle('sidebar-collapsed', isCollapsed);
+  document.body.classList.toggle('sidebar-collapsed', isCollapsed);
+
+  const collapseBtn = document.getElementById('nbSidebarCollapseBtn');
+  const reopenBtn = document.getElementById('nbSidebarReopenBtn');
+  const headerToggleBtn = document.getElementById('nbDesktopSidebarBtn');
+  if (collapseBtn) collapseBtn.setAttribute('aria-expanded', String(!isCollapsed));
+  if (reopenBtn) reopenBtn.setAttribute('aria-expanded', String(!isCollapsed));
+  if (headerToggleBtn) headerToggleBtn.setAttribute('aria-expanded', String(!isCollapsed));
 }
 
 function initNotebookSidebarResizer() {
