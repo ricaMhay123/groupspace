@@ -823,6 +823,10 @@
       box-shadow: 0 8px 26px rgba(15, 23, 42, 0.28) !important;
       cursor: move !important;
     }
+    .interactive-shape.is-dragging .textbox-editable {
+      user-select: none !important;
+      pointer-events: none;
+    }
     .interactive-shape.selected {
       outline: 2px solid #2563eb !important;
       outline-offset: 2px;
@@ -1566,6 +1570,7 @@
       background: var(--nb-bg, #111215);
     }
     .nb-canvas {
+      position: relative !important;
       width: 100%;
       max-width: 816px;
       min-height: 900px;
@@ -2396,6 +2401,9 @@
                 <span>Outline</span>
                 <input type="color" id="nbSfStrokeColor" class="nb-edit-ctrl" value="#2563eb" onchange="updateSelectedShapeFromPanel()">
               </div>
+              <label style="display:inline-flex; align-items:center; gap:3px; font-size:11px; cursor:pointer;" title="Remove border/outline">
+                <input type="checkbox" id="nbSfNoOutline" onchange="updateSelectedShapeFromPanel()"> No Outline
+              </label>
             </div>
             <div class="nb-ribbon-row">
               <label for="nbSfStrokeWidth" style="font-size:11px;">Weight:</label>
@@ -4736,6 +4744,7 @@ function updateSelectedShapeStyle() {
   shape.strokeWidth = strokeWidth;
   shape.fillColor = fillColor;
   shape.strokeColor = strokeColor;
+  shape.noOutline = (strokeWidth === 0);
 
   renderAllShapes();
   selectShapeById(shape.id);
@@ -4766,6 +4775,10 @@ function createShapeElement(shapeData) {
   const stroke = shapeData.strokeColor || '#2563eb';
   const fill = (shapeData.noFill || shapeData.fillColor === 'transparent') ? 'transparent' : (shapeData.fillColor || 'rgba(37,99,235,0.12)');
   const bStyle = shapeData.borderStyle || 'solid';
+  const isNoOutline = shapeData.noOutline === true || shapeData.strokeColor === 'none' || sw === 0;
+  const borderCss = isNoOutline ? 'none' : `${sw}px ${bStyle} ${stroke}`;
+  const svgStroke = isNoOutline ? 'none' : stroke;
+  const svgStrokeWidth = isNoOutline ? 0 : sw;
   const op = shapeData.opacity != null ? shapeData.opacity : 1;
   el.style.opacity = op;
   const canEdit = canCurrentUserEditPage(pages.find(p => Number(p.id) === Number(currentPageId)));
@@ -4774,34 +4787,34 @@ function createShapeElement(shapeData) {
   const t = shapeData.type;
 
   if (t === 'rectangle') {
-    innerVisual = `<div style="width:100%; height:100%; border:${sw}px ${bStyle} ${stroke}; background:${fill}; border-radius:6px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding:6px;"><div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}" style="text-align:center; font-weight:600; color:${stroke}; width:100%;">${shapeData.text || ''}</div></div>`;
+    innerVisual = `<div style="width:100%; height:100%; border:${borderCss}; background:${fill}; border-radius:6px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding:6px;"><div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}" style="text-align:center; font-weight:600; color:${stroke}; width:100%;">${shapeData.text || ''}</div></div>`;
   } else if (t === 'circle') {
-    innerVisual = `<div style="width:100%; height:100%; border:${sw}px ${bStyle} ${stroke}; background:${fill}; border-radius:50%; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding:10px;"><div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}" style="text-align:center; font-weight:600; color:${stroke}; width:100%;">${shapeData.text || ''}</div></div>`;
+    innerVisual = `<div style="width:100%; height:100%; border:${borderCss}; background:${fill}; border-radius:50%; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding:10px;"><div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}" style="text-align:center; font-weight:600; color:${stroke}; width:100%;">${shapeData.text || ''}</div></div>`;
   } else if (t === 'diamond') {
     innerVisual = `
       <div style="width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center;">
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute; inset:0; display:block; overflow:visible;">
-          <polygon points="50,3 97,50 50,97 3,50" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round" />
+          <polygon points="50,3 97,50 50,97 3,50" fill="${fill}" stroke="${svgStroke}" stroke-width="${svgStrokeWidth}" stroke-linejoin="round" />
         </svg>
         <div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}" style="position:relative; z-index:2; text-align:center; font-weight:600; font-size:12.5px; color:${stroke}; width:66%; max-height:70%; overflow:hidden;">${shapeData.text || 'Decision?'}</div>
       </div>
     `;
   } else if (t === 'oval') {
     innerVisual = `
-      <div style="width:100%; height:100%; border:${sw}px solid ${stroke}; background:${fill}; border-radius:999px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding:6px 14px;">
+      <div style="width:100%; height:100%; border:${borderCss}; background:${fill}; border-radius:999px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding:6px 14px;">
         <div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}" style="text-align:center; font-weight:600; color:${stroke}; width:100%;">${shapeData.text || 'Terminal'}</div>
       </div>
     `;
   } else if (t === 'line' || t === 'straight_line') {
     innerVisual = `
       <svg width="100%" height="100%" viewBox="0 0 100 36" preserveAspectRatio="none" style="display:block; overflow:visible;">
-        <line x1="4" y1="18" x2="96" y2="18" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" />
+        <line x1="4" y1="18" x2="96" y2="18" stroke="${svgStroke}" stroke-width="${svgStrokeWidth}" stroke-linecap="round" />
       </svg>
     `;
   } else if (t === 'dashed_line') {
     innerVisual = `
       <svg width="100%" height="100%" viewBox="0 0 100 36" preserveAspectRatio="none" style="display:block; overflow:visible;">
-        <line x1="4" y1="18" x2="96" y2="18" stroke="${stroke}" stroke-width="${sw}" stroke-dasharray="8,6" stroke-linecap="round" />
+        <line x1="4" y1="18" x2="96" y2="18" stroke="${svgStroke}" stroke-width="${svgStrokeWidth}" stroke-dasharray="8,6" stroke-linecap="round" />
       </svg>
     `;
   } else if (t === 'arrow' || t === 'arrow_line' || t === 'straight_arrow_line') {
@@ -4809,10 +4822,10 @@ function createShapeElement(shapeData) {
       <svg width="100%" height="100%" viewBox="0 0 100 36" preserveAspectRatio="none" style="display:block; overflow:visible;">
         <defs>
           <marker id="ah_${shapeData.id}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-            <polygon points="0 0, 8 3, 0 6" fill="${stroke}" />
+            <polygon points="0 0, 8 3, 0 6" fill="${svgStroke}" />
           </marker>
         </defs>
-        <line x1="4" y1="18" x2="88" y2="18" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" marker-end="url(#ah_${shapeData.id})" />
+        <line x1="4" y1="18" x2="88" y2="18" stroke="${svgStroke}" stroke-width="${svgStrokeWidth}" stroke-linecap="round" marker-end="url(#ah_${shapeData.id})" />
       </svg>
     `;
   } else if (t === 'dashed_arrow_line' || t === 'broken_arrow_line') {
@@ -4820,22 +4833,22 @@ function createShapeElement(shapeData) {
       <svg width="100%" height="100%" viewBox="0 0 100 36" preserveAspectRatio="none" style="display:block; overflow:visible;">
         <defs>
           <marker id="bah_${shapeData.id}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-            <polygon points="0 0, 8 3, 0 6" fill="${stroke}" />
+            <polygon points="0 0, 8 3, 0 6" fill="${svgStroke}" />
           </marker>
         </defs>
-        <line x1="4" y1="18" x2="88" y2="18" stroke="${stroke}" stroke-width="${sw}" stroke-dasharray="8,6" stroke-linecap="round" marker-end="url(#bah_${shapeData.id})" />
+        <line x1="4" y1="18" x2="88" y2="18" stroke="${svgStroke}" stroke-width="${svgStrokeWidth}" stroke-dasharray="8,6" stroke-linecap="round" marker-end="url(#bah_${shapeData.id})" />
       </svg>
     `;
   } else if (t === 'callout') {
     innerVisual = `
-      <div style="width:100%; height:100%; position:relative; background:${fill}; border:${sw}px ${bStyle} ${stroke}; border-radius:8px; padding:6px 10px; box-sizing:border-box; display:flex; align-items:center; justify-content:center;">
+      <div style="width:100%; height:100%; position:relative; background:${fill}; border:${borderCss}; border-radius:8px; padding:6px 10px; box-sizing:border-box; display:flex; align-items:center; justify-content:center;">
         <div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}" style="text-align:center; font-weight:600; color:${stroke}; width:100%;">${shapeData.text || 'Callout'}</div>
-        <div style="position:absolute; bottom:-9px; left:20px; width:0; height:0; border-left:7px solid transparent; border-right:7px solid transparent; border-top:9px solid ${stroke};"></div>
+        <div style="position:absolute; bottom:-9px; left:20px; width:0; height:0; border-left:7px solid transparent; border-right:7px solid transparent; border-top:9px solid ${isNoOutline ? fill : stroke};"></div>
       </div>
     `;
   } else if (t === 'textbox') {
     innerVisual = `
-      <div class="interactive-textbox-inner" style="background:${fill}; border:${sw}px ${bStyle} ${stroke};">
+      <div class="interactive-textbox-inner" style="background:${fill}; border:${borderCss};">
         <div class="textbox-drag-bar" title="Drag Text Box All Around"><span style="font-size:10px; font-weight:700;">✥ Text Box</span><span style="font-size:9px; opacity:0.75;">Drag to Move</span></div>
         <div class="textbox-editable" contenteditable="${canEdit ? 'true' : 'false'}">${shapeData.text || ''}</div>
       </div>
@@ -4877,6 +4890,7 @@ function createShapeElement(shapeData) {
 function bindShapeInteractions(shapeEl, shapeData) {
   // 1. Unified Draggable Behavior (Microsoft Word Style - Drag Anywhere All Around)
   shapeEl.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
     const currentPageObj = pages.find(p => Number(p.id) === Number(currentPageId));
     if (currentPageObj && !canCurrentUserEditPage(currentPageObj)) return;
 
@@ -4893,6 +4907,7 @@ function bindShapeInteractions(shapeEl, shapeData) {
     const isDragHandleClick = !!e.target.closest('.textbox-drag-bar') || !isDirectEditableClick;
 
     selectShapeById(shapeData.id);
+    if (isDragHandleClick) e.preventDefault();
 
     const startPointerX = e.clientX;
     const startPointerY = e.clientY;
@@ -4900,10 +4915,11 @@ function bindShapeInteractions(shapeEl, shapeData) {
     const initialY = Number(shapeData.y) || 0;
     let isDragging = false;
     const pointerId = e.pointerId;
+    const zoomFactor = (typeof currentZoomPct === 'number' && currentZoomPct > 0) ? (currentZoomPct / 100) : 1;
 
     function onPointerMove(moveEvent) {
-      const dx = moveEvent.clientX - startPointerX;
-      const dy = moveEvent.clientY - startPointerY;
+      const dx = (moveEvent.clientX - startPointerX) / zoomFactor;
+      const dy = (moveEvent.clientY - startPointerY) / zoomFactor;
 
       // Start dragging: immediately if clicking border/drag-bar, or after moving > 4px if clicking inside text
       if (!isDragging) {
@@ -4918,28 +4934,27 @@ function bindShapeInteractions(shapeEl, shapeData) {
           // Remove text highlight while dragging
           const editable = shapeEl.querySelector('.textbox-editable');
           if (editable && document.activeElement === editable) {
-            window.getSelection()?.removeAllRanges();
+            editable.blur();
           }
+          window.getSelection()?.removeAllRanges();
         }
       }
 
       if (isDragging) {
         moveEvent.preventDefault();
-        const canvas = document.getElementById('nbCanvas');
-        const maxW = canvas ? (canvas.clientWidth - 20) : 800;
+        const sheet = shapeEl.closest('.nb-canvas') || document.getElementById('nbCanvas');
+        const sheetW = sheet ? sheet.clientWidth : 800;
+        const sheetH = sheet ? sheet.clientHeight : 900;
+        const elW = shapeEl.offsetWidth || Number(shapeData.w) || 100;
+        const elH = shapeEl.offsetHeight || Number(shapeData.h) || 60;
+        const maxX = Math.max(0, sheetW - elW);
+        const maxY = Math.max(0, sheetH - elH);
 
-        // Allow moving anywhere all around the canvas
-        shapeData.x = Math.max(0, Math.min(maxW, initialX + dx));
-        shapeData.y = Math.max(0, initialY + dy);
-
-        // Expand canvas height automatically if dragging down
-        if (canvas && (shapeData.y + (shapeData.h || 100) + 60 > canvas.offsetHeight)) {
-          canvas.style.minHeight = (shapeData.y + (shapeData.h || 100) + 120) + 'px';
-        }
+        shapeData.x = Math.round(Math.max(0, Math.min(maxX, initialX + dx)));
+        shapeData.y = Math.round(Math.max(0, Math.min(maxY, initialY + dy)));
 
         shapeEl.style.left = shapeData.x + 'px';
         shapeEl.style.top = shapeData.y + 'px';
-        scheduleAutoSave();
       }
     }
 
@@ -4968,10 +4983,6 @@ function bindShapeInteractions(shapeEl, shapeData) {
     window.addEventListener('pointermove', onPointerMove, true);
     window.addEventListener('pointerup', onPointerUp, true);
     window.addEventListener('pointercancel', onPointerUp, true);
-
-    if (isDragHandleClick) {
-      e.preventDefault();
-    }
   });
 
   // 2. Rotation via circular top handle
@@ -5126,6 +5137,7 @@ function syncShapeFormatPanel(shape) {
   const sfFill = document.getElementById('nbSfFillColor');
   const sfNoFill = document.getElementById('nbSfNoFill');
   const sfStroke = document.getElementById('nbSfStrokeColor');
+  const sfNoOutline = document.getElementById('nbSfNoOutline');
   const sfWidth = document.getElementById('nbSfWidth');
   const sfHeight = document.getElementById('nbSfHeight');
   const sfStrokeWidth = document.getElementById('nbSfStrokeWidth');
@@ -5133,8 +5145,8 @@ function syncShapeFormatPanel(shape) {
   const sfOpacity = document.getElementById('nbSfOpacity');
 
   if (sfNoFill) sfNoFill.checked = (shape.fillColor === 'transparent' || shape.noFill === true);
+  if (sfNoOutline) sfNoOutline.checked = (shape.noOutline === true || shape.strokeColor === 'none' || Number(shape.strokeWidth) === 0);
   if (sfFill && shape.fillColor && shape.fillColor.startsWith('#')) sfFill.value = shape.fillColor;
-  if (sfStroke && shape.strokeColor && shape.strokeColor.startsWith('#')) strokeElValue = shape.strokeColor;
   if (sfStroke && shape.strokeColor && shape.strokeColor.startsWith('#')) sfStroke.value = shape.strokeColor;
   if (sfWidth && shape.w) sfWidth.value = Math.round(shape.w);
   if (sfHeight && shape.h) sfHeight.value = Math.round(shape.h);
@@ -5151,6 +5163,7 @@ function updateSelectedShapeFromPanel() {
   const sfFill = document.getElementById('nbSfFillColor');
   const sfNoFill = document.getElementById('nbSfNoFill');
   const sfStroke = document.getElementById('nbSfStrokeColor');
+  const sfNoOutline = document.getElementById('nbSfNoOutline');
   const sfWidth = document.getElementById('nbSfWidth');
   const sfHeight = document.getElementById('nbSfHeight');
   const sfStrokeWidth = document.getElementById('nbSfStrokeWidth');
@@ -5165,6 +5178,7 @@ function updateSelectedShapeFromPanel() {
     shape.noFill = false;
   }
 
+  shape.noOutline = !!(sfNoOutline && sfNoOutline.checked);
   if (sfStroke) shape.strokeColor = sfStroke.value;
   if (sfStrokeWidth) shape.strokeWidth = Number(sfStrokeWidth.value);
   if (sfBorderStyle) shape.borderStyle = sfBorderStyle.value;
