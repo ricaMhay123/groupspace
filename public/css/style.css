@@ -1241,13 +1241,17 @@ body.dashboard-page {
   font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  margin: 0 0 4px 0;
+  margin: 0;
 }
 
 .dashboard-header p {
   color: var(--text-muted);
   font-size: 0.88rem;
-  margin: 0;
+  margin: 4px 0 0 0;
+}
+
+.dashboard-header p:empty {
+  display: none;
 }
 
 .dashboard-header-actions {

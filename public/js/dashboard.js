@@ -337,13 +337,7 @@ function switchTab(tabName) {
   };
 
   const subtitleMap = {
-    overview: `Homespace for ${currentGroupDetails ? currentGroupDetails.name : 'Workspace'}`,
-    tasks: 'Track progress with dual-approval quality control.',
-    calendar: 'View events, deadlines, and task due dates.',
-    notebook: 'Shared project documentation and specs.',
-    expenses: 'Smart ledger with automatic debt simplification.',
-    discussions: 'Brainstorm, discuss ideas, and follow activity.',
-    personal: 'Private to your account. No other members can view this data.'
+    overview: `Homespace for ${currentGroupDetails ? currentGroupDetails.name : 'Workspace'}`
   };
 
   const actionMap = {
