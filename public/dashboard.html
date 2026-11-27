@@ -29,19 +29,15 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary); flex-shrink:0;" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>
           <h2>GroupSpace</h2>
         </a>
-        <button type="button" class="mobile-sidebar-close-btn" aria-label="Close navigation menu" onclick="toggleMobileSidebar(false)">✕</button>
+        <div style="display:inline-flex; align-items:center; gap:6px;">
+          <a href="workspaces.html" class="sidebar-all-workspaces-link" title="Back to all workspaces">&larr; Workspaces</a>
+          <button type="button" class="mobile-sidebar-close-btn" aria-label="Close navigation menu" onclick="toggleMobileSidebar(false)">✕</button>
+        </div>
       </div>
 
-      <!-- Multi-Group Switcher -->
-      <div class="group-selector-box">
-        <div class="group-selector-header">
-          <label for="groupSwitcher">Active Workspace</label>
-          <a href="workspaces.html" class="sidebar-all-workspaces-link" title="Browse all workspaces">All Workspaces</a>
-        </div>
-        <select id="groupSwitcher" class="group-select" aria-label="Active workspace" onchange="switchWorkspace(this.value)">
-          <option value="">Loading workspaces...</option>
-        </select>
-      </div>
+      <select id="groupSwitcher" class="group-select" aria-label="Active workspace" aria-hidden="true" tabindex="-1" style="display:none;" onchange="switchWorkspace(this.value)">
+        <option value="">Loading workspaces...</option>
+      </select>
 
       <!-- Nav Menu -->
       <ul id="sidebarMenu">

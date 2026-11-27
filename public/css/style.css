@@ -1043,8 +1043,9 @@ body.dashboard-page {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 2px 4px;
-  margin-bottom: 18px;
+  padding: 2px 4px 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border);
 }
 
 .dashboard-brand-link {
