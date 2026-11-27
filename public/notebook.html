@@ -1237,33 +1237,6 @@
       padding: 4px 8px;
       line-height: 1;
     }
-    .nb-sidebar-reopen-btn {
-      display: none;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 10px;
-      margin-right: 6px;
-      height: 24px;
-      border-radius: 6px;
-      border: 1px solid var(--nb-border);
-      background: var(--nb-surface);
-      color: var(--nb-text);
-      font-size: 11.5px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      white-space: nowrap;
-    }
-    .nb-sidebar-reopen-btn:hover {
-      background: var(--nb-hover);
-      border-color: var(--nb-primary);
-      color: var(--nb-primary);
-    }
-    .nb-layout.sidebar-collapsed .nb-sidebar-reopen-btn,
-    .nb-sidebar.sidebar-collapsed ~ .nb-editor-area .nb-sidebar-reopen-btn,
-    .nb-sidebar.desktop-collapsed ~ .nb-editor-area .nb-sidebar-reopen-btn {
-      display: inline-flex;
-    }
     .nb-sidebar.sidebar-collapsed,
     .nb-layout.sidebar-collapsed .nb-sidebar,
     .nb-sidebar.desktop-collapsed {
@@ -1406,7 +1379,6 @@
     @media (max-width: 768px) {
       .nb-sidebar-toggle-btn,
       .nb-sidebar-collapse-btn,
-      .nb-sidebar-reopen-btn,
       .nb-sidebar-resizer {
         display: none !important;
       }
@@ -1857,7 +1829,6 @@
     <div class="nb-toolbar" id="nbMainToolbar">
       <!-- Microsoft Word Style Ribbon Tabs: File / Home / Insert / Draw / Layout / View -->
       <div class="nb-ribbon-tabs" role="tablist" aria-label="Notebook Ribbon Tabs">
-        <button type="button" id="nbSidebarReopenBtn" class="nb-sidebar-reopen-btn" onclick="toggleDesktopSidebar()" aria-label="Expand sidebar" aria-expanded="false" title="Show Folders &amp; Documents sidebar">&#9776; Sidebar</button>
         <button type="button" class="nb-ribbon-tab" data-ribbon-tab="file" onclick="switchNotebookRibbonTab('file')">File</button>
         <button type="button" class="nb-ribbon-tab active" data-ribbon-tab="home" onclick="switchNotebookRibbonTab('home')">Home</button>
         <button type="button" class="nb-ribbon-tab" data-ribbon-tab="insert" onclick="switchNotebookRibbonTab('insert')">Insert</button>
@@ -3774,10 +3745,8 @@ function toggleDesktopSidebar(forceCollapsed) {
   document.body.classList.toggle('sidebar-collapsed', isCollapsed);
 
   const collapseBtn = document.getElementById('nbSidebarCollapseBtn');
-  const reopenBtn = document.getElementById('nbSidebarReopenBtn');
   const headerToggleBtn = document.getElementById('nbDesktopSidebarBtn');
   if (collapseBtn) collapseBtn.setAttribute('aria-expanded', String(!isCollapsed));
-  if (reopenBtn) reopenBtn.setAttribute('aria-expanded', String(!isCollapsed));
   if (headerToggleBtn) headerToggleBtn.setAttribute('aria-expanded', String(!isCollapsed));
 }
 
