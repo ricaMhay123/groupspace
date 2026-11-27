@@ -10,7 +10,9 @@ const nodemailer = require('nodemailer');
 
 // --- Gmail SMTP (uses Google's own servers — DMARC always passes for @gmail.com) ---
 let _gmailTransporter = null;
+let _smtpBlockedUntil = 0;
 function getGmailTransporter() {
+  if (Date.now() < _smtpBlockedUntil) return null;
   if (_gmailTransporter) return _gmailTransporter;
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
@@ -21,6 +23,10 @@ function getGmailTransporter() {
     host: 'smtp.gmail.com',
     port,
     secure,
+    family: 4,
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 10000,
     auth: { user: user.trim(), pass: pass.trim() },
     tls: { rejectUnauthorized: false }
   });
@@ -35,7 +41,8 @@ async function sendViaBrevo({ to, subject, html }) {
   const res = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { 'accept': 'application/json', 'api-key': apiKey.trim(), 'content-type': 'application/json' },
-    body: JSON.stringify({ sender: { name: 'GroupSpace', email: fromEmail }, to: [{ email: to }], subject, htmlContent: html })
+    body: JSON.stringify({ sender: { name: 'GroupSpace', email: fromEmail }, to: [{ email: to }], subject, htmlContent: html }),
+    signal: AbortSignal.timeout(8000)
   });
   const data = await res.json();
   if (!res.ok) throw new Error(`Brevo ${res.status}: ${data.message || JSON.stringify(data)}`);
@@ -49,7 +56,8 @@ async function sendViaResend({ to, subject, html }) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: 'GroupSpace <onboarding@resend.dev>', to: [to], subject, html })
+    body: JSON.stringify({ from: 'GroupSpace <onboarding@resend.dev>', to: [to], subject, html }),
+    signal: AbortSignal.timeout(8000)
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || JSON.stringify(data));
@@ -80,12 +88,14 @@ async function sendEmail({ to, subject, html }) {
       console.log(`✅ [Gmail SMTP] Email sent to ${to}. MessageId: ${info.messageId}`);
       return { accepted: [to], provider: 'gmail' };
     } catch (err) {
+      if (['ETIMEDOUT', 'ECONNREFUSED', 'ENETUNREACH', 'EHOSTUNREACH', 'ESOCKET'].includes(err.code) || /timeout/i.test(err.message)) {
+        _smtpBlockedUntil = Date.now() + 5 * 60 * 1000;
+      }
       errors.push(`[Gmail SMTP Error] ${err.message}`);
       console.error(`⚠️ [Gmail SMTP Error] ${err.message} — trying Brevo...`);
     }
   } else {
-    errors.push('[Email] Gmail SMTP not configured (SMTP_USER or SMTP_PASS missing)');
-    console.warn('[Email] Gmail SMTP not configured (SMTP_USER or SMTP_PASS missing)');
+    errors.push('[Email] Gmail SMTP skipped (unconfigured or recently timed out)');
   }
 
   // 2. Brevo REST API (HTTPS — but emails from @gmail.com may hit spam/be rejected)
