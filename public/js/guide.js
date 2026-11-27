@@ -62,9 +62,9 @@
           steps: [
             'Create tasks with priority levels (Low, Medium, High, Urgent), due date/time, and 1 or more assignees (or select Assign to All Members).',
             'Tasks progress through 4 columns: To Do -> In Progress -> Awaiting Approval -> Done.',
-            'All task deadlines automatically appear on the Team Calendar tab.'
+            'All task deadlines automatically appear on the Team Calendar tab, and you can export the full Task Board summary to CSV or PDF anytime.'
           ],
-          keywords: 'kanban tasks priority due date multi assignee assign all columns'
+          keywords: 'kanban tasks priority due date multi assignee assign all columns csv pdf export report'
         },
         {
           title: 'Dual-Approval Quality Gate & Leader Follow-Up',
@@ -152,9 +152,9 @@
           steps: [
             'GroupSpace automatically computes each member\'s net balance and simplifies circular debts into the fewest possible payments.',
             'Click Settle Up on any balance card to record a Full or Partial payment.',
-            'Tag the payment method (GCash, Maya, Bank Transfer, or Cash), enter a reference number, and attach a proof-of-payment screenshot.'
+            'Tag the payment method (GCash, Maya, Bank Transfer, or Cash), enter a reference number, attach proof of payment, and export the Expense Ledger to CSV or PDF.'
           ],
-          keywords: 'settle up debt simplification algorithm gcash maya bank transfer cash proof reference'
+          keywords: 'settle up debt simplification algorithm gcash maya bank transfer cash proof reference csv pdf export report'
         }
       ]
     },

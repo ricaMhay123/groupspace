@@ -2589,6 +2589,8 @@ async function loadExpenses() {
 
     const expenses = expensesRes.data || [];
     const summary = summaryRes.data || { totalSpent: 0, memberBalances: [], settlements: [] };
+    window.currentExpenses = expenses;
+    window.currentExpenseSummary = summary;
 
     document.getElementById('expTotalSpent').textContent = `₱${summary.totalSpent.toFixed(2)}`;
     
@@ -5405,3 +5407,230 @@ function renderPersonalExpenseAnalytics(items) {
     </table>
   `;
 }
+
+/* =========================================================
+   FINANCIAL & TASK REPORT EXPORTS (CSV / PDF)
+   ========================================================= */
+
+function _buildSafeExportFilename(prefix, ext) {
+  const wsName = (currentGroupDetails && currentGroupDetails.name ? currentGroupDetails.name : 'Workspace')
+    .replace(/[^a-zA-Z0-9_-]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  const dateStamp = new Date().toISOString().slice(0, 10);
+  return `GroupSpace_${wsName}_${prefix}_${dateStamp}.${ext}`;
+}
+
+function _downloadCsvReport(filename, headers, rows) {
+  const escapeCsvCell = (val) => {
+    const str = String(val == null ? '' : val).replace(/"/g, '""');
+    return `"${str}"`;
+  };
+  const lines = [
+    headers.map(escapeCsvCell).join(','),
+    ...rows.map(r => r.map(escapeCsvCell).join(','))
+  ];
+  const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function _downloadPdfReport({ filename, reportTitle, kpis, headers, rows, extraHtml = '' }) {
+  const wsName = currentGroupDetails && currentGroupDetails.name ? currentGroupDetails.name : 'Workspace';
+  const generatedAt = new Date().toLocaleString();
+
+  const kpiHtml = kpis.map(k => `
+    <div style="flex:1; min-width:120px; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; background:#f8fafc;">
+      <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:0.04em;">${escapeHtml(k.label)}</div>
+      <div style="font-size:16px; font-weight:800; color:#0f172a; margin-top:3px;">${escapeHtml(k.value)}</div>
+    </div>
+  `).join('');
+
+  const thHtml = headers.map(h => `<th style="text-align:left; padding:8px 10px; border-bottom:2px solid #cbd5e1; font-size:11px; color:#334155; background:#f1f5f9;">${escapeHtml(h)}</th>`).join('');
+  const trHtml = rows.length === 0
+    ? `<tr><td colspan="${headers.length}" style="padding:16px; text-align:center; color:#64748b; font-size:12px;">No records available.</td></tr>`
+    : rows.map(r => `
+        <tr>
+          ${r.map(cell => `<td style="padding:8px 10px; border-bottom:1px solid #e2e8f0; font-size:11.5px; color:#0f172a;">${escapeHtml(String(cell == null ? '' : cell))}</td>`).join('')}
+        </tr>
+      `).join('');
+
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'padding:24px; font-family:Inter, system-ui, sans-serif; color:#0f172a; background:#ffffff; width:760px;';
+  wrapper.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #0f172a; padding-bottom:12px; margin-bottom:16px;">
+      <div>
+        <div style="font-size:11px; font-weight:700; color:#2e5bff; text-transform:uppercase; letter-spacing:0.06em;">GroupSpace Workspace Report</div>
+        <h1 style="margin:4px 0 2px; font-size:20px; font-weight:800; color:#0f172a;">${escapeHtml(reportTitle)}</h1>
+        <div style="font-size:12px; color:#475569;">Workspace: <strong>${escapeHtml(wsName)}</strong></div>
+      </div>
+      <div style="text-align:right; font-size:11px; color:#64748b;">
+        <div>Generated</div>
+        <div style="font-weight:600; color:#0f172a;">${escapeHtml(generatedAt)}</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px;">
+      ${kpiHtml}
+    </div>
+    <table style="width:100%; border-collapse:collapse; margin-bottom:16px;">
+      <thead><tr>${thHtml}</tr></thead>
+      <tbody>${trHtml}</tbody>
+    </table>
+    ${extraHtml}
+  `;
+
+  if (typeof window.html2pdf === 'function') {
+    await window.html2pdf()
+      .set({
+        margin: [10, 10, 10, 10],
+        filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      })
+      .from(wrapper)
+      .save();
+  } else {
+    const printWin = window.open('', '_blank', 'width=840,height=680');
+    if (printWin) {
+      printWin.document.write(`<!DOCTYPE html><html><head><title>${escapeHtml(reportTitle)}</title></head><body>${wrapper.innerHTML}</body></html>`);
+      printWin.document.close();
+      printWin.focus();
+      printWin.print();
+    }
+  }
+}
+
+async function exportTasksReport(format = 'csv') {
+  try {
+    if (!Array.isArray(window.currentTasks)) {
+      await loadTasks();
+    }
+    const tasks = Array.isArray(window.currentTasks) ? window.currentTasks : [];
+    const formatStatus = (s) => {
+      const key = String(s || 'TODO').toUpperCase();
+      if (key === 'PENDING_APPROVAL') return 'Awaiting Approval';
+      if (key === 'IN_PROGRESS') return 'In Progress';
+      if (key === 'DONE') return 'Done';
+      return 'To Do';
+    };
+
+    const headers = ['Task Title', 'Status', 'Priority', 'Assignee', 'Due Date', 'Blocked / Flagged'];
+    const rows = tasks.map(t => [
+      t.title || 'Untitled Task',
+      formatStatus(t.status),
+      String(t.priority || 'MEDIUM').toUpperCase(),
+      t.assignee_name || 'Unassigned',
+      t.due_date ? formatDate(t.due_date) : 'No due date',
+      t.is_flagged ? `Blocked (${t.flag_reason || 'Needs assist'})` : 'Clear'
+    ]);
+
+    if (String(format).toLowerCase() === 'csv') {
+      const filename = _buildSafeExportFilename('Task_Board_Report', 'csv');
+      _downloadCsvReport(filename, headers, rows);
+      showToast('Task report exported as CSV.', 'success');
+      return;
+    }
+
+    const counts = {
+      todo: tasks.filter(t => String(t.status || 'TODO').toUpperCase() === 'TODO').length,
+      inProgress: tasks.filter(t => String(t.status || '').toUpperCase() === 'IN_PROGRESS').length,
+      pending: tasks.filter(t => String(t.status || '').toUpperCase() === 'PENDING_APPROVAL').length,
+      done: tasks.filter(t => String(t.status || '').toUpperCase() === 'DONE').length
+    };
+
+    const filename = _buildSafeExportFilename('Task_Board_Report', 'pdf');
+    showToast('Generating Task Board PDF report...', 'info');
+    await _downloadPdfReport({
+      filename,
+      reportTitle: 'Kanban Task Board Summary',
+      kpis: [
+        { label: 'Total Tasks', value: String(tasks.length) },
+        { label: 'To Do / In Progress', value: `${counts.todo} / ${counts.inProgress}` },
+        { label: 'Awaiting Approval', value: String(counts.pending) },
+        { label: 'Approved Done', value: String(counts.done) }
+      ],
+      headers,
+      rows
+    });
+    showToast('Task Board PDF report downloaded.', 'success');
+  } catch (err) {
+    showToast('Failed to export task report: ' + err.message, 'error');
+  }
+}
+
+async function exportExpensesReport(format = 'csv') {
+  try {
+    if (!Array.isArray(window.currentExpenses) || !window.currentExpenseSummary) {
+      await loadExpenses();
+    }
+    const expenses = Array.isArray(window.currentExpenses) ? window.currentExpenses : [];
+    const summary = window.currentExpenseSummary || { totalSpent: 0, settlements: [] };
+    const settlements = Array.isArray(summary.settlements) ? summary.settlements : [];
+
+    const formatSplit = (e) => {
+      if (e.category === 'Settlement') return 'Settlement';
+      if (e.split_type === 'SUBSET') return `Selected (${e.splits ? e.splits.length : 0})`;
+      if (e.split_type === 'EXACT') return 'Exact Split';
+      if (e.split_type === 'PERCENT') return 'Percentage';
+      if (e.split_type === 'SHARES') return 'Shares';
+      return 'Equal Split';
+    };
+
+    const headers = ['Date', 'Description', 'Category', 'Paid By', 'Split Mode', 'Amount (PHP)'];
+    const rows = expenses.map(e => [
+      e.date || '',
+      e.title || '',
+      e.category || 'General',
+      e.payer_name || '',
+      formatSplit(e),
+      `₱${Number(e.amount || 0).toFixed(2)}`
+    ]);
+
+    if (String(format).toLowerCase() === 'csv') {
+      const filename = _buildSafeExportFilename('Expense_Ledger_Report', 'csv');
+      _downloadCsvReport(filename, headers, rows);
+      showToast('Expense ledger exported as CSV.', 'success');
+      return;
+    }
+
+    const settlementRowsHtml = settlements.length === 0
+      ? '<div style="font-size:12px; color:#047857; font-weight:600;">All balances settled — no pending transfers required.</div>'
+      : `<ul style="margin:6px 0 0; padding-left:18px; font-size:12px; color:#0f172a;">
+          ${settlements.map(s => `<li style="margin-bottom:4px;"><strong>${escapeHtml(s.fromName)}</strong> pays <strong>${escapeHtml(s.toName)}</strong>: <strong>₱${Number(s.amount || 0).toFixed(2)}</strong></li>`).join('')}
+        </ul>`;
+
+    const extraHtml = `
+      <div style="margin-top:14px; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px; background:#f8fafc;">
+        <div style="font-size:12px; font-weight:700; color:#0f172a; margin-bottom:4px;">Simplified Debt Settlement Plan</div>
+        ${settlementRowsHtml}
+      </div>
+    `;
+
+    const filename = _buildSafeExportFilename('Expense_Ledger_Report', 'pdf');
+    showToast('Generating Expense Ledger PDF report...', 'info');
+    await _downloadPdfReport({
+      filename,
+      reportTitle: 'Expense Ledger & Settlement Report',
+      kpis: [
+        { label: 'Total Expenditure', value: `₱${Number(summary.totalSpent || 0).toFixed(2)}` },
+        { label: 'Ledger Entries', value: String(expenses.length) },
+        { label: 'Active Settlements', value: String(settlements.length) }
+      ],
+      headers,
+      rows,
+      extraHtml
+    });
+    showToast('Expense Ledger PDF report downloaded.', 'success');
+  } catch (err) {
+    showToast('Failed to export expense report: ' + err.message, 'error');
+  }
+}
+
+window.exportTasksReport = exportTasksReport;
+window.exportExpensesReport = exportExpensesReport;
